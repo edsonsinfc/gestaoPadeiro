@@ -1,0 +1,20 @@
+# Allow access to all files - Fix 403 Forbidden
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>
+
+# Apache 2.2 fallback
+<IfModule !mod_authz_core.c>
+    Order Allow,Deny
+    Allow from all
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Pass all requests to Node.js app via Passenger
+<IfModule mod_passenger.c>
+    PassengerEnabled on
+    PassengerAppType node
+    PassengerStartupFile server.js
+</IfModule>
