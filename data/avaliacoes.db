@@ -1,0 +1,73 @@
+[
+  {
+    "id": "moitvdjoh7o1fpob7",
+    "tipo": "cliente",
+    "padeiroId": "padeiro-teste-001",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "clienteId": "moitruelivz03byxw",
+    "clienteNome": "Big Box",
+    "nota": 5,
+    "comentario": "ç",
+    "avaliadoPor": "padeiro-teste-001",
+    "avaliadoPorNome": "Padeiro Brago (Teste)",
+    "criadoEm": "2026-04-28T16:15:50.100Z"
+  },
+  {
+    "id": "moiu3iqwm51wll9q4",
+    "tipo": "cliente",
+    "padeiroId": "padeiro-teste-001",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "clienteId": "moitruelrne7xdxu9",
+    "clienteNome": "J.M.B",
+    "nota": 4,
+    "comentario": "",
+    "avaliadoPor": "padeiro-teste-001",
+    "avaliadoPorNome": "Padeiro Brago (Teste)",
+    "criadoEm": "2026-04-28T16:22:10.088Z"
+  },
+  {
+    "id": "moiwgrsq372fj4hpx",
+    "tipo": "gestor",
+    "padeiroId": "padeiro-teste-001",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "respostas": {
+      "1": true,
+      "2": true,
+      "3": 3,
+      "4": 3,
+      "5": true,
+      "6": 3,
+      "7": true
+    },
+    "observacao": "",
+    "avaliadoPor": "admin-001",
+    "avaliadoPorNome": "Administrador",
+    "criadoEm": "2026-04-28T17:28:27.578Z"
+  },
+  {
+    "id": "moj24r4auupl236oi",
+    "tipo": "cliente",
+    "padeiroId": "padeiro-teste-001",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "clienteId": "moitrueljuj9tvw90",
+    "clienteNome": "Pães e Vinho",
+    "nota": 4,
+    "comentario": "Profissional pontual",
+    "avaliadoPor": "padeiro-teste-001",
+    "avaliadoPorNome": "Padeiro Brago (Teste)",
+    "criadoEm": "2026-04-28T20:07:04.522Z"
+  },
+  {
+    "id": "mok1gug74tqwe612r",
+    "tipo": "cliente",
+    "padeiroId": "padeiro-teste-001",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "clienteId": "moitruelrne7xdxu9",
+    "clienteNome": "J.M.B",
+    "nota": 5,
+    "comentario": "o cliente aodrou",
+    "avaliadoPor": "padeiro-teste-001",
+    "avaliadoPorNome": "Padeiro Brago (Teste)",
+    "criadoEm": "2026-04-29T12:36:15.271Z"
+  }
+]

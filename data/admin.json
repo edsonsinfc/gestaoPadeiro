@@ -1,0 +1,11 @@
+[
+  {
+    "id": "admin-001",
+    "nome": "Administrador",
+    "email": "admin@brago.com",
+    "passwordHash": "$2a$10$ZNXnwW7g4jCvKEjV1skGFOdozQL/9ZnpWQKcRm3HqjpA2JBKNQe7W",
+    "role": "admin",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.422Z"
+  }
+]

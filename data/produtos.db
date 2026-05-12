@@ -1,0 +1,5825 @@
+[
+  {
+    "id": "moitruedqsxegzb4l",
+    "codigo": "14760",
+    "descricao": "ABAFADOR DE HAMBURGUER ALUM 0,7 - 15CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedvta97ulat",
+    "codigo": "17792",
+    "descricao": "ACUCAR CONFEITEIRO TOP SUGAR C100 SACO 1",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17792.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued6pyss2hhg",
+    "codigo": "18263",
+    "descricao": "ACUCAR CRISTAL 5KG",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedpzpeu7ux0",
+    "codigo": "18323",
+    "descricao": "ACUCAR SACHE CX 1000X5GR",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued8j1t5p45z",
+    "codigo": "18262",
+    "descricao": "ACUCAR SACHE CX 400X5GR",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedj6iok6j3d",
+    "codigo": "6661",
+    "descricao": "ACUCAR SACHER CX 1000X5GR",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\6661.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedn81ga04r4",
+    "codigo": "18273",
+    "descricao": "ADOCANTE ADOCYL 100ML",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18273.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedoxvlrx61p",
+    "codigo": "18274",
+    "descricao": "ADOCANTE SACHE STEVIA 50X5G LINEA",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18274.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued2vfplgf0v",
+    "codigo": "18275",
+    "descricao": "ADOCANTE SUCRALOSE 6X75ML",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18275.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedrxl3kkq1y",
+    "codigo": "18276",
+    "descricao": "ADOCANTE ZERO CAL 100ML",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18276.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued8ya32kocj",
+    "codigo": "13717",
+    "descricao": "ALHO TRITURADO EM PASTA 1KG (6)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13717.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued5yqt2aa16",
+    "codigo": "13718",
+    "descricao": "ALHO TRITURADO EM PASTA 3KG (4)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13718.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedevg5z7gx9",
+    "codigo": "13713",
+    "descricao": "AMACIANTE DE CARNE 1KG (10)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13713.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedrpwjyxhdu",
+    "codigo": "15197",
+    "descricao": "ANTIMOFO E ANTI ROPE MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15197.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedmca58rwap",
+    "codigo": "12968",
+    "descricao": "ARO CORT. RED. P/ BOLO (INOX) 3.D/F 5X4",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12968.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedh7lilnuev",
+    "codigo": "12962",
+    "descricao": "ARO CORTADOR MARGARIDA INOX",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12962.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedmntrddbz8",
+    "codigo": "12967",
+    "descricao": "ARO CORTADOR QUADRADO LISO INOX 9,8X4CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12967.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued139jrmkh3",
+    "codigo": "14475",
+    "descricao": "ARO CORTADOR REDONDO INOX 15X8CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14475.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueda59a3e3dr",
+    "codigo": "14476",
+    "descricao": "ARO CORTADOR REDONDO INOX 20X8CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14476.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued88dzbx0v3",
+    "codigo": "14477",
+    "descricao": "ARO CORTADOR REDONDO INOX 23X8CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14477.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued2dh4magw3",
+    "codigo": "14726",
+    "descricao": "ARO MODELADOR REDONDO INOX 13X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14726.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueduu3g1opxk",
+    "codigo": "14478",
+    "descricao": "ARO MODELADOR REDONDO INOX 15X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14478.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedjv81pugj6",
+    "codigo": "14479",
+    "descricao": "ARO MODELADOR REDONDO INOX 20X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14479.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued3ytk81y2f",
+    "codigo": "14480",
+    "descricao": "ARO MODELADOR REDONDO INOX 23X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14480.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedwmat00m33",
+    "codigo": "12963",
+    "descricao": "ARO RETANG REGULAVEL INOX 31,5X19,5X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12963.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued0luwjttcz",
+    "codigo": "14727",
+    "descricao": "ASSAD. PAO DE LO (ALUM) N.3 36X25X5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedzmkcdwbm6",
+    "codigo": "14481",
+    "descricao": "ASSADEIRA CONICA ALUMINIO 62X36X3,5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14481.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued8ubc8v5k3",
+    "codigo": "14482",
+    "descricao": "ASSADEIRA CONICA ALUMINIO 70X58X3,5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14482.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedlgk2xvf2p",
+    "codigo": "12424",
+    "descricao": "BAGUETE CLASSICA MM C100 SACO 20KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12424.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedzo0rk8hb9",
+    "codigo": "14757",
+    "descricao": "BAGUETE CLASSICA MM C50 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14757.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueddmswmi68u",
+    "codigo": "14788",
+    "descricao": "BAGUETE CLASSICA MM C50 SC 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14788.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued158ulun60",
+    "codigo": "7471",
+    "descricao": "BAGUETE GRAND SAVEUR C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7471.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueddnxc9q6j4",
+    "codigo": "15982",
+    "descricao": "BALAO NR.7  TIFFANY S.ROQUE C/50 UN",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedjoxp1tubd",
+    "codigo": "15983",
+    "descricao": "BALAO NR.7  VERDE MUSGO S.ROQUE C/50 UN",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedshk2pu87n",
+    "codigo": "14761",
+    "descricao": "BAND.C/TELA ESCORRER FRIT INOX 56X40X7",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedg54boi5np",
+    "codigo": "14728",
+    "descricao": "BANDEJA CANTO CRESPO INOX 44,3X31,3X1,3",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14728.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedi625avxpx",
+    "codigo": "14729",
+    "descricao": "BANDEJA CANTO CRESPO INOX 48,2X38,2X2,8",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14729.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedex4dg1y1o",
+    "codigo": "14730",
+    "descricao": "BANDEJA CANTO LISO INOX 35X20X2",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14730.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedpghkj33r3",
+    "codigo": "16232",
+    "descricao": "BARQUETE FOLHADA LOSANGO CX 72",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedriv3lgrfl",
+    "codigo": "16233",
+    "descricao": "BARQUETE FOLHADA QUADRADA CX 72",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedmcz48kl1q",
+    "codigo": "15246",
+    "descricao": "BASE CULINARIA ITAMBE 25% 1,0KG (12)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14772.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued0g2h5v3vl",
+    "codigo": "14485",
+    "descricao": "BATEDOR DE ARAME (INOX) 35CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14485.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedvq762zpxr",
+    "codigo": "14484",
+    "descricao": "BATEDOR FOUET INOX 30CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14484.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedai6yqwncj",
+    "codigo": "14836",
+    "descricao": "BICO P/CONF. PIT. 3 (INOX) PCT C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedvoaa1n4ga",
+    "codigo": "14731",
+    "descricao": "BICO P/CONF.CRESP. N.3 (INOX) PT C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedaeox9vxki",
+    "codigo": "14732",
+    "descricao": "BICO P/CONF.CRESP.N.5 (INOX) PT C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued9b9n93j2p",
+    "codigo": "14834",
+    "descricao": "BICO P/CONF.ESP. FOLHA PQ (INOX) PCT C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedcsjjgb8zq",
+    "codigo": "14835",
+    "descricao": "BICO P/CONF.ESP. MARG. 3 (INOX) PCT C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedlqav0inqo",
+    "codigo": "16962",
+    "descricao": "BISC CASTANHA PARA 12GRAOS 150G (18)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16962.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedzrfb44jvy",
+    "codigo": "16964",
+    "descricao": "BISC CASTANHA PARA 150G (18)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16964.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued6cjz558mk",
+    "codigo": "17182",
+    "descricao": "BISC CASTANHA PARA 300G (12)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17182.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedt37n5vh4h",
+    "codigo": "16963",
+    "descricao": "BISC CASTANHA PARA ACAI 150G (18)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16963.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedyd8kivoc9",
+    "codigo": "17183",
+    "descricao": "BISC CASTANHA PARA ACAI 300G (12)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17183.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedrul4wo3vq",
+    "codigo": "17184",
+    "descricao": "BISC INTEGR ACAI 150G (18)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17184.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued8tsija4qk",
+    "codigo": "17181",
+    "descricao": "BISC INTEGR CAST PARA CANELA 150G (18)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\17181.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueddx5nh4r2b",
+    "codigo": "17185",
+    "descricao": "BISC PACIENCIA 100G (20)",
+    "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17185.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedkt9l6hom5",
+    "codigo": "14585",
+    "descricao": "BISCOITO BACON CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14585.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedzokvbct7a",
+    "codigo": "14563",
+    "descricao": "BISCOITO BAMBOLE CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14563.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruednfklu2vie",
+    "codigo": "14564",
+    "descricao": "BISCOITO BEIJINHO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14564.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedxndu207o1",
+    "codigo": "14565",
+    "descricao": "BISCOITO BEM CASADO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14565.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued8ta2gwzoh",
+    "codigo": "14566",
+    "descricao": "BISCOITO CANELA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14566.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedfd2osj3ku",
+    "codigo": "14567",
+    "descricao": "BISCOITO CASADINHO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14567.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedme1ndofdi",
+    "codigo": "14568",
+    "descricao": "BISCOITO CHOCOBIS CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14568.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueduk0jcujkr",
+    "codigo": "14569",
+    "descricao": "BISCOITO CHOCOMINAS CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14569.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued0cd5q7pn3",
+    "codigo": "14570",
+    "descricao": "BISCOITO DIMINAS CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14570.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued3nt1ezq16",
+    "codigo": "14571",
+    "descricao": "BISCOITO ENROLADINHO GOIABA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14571.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued5ehmc7oh6",
+    "codigo": "14572",
+    "descricao": "BISCOITO FLORZINHA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14572.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued3gd37q767",
+    "codigo": "14573",
+    "descricao": "BISCOITO LEITE CONDENSADO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14573.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedrixy357fl",
+    "codigo": "14574",
+    "descricao": "BISCOITO MARGARIDA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14574.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedla7yv7xzx",
+    "codigo": "14579",
+    "descricao": "BISCOITO NEVADA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14579.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued2o32wlwk1",
+    "codigo": "14580",
+    "descricao": "BISCOITO PALITO CHOCOLATE CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14580.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedxradpomae",
+    "codigo": "14581",
+    "descricao": "BISCOITO PALMIER CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14581.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueduo0wmnoiw",
+    "codigo": "14582",
+    "descricao": "BISCOITO PAO DE MEL CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14582.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruednq8udkvb9",
+    "codigo": "14586",
+    "descricao": "BISCOITO PIMENTA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14586.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrueddf6siy915",
+    "codigo": "14587",
+    "descricao": "BISCOITO PIZZA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14587.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedc92c8qrym",
+    "codigo": "14588",
+    "descricao": "BISCOITO QUEIJO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14588.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedvybqujkpa",
+    "codigo": "14583",
+    "descricao": "BISCOITO SEQUILHOS CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "192.168.73.10\\FOTOSPRODUTOS\\14583.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruednqcxv3tnr",
+    "codigo": "14584",
+    "descricao": "BISCOITO SOL CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14584.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedufljgojkw",
+    "codigo": "14589",
+    "descricao": "BISCOITO TORRADINHA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14589.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedig2lu6kqm",
+    "codigo": "17607",
+    "descricao": "BOLO BROWNIE CX 24X60G 72492",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17607.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedacj85p750",
+    "codigo": "12742",
+    "descricao": "BOLO BROWNIE MIX GLUTEN FREE SC 12,5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12742.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedtl8ewgom2",
+    "codigo": "12043",
+    "descricao": "BOLO BROWNIE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12043.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued1nihi6tyv",
+    "codigo": "13524",
+    "descricao": "BOLO CAKE VEGANO SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13524.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued44x38e2mz",
+    "codigo": "14080",
+    "descricao": "BOLO DE CHOC. CREMOSO 5KG(5X5) (RICONI)",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14080.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedmjkr8wnfb",
+    "codigo": "14079",
+    "descricao": "BOLO DE LARANJA CREMOSO 5KG(5X5) RICONI",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14079.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedpi4qgrdi5",
+    "codigo": "14081",
+    "descricao": "BOLO DE MANDIOCA CREMOSO 5KG(5X5) RICONI",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14081.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued47i19dbtl",
+    "codigo": "14076",
+    "descricao": "BOLO DE MARACUJÁ 5KG(5X5) ( RICONI)",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14076.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedi2vg14zb0",
+    "codigo": "14078",
+    "descricao": "BOLO DE MILHO CREMOSO 3KG(5X3) ( RICONI)",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14078.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitrued0xbo168ek",
+    "codigo": "14082",
+    "descricao": "BOLO DE MILHO CREMOSO 5KG(5X5) (RICONI)",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14082.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedt9osvh62z",
+    "codigo": "7121",
+    "descricao": "BOLO GOLDEN CAKE AIPIM SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7121.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedv4t4izu3v",
+    "codigo": "13466",
+    "descricao": "BOLO GOLDEN CAKE BATATA DOCE (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13466.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedlnp9mp72c",
+    "codigo": "7124",
+    "descricao": "BOLO GOLDEN CAKE CENOURA (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7124.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedbtvzy5r8i",
+    "codigo": "16504",
+    "descricao": "BOLO GOLDEN CAKE CENOURA C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16504.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedg63ptof5p",
+    "codigo": "13467",
+    "descricao": "BOLO GOLDEN CAKE CHOCOLATE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13467.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedubd62hae4",
+    "codigo": "7123",
+    "descricao": "BOLO GOLDEN CAKE FUBA (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7123.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.317Z"
+  },
+  {
+    "id": "moitruedxei26reyl",
+    "codigo": "16625",
+    "descricao": "BOLO GOLDEN CAKE FUBA C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16625.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeajuebfoqn",
+    "codigo": "12728",
+    "descricao": "BOLO GOLDEN CAKE INTEG MALT (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12728.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexjli19yvl",
+    "codigo": "7122",
+    "descricao": "BOLO GOLDEN CAKE MILHO VERDE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7122.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee6uw80d6fb",
+    "codigo": "7120",
+    "descricao": "BOLO GOLDEN CAKE NEUTRO SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7120.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueex4q12unq2",
+    "codigo": "13523",
+    "descricao": "BOLO GOLDEN CAKE S/ACUCAR SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13523.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueep3j7lpe6e",
+    "codigo": "15828",
+    "descricao": "BOLO GOLDEN CAKE TAPIOCA SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15828.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg136kswg9",
+    "codigo": "14691",
+    "descricao": "BOLO GOLDEN FILL NEUTRO (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14691.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenq2vpsxy6",
+    "codigo": "15826",
+    "descricao": "BOLO GOLDEN PAO DE MEL (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15826.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueepgocezl2h",
+    "codigo": "17271",
+    "descricao": "BOLO INGLÊS C12 (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17271.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueei5cq5bic2",
+    "codigo": "12044",
+    "descricao": "BOLO LIGHT LA NUVOLA (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12044.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetwtesf4no",
+    "codigo": "12743",
+    "descricao": "BOLO MUFFIN MIX GLUTEN FREE (SACO 12KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12743.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueean0xawq5d",
+    "codigo": "16012",
+    "descricao": "BOMBOM GAROTO 250G(E) ",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedz27xpuus",
+    "codigo": "15981",
+    "descricao": "BOMBOM GRANDES SUCESSOS LACTA 250.6G(E) ",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueekff6bxt2l",
+    "codigo": "15858",
+    "descricao": "BOMBOM SONHO DE VALSA 20G (E) ",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9n48xnknx",
+    "codigo": "15859",
+    "descricao": "BOMBONS SONHO DE VALSA 20G ",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14146.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueef51j94160",
+    "codigo": "18469",
+    "descricao": "BRAVO CREM CALDA 12X1L",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18469.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee76trr8nyv",
+    "codigo": "14698",
+    "descricao": "BRIGAD CHOC BELGA ITAMBE LT 1,01KG(12)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14698.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8d6nj0xxd",
+    "codigo": "16506",
+    "descricao": "BRIOCHE SCHOKO C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16506.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3gevgyxbo",
+    "codigo": "18290",
+    "descricao": "BRIOCHE T C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18290.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewypl07wav",
+    "codigo": "16507",
+    "descricao": "BROA DE MILHO C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16507.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeepgeuaewu",
+    "codigo": "14536",
+    "descricao": "CAFE ASSUM PRETO A VACUO 250GR",
+    "fornecedor": "CAFE DO SITIO IND. E COMD. LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14536.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5qgepqzw6",
+    "codigo": "14535",
+    "descricao": "CAFE DO SITIO A VACUO 250GR",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14535.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeum3rwc3o0",
+    "codigo": "17711",
+    "descricao": "CAIXA ESPECIAL DONUTS",
+    "fornecedor": "PONTA DE ESTOQUE",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewxxzy71ra",
+    "codigo": "16501",
+    "descricao": "CAIXA FOOD DONUTS - 73765 ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueez7tp68kxd",
+    "codigo": "16787",
+    "descricao": "CAKE RECH BANANA AVEIA MEL CX 2X1KG ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeahumdvvl3",
+    "codigo": "16784",
+    "descricao": "CAKE RECH CHOCOLATE CX 2X1KG ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueep19r0jx0z",
+    "codigo": "16785",
+    "descricao": "CAKE RECH COCO CX 2X1KG",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeesqo8i8xw",
+    "codigo": "16788",
+    "descricao": "CAKE RECH INT CASTANHA TAMARA CX 2X1KG ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexr3ez0b97",
+    "codigo": "16786",
+    "descricao": "CAKE RECH RED VELVET CX 2X1KG ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevz7j1tohi",
+    "codigo": "14150",
+    "descricao": "CALDA BRAVO DOLCE VITA CX 1KG(12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14150.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeoigu2qa3b",
+    "codigo": "17556",
+    "descricao": "CALDA DELICIA 1L (12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17556.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8lq1mafw9",
+    "codigo": "15646",
+    "descricao": "CALDA P/ MOLHAR BOLO MAURI 1L (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee05gypmjh3",
+    "codigo": "13716",
+    "descricao": "CALDO DE GALINHA 1KG (10)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13716.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7dvb1aobd",
+    "codigo": "13774",
+    "descricao": "CALDO DE PEIXE PCT 1KG (10)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13774.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee73e3bhjmu",
+    "codigo": "12965",
+    "descricao": "CALHA ESPUMONE EM V INOX",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12965.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9ipksxp6i",
+    "codigo": "18488",
+    "descricao": "CANTUCCI C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueekitoqhzqv",
+    "codigo": "14268",
+    "descricao": "CARAVELA COB COVER CACAO BD 5KG 45BB",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14268.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeue4z52rrg",
+    "codigo": "14267",
+    "descricao": "CARAVELA COB COVER WHITE BD 5KG 45BA",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14267.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0tluxqh4r",
+    "codigo": "14598",
+    "descricao": "CARAVELA FLOCO FOR AM 2,05K AX48SE(8)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14598.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueex88dltl9i",
+    "codigo": "14756",
+    "descricao": "CARAVELA FLOCOS AO LEIT 2,05K AX48SM (8)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14756.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqolxtdh6f",
+    "codigo": "14597",
+    "descricao": "CARAVELA FLOCOS BRANCO 2,05K AX48SB (8)",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14597.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5tuo8ol39",
+    "codigo": "14645",
+    "descricao": "CARAVELA GOTAS AO LEITE 10KG A49AU ",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14645.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemg7klc2x4",
+    "codigo": "14269",
+    "descricao": "CARAVELA RECH FLUIR NOCCI BD 5K 45BD FL",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14269.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedzngyw93a",
+    "codigo": "16756",
+    "descricao": "CARAVELLA CARAMELLO CR CARAMELO 3K",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16756.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueet1b3sogm6",
+    "codigo": "16753",
+    "descricao": "CARAVELLA CRUNCH NOCCIOLA CR AVELA 3K",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16753.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexqnf53e4x",
+    "codigo": "17813",
+    "descricao": "CARAVELLA GOTAS AO LEITE 1 KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17813.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegb2e727ri",
+    "codigo": "16781",
+    "descricao": "CARAVELLA GRAN G PISTACCHIO 3K ",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeyd2l1754z",
+    "codigo": "16752",
+    "descricao": "CARAVELLA GRAN NOCCIOLA 1,01K(9)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16752.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesxssxlpm5",
+    "codigo": "16754",
+    "descricao": "CARAVELLA GRAN NOCCIOLA CR AVELA 3K",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16754.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedrbvwnna2",
+    "codigo": "17278",
+    "descricao": "CARAVELLA PISTACCHIO BISNAGA 1,01KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17278.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeu2wbsq99j",
+    "codigo": "17396",
+    "descricao": "CARAVELLA PISTACCHIO BISNAGA 1,01KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueem8ealghof",
+    "codigo": "16755",
+    "descricao": "CARAVELLA PISTACCHIO CR PISTACHE 3K",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16755.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezkxipsck1",
+    "codigo": "17870",
+    "descricao": "CARIBE BUENO BISNAGA 1,01KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17870.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueew1k2hkur2",
+    "codigo": "17558",
+    "descricao": "CARIBE FLOCOS DE LEITE SC 20KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezxrm419we",
+    "codigo": "17557",
+    "descricao": "CARIBE FOND. FLOCOS SC 20KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7faxcuid6",
+    "codigo": "17872",
+    "descricao": "CARIBE LEITINHO BISNAGA 1,01KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17872.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemt3435t58",
+    "codigo": "18009",
+    "descricao": "CARIBE PISTACHE BISNAGA 1,01KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18009.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1xtse1hy8",
+    "codigo": "14486",
+    "descricao": "CARRETILHA CRES C/5 (PLAS/INOX) 2,7X15,2",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14486.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueel0ktk2x1y",
+    "codigo": "18210",
+    "descricao": "CEBOLA CARAMELIZADA 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18210.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueed4ttp8zr3",
+    "codigo": "18321",
+    "descricao": "CHA BOLDO MATE LEAO CX10UNI",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14535.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee03wxa1hn9",
+    "codigo": "18270",
+    "descricao": "CHA CAMOMILA MATE LEAO CX10UNI",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18270.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5kobff6e6",
+    "codigo": "18271",
+    "descricao": "CHA CAPIM CIDREIRA MATE LEAO CX10UNI",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18271.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeayfatpuks",
+    "codigo": "18272",
+    "descricao": "CHA ERVA DOCE MATE LEAO CX10UNI",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18272.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexz8srtp7g",
+    "codigo": "18277",
+    "descricao": "CHA HORTELA MATE LEAO CX10UNI",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18277.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueef44dq58nm",
+    "codigo": "16672",
+    "descricao": "CHANTILLY BAUNILHA 1KG LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16672.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezbgsm5e90",
+    "codigo": "17674",
+    "descricao": "CHANTILLY BRAVO CREM SUPREMO 1KG (12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17674.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegsy61v888",
+    "codigo": "16673",
+    "descricao": "CHANTILLY CHOCOLATE 1K LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeb6vs23cla",
+    "codigo": "17124",
+    "descricao": "CHANTILLY CHOCOLATE 1KG LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee642ria2m9",
+    "codigo": "14148",
+    "descricao": "CHANTILLY DECOR ART 1KG (12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14148.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehph4fosz5",
+    "codigo": "16674",
+    "descricao": "CHANTILLY MORANGO 1KG LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueem7y62caj9",
+    "codigo": "16675",
+    "descricao": "CHANTILLY NATA 1KG LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueensb1jo1jt",
+    "codigo": "16676",
+    "descricao": "CHANTILLY SUAVE 1KG LEDEVIT",
+    "fornecedor": "CUNHAPAN DISTRIBUIDORA DE PRODUTOS PARA PANIFICACAO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16676.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueew9bnwka1q",
+    "codigo": "14832",
+    "descricao": "CHANTILY MONNA LISA CX 1K(12) AV50AB",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecbjf5m6r0",
+    "codigo": "14151",
+    "descricao": "CHANTILY MONNA LISA DELUXE CX 1K(12 51AC",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14151.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea4a72oo9s",
+    "codigo": "16179",
+    "descricao": "CHICAGO PIZZA CALABRESA CX 12X190G ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16179.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedxg8viyq6",
+    "codigo": "16178",
+    "descricao": "CHICAGO PIZZA FRANGO CX 12X190G ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16178.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezv8n7pmi3",
+    "codigo": "14890",
+    "descricao": "CHOC CARAVEL NOCCIOL FORN AVELA BD 20KG",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewu7253a84",
+    "codigo": "14293",
+    "descricao": "CHOC CARAVELLA GOT AM FORN CX 10K 49A FL",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14293.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee2o1refkt6",
+    "codigo": "14152",
+    "descricao": "CHOC CARAVELLA NOCCI FOR AVELA BD 5KG FL",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14152.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueebcjn47kh1",
+    "codigo": "15689",
+    "descricao": "CHOCO GRANULADO CROCAN MAURI 1,05KG (10)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\156890.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee05lcttks0",
+    "codigo": "15688",
+    "descricao": "CHOCO GRANULADO MACIO MAURI 1,05KG (10)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15688.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehhwfzaevv",
+    "codigo": "14733",
+    "descricao": "COADOR FIO DE OVOS INOX C/3 BICOS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14733.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8bv6dle65",
+    "codigo": "17638",
+    "descricao": "COBERTURA PASCAL C100 (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17638.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexpqbvlcya",
+    "codigo": "14763",
+    "descricao": "COLHER DE CREME (POLIAMIDA) 30CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14763.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefkt43ftir",
+    "codigo": "14487",
+    "descricao": "COLHER DE CREME (POLIAMIDA) 35CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14487.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9r4o7jnvz",
+    "codigo": "13714",
+    "descricao": "COLORIFICO COMUM 1KG (10)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13714.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefbp4vzsov",
+    "codigo": "15355",
+    "descricao": "COMPOSTO LACTEO CULINARIO 1,0KG (10)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqqkz5i12u",
+    "codigo": "14917",
+    "descricao": "COMPOSTO LACTEO ITAMBE CL 7000 25K",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruees1s3fwesv",
+    "codigo": "14700",
+    "descricao": "COMPOSTO LACTEO ITAMBE CL3000 25KG",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14700.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewv1k78ux3",
+    "codigo": "15172",
+    "descricao": "COMPOSTO LACTEO ITAMBE CL3000 25KG",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14700.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee38py9c4yp",
+    "codigo": "14833",
+    "descricao": "COMPOSTO LACTEO ITAMBE CL8080 25KG FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14833.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevyuruza4e",
+    "codigo": "14697",
+    "descricao": "COMPOSTO LACTEO PANIF. ITAMBE 1KG(10)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14697.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueee9apm54f0",
+    "codigo": "14696",
+    "descricao": "COMPOSTO LACTEO PROF. ITAMBE 1KG (10)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14696.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5ice1uc2u",
+    "codigo": "14489",
+    "descricao": "CONCHA CEREAIS INOX 1000G",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14489.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesg5v5jytu",
+    "codigo": "14488",
+    "descricao": "CONCHA CEREAIS INOX 500G",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14488.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9qr9n5ykg",
+    "codigo": "13712",
+    "descricao": "COND.CURCUMA 1KG (10)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13712.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeyi3rwykhn",
+    "codigo": "18487",
+    "descricao": "COOKIE C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1vni8kn86",
+    "codigo": "14741",
+    "descricao": "CORTADOR PETIT FLOUR CORAC. INOX PCT C/4",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3zdxdcurk",
+    "codigo": "15193",
+    "descricao": "CR CHANTILLY SELECT MAURI 1L (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15193.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueectxxoxp7j",
+    "codigo": "16917",
+    "descricao": "CREME CHANTILLY CHOC 1,1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeckzdczrzy",
+    "codigo": "17964",
+    "descricao": "CREME CHANTILLY TRAD FLEISCHMANN 1L",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17964.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefo6udlwqv",
+    "codigo": "15192",
+    "descricao": "CREME CHANTILLY TRAD GRAN FINALE 1L",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15192.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueek3xaxckmh",
+    "codigo": "17791",
+    "descricao": "CREME CONFEITEIRO PCT C/800G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17791.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqlap6idgu",
+    "codigo": "7126",
+    "descricao": "CREME CONFEITEIRO PREMIUM GOLDEN SACO 2K",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7126.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4pqyjh9tb",
+    "codigo": "17560",
+    "descricao": "CREME CULINARIO BRAVO 1KG (12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17560.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetaudyedu9",
+    "codigo": "14694",
+    "descricao": "CREME DE LEITE ITAMBE 17% 1,01KG (12)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14694.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegu5u5dnut",
+    "codigo": "14772",
+    "descricao": "CREME DE LEITE ITAMBE 25% 1,01KG (12)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14772.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemcehnunwn",
+    "codigo": "16231",
+    "descricao": "CREME QUICHE GOURMET C100 (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16231.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5kimgokzs",
+    "codigo": "14149",
+    "descricao": "CREME VEGETAL MAXIME CHEF 24%G CX 1K(12)",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14149.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueer6h9kcoml",
+    "codigo": "12541",
+    "descricao": "CROISSANT C50 (SACO 10KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12541.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevtaipk4wk",
+    "codigo": "15670",
+    "descricao": "CROISSANT CONGEL CHOCOLATE (SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15670.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehgd4mqjrn",
+    "codigo": "15672",
+    "descricao": "CROISSANT CONGEL FRANGO(SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15672.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevfl7ow1qj",
+    "codigo": "15671",
+    "descricao": "CROISSANT CONGEL GOIABA (SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexfx3v4p8w",
+    "codigo": "16469",
+    "descricao": "CROISSANT CONGEL LANCHE(SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16469.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7jlfekf3s",
+    "codigo": "15673",
+    "descricao": "CROISSANT CONGEL NATURAL (SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15673.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1rc7cmlay",
+    "codigo": "15763",
+    "descricao": "CROISSANT CONGEL QUEI/PRES (SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueengmaq8x1k",
+    "codigo": "15762",
+    "descricao": "CROISSANT CONGEL QUEIJO (SACO 5KG)(2)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea2xmhvvv1",
+    "codigo": "17636",
+    "descricao": "CROISSANT CONGEL TRADICIONAL (CX 240G)",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueerpfdzvfqi",
+    "codigo": "16505",
+    "descricao": "CROISSANT MANTEIGA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16505.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueerwi7yvs1f",
+    "codigo": "7116",
+    "descricao": "CROISSANT PRESTIGE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7116.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee61hdxlvfs",
+    "codigo": "13710",
+    "descricao": "CURRY 500G (20)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13710.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg9xm007wa",
+    "codigo": "7131",
+    "descricao": "DELICATESSE COB CHOC AO LEITE BD 4KG (2)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7131.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenm4zvcr1o",
+    "codigo": "12426",
+    "descricao": "DELICATESSE COB CHOC BRANCO BD 4KG (2)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12426.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeltr9tqr8m",
+    "codigo": "12425",
+    "descricao": "DELICATESSE COB CHOC M.AMARG BD 4KG (2)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12425.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeaddautq7i",
+    "codigo": "12461",
+    "descricao": "DESMOLDANTE SEPA WAX LATA 500ML",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12461.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0jjvxz3fa",
+    "codigo": "18212",
+    "descricao": "DOCE DE LEITE S/AMIDO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18212.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemb90aslzq",
+    "codigo": "18211",
+    "descricao": "DOCE DE LEITE S/AMIDO 4,8KG  BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18211.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueebsegbk6t",
+    "codigo": "14690",
+    "descricao": "DOCE LEITE TRAD. ITAMBE LATA 5KG (4)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14690.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefpb8nrkm3",
+    "codigo": "17357",
+    "descricao": "DONUTS CHOCOLATE DARK CX 24X70 73642",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17357.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueerlr2l7w47",
+    "codigo": "16148",
+    "descricao": "DONUTS COBERT CHOC/CREME CX 24X80G ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueet8cp4rarz",
+    "codigo": "16122",
+    "descricao": "DONUTS COBERT CHOC/CREME CX 24X80G 76537",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16122.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea8pllw15t",
+    "codigo": "16586",
+    "descricao": "DONUTS CORACAO CHOC CX 24X80G 74175",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16586.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeldp6pryu4",
+    "codigo": "17772",
+    "descricao": "DONUTS CORACAO FINI CX 24X80G 74168",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueerjac7gz2q",
+    "codigo": "16124",
+    "descricao": "DONUTS ESP DIAMANTE NEGRO CX 24X70G",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeeqrf9p8cs",
+    "codigo": "16123",
+    "descricao": "DONUTS ESP LAKA CX 24X70G",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16123.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee31f6ak8i9",
+    "codigo": "16766",
+    "descricao": "DONUTS KIT KAT CX 24X70G 76483",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16766.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7ge5kogxm",
+    "codigo": "16767",
+    "descricao": "DONUTS LEITE MOÇA CX 24X70G 72348",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16767.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeylr6bmgoc",
+    "codigo": "16126",
+    "descricao": "DONUTS RECH AVELA/ NUT CX 24X70G 72379",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16126.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8jldf23zs",
+    "codigo": "16109",
+    "descricao": "DONUTS RECH BAV/CREME CX 24X70G 76322",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16109.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueektdhuu7tj",
+    "codigo": "16125",
+    "descricao": "DONUTS RECH CAPPUCCINO CX 24X70G ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeza7prt87r",
+    "codigo": "16120",
+    "descricao": "DONUTS RECH CHOCOLATE CX 24X70G 76308",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16120.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeyork9wly5",
+    "codigo": "16970",
+    "descricao": "DONUTS RECH CHURROS CX 24X70G 72287",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16970.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedx1io9mwq",
+    "codigo": "16119",
+    "descricao": "DONUTS RECH DOCE DE LEIT CX 24X70G 76315",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16119.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee40ihcgpkl",
+    "codigo": "16121",
+    "descricao": "DONUTS RECH FRUTAS VERM CX 24X70G 76339",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16121.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeby6nna66p",
+    "codigo": "16542",
+    "descricao": "DONUTS RECH OURO BRANCO CX 24X70G",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4acga1lgk",
+    "codigo": "16605",
+    "descricao": "DONUTS RECH PACOQUITA CX 24X70G 72560",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16605.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueej8ya9cz42",
+    "codigo": "16783",
+    "descricao": "DONUTS RECH PISTACHE CX 24X70G 73598",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16783.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueel6bj3sepa",
+    "codigo": "16543",
+    "descricao": "DONUTS RECH SONHO DE VALSA CX 24X70G",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4fx7d4eqc",
+    "codigo": "14923",
+    "descricao": "ECLAIR GOLDEN PCT C/600G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14923.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1437wtbv4",
+    "codigo": "14762",
+    "descricao": "ESPANADEIRA PLASTICA P/ BALCAO",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14762.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeyz12j9js7",
+    "codigo": "14841",
+    "descricao": "ESPATULA (INOX) 30CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewl9sf9ni4",
+    "codigo": "14842",
+    "descricao": "ESPATULA C/ DEGRAUS (INOX) 25CM SO DE LA",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeliz2i8q43",
+    "codigo": "14767",
+    "descricao": "FACA FIO ONDULADO (INOX) 14 / 35 CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14767.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeftqttnxcq",
+    "codigo": "15168",
+    "descricao": "FERMENT SECO LESAFFRE IND MD 10KG",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15168.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesorpuwow0",
+    "codigo": "15169",
+    "descricao": "FERMENT SECO LESAFFRE IND PAES CONG 10KG",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\15169.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueebmmjaxifm",
+    "codigo": "15167",
+    "descricao": "FERMENTO BIO INST FERMIPAN 500G MD (20)",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15167.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee69vr484ui",
+    "codigo": "17349",
+    "descricao": "FERMENTO BIO INST FERMIPAN 500G MS (20)",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15167.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee27zdsvnzg",
+    "codigo": "16286",
+    "descricao": "FERMENTO INST M DOCE FORNATTA 500G (20)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16286.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueew4t9pajtz",
+    "codigo": "15195",
+    "descricao": "FERMENTO INST M DOCE MAURIPAN 500G (20)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\15195.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5jjlu81xm",
+    "codigo": "15194",
+    "descricao": "FERMENTO INST M SALGA FORNATTA 500G (20)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15194.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueez6cji3b48",
+    "codigo": "16287",
+    "descricao": "FERMENTO INST M SALGA FORNATTA 500G (20)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee377wku2gt",
+    "codigo": "15424",
+    "descricao": "FERMENTO INST MAURI 4 DISPLAY X 68X10G",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeaqafryczm",
+    "codigo": "15423",
+    "descricao": "FERMENTO INST MAURI 64X125G",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\15423.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5hbbx1hdz",
+    "codigo": "17788",
+    "descricao": "FERMENTO PO QUIMICO FLEISCHMANN 2KG (10)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17788.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5cy93ovnt",
+    "codigo": "17690",
+    "descricao": "FERMENTO PO QUIMICO GOLDEN TRIEB 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17690.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueensmrhvfeu",
+    "codigo": "15196",
+    "descricao": "FERMENTO PÓ QUÍMICO MAURI 2KG (10)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15196.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4345ygrjh",
+    "codigo": "14083",
+    "descricao": "FERMENTO QUIMICO EM PO CX 2KG(10) RICONI",
+    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14083.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecghuridwv",
+    "codigo": "14723",
+    "descricao": "FERMENTO SEC INST C/500G (20)ANGEST SALG",
+    "fornecedor": "FESTPAN ALIMENTOS IMP.E EXP LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8vnhxw079",
+    "codigo": "14263",
+    "descricao": "FERMENTO SECO INST C/500G (20)ANGEST DOC",
+    "fornecedor": "FESTPAN ALIMENTOS IMP.E EXP LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14263.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeawm84scln",
+    "codigo": "13785",
+    "descricao": "FOCACCIA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13785.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1exexqxcv",
+    "codigo": "15208",
+    "descricao": "FONDANT MAURI 2KG (6)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15208.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqd12tkv51",
+    "codigo": "14839",
+    "descricao": "FORMA ART. CORACAO MD (ALUM) 29,5X7CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeve76xixwg",
+    "codigo": "14840",
+    "descricao": "FORMA ART. MARG. C/8 GOMOS (ALUM) 27X7CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueekjt4zqua6",
+    "codigo": "14768",
+    "descricao": "FORMA ARTIST. CORACAO PQ (ALUM) 25,3X7CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqi5npgkqc",
+    "codigo": "14490",
+    "descricao": "FORMA BOLO INGLES ALUMINIO 21X9X4,5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14490.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecfumzkko8",
+    "codigo": "12964",
+    "descricao": "FORMA CALHA RETANGULAR ALUMINIO 45X5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12964.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexyq1s7x3h",
+    "codigo": "14735",
+    "descricao": "FORMA COPO DE GELO 10,2X5CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14735.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueen0ira3yb3",
+    "codigo": "14736",
+    "descricao": "FORMA COPO DE GELO 7X3,5CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14736.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeowk2i1ctd",
+    "codigo": "14523",
+    "descricao": "FORMA CUPCAKE GR 12 (ALUM) 35,5X26,5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14523.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5mo33cier",
+    "codigo": "14739",
+    "descricao": "FORMA CUPCAKE GR 12 C/ANT. 35,4X27X3",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueema2mm9w9i",
+    "codigo": "14491",
+    "descricao": "FORMA CUPCAKE PEQ ALUMINIO 12 CAVIDADES",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14491.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueef1oe5okxt",
+    "codigo": "12959",
+    "descricao": "FORMA CUPCAKE PEQUENO COM 24 CAVIDADES",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12959.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueen7da59ihr",
+    "codigo": "14499",
+    "descricao": "FORMA EMPAD LISA NR.4 ALU 5X2,6X6,8 C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14499.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehpv84lsy4",
+    "codigo": "14492",
+    "descricao": "FORMA P. FORMA BABY C/TAMPA (ALUM) 22X10",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14492.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg7p9y4qjq",
+    "codigo": "15764",
+    "descricao": "FORMA PANDORO ALUMINIO 9,5X14X24CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15764.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenzph189lo",
+    "codigo": "12973",
+    "descricao": "FORMA PAO CENTEIO (ALUM) 20,5X9,8X6,6",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12973.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0xhmq6ojd",
+    "codigo": "14734",
+    "descricao": "FORMA PAO DE FORMA (ALUM) 30X10X10",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexfhvmwz9s",
+    "codigo": "14500",
+    "descricao": "FORMA PETIT GATEAU ALUMINIO 6,5X6CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14500.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeacmkemovt",
+    "codigo": "14493",
+    "descricao": "FORMA PIZZA (ALUM) 30X1,5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14493.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9j7eus38e",
+    "codigo": "14617",
+    "descricao": "FORMA PIZZA ALUMINIO 25CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14617.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueec283zse0p",
+    "codigo": "14618",
+    "descricao": "FORMA PIZZA ALUMINIO 35CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14618.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee6s0hieprg",
+    "codigo": "12081",
+    "descricao": "FORMA PUDIM TORTA SUICA ALUM 13X6CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12081.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg9j8b50rn",
+    "codigo": "13185",
+    "descricao": "FORMA PUDIM TORTA SUICA ALUM 13X8CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13185.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeh9vancvdk",
+    "codigo": "14502",
+    "descricao": "FORMA QUINDIM ALUMINIO 5,1CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14502.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefos61eh3b",
+    "codigo": "14501",
+    "descricao": "FORMA QUINDIM ALUMINIO 5,8CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14501.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4o3yddzpt",
+    "codigo": "14503",
+    "descricao": "FORMA QUINDIM MINI ALUMINIO 3,7CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14503.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewjg4o6dkw",
+    "codigo": "14494",
+    "descricao": "FORMA REBAIXADA BALLERINE ALUM 18,5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14494.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9ihxcdcqp",
+    "codigo": "12834",
+    "descricao": "FORMA STOLEN 300GR PT C/50",
+    "fornecedor": "ALUMIFORMAS -PEDRO ROBERTO REZENDE ME",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12834.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8vlfvtbmn",
+    "codigo": "14495",
+    "descricao": "FORMA TORTA SUICA (ALUM) 15X8X19",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14495.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7ld31gixx",
+    "codigo": "14524",
+    "descricao": "FORMA TORTA SUICA (ALUM) 17X8X19,4",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14524.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeu19ea8kby",
+    "codigo": "14496",
+    "descricao": "FORMA TORTA SUICA (ALUM) 18X8X21",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14496.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemjylx0ffe",
+    "codigo": "14497",
+    "descricao": "FORMINHA ALUMINIO EMPADA LISA N1 C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14497.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueep44kqsa9m",
+    "codigo": "14498",
+    "descricao": "FORMINHA ALUMINIO EMPADA LISA N3 C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14498.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4qswwonjd",
+    "codigo": "14764",
+    "descricao": "FORMINHA EMPADA CRESPA N3 7,4X2,2CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14764.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeo7aznsr3u",
+    "codigo": "14766",
+    "descricao": "FORMINHA EMPADA LISA N5 9X3,2CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14766.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesdc15zqwi",
+    "codigo": "12974",
+    "descricao": "FORMINHA MODELO LUNA ALUM 8X4,3CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12974.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecmmvef6fj",
+    "codigo": "14737",
+    "descricao": "FORMINHA REBAIXADA ALUMINIO 9X2,9CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14737.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecjm9p8gk2",
+    "codigo": "14765",
+    "descricao": "FORMINHA TORTA MACA CRESPA 7,6CM C/12",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14765.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4y6l2zl98",
+    "codigo": "14770",
+    "descricao": "FRIGGITUTTO ÓLEO DE PALMA SC 10L ",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezq5vq366t",
+    "codigo": "14799",
+    "descricao": "FRUTAS CRISTALIZADAS PEROLA 10KG FL",
+    "fornecedor": "SS ALIMENTOS INDUSTRIA E COMERCIO - PEROLA SS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueepwb2uy61o",
+    "codigo": "18208",
+    "descricao": "GELEIA ABACAXI C/PIMENTA 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18208.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee6apo2r0jm",
+    "codigo": "14211",
+    "descricao": "GELEIA BRILHO MARACUJA P/COBERTURA 4,3KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14211.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeutidgqv70",
+    "codigo": "15210",
+    "descricao": "GELEIA BRILHO NEUTRA MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15210.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3f0s0etgv",
+    "codigo": "14141",
+    "descricao": "GELEIA BRILHO NEUTRA P/COBERT 4,3KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14141.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehauye9a0q",
+    "codigo": "14142",
+    "descricao": "GELEIA BRILHO VERMELHA P/COBERT 4,3KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14142.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3jtrjkpwv",
+    "codigo": "18209",
+    "descricao": "GELEIA PIMENTA VERMELHA 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18209.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesj8f9ood8",
+    "codigo": "12418",
+    "descricao": "GOLDEN PAO DE LO SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12418.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegwjxvhryn",
+    "codigo": "7125",
+    "descricao": "GOLDEN SCHOKO PAO DE LO SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7125.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0jph58uqz",
+    "codigo": "16291",
+    "descricao": "GRANO BRIOCHE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16291.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueejkxztpn5j",
+    "codigo": "16304",
+    "descricao": "GRANO CAKE SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16304.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqn9m8a0oo",
+    "codigo": "12432",
+    "descricao": "GRANO PAO FRANCES C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12432.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqon0aw07g",
+    "codigo": "14504",
+    "descricao": "JOGO CORTADOR ESFIHA COM 4 PEÇAS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14504.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeos8ky4ptk",
+    "codigo": "14507",
+    "descricao": "JOGO CORTADOR QUAD LISO INOX C/7 PEÇAS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14507.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewh1t7u57x",
+    "codigo": "14750",
+    "descricao": "JOGO CORTADOR QUAD LISO/CRESPO PLAST C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14750.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeethl9jrd4",
+    "codigo": "14740",
+    "descricao": "JOGO CORTADOR RED LISO/CRESPO PLAST C/6",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14740.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee2c73zxrjw",
+    "codigo": "14508",
+    "descricao": "JOGO CORTADOR REDOND LISO INOX C/7 PEÇAS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14508.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehm90i6xep",
+    "codigo": "12969",
+    "descricao": "JOGO CORTADOR SEXTAVADO INOX C/5",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12969.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee02llaa5vm",
+    "codigo": "14505",
+    "descricao": "JOGO PETIT FOUR INOX C/20 PEÇAS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14505.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueem2yfl3jq1",
+    "codigo": "14506",
+    "descricao": "JOGO PETIT FOUR MINI INOX C/13 PEÇAS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14506.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemienn5lua",
+    "codigo": "14518",
+    "descricao": "KIT EJETOR FOLHAS PLASTICO C/3 TAMANHOS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14518.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeipf73qwlq",
+    "codigo": "14519",
+    "descricao": "KIT EJETOR FOLHAS PLASTICO C/4 TAMANHOS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14519.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexcy67ui5w",
+    "codigo": "14742",
+    "descricao": "KIT ESTECAS PLASTICO C/14 ITENS",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14742.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7igm0i7qa",
+    "codigo": "15760",
+    "descricao": "LE PAIN BRIOCHE (SACO 10X2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15760.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueehm5fvvvqa",
+    "codigo": "7115",
+    "descricao": "LE PAIN BRIOCHE C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7115.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueepdtlyh6bg",
+    "codigo": "15434",
+    "descricao": "LE PAIN BRIOCHE C20 SACO 15KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15434.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueed2j9plvcj",
+    "codigo": "14134",
+    "descricao": "LE PAIN BRIOCHE C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14134.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7tzqyzr26",
+    "codigo": "11723",
+    "descricao": "LE PAIN BRIOCHE INTEGRAL (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\11723.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeefmod9s7v",
+    "codigo": "15171",
+    "descricao": "LEITE CONDENSADO ITAMBE BAG 5KG (2)",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14693.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeovkx9tufu",
+    "codigo": "14693",
+    "descricao": "LEITE CONDENSADO ITAMBE BAG 5KG (2)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14693.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4hnmenuw8",
+    "codigo": "14692",
+    "descricao": "LEITE CONDENSADO ITAMBE LATA 5KG (4)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14692.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeozfb7c0hm",
+    "codigo": "15173",
+    "descricao": "LEITE EM PO DESNATADO SC 25KG FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemc4snudab",
+    "codigo": "14921",
+    "descricao": "LIVRO IREKS",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14921.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5jdln4qxr",
+    "codigo": "13024",
+    "descricao": "MAIONESE HELLMANS  SC 6X3KG ",
+    "fornecedor": "GARRA ATACADO E DISTRIBUIDOR DE ALIMENTOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13024.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueek8k5lkgxj",
+    "codigo": "14433",
+    "descricao": "MALTE AROMA NATURAL REALCA SABOR C/500G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14433.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueext39xbyxw",
+    "codigo": "13395",
+    "descricao": "MALTE CARAMEL COR E AROMA NATURAL C/500",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13395.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee84z3pdn7h",
+    "codigo": "13505",
+    "descricao": "MALTE DARK AROMA TOSTADO NATUAL C/500G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13505.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3dlvpyygp",
+    "codigo": "14738",
+    "descricao": "MARCADOR DE TORTA PED  (INOX) 28CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee32xv07hv9",
+    "codigo": "14146",
+    "descricao": "MARG MAXIME FOLHADA PLACA 2KG(5)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14146.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecyye0xb1a",
+    "codigo": "14919",
+    "descricao": "MARG.VEGETAL PLAIA FOLHADA 20KG FL",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueelc03s9wc0",
+    "codigo": "17206",
+    "descricao": "MASSA FOLHADA 1,5MM RL C/2,2KG",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17206.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeuvrxxdvih",
+    "codigo": "15668",
+    "descricao": "MASSA FOLHADA 3MM RL C/2,2KG (8)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15668.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezwdxnq3ze",
+    "codigo": "15851",
+    "descricao": "MASSA FOLHADA TRADICIONAL RL C/1KG",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1d049jh1v",
+    "codigo": "13396",
+    "descricao": "MASSA MADRE TRIGO S40 C/500G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13396.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeh5zrukerm",
+    "codigo": "16525",
+    "descricao": "MASSA MADRE TRIGO W200 12,500KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5oen248ig",
+    "codigo": "15849",
+    "descricao": "MASSA NEUTRA TORTA 2,5MM RL C/2,2KG",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemkmz8v7oq",
+    "codigo": "15978",
+    "descricao": "MASSA P/TORTA RL C/2,2KG (8)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15978.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee6h1brm1b3",
+    "codigo": "17356",
+    "descricao": "MASSA SEM FOLHADA P/EMP DOCE MAR C/2KG",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeouu6nqost",
+    "codigo": "16208",
+    "descricao": "MASSA SEMI FOLHADA C/1KG(16)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevtyeruhwm",
+    "codigo": "15669",
+    "descricao": "MASSA SEMI FOLHADA C/2KG (8)",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15669.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5g0heq9ea",
+    "codigo": "15850",
+    "descricao": "MASSA SEMI FOLHADA ESPECIAL RL C/2,2KG",
+    "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueecvk1x34bd",
+    "codigo": "17803",
+    "descricao": "MASTER SHINE 1L (12)",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17803.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5e0igtzpf",
+    "codigo": "15170",
+    "descricao": "MELHOR FARINH MAGIMIX PLUS 5KG (40X125G)",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\15170.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetc737i73k",
+    "codigo": "15252",
+    "descricao": "MELHOR FARINH MAGIMIX PLUS CX5KG 40X125G",
+    "fornecedor": "LESAFFRE DO BRASIL PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\15170.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexq7invhsa",
+    "codigo": "15198",
+    "descricao": "MELHORADOR FARINHA MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15198.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeys6vpws8n",
+    "codigo": "18429",
+    "descricao": "MELHORADOR FROST LM SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeu2tsk66ef",
+    "codigo": "16710",
+    "descricao": "MELHORADOR FROST POWER SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16710.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee5cdwtj9bh",
+    "codigo": "18260",
+    "descricao": "MELHORADOR IDEAL FLEX PCT C/500G",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18260.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee403q86rxl",
+    "codigo": "13433",
+    "descricao": "MELHORADOR IDEAL FROST SACO 20KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13433.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeaynjyy3yj",
+    "codigo": "16499",
+    "descricao": "MELHORADOR IDEAL LIFE C SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16499.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9fduwifjg",
+    "codigo": "13434",
+    "descricao": "MELHORADOR IDEAL LIFE SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13434.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegs59e4twe",
+    "codigo": "13435",
+    "descricao": "MELHORADOR IDEAL PLUS V (SACO 15KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13435.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueex6pkpt2gd",
+    "codigo": "16268",
+    "descricao": "MELHORADOR IDEAL UNI SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16268.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueek99o033by",
+    "codigo": "17862",
+    "descricao": "MELHORADOR IDEAL UNI SC10 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17862.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegajkdg9zc",
+    "codigo": "17844",
+    "descricao": "MELHORADOR NATURAL MALTE X 70 SC 20KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg1p5yb2ui",
+    "codigo": "15862",
+    "descricao": "MELHORADOR STABILASE SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15862.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee74u9o6iyk",
+    "codigo": "17689",
+    "descricao": "MELHORADOR SUAVEMIX SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17689.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9kgmpoosi",
+    "codigo": "16234",
+    "descricao": "MINI DONUTS RECH BAV/CREME CX 72X15G 453",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16234.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezfen7iks3",
+    "codigo": "16236",
+    "descricao": "MINI DONUTS RECH CHOCOLA CX 72X15G 9460",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16236.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueey036y2dub",
+    "codigo": "16237",
+    "descricao": "MINI DONUTS RECH CHOCOLATE CX 72X15G ",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewvtnlujow",
+    "codigo": "16235",
+    "descricao": "MINI DONUTS RECH DOC LEITE CX 72X15G 477",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16235.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg59h4rkxg",
+    "codigo": "17634",
+    "descricao": "MINI RING COBERT CH PT/BR CX48X15G 74106",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17634.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee54o2vvfgl",
+    "codigo": "17868",
+    "descricao": "MINI RING COBERT CHOC BR CX48 74090",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevsq20laju",
+    "codigo": "17632",
+    "descricao": "MINI RING COBERT CHOC PT CX48X15G 74090",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17632.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeodf088m6r",
+    "codigo": "17633",
+    "descricao": "MINI RING COBERT CHOC ROS CX48X15G 74113",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17633.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee27i2v0dig",
+    "codigo": "17703",
+    "descricao": "MINI RING HOMER CX 48X15G 74137",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17703.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegwarc6x5p",
+    "codigo": "14753",
+    "descricao": "MIRALL CHOC BCO GLAÇAGEM BD 3KG 24ED",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueergt4b7es6",
+    "codigo": "14270",
+    "descricao": "MIRALL CHOC BCO GLAÇAGEM BD 5KG 24AD",
+    "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14270.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeaq9cst0ct",
+    "codigo": "14754",
+    "descricao": "MIRALL CHOC. GLAÇAGEM BD 3KG 23ED",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea1iwt3ptx",
+    "codigo": "14271",
+    "descricao": "MIRALL CHOC. GLAÇAGEM BD 5KG 23AD",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14271.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedp9ehw0f6",
+    "codigo": "14716",
+    "descricao": "MIRALL MORANGO GLAÇAGEM BD 3KG",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeutgqc0qtn",
+    "codigo": "14272",
+    "descricao": "MIRALL MORANGO GLAÇAGEM BD 5KG",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14272.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqpqy0rapg",
+    "codigo": "14755",
+    "descricao": "MIRALL NEUTRA GLAÇAGEM BD 3KG",
+    "fornecedor": "ORGAO PUBLICO ",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueey14o4fojo",
+    "codigo": "17781",
+    "descricao": "MIST BOLO AIPIM FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17781.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewwppnriyu",
+    "codigo": "15183",
+    "descricao": "MIST BOLO AIPIM MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15183.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeajjw9n0m0",
+    "codigo": "17808",
+    "descricao": "MIST BOLO CENOURA FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17808.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueef06r5ynqb",
+    "codigo": "15184",
+    "descricao": "MIST BOLO CENOURA MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15184.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0bxph2om9",
+    "codigo": "17782",
+    "descricao": "MIST BOLO CHOCOLATE FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17782.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefcrzexpnc",
+    "codigo": "15185",
+    "descricao": "MIST BOLO CHOCOLATE MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15185.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedjp23a1pe",
+    "codigo": "17783",
+    "descricao": "MIST BOLO COCO FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17783.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetd9rteqbi",
+    "codigo": "15186",
+    "descricao": "MIST BOLO COCO MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15186.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueev41x3kwwp",
+    "codigo": "17789",
+    "descricao": "MIST BOLO LARANJA FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17789.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea4piykfm8",
+    "codigo": "15187",
+    "descricao": "MIST BOLO LARANJA MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeth6elveod",
+    "codigo": "17785",
+    "descricao": "MIST BOLO MILHO FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17785.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeutooez9vw",
+    "codigo": "15188",
+    "descricao": "MIST BOLO MILHO MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15188.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefjg6aj6pg",
+    "codigo": "15189",
+    "descricao": "MIST BOLO NEUTRO MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15189.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevvndf3mfd",
+    "codigo": "15590",
+    "descricao": "MIST BOLO PAO LO CHOC MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15590.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueec8inhlvn9",
+    "codigo": "15589",
+    "descricao": "MIST BOLO PAO LO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetu3e3yxah",
+    "codigo": "17807",
+    "descricao": "MIST BRIOCHE FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17807.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueep3sscjjk5",
+    "codigo": "15201",
+    "descricao": "MIST BRIOCHE MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15201.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee3em6j3egi",
+    "codigo": "17786",
+    "descricao": "MIST CAKE CHOCOLATE FLEISCHMANN 3KG (5)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17786.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegtrdtw2kf",
+    "codigo": "15190",
+    "descricao": "MIST CAKE CHOCOLATE MAURI 3KG (5)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15190.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueees5e9hspb",
+    "codigo": "17787",
+    "descricao": "MIST CAKE NEUTRO FLEISCHMANN 3KG (5)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17787.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemrp54j7qk",
+    "codigo": "15191",
+    "descricao": "MIST CAKE NEUTRO MAURI 3KG (5)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15191.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee0mm5m85n6",
+    "codigo": "15651",
+    "descricao": "MIST CAKEMOUSSE BRULE 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueezrrrudltb",
+    "codigo": "15647",
+    "descricao": "MIST CAKEMOUSSE CHOC INTEN MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee4vel5wiai",
+    "codigo": "15652",
+    "descricao": "MIST CAKEMOUSSE COCO 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeen8tmp0wq",
+    "codigo": "15648",
+    "descricao": "MIST CAKEMOUSSE LEITE COND 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeurrqklrkd",
+    "codigo": "15649",
+    "descricao": "MIST CAKEMOUSSE MARACUJA 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeszkd3uswb",
+    "codigo": "15650",
+    "descricao": "MIST CAKEMOUSSE PAMONHA 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeujwfx11gi",
+    "codigo": "15221",
+    "descricao": "MIST CHIPA MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15221.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee00huxyrsc",
+    "codigo": "15330",
+    "descricao": "MIST CREME RECHEIO MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15330.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueea8t37l9oa",
+    "codigo": "13453",
+    "descricao": "MIST P/CHIPA C80 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13453.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueex2a6sqvnd",
+    "codigo": "17277",
+    "descricao": "MIST P/CHIPA SACO 20KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17277.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee49cz4apx3",
+    "codigo": "12927",
+    "descricao": "MIST P/DONUTS C50 SACO 2K",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12927.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee52tascx22",
+    "codigo": "17088",
+    "descricao": "MIST P/MON MACARON PCT C/1KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17088.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefji33ufds",
+    "codigo": "15203",
+    "descricao": "MIST PAO DE BATATA MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15203.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee1mbhap99b",
+    "codigo": "15209",
+    "descricao": "MIST PAO DE QUEIJO MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15209.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueet6smpkx3h",
+    "codigo": "15205",
+    "descricao": "MIST PAO LEVE INTEGRAL MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15205.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeccalyc00h",
+    "codigo": "15204",
+    "descricao": "MIST PAO LEVE INTEGRAL MAURI KIT 2X5KG",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15204.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee53hgcogpi",
+    "codigo": "15206",
+    "descricao": "MIST PAO LEVE MULTIGRAO MAURI KIT 2X5KG",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15206.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueebw4pn3vzp",
+    "codigo": "17869",
+    "descricao": "MIST PAO MULTIMIX FLEISCHMANN 1KG",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueev11yd48lp",
+    "codigo": "17784",
+    "descricao": "MIST PAO MULTIMIX FLEISCHMANN 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17784.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeu5q2i9o6w",
+    "codigo": "17136",
+    "descricao": "MIST PAO MULTIUSO MAURI 1KG",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee2vxxk54a4",
+    "codigo": "15202",
+    "descricao": "MIST PAO MULTIUSO MAURI 5KG (3)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15202.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegu0lrul13",
+    "codigo": "17691",
+    "descricao": "MIST SCHOKO MALTE SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17691.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9di8khqlz",
+    "codigo": "15207",
+    "descricao": "MISTURA P/ CHIPA MAURI 1KG (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7gmyh456y",
+    "codigo": "7472",
+    "descricao": "MISTURA P/ MON MACARON PCT C/ 1KG (10)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7472.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegd63t4eh4",
+    "codigo": "16743",
+    "descricao": "MISTURA P/ PANETONE GOLDEN S (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16743.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedyewmb4pi",
+    "codigo": "12431",
+    "descricao": "MISTURA P/ PAO DOCE C33 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12431.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqlfhu3s7p",
+    "codigo": "14648",
+    "descricao": "MIX MACIO PCT C/ 500G (20)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14648.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevrioricfr",
+    "codigo": "11929",
+    "descricao": "MOLHO DE TOMATE TRADICIONAL (E)",
+    "fornecedor": "GOIAS VERDE ALIMENTOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\11929.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevbfcoy7x7",
+    "codigo": "16210",
+    "descricao": "MOLHO DE TOMATE TRADICIONAL (E)",
+    "fornecedor": "GOIAS VERDE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16210.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueelnsldk377",
+    "codigo": "12268",
+    "descricao": "MOSTARDA HELLMANNS 8GR CX 154",
+    "fornecedor": "GARRA ATACADO E DISTRIBUIDOR DE ALIMENTOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\12268.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexnpebgx22",
+    "codigo": "16180",
+    "descricao": "MUFFIN BAUNILHA CX 15X80G 76032",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16180.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueewn9nugou8",
+    "codigo": "18486",
+    "descricao": "MUFFIN C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee7bqgy6lkf",
+    "codigo": "16182",
+    "descricao": "MUFFIN CHOCOLATE C/GOTAS CX 15X80G 76025",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16182.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee10jsspa1v",
+    "codigo": "16181",
+    "descricao": "MUFFIN RED VELVET CX 15X80G 76056",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16181.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueemeber1cto",
+    "codigo": "13757",
+    "descricao": "OREGANO 1KG ",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\13757.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueez0jgn5vad",
+    "codigo": "13721",
+    "descricao": "OREGANO FLOCOS 200G (25)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\13721.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeszm5exccc",
+    "codigo": "15200",
+    "descricao": "OVOMALTINE CHOC CREME CROCANTE 660G (6)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15200.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueen9u3syii7",
+    "codigo": "15222",
+    "descricao": "OVOMALTINE CHOC CREME CROCANTE 660G (6)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee19v3ime87",
+    "codigo": "15199",
+    "descricao": "OVOMALTINE CHOC FLOCO CROCANTE 750G (12)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15199.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeufio1hhd6",
+    "codigo": "17000",
+    "descricao": "PAMONHA DOCE C/COCO",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueefgamwell3",
+    "codigo": "17072",
+    "descricao": "PAMONHA DOCE C/COCO C/10",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeg4blmnamw",
+    "codigo": "17082",
+    "descricao": "PAMONHA DOCE C/COCO C/50",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenam7djapg",
+    "codigo": "17001",
+    "descricao": "PAMONHA DOCE C/QUEIJO",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9kaks1ga2",
+    "codigo": "17071",
+    "descricao": "PAMONHA DOCE C/QUEIJO C/10",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueey57766i0e",
+    "codigo": "17083",
+    "descricao": "PAMONHA DOCE C/QUEIJO C/50",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueep7qbgkwpc",
+    "codigo": "17003",
+    "descricao": "PAMONHA SALGADA C/LINGUICA",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueekh4rneeun",
+    "codigo": "17073",
+    "descricao": "PAMONHA SALGADA C/LINGUICA C/10",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenzsmc91in",
+    "codigo": "17084",
+    "descricao": "PAMONHA SALGADA C/LINGUICA C/50",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeuvtfr1bkf",
+    "codigo": "17004",
+    "descricao": "PAMONHA SALGADA C/QUEIJO",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9jznnrsq7",
+    "codigo": "17074",
+    "descricao": "PAMONHA SALGADA C/QUEIJO C/10",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeh0uuemig8",
+    "codigo": "17085",
+    "descricao": "PAMONHA SALGADA C/QUEIJO C/50",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueejehzk1etz",
+    "codigo": "17002",
+    "descricao": "PAMONHA SALGADA TEMPERADA",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeayhndvfl6",
+    "codigo": "17075",
+    "descricao": "PAMONHA SALGADA TEMPERADA C/10",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueevb1ugozv3",
+    "codigo": "17086",
+    "descricao": "PAMONHA SALGADA TEMPERADA C/50",
+    "fornecedor": "BRASIL VERDE COMERCIO VAREJISTA E ATACADISTA DE PAMONHAS LTD",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueexmebo1ym4",
+    "codigo": "14216",
+    "descricao": "PANETONE C10 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14216.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueedpzyjixmq",
+    "codigo": "18431",
+    "descricao": "PANETONE C10 SC10 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18431.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueenppibijgp",
+    "codigo": "17863",
+    "descricao": "PANETONE C10 SC10 SACO 5KG (TESTE)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17863.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeza7oci27u",
+    "codigo": "7267",
+    "descricao": "PANETONE GOLDEN S C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7267.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeqgn1hjgvz",
+    "codigo": "16745",
+    "descricao": "PANETONE LIEVITO MADRE C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16745.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeiw2r8k1go",
+    "codigo": "14924",
+    "descricao": "PAO 100% INTEGR CAST E ESPELT (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14924.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueetj39xmup2",
+    "codigo": "17354",
+    "descricao": "PAO 12 GRAOS LV ZERO ACUCAR (SC 12,5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17354.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueesvueah3kn",
+    "codigo": "16140",
+    "descricao": "PAO AUSTRALIANO C10 (SACO 10KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16140_1.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee43jt2vai1",
+    "codigo": "14789",
+    "descricao": "PAO AUSTRALIANO C10 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14789.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeq9ej7gb6b",
+    "codigo": "7119",
+    "descricao": "PAO AUSTRALIANO CLASSICO SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7119.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueegzvx6pvc1",
+    "codigo": "16141",
+    "descricao": "PAO AUSTRALIANO INTEGRAL C100 SC 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16141.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueeztpv2cr1u",
+    "codigo": "13830",
+    "descricao": "PAO AUSTRALIANO S C100 SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13830.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueey2kd734n7",
+    "codigo": "14520",
+    "descricao": "PAO AUSTRALIANO S C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14520.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitrueer51kj5ndt",
+    "codigo": "17716",
+    "descricao": "PAO CASEIRO C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17716.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9eerr2bfm",
+    "codigo": "7113",
+    "descricao": "PAO CIABATTA CLASSICA MM C100 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7113.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee8dv7lbu1e",
+    "codigo": "18289",
+    "descricao": "PAO CIABATTA CLASSICA MM C50 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18289.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruee9okzky2au",
+    "codigo": "17693",
+    "descricao": "PAO DA FAZENDA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17693.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.318Z"
+  },
+  {
+    "id": "moitruefbjir0iais",
+    "codigo": "12208",
+    "descricao": "PAO DE ABOBORA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12208.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefh8kje1p8k",
+    "codigo": "17861",
+    "descricao": "PAO DE BATATA C20 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17861.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef9yy5rskso",
+    "codigo": "13281",
+    "descricao": "PAO DE BATATA DOCE C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13281.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefr46yq6b38",
+    "codigo": "7298",
+    "descricao": "PAO DE BATATA ESPECIAL C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7298.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef7a7a7l4h1",
+    "codigo": "12105",
+    "descricao": "PAO DE CENOURA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12105.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefai6zynhmv",
+    "codigo": "14057",
+    "descricao": "PAO DE CEVADA MALT C50 CX 10KG (2X5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14057.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefvxyt9czzd",
+    "codigo": "16518",
+    "descricao": "PAO DE FORMA D10 INTEGRAL SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16518.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefdqrarb6vd",
+    "codigo": "16267",
+    "descricao": "PAO DE FORMA D10 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16267.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefczrdb97tb",
+    "codigo": "17236",
+    "descricao": "PAO DE LEITE C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17236.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef89xrb55sk",
+    "codigo": "15627",
+    "descricao": "PAO DE LEITE D10 (SACO 10KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15627.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueffbg5h57k7",
+    "codigo": "13522",
+    "descricao": "PAO DE LO S/ LACTOSE (SACO 2KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13522.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef52i3gibcp",
+    "codigo": "12433",
+    "descricao": "PAO DE MANDIOQUINHA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12433.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefsn3pw8nwk",
+    "codigo": "12429",
+    "descricao": "PAO DE MILHO ESPECIAL C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12429.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefeitrc5exr",
+    "codigo": "12556",
+    "descricao": "PAO DE OVOS ESPECIAL C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12556.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefbo0c4z11r",
+    "codigo": "12430",
+    "descricao": "PAO DE QUEIJO ORIGINAL SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12430.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefl06rgt82h",
+    "codigo": "15827",
+    "descricao": "PAO DE TAPIOCA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15827.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueftwh4qadho",
+    "codigo": "14922",
+    "descricao": "PAO FRANCES INTEGRAL MM C33 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14922.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2htok80k9",
+    "codigo": "14695",
+    "descricao": "PAO FRANCES MM C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14695.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefp175ef9br",
+    "codigo": "16847",
+    "descricao": "PAO FRANCES TAPIOCA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16847.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefm96rd83zp",
+    "codigo": "17707",
+    "descricao": "PAO HAMBURGUER ARTISANO D10 SC 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17707.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefix51rx13t",
+    "codigo": "17708",
+    "descricao": "PAO HAMBURGUER AUSTRALIANO D10 SC 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17708.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueflqrnwa3ml",
+    "codigo": "17692",
+    "descricao": "PAO HAMBURGUER BRIOCHE D10 SACO 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17692.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef13lep52r9",
+    "codigo": "17709",
+    "descricao": "PAO HAMBURGUER MANDIOQUINH D10 SC 10KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17709.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefbv4yx0bhz",
+    "codigo": "16284",
+    "descricao": "PAO INTEGRAL MULTIGRAOS C100 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16284.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3894zhn1w",
+    "codigo": "16292",
+    "descricao": "PAO INTEGRAL TRADICIONAL C100 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16292.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef93k6ltue8",
+    "codigo": "13402",
+    "descricao": "PAO ITALIANO CLASSICO MM C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13402.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefrmg14flou",
+    "codigo": "7114",
+    "descricao": "PAO ITALIANO CLASSICO MM SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7114.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefywyomww47",
+    "codigo": "17715",
+    "descricao": "PAO NA CHAPA C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17715.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefh0hec62fm",
+    "codigo": "16952",
+    "descricao": "PAO PANE LIEVITO MADRE C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16952.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefrah1rf0ea",
+    "codigo": "17550",
+    "descricao": "PAO PANE LIEVITO MADRE DUO SACO 1KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17550.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefv1dpdxn5h",
+    "codigo": "12250",
+    "descricao": "PAO PORTUGUES MM C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12250.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef5e5ygmdu5",
+    "codigo": "15626",
+    "descricao": "PAO PROVENCAL D10 (SACO 10KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15626.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueflzih22irs",
+    "codigo": "12740",
+    "descricao": "PAO SEM GLUTEN SINGLUPLUS C100 (SC 12KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12740.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefm578blam7",
+    "codigo": "15628",
+    "descricao": "PAO SEM GLUTEN SINGLUPLUS SPECIAL C100",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15628.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefkxxwz4en3",
+    "codigo": "13491",
+    "descricao": "PAO SEMI ITALIANO C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13491.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefnrleklr45",
+    "codigo": "17875",
+    "descricao": "PAO SEMI ITALIANO MM C50 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17875.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefo0tjg8e07",
+    "codigo": "12741",
+    "descricao": "PAO SINGLUPLUS VITAL (SACO 12KG) (E)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12741.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1e0qbo0gh",
+    "codigo": "12727",
+    "descricao": "PAO SOVITAL 100% INTEGRAL (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12727.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhxvegn0mc",
+    "codigo": "13820",
+    "descricao": "PAO SOVITAL AVEIA C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13820.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2qezqj8ee",
+    "codigo": "13824",
+    "descricao": "PAO SOVITAL CENTEIO C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13824.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefklr78s5fg",
+    "codigo": "12103",
+    "descricao": "PAO SOVITAL CHIA (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12103.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefeb5edyevs",
+    "codigo": "13825",
+    "descricao": "PAO SOVITAL FIBRAS C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13825.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefas9eh92uh",
+    "codigo": "13823",
+    "descricao": "PAO SOVITAL INTEG 8 GRAOS C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13823.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef7dz5lx4nv",
+    "codigo": "13821",
+    "descricao": "PAO SOVITAL INTEG MILHO C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13821.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef42pgxb46w",
+    "codigo": "7108",
+    "descricao": "PAO SOVITAL INTEGR AVEIA (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7108.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef0at7fpd2t",
+    "codigo": "14416",
+    "descricao": "PAO SOVITAL INTEGR FIBRAS (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14416.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2adfm9pt4",
+    "codigo": "7106",
+    "descricao": "PAO SOVITAL INTEGR LEVE (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7106.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2k7r7pu06",
+    "codigo": "7109",
+    "descricao": "PAO SOVITAL INTEGR MILHO (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7109.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef6qghdmpmy",
+    "codigo": "7112",
+    "descricao": "PAO SOVITAL INTEGRAL 8 GRAOS (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7112.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef65te93ke6",
+    "codigo": "13818",
+    "descricao": "PAO SOVITAL INTEGRAL C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13818.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefzj7unw39e",
+    "codigo": "7111",
+    "descricao": "PAO SOVITAL INTEGRAL LINHO (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\7111.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef4qllrhyrl",
+    "codigo": "13822",
+    "descricao": "PAO SOVITAL LINHO C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13822.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1znybj58o",
+    "codigo": "12104",
+    "descricao": "PAO SOVITAL QUINOA C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12104.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefk0myi3xxv",
+    "codigo": "13819",
+    "descricao": "PAO SOVITAL SOJA C50 CX 10KG (2X5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13819.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2ag00v7l5",
+    "codigo": "17637",
+    "descricao": "PAO TORRADA CONGEL TRADICIONAL (CX 240G)",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefxd0287vb7",
+    "codigo": "13521",
+    "descricao": "PAO VEGANO C100 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13521.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmwwuo7va7",
+    "codigo": "7105",
+    "descricao": "PAO VENEZA MM C100 SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7105.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefx3v743kjx",
+    "codigo": "14509",
+    "descricao": "PEGADOR DE DOCE C/MOLA (INOX)20CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14509.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef45fihr40v",
+    "codigo": "14510",
+    "descricao": "PEGADOR DE PAO (INOX)",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14510.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefxo7g4xuzs",
+    "codigo": "17314",
+    "descricao": "PETIT GATEAU CHOCOLATE CX 24X80G 79156",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17314.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueft8aj0hjp1",
+    "codigo": "15980",
+    "descricao": "PRESTIGIO NESTLE 33GR  (E) ",
+    "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefjxy5zcrmt",
+    "codigo": "17288",
+    "descricao": "PUDIM DE LEITE COND CONG CX 24X90G 79187",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17288.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefc8f0zj6ul",
+    "codigo": "17606",
+    "descricao": "PUDIM DE LEITE COND CONG CX12X90G 78975",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17606.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefw1u3ft66h",
+    "codigo": "13828",
+    "descricao": "PÃO CRAFT MALTE C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13828.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefui61ibotd",
+    "codigo": "13829",
+    "descricao": "PÃO CRAFT MALTE SOFT C50 (SACO 5KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\13829.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefq3xofkk3y",
+    "codigo": "14511",
+    "descricao": "RASPADEIRA INOX CABO PP C/10CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14511.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefqy4kfp948",
+    "codigo": "14512",
+    "descricao": "RASPADEIRA INOX CABO PP C/11,7CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14512.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueflypzc9rt6",
+    "codigo": "14513",
+    "descricao": "RASPADOR CHOCOLATE MEIA LUA INOX 10CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14513.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefc522cn4hb",
+    "codigo": "14145",
+    "descricao": "REALÇADOR SABOR PANITOP (SACO 10KG)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14145.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef0pkr5bqaj",
+    "codigo": "14699",
+    "descricao": "RECH/COB CHOC BELG LT 1,01KG (12)FL",
+    "fornecedor": "ITAMBE",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14699.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefu4h8x1x1s",
+    "codigo": "17397",
+    "descricao": "RECHEIO ABACAXI 1,01KG",
+    "fornecedor": "MORALLES INDUSTRIA COMERCIO E SERVICOS DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17397.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefuloukw0d7",
+    "codigo": "16565",
+    "descricao": "RECHEIO AMENDOIM 1,01KG 4356",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16565.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1r7m78oto",
+    "codigo": "17512",
+    "descricao": "RECHEIO BANANA CARAMELIZADA 1,01KG",
+    "fornecedor": "MORALLES INDUSTRIA COMERCIO E SERVICOS DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17512.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefxtdsb95cq",
+    "codigo": "15326",
+    "descricao": "RECHEIO BAUNILHA MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15326.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefowql8y5ia",
+    "codigo": "15328",
+    "descricao": "RECHEIO BRIGADEIRO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15328.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefb19537kbe",
+    "codigo": "18226",
+    "descricao": "RECHEIO CAPPUCCINO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18226.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmtj64onsc",
+    "codigo": "18222",
+    "descricao": "RECHEIO CARAMELO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18222.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefwbbigr4bl",
+    "codigo": "16558",
+    "descricao": "RECHEIO CHOC AO LEITE 1,01KG 4358",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16558.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefvz26gss5b",
+    "codigo": "16559",
+    "descricao": "RECHEIO CHOC BCO 1,01KG 4357",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16559.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef8e9cgw49h",
+    "codigo": "16563",
+    "descricao": "RECHEIO CHOC LEITE C/AVELA 1,01KG 4361",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16563.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhazar88qa",
+    "codigo": "16560",
+    "descricao": "RECHEIO CHOC M AMARGO 1,01KG 4359",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16560.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1abc5ny29",
+    "codigo": "16579",
+    "descricao": "RECHEIO CHOCOLATE AO LEITE DOREMUS 1,1KG",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16579.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefg3add188n",
+    "codigo": "15211",
+    "descricao": "RECHEIO CHOCOLATE AO LEITE MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15211.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1cr65m5e7",
+    "codigo": "18220",
+    "descricao": "RECHEIO CHOCOLATE BRIGADEIRO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18220.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefl54yynqw8",
+    "codigo": "18221",
+    "descricao": "RECHEIO CHOCOLATE MEIO AMARGO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18221.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefylwontkio",
+    "codigo": "15327",
+    "descricao": "RECHEIO COCO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15327.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef4xoze59hk",
+    "codigo": "16562",
+    "descricao": "RECHEIO CR COCO BCO C/CAST 1,01KG 4360",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16562.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef5f88k842a",
+    "codigo": "18225",
+    "descricao": "RECHEIO CREME BOMBOM PATISSIER 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18225.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefvwiwm1wj0",
+    "codigo": "17539",
+    "descricao": "RECHEIO CREME DE DORELLA 1,01KG 5218",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17539.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmsgjkheoq",
+    "codigo": "16561",
+    "descricao": "RECHEIO FLOCOS MALTADO 1,01KG 4363",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16561.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefovx56hpz3",
+    "codigo": "18213",
+    "descricao": "RECHEIO FORN BANANA C/CANELA 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18213.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefn1qylt8d8",
+    "codigo": "18214",
+    "descricao": "RECHEIO FORN FRUTAS VERMELHAS 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18214.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhi6in25zf",
+    "codigo": "18215",
+    "descricao": "RECHEIO FORN GOIABA 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18215.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefsc84b5no6",
+    "codigo": "18216",
+    "descricao": "RECHEIO FORN LARANJA 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18216.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef11m4x7ab9",
+    "codigo": "18204",
+    "descricao": "RECHEIO FORN MACA C/CANELA 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18204.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhzsynht4s",
+    "codigo": "18218",
+    "descricao": "RECHEIO FORN MARACUJA C/SEMENTES 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18218.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3kuxflvta",
+    "codigo": "18219",
+    "descricao": "RECHEIO FORN MORANGO 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18219.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef1j65q9vbb",
+    "codigo": "15420",
+    "descricao": "RECHEIO LEITE CHOC TRUFADO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefo3kw403ka",
+    "codigo": "15329",
+    "descricao": "RECHEIO LEITE CONDENSADO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15329.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefwew8jg9h1",
+    "codigo": "16564",
+    "descricao": "RECHEIO LEITE EM PO 1,01KG 4364",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16564.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefwuuapzbd5",
+    "codigo": "18217",
+    "descricao": "RECHEIO LIMAO 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18217.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefrhj06iir2",
+    "codigo": "15212",
+    "descricao": "RECHEIO LIMÃO CREMOSO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15212.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefky5jilras",
+    "codigo": "17511",
+    "descricao": "RECHEIO MARACUJA 1,01KG",
+    "fornecedor": "MORALLES INDUSTRIA COMERCIO E SERVICOS DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17511.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefrj8t8vhbs",
+    "codigo": "17398",
+    "descricao": "RECHEIO MORANGO 1,01KG",
+    "fornecedor": "MORALLES INDUSTRIA COMERCIO E SERVICOS DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17398.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefcz602vhei",
+    "codigo": "15213",
+    "descricao": "RECHEIO MORANGO CREMOSO MAURI 4KG (4)",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15213.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefsb1ffdepd",
+    "codigo": "18257",
+    "descricao": "RECHEIO PISTACHE DUBAI 1,01KG BP",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18257.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmh4f4jltn",
+    "codigo": "18227",
+    "descricao": "RECHEIO PIZZA CHOCOLATE AO LEITE 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18227.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefq2g1c8a8v",
+    "codigo": "18223",
+    "descricao": "RECHEIO PIZZA CHOCOLATE BRANCO 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18223.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef9tldc2qe2",
+    "codigo": "18224",
+    "descricao": "RECHEIO PIZZA CHOCOLATE E AVELA 1,01KG",
+    "fornecedor": "BOM PRINCIPIO ALIMENTOS",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\18224.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefudoui8jfr",
+    "codigo": "14292",
+    "descricao": "RECHEIO RITTER BANANA C/CANELA 1,05K FL",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14292.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueft2pigvgct",
+    "codigo": "14208",
+    "descricao": "RECHEIO RITTER CASSATA 1,05KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14208.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhhxz9qnm6",
+    "codigo": "14137",
+    "descricao": "RECHEIO RITTER CHOCOLATE 1,05KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14137.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefkrxkuddx1",
+    "codigo": "14136",
+    "descricao": "RECHEIO RITTER CHOCOLATE BD 4,3KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14136.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefd9vo9p3jn",
+    "codigo": "14209",
+    "descricao": "RECHEIO RITTER CREME CONF. 1,05KG FL",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14209.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefb4gmva6gp",
+    "codigo": "14210",
+    "descricao": "RECHEIO RITTER CREME CONF. 4,6KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14210.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3aytavnul",
+    "codigo": "14456",
+    "descricao": "RECHEIO RITTER DOCE CREM. AMENDOIM 4KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14456.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefauz4ptihm",
+    "codigo": "14139",
+    "descricao": "RECHEIO RITTER GOIABA 1,05KG FL",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14139.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefkyxegm0kc",
+    "codigo": "14682",
+    "descricao": "RECHEIO RITTER MACA C/CANELA 1,05K FL",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14682.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhkvk0tddr",
+    "codigo": "14140",
+    "descricao": "RECHEIO RITTER MORANGO 1,05KG FL",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14140.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefsp1k21nvb",
+    "codigo": "14138",
+    "descricao": "RECHEIO RITTER MORANGO BD 4,3KG",
+    "fornecedor": "RITTER ALIMENTOS SA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14138.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefz5xfwi4m1",
+    "codigo": "16566",
+    "descricao": "RECHEIO TRUFA 1,01KG 4362",
+    "fornecedor": "DOREMUS ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16566.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefyc3qllcbp",
+    "codigo": "17629",
+    "descricao": "RING ABACAXI 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17629.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefruwxqudz2",
+    "codigo": "16749",
+    "descricao": "RING BLUEBERRY 75G CX C/24 73383",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16749.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef4ylq302vw",
+    "codigo": "16793",
+    "descricao": "RING BRIGADEIRO 75G CX C/24 73901",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16793.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef33p3glcto",
+    "codigo": "16958",
+    "descricao": "RING CARNAVAL 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16958.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefnx46fx7f6",
+    "codigo": "17335",
+    "descricao": "RING CHOC PRETO-BRANCO 75G CX C/24 77183",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17335.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3vbo6nudr",
+    "codigo": "16128",
+    "descricao": "RING CHOCOLATE 75G CX C/24 72874",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16128.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhq8donxrn",
+    "codigo": "17642",
+    "descricao": "RING CHOCOLATE BRANCO 75G CX C/24 72898",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17642.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefu7dlshjpp",
+    "codigo": "17518",
+    "descricao": "RING CHOCOLATE HALLOWEEN 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17518.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueffaycp5f1b",
+    "codigo": "17551",
+    "descricao": "RING CHOCOLATE NATALINO 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmup5s4xbr",
+    "codigo": "16750",
+    "descricao": "RING COBERT BRIGADEIRO CX 24X75G",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16750.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef8jcygsk5c",
+    "codigo": "16129",
+    "descricao": "RING COOKIES & CREAM 75G CX C/24 72867",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16129.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef8t0kx0g4y",
+    "codigo": "17334",
+    "descricao": "RING CREME DE MORANGO 75G CX C/24 77176",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17334.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef5bxis5uba",
+    "codigo": "16130",
+    "descricao": "RING DOCE LEITE CROCANTE 75G C/24 72850",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16130.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3jxgsswxy",
+    "codigo": "16127",
+    "descricao": "RING FRUTAS VERMELHAS 75G CX C/24 72911",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16127.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefs72p5kg4b",
+    "codigo": "17123",
+    "descricao": "RING HOMER CREME 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17123.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef03b375ww0",
+    "codigo": "17702",
+    "descricao": "RING PACOQUITA 75G CX C/24 73987",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17702.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef6oq0nhafx",
+    "codigo": "16751",
+    "descricao": "RING PINK LEMONADE 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16751.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefcfibtvosl",
+    "codigo": "17656",
+    "descricao": "RING PISTACHE 75G CX C/24 72904",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17656.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefor045shqc",
+    "codigo": "17643",
+    "descricao": "RING TRIPLO CHOCOLATE 75G CX C/24",
+    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\17643.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2j4remh54",
+    "codigo": "12971",
+    "descricao": "ROLO CORT. TRELICA (INOX) 12 CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12971.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitrueft91e58qbz",
+    "codigo": "14514",
+    "descricao": "ROLO DE MASSA GIRATORIO POLIETILENO 35CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14514.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefkrzet9e7x",
+    "codigo": "14575",
+    "descricao": "ROSQ. AMANTEIGADA C/ABACAXI CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14575.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefwumbloio2",
+    "codigo": "14576",
+    "descricao": "ROSQ. AMANTEIGADA C/COCO CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14576.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef15xr6vc6t",
+    "codigo": "14577",
+    "descricao": "ROSQ. AMANTEIGADA C/FLOCOS CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14577.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhroar7dw8",
+    "codigo": "14578",
+    "descricao": "ROSQ. AMANTEIGADA C/LARANJA CX 2KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14578.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefvh97ufdms",
+    "codigo": "7127",
+    "descricao": "SONHO GOLDEN BERLINER SACO 2KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\7127.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefh3rvgotx4",
+    "codigo": "12226",
+    "descricao": "SUAVE MIX (SACO 5KG) (E)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12226.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefpid67sjd7",
+    "codigo": "12215",
+    "descricao": "SUPER SOFT C50 (SACO 5KG) (E)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\12215.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef4712xezaz",
+    "codigo": "14483",
+    "descricao": "SUPORTE GIRATORIO POLIETILENO 29,5CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14483.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefkca78r6wz",
+    "codigo": "14590",
+    "descricao": "SUSPIRO CX 1,200KG",
+    "fornecedor": "BISCOITO CASEIRO DIMINAS",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14590.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefp0ag86juw",
+    "codigo": "14619",
+    "descricao": "TAPETE SILICONE 18 CAVI 6,8CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14619.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef3niy3lhhr",
+    "codigo": "14646",
+    "descricao": "TAPETE SILICONE 18 CAVIDADES 6,8CM 8124",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14646.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef9i4evhb3j",
+    "codigo": "14647",
+    "descricao": "TAPETE SILICONE 53 CAVIDADES 3,8CM 8124",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14647.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef2ji8tbvie",
+    "codigo": "14525",
+    "descricao": "TAPETE SILICONE 60X40",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14525.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefiyk1vq0ke",
+    "codigo": "14515",
+    "descricao": "TELA P/GLACEADO INOX 60X40CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14515.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefc0eutk8z7",
+    "codigo": "14769",
+    "descricao": "TELA REDONDA P/ PIZZA (ALUMI) 35CM",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefym1t7slrd",
+    "codigo": "13773",
+    "descricao": "TEMPERCHURRI  500G (20)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13773.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefhzc277mk4",
+    "codigo": "13709",
+    "descricao": "TEMPERO COMPLETO 500G (20)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13709.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefnceovw2sw",
+    "codigo": "13771",
+    "descricao": "TEMPERO PARA ARROZ 500G (20)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13771.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefstyp8jy8t",
+    "codigo": "13772",
+    "descricao": "TEMPERO PARA FEIJÃO 500G (20)",
+    "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
+    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13772.JPG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefwy56x6jcj",
+    "codigo": "16358",
+    "descricao": "TESTE",
+    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruef66cyu8sym",
+    "codigo": "16230",
+    "descricao": "TOP GLAZE GEL BRILHO FINALIZAR E PROTEGE",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\16230.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefmhpuv0yom",
+    "codigo": "15755",
+    "descricao": "TOP MACIO (SACO 4X5KG)(20)",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\15755.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefk3o6noc3u",
+    "codigo": "9627",
+    "descricao": "TOP MACIO MASSA DOCE SACO 5KG",
+    "fornecedor": "IREKS DO BRASIL",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\9627.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefjox5z12ny",
+    "codigo": "14516",
+    "descricao": "TRINCHA MESTRE CUCA",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14516.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefgss0427dg",
+    "codigo": "14517",
+    "descricao": "TRINCHA MESTRE CUCA GRANDE",
+    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
+    "fotoPath": "P:\\FOTOSPRODUTOS\\14517.PNG",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  },
+  {
+    "id": "moitruefx38uag1lx",
+    "codigo": "14823",
+    "descricao": "UVA PASSA PRETA FLAME 10KG FL",
+    "fornecedor": "POLICO COMERCIAL DE ALIMENTOS LTDA",
+    "fotoPath": "",
+    "ativo": true,
+    "criadoEm": "2026-04-28T16:13:05.319Z"
+  }
+]

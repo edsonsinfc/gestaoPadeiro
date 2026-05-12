@@ -1,0 +1,39 @@
+{
+  "name": "BRAGO Sistema Padeiro",
+  "short_name": "Brago Padeiro",
+  "description": "Sistema de Gestão e Produção - BRAGO Distribuidora",
+  "start_url": "/?pwa=true",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F8FA",
+  "theme_color": "#1E4BFF",
+  "icons": [
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Nova Atividade",
+      "url": "/?route=padeiro-atividade",
+      "icons": [{ "src": "/assets/icon-512.png", "sizes": "192x192" }]
+    }
+  ]
+}

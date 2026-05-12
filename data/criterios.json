@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "texto": "Cumpriu o horário?",
+    "tipo": "boolean"
+  },
+  {
+    "id": "2",
+    "texto": "Cumpriu a meta semanal?",
+    "tipo": "boolean"
+  },
+  {
+    "id": "3",
+    "texto": "Qualidade dos produtos",
+    "tipo": "nota"
+  },
+  {
+    "id": "4",
+    "texto": "Higiene e organização",
+    "tipo": "nota"
+  },
+  {
+    "id": "5",
+    "texto": "Uso correto do uniforme/EPIs",
+    "tipo": "boolean"
+  },
+  {
+    "id": "6",
+    "texto": "Relacionamento com o cliente",
+    "tipo": "nota"
+  },
+  {
+    "id": "7",
+    "texto": "Registrou atividades corretamente?",
+    "tipo": "boolean"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "moiwh3n7n6brdn7e1",
+    "padeiroId": "padeiro-teste-001",
+    "metaKg": 500,
+    "periodo": "2026-04",
+    "observacao": "",
+    "padeiroNome": "Padeiro Brago (Teste)",
+    "criadoPor": "admin-001",
+    "criadoEm": "2026-04-28T17:28:42.931Z",
+    "atualizadoEm": "2026-04-28T17:28:58.185Z"
+  },
+  {
+    "id": "moj2hmxcnrj9am78p",
+    "padeiroId": "moitru63l953spbhy",
+    "metaKg": 100,
+    "periodo": "2026-05",
+    "observacao": "",
+    "padeiroNome": "ALAOR FLAVIO NUNES DE FREITAS",
+    "criadoPor": "admin-001",
+    "criadoEm": "2026-04-28T20:17:05.616Z"
+  },
+  {
+    "id": "moj2hz8ooevc59u36",
+    "padeiroId": "moitru63l953spbhy",
+    "metaKg": 100,
+    "periodo": "2026-04",
+    "observacao": "",
+    "padeiroNome": "ALAOR FLAVIO NUNES DE FREITAS",
+    "criadoPor": "admin-001",
+    "criadoEm": "2026-04-28T20:17:21.576Z"
+  }
+]

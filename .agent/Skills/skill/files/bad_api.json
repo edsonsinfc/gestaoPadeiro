@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "E-Commerce API",
+    "version": "beta"
+  },
+  "paths": {
+    "/getUsers": {
+      "get": {
+        "summary": "List all users",
+        "description": "Returns the full user list.",
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserList" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/order": {
+      "post": {
+        "summary": "Create order",
+        "responses": {
+          "201": { "description": "Created" }
+        }
+      }
+    },
+    "/products/{productId}/review": {
+      "post": {
+        "summary": "Add a review",
+        "description": "Adds a review to the specified product.",
+        "operationId": "addProductReview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReviewInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Review" }
+              }
+            }
+          },
+          "400": { "description": "Bad request" },
+          "404": { "description": "Product not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserList": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/User" }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" }
+        }
+      },
+      "ReviewInput": {
+        "type": "object",
+        "properties": {
+          "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "comment": { "type": "string" }
+        }
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "rating": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

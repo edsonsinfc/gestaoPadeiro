@@ -1,0 +1,112 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { JWT_SECRET, BASE_URL } = require('../config');
+const { Admin, Padeiro } = require('../data/db-adapter');
+const emailService = require('../data/emailService');
+
+exports.login = async (req, res) => {
+  const { email, senha } = req.body;
+  if (!email || !senha) return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+
+  const emailLower = email.toLowerCase().trim();
+
+  try {
+    // Check admin
+    let admin = await Admin.findOne({ email: new RegExp(`^${emailLower}$`, 'i') });
+    if (admin) {
+      const valid = await bcrypt.compare(senha, admin.passwordHash);
+      if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+      
+      const role = admin.role || 'admin';
+      const token = jwt.sign({ 
+        id: admin.id, 
+        email: admin.email, 
+        role: role, 
+        nome: admin.nome,
+        filial: admin.filial || null 
+      }, JWT_SECRET, { expiresIn: '12h' });
+      
+      return res.json({ 
+        token, 
+        user: { 
+          id: admin.id, 
+          nome: admin.nome, 
+          email: admin.email, 
+          role: role,
+          filial: admin.filial || null
+        } 
+      });
+    }
+
+    // Check padeiro
+    let padeiro = await Padeiro.findOne({ email: new RegExp(`^${emailLower}$`, 'i') });
+    if (!padeiro) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
+    if (!padeiro.passwordHash) return res.status(403).json({ error: 'first_access', message: 'Primeiro acesso. Verifique seu e-mail para definir sua senha.' });
+
+    const valid = await bcrypt.compare(senha, padeiro.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+
+    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '12h' });
+    return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+};
+
+exports.firstAccess = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email é obrigatório' });
+
+  try {
+    const padeiro = await Padeiro.findOne({ email: new RegExp(`^${email.trim()}$`, 'i') });
+    if (!padeiro) return res.status(404).json({ error: 'E-mail não encontrado no sistema' });
+    if (padeiro.passwordHash) return res.status(400).json({ error: 'Senha já definida. Faça login normalmente.' });
+
+    // Generate token
+    const token = jwt.sign({ email: padeiro.email, type: 'first_access' }, JWT_SECRET, { expiresIn: '24h' });
+    padeiro.firstAccessToken = token;
+    padeiro.firstAccessExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await padeiro.save();
+
+    // Send email
+    await emailService.sendFirstAccessEmail(padeiro.email, token, BASE_URL);
+    
+    res.json({ 
+      success: true, 
+      message: 'E-mail enviado! Verifique sua caixa de entrada.',
+      ...(emailService.getProviderName() === 'mock' ? { token, mockMode: true } : {})
+    });
+  } catch (error) {
+    console.error("First access error:", error);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+};
+
+exports.setPassword = async (req, res) => {
+  const { token, senha } = req.body;
+  if (!token || !senha) return res.status(400).json({ error: 'Token e senha são obrigatórios' });
+  if (senha.length < 6) return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres' });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const padeiro = await Padeiro.findOne({ email: new RegExp(`^${decoded.email}$`, 'i') });
+    if (!padeiro) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    padeiro.passwordHash = await bcrypt.hash(senha, 10);
+    padeiro.firstAccessToken = null;
+    padeiro.firstAccessExpiry = null;
+    padeiro.atualizadoEm = new Date().toISOString();
+    await padeiro.save();
+
+    res.json({ success: true, message: 'Senha definida com sucesso! Faça login.' });
+  } catch (e) {
+    return res.status(400).json({ error: 'Token inválido ou expirado' });
+  }
+};
+
+exports.getPendingEmails = (req, res) => {
+  const emails = emailService.getPendingEmails(req.params.email);
+  res.json(emails);
+};

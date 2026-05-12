@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.sqlite
+*.sqlite-journal
+dist/
+build/
+.vscode/
+scratch/
+uploads/
+*.sql
+*.crt
+*.key
+*.bak.js
+MIGRATION_LOG.md
+AUDIT_FILES.txt

@@ -1,0 +1,37 @@
+:root {
+  /* Brago Design System - Premium Light Palette */
+  --primary: #1E4BFF; /* Brago Blue */
+  --primary-dark: #1032CC;
+  --primary-light: rgba(30, 75, 255, 0.08);
+  --accent: #E8450A; /* Brago Orange */
+  
+  --bg-main: #F7F8FA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F9FAFB;
+  --bg-input: #F3F4F6;
+  
+  --text-main: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-glow: rgba(30, 75, 255, 0.1);
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --font-main: 'Inter', 'Outfit', sans-serif;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
