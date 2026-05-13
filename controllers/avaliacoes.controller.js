@@ -16,6 +16,7 @@ exports.listAvaliacoes = async (req, res) => {
         const ids = padeirosDaFilial.map(p => p.id);
         query.padeiroId = { $in: ids };
       }
+    }
     const avaliacoes = await Avaliacao.find(query);
     res.json(avaliacoes);
   } catch (error) {

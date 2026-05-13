@@ -957,10 +957,24 @@ const Gestao = {
       </form>
     `;
 
-    Components.showModal(id ? 'Editar Usuário' : 'Novo Usuário do Painel', html, `
-      <button class="btn btn-secondary" onclick="Components.closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="Gestao.saveUsuario('${id || ''}')">${id ? 'Salvar Alterações' : 'Criar Usuário'}</button>
-    `);
+    const footer = `
+      <div class="flex justify-between w-full">
+        <div>
+          ${id ? `
+            <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario('${id}', '${u.nome}')">
+              <i data-lucide="trash-2" style="width:16px; height:16px; vertical-align: middle; margin-right: 4px;"></i>
+              Excluir Usuário
+            </button>
+          ` : ''}
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary" onclick="Components.closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="Gestao.saveUsuario('${id || ''}')">${id ? 'Salvar Alterações' : 'Criar Usuário'}</button>
+        </div>
+      </div>
+    `;
+
+    Components.showModal(id ? 'Editar Usuário' : 'Novo Usuário do Painel', html, footer);
     Components.renderIcons();
   },
 
