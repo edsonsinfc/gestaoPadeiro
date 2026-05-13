@@ -203,16 +203,23 @@ class SqlCollection {
 
 // Model proxies
 function createProxy(instance) {
-  return new Proxy(instance, {
-    construct(target, args) {
+  // We use a function as the target so it's "constructible" via 'new'
+  const target = function() {};
+  
+  // Inherit all methods and properties from the instance (SqlCollection)
+  Object.setPrototypeOf(target, instance);
+
+  return new Proxy(target, {
+    construct(t, args) {
       const doc = args[0] || {};
       return {
         ...doc,
         save: async function() {
+          // Use the instance directly for method calls
           if (this.id || this._id) {
-            return target.findByIdAndUpdate(this.id || this._id, this);
+            return instance.findByIdAndUpdate(this.id || this._id, this);
           } else {
-            const created = await target.create(this);
+            const created = await instance.create(this);
             Object.assign(this, created);
             return this;
           }
