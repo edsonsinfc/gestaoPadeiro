@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v8';
+const CACHE_NAME = 'brago-padeiro-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -77,11 +77,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first strategy for the main page to ensure users always get the latest version
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('/') || event.request.url.endsWith('index.html')) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html', { ignoreSearch: true });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((response) => {
       // Return from cache OR fetch from network
       return response || fetch(event.request).then((fetchResponse) => {
-        // Optional: dynamically cache new assets here if desired
         return fetchResponse;
       });
     }).catch(() => {
@@ -96,4 +105,11 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+// Message Event: Handle commands from the client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

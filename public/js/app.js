@@ -85,7 +85,7 @@ const App = {
     this.renderPage(route);
   },
 
-  renderSidebar(user, isAdmin) {
+  renderSidebar(user, isManagement) {
     const initials = user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     
     const adminNav = `
