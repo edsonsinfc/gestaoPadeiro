@@ -144,9 +144,12 @@ const TABLES = [
           id VARCHAR(50) PRIMARY KEY,
           padeiroId VARCHAR(50),
           padeiroNome VARCHAR(255),
-          nota INT,
+          clienteId VARCHAR(50),
+          clienteNome VARCHAR(255),
+          atividadeId VARCHAR(50),
           tipo VARCHAR(50),
-          criterios TEXT,
+          respostas TEXT,
+          nota DOUBLE,
           avaliadoPor VARCHAR(255),
           avaliadoPorNome VARCHAR(255),
           observacao TEXT,
@@ -199,6 +202,26 @@ const TABLES = [
 async function initTables() {
   for (const table of TABLES) {
     await pool.execute(table.schema);
+  }
+  
+  // Migrations for 'avaliacoes' table (ensure new columns exist and old ones are renamed/updated)
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM avaliacoes");
+    const colNames = cols.map(c => c.Field);
+
+    if (!colNames.includes('clienteId')) await pool.execute("ALTER TABLE avaliacoes ADD COLUMN clienteId VARCHAR(50)");
+    if (!colNames.includes('clienteNome')) await pool.execute("ALTER TABLE avaliacoes ADD COLUMN clienteNome VARCHAR(255)");
+    if (!colNames.includes('atividadeId')) await pool.execute("ALTER TABLE avaliacoes ADD COLUMN atividadeId VARCHAR(50)");
+    
+    if (colNames.includes('criterios') && !colNames.includes('respostas')) {
+      await pool.execute("ALTER TABLE avaliacoes CHANGE COLUMN criterios respostas TEXT");
+    }
+    
+    // Change nota to DOUBLE if it's currently INT
+    await pool.execute("ALTER TABLE avaliacoes MODIFY COLUMN nota DOUBLE");
+    
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente:', e.message);
   }
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }

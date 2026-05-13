@@ -24,8 +24,8 @@ exports.createAvaliacao = async (req, res) => {
   try {
     // Campos que REALMENTE existem na tabela MySQL 'avaliacoes'
     const validColumns = [
-      'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'atividadeId',
-      'tipo', 'notas', 'media', 'comentario', 'avaliadoPor', 'avaliadoPorNome', 'criadoEm'
+      'id', 'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'atividadeId',
+      'tipo', 'respostas', 'nota', 'observacao', 'avaliadoPor', 'avaliadoPorNome', 'criadoEm'
     ];
 
     const nova = {
@@ -41,9 +41,9 @@ exports.createAvaliacao = async (req, res) => {
     });
 
     // 2. Traduções de nomes do Frontend para o Banco
-    if (req.body.nota !== undefined) nova.media = req.body.nota;
-    if (req.body.respostas !== undefined) nova.notas = req.body.respostas;
-    if (req.body.observacao !== undefined) nova.comentario = req.body.observacao;
+    if (req.body.nota !== undefined) nova.nota = req.body.nota;
+    if (req.body.respostas !== undefined) nova.respostas = req.body.respostas;
+    if (req.body.observacao !== undefined) nova.observacao = req.body.observacao;
 
     // Remove qualquer campo que não esteja na lista de colunas válidas (segurança extra)
     Object.keys(nova).forEach(key => {

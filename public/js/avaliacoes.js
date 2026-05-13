@@ -281,9 +281,13 @@ const Avaliacoes = {
 
   setCriterio(btn, val) {
     const id = btn.dataset.id;
-    document.querySelectorAll(`.criterio-btn[data-id="${id}"]`).forEach(b => b.style.opacity='0.4');
+    document.querySelectorAll(`.criterio-btn[data-id="${id}"]`).forEach(b => {
+      b.style.opacity = '0.4';
+      delete b.dataset.selected;
+    });
     btn.style.opacity = '1';
     btn.dataset.selected = 'true';
+    btn.dataset.val = val; // Ensure data-val is set/correct
   },
 
   async saveGestorAval() {
