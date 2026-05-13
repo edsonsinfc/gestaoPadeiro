@@ -37,11 +37,12 @@ class SqlCollection {
     if (!doc) return null;
     if (Array.isArray(doc)) return doc.map(d => this.wrapDoc(d));
     
-    return {
-      ...doc,
-      toJSON: function() { return this; },
-      toObject: function() { return this; }
-    };
+    const d = { ...doc };
+    Object.defineProperties(d, {
+      toJSON: { value: function() { return this; }, enumerable: false, configurable: true, writable: true },
+      toObject: { value: function() { return this; }, enumerable: false, configurable: true, writable: true }
+    });
+    return d;
   }
 
   // Convert query object to SQL WHERE clause
@@ -227,17 +228,20 @@ function createProxy(instance) {
             }
           },
           enumerable: false,
-          configurable: true
+          configurable: true,
+          writable: true
         },
         toJSON: {
           value: function() { return this; },
           enumerable: false,
-          configurable: true
+          configurable: true,
+          writable: true
         },
         toObject: {
           value: function() { return this; },
           enumerable: false,
-          configurable: true
+          configurable: true,
+          writable: true
         }
       });
 
