@@ -881,9 +881,14 @@ const Gestao = {
                 )}</td>
                 <td>${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}</td>
                 <td class="text-right">
-                  <button class="btn-icon text-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')" title="Excluir">
-                    <i data-lucide="trash-2"></i>
-                  </button>
+                  <div class="row-actions flex gap-2 justify-end">
+                    <button class="btn-icon text-blue" onclick="Gestao.openUsuarioForm('${u.id}')" title="Editar">
+                      <i data-lucide="pencil"></i>
+                    </button>
+                    <button class="btn-icon text-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')" title="Excluir">
+                      <i data-lucide="trash-2"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             `).join('')}
@@ -916,59 +921,62 @@ const Gestao = {
   },
 
   openUsuarioForm(id = null) {
-    if (id) {
-      Components.toast('Edição de usuário em breve', 'info');
-      return;
-    }
-
+    const u = id ? this.allData.usuarios.find(x => x.id === id) : {};
+    
     const html = `
       <form id="form-usuario" class="flex flex-col gap-4">
         <div class="input-group">
           <label class="label">Nome Completo</label>
-          <input type="text" name="nome" class="input-control" required placeholder="Ex: João Silva">
+          <input type="text" name="nome" class="input-control" required placeholder="Ex: João Silva" value="${u.nome || ''}">
         </div>
         <div class="input-group">
           <label class="label">E-mail (Login)</label>
-          <input type="email" name="email" class="input-control" required placeholder="joao@brago.com">
+          <input type="email" name="email" class="input-control" required placeholder="joao@brago.com" value="${u.email || ''}">
         </div>
         <div class="input-group">
-          <label class="label">Senha Inicial</label>
-          <input type="password" name="senha" class="input-control" required placeholder="Mínimo 6 caracteres">
+          <label class="label">${id ? 'Nova Senha (deixe em branco para manter)' : 'Senha Inicial'}</label>
+          <input type="password" name="senha" class="input-control" ${id ? '' : 'required'} placeholder="Mínimo 6 caracteres">
         </div>
         <div class="input-group">
           <label class="label">Papel (Role)</label>
           <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = this.value === 'gestor_regional' ? 'block' : 'none'">
-            <option value="gestor_regional">Gestor Regional (Acesso a uma filial)</option>
-            <option value="gestor_geral">Gestor Geral (Acesso total)</option>
-            <option value="admin">Administrador (Acesso total + Desenvolvimento)</option>
+            <option value="gestor_regional" ${u.role === 'gestor_regional' || u.role === 'gestor' ? 'selected' : ''}>Gestor Regional (Acesso a uma filial)</option>
+            <option value="gestor_geral" ${u.role === 'gestor_geral' ? 'selected' : ''}>Gestor Geral (Acesso total)</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador (Acesso total + Desenvolvimento)</option>
           </select>
         </div>
-        <div class="input-group" id="filial-selector">
+        <div class="input-group" id="filial-selector" style="display: ${u.role === 'gestor_regional' || u.role === 'gestor' || (!id) ? 'block' : 'none'}">
           <label class="label">Filial Atribuída</label>
           <select name="filial" class="input-control">
-            <option value="Brago Brasília">Brago Brasília</option>
-            <option value="Brago Goiania">Brago Goiania</option>
-            <option value="Brago Palmas">Brago Palmas</option>
-            <option value="Brago Campo Grande">Brago Campo Grande</option>
+            <option value="Brago Brasília" ${u.filial === 'Brago Brasília' ? 'selected' : ''}>Brago Brasília</option>
+            <option value="Brago Goiania" ${u.filial === 'Brago Goiania' ? 'selected' : ''}>Brago Goiania</option>
+            <option value="Brago Palmas" ${u.filial === 'Brago Palmas' ? 'selected' : ''}>Brago Palmas</option>
+            <option value="Brago Campo Grande" ${u.filial === 'Brago Campo Grande' ? 'selected' : ''}>Brago Campo Grande</option>
           </select>
         </div>
       </form>
     `;
 
-    Components.showModal('Novo Usuário do Painel', html, `
+    Components.showModal(id ? 'Editar Usuário' : 'Novo Usuário do Painel', html, `
       <button class="btn btn-secondary" onclick="Components.closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="Gestao.saveUsuario()">Salvar Usuário</button>
+      <button class="btn btn-primary" onclick="Gestao.saveUsuario('${id || ''}')">${id ? 'Salvar Alterações' : 'Criar Usuário'}</button>
     `);
+    Components.renderIcons();
   },
 
-  async saveUsuario() {
+  async saveUsuario(id = null) {
     const form = document.getElementById('form-usuario');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
     try {
-      await API.post('/api/management/users', data);
-      Components.toast('Usuário criado com sucesso!', 'success');
+      if (id) {
+        await API.put(`/api/management/users/${id}`, data);
+        Components.toast('Usuário atualizado com sucesso!', 'success');
+      } else {
+        await API.post('/api/management/users', data);
+        Components.toast('Usuário criado com sucesso!', 'success');
+      }
       Components.closeModal();
       this.loadTab();
     } catch (e) {

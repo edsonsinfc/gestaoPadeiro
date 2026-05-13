@@ -59,3 +59,24 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Erro ao excluir usuário' });
   }
 };
+exports.updateUser = async (req, res) => {
+  const allowed = ['admin', 'gestor_geral'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
+  try {
+    const { nome, email, senha, role, filial } = req.body;
+    const updateData = { nome, email, role };
+    
+    if (role === 'gestor_regional') updateData.filial = filial;
+    else updateData.filial = null;
+
+    if (senha) {
+      updateData.passwordHash = await bcrypt.hash(senha, 10);
+    }
+
+    await Admin.findByIdAndUpdate(req.params.id, updateData);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error updating admin:", error);
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+};

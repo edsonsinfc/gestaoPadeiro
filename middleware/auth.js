@@ -13,7 +13,8 @@ function authMiddleware(req, res, next) {
 }
 
 function adminOnly(req, res, next) {
-  if (req.user.role !== 'admin' && req.user.role !== 'gestor') {
+  const allowed = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'];
+  if (!allowed.includes(req.user.role)) {
     return res.status(403).json({ error: 'Acesso negado' });
   }
   next();
