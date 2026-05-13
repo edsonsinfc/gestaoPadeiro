@@ -213,6 +213,10 @@
   .pf-btn-primary, .pf-input, .pf-select, .pf-row-btn { min-height: 44px; }
   
   .pf-photo-add { padding: 12px; }
+
+  .pf-container {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
 }
 
 /* ============================================================
