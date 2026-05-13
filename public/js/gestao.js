@@ -894,20 +894,20 @@ const Gestao = {
       <!-- Mobile List -->
       <div class="mobile-only apple-list">
         ${data.map(u => `
-          <div class="apple-list-item" onclick="Gestao.openUsuarioForm('${u.id}')">
-            <div class="apple-list-left">
-              <div class="apple-avatar" style="background: ${u.role === 'admin' ? 'var(--apple-blue)' : 'var(--apple-orange)'}">
-                ${this.getInitials(u.nome)}
-              </div>
-              <div class="apple-list-info">
-                <div class="apple-list-title">${u.nome}</div>
-                <div class="apple-list-subtitle">
-                  ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : 'Gestor'} • 
-                  ${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}
-                </div>
+          <div class="apple-card">
+            <div class="apple-card-info" onclick="Gestao.openUsuarioForm('${u.id}')">
+              <div class="apple-card-name">${u.nome}</div>
+              <div class="apple-list-subtitle" style="font-size: 13px; color: var(--apple-gray);">
+                ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : 'Gestor'} • 
+                ${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}
               </div>
             </div>
-            <i data-lucide="chevron-right" class="apple-chevron"></i>
+            <div class="flex items-center gap-2">
+               <button class="btn-icon text-danger" onclick="event.stopPropagation(); Gestao.deleteUsuario('${u.id}', '${u.nome}')" style="padding: 8px;">
+                 <i data-lucide="trash-2" style="width:18px; height:18px;"></i>
+               </button>
+               <i data-lucide="chevron-right" class="apple-chevron" style="width:16px; height:16px;"></i>
+            </div>
           </div>
         `).join('')}
       </div>
