@@ -5,8 +5,16 @@ exports.listUsers = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
-    const admins = await Admin.find({ deletado: { $ne: true } });
-    const padeiros = await Padeiro.find({ deletado: { $ne: true } });
+    let admins, padeiros;
+    try {
+      admins = await Admin.find({ deletado: { $ne: true } });
+      padeiros = await Padeiro.find({ deletado: { $ne: true } });
+    } catch (e) {
+      // Fallback if 'deletado' column doesn't exist yet
+      console.warn('Fallback: deletado column missing, fetching all users');
+      admins = await Admin.find();
+      padeiros = await Padeiro.find();
+    }
     
     const combined = [
       ...admins.map(a => ({ ...a, source: 'admin' })),
