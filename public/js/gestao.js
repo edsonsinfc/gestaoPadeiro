@@ -1009,14 +1009,13 @@ const Gestao = {
   },
 
   deleteUsuario(id, nome) {
-    Components.confirm(`Deseja realmente excluir o usuário ${nome}?`, async () => {
-      try {
-        await API.delete(`/api/management/users/${id}`);
-        Components.toast('Usuário excluído!', 'success');
-        Gestao.loadTab();
-      } catch (e) {
-        Components.toast(e.message, 'error');
-      }
-    });
+    if (confirm(`Deseja realmente excluir o usuário ${nome}?`)) {
+      API.delete(`/api/management/users/${id}`)
+        .then(() => {
+          Components.toast('Usuário excluído!', 'success');
+          Gestao.loadTab();
+        })
+        .catch(e => Components.toast(e.message, 'error'));
+    }
   }
 };
