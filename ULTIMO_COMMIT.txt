@@ -1,9 +1,11 @@
 Projeto Gestão Padeiro
-Estado: Estável e Sincronizado (Correções de Construtor e SQL aplicadas)
+Estado: Estável e Sincronizado (Correções Críticas Concluídas)
 Data: 2026-05-13
-Objetivo: Repositório atualizado com correções críticas no backend (mysqlDB.js).
+Objetivo: Sistema estabilizado após série de correções no adaptador MySQL.
 
-Principais ajustes de hoje:
-- Correção do erro 'Padeiro is not a constructor' ao criar novos registros.
-- Implementação de filtro para evitar que métodos internos (save, toJSON, toObject) sejam incluídos em comandos SQL.
-- Configuração de métodos do modelo como não-enumeráveis para maior estabilidade.
+Resumo das Correções Finais:
+1. Padeiro is not a constructor: Resolvido alterando o alvo do Proxy para uma função.
+2. Unknown column 'save': Resolvido filtrando funções na geração de SQL e tornando métodos não-enumeráveis.
+3. Read only property 'toJSON': Resolvido tornando as propriedades editáveis (writable: true) e padronizando o wrapDoc.
+
+O sistema de gestão de padeiros está totalmente funcional e sincronizado com o repositório remoto.
