@@ -37,10 +37,10 @@ const AdminDashboard = {
       if (this.searchTerm) {
         stats = {
           ...stats,
-          top10Pads: (stats.top10Pads || []).filter(p => p.nome.toLowerCase().includes(this.searchTerm)),
-          top3Pads: (stats.top3Pads || []).filter(p => p.nome.toLowerCase().includes(this.searchTerm)),
-          rankingClientes: (stats.rankingClientes || []).filter(c => c.nome.toLowerCase().includes(this.searchTerm)),
-          pontoCritico: (stats.pontoCritico || []).filter(p => p.nome.toLowerCase().includes(this.searchTerm))
+          top10Pads: (stats.top10Pads || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm)),
+          top3Pads: (stats.top3Pads || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm)),
+          rankingClientes: (stats.rankingClientes || []).filter(c => c && c.nome && c.nome.toLowerCase().includes(this.searchTerm)),
+          pontoCritico: (stats.pontoCritico || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm))
         };
       }
 
@@ -398,8 +398,8 @@ const AdminDashboard = {
       // Draw Charts using Chart.js
       setTimeout(() => {
         const prodData = stats.rankingProducao || [];
-        const prodLabels = prodData.map(p => p.nome.split(' ').slice(0, 2).join(' '));
-        const prodVals = prodData.map(p => p.totalKg);
+        const prodLabels = prodData.map(p => (p && p.nome) ? p.nome.split(' ').slice(0, 2).join(' ') : '—');
+        const prodVals = prodData.map(p => p ? p.totalKg : 0);
         this.initBarChart('producaoChart', prodLabels, prodVals, 'rgba(30, 75, 255, 0.8)');
         
         this.initDoughnutChart('cargoChart', stats.porCargo);

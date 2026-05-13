@@ -7,8 +7,15 @@ exports.getGeneralStats = async (req, res) => {
     const atividadeQuery = {};
     const avaliacaoQuery = {};
     
-    if (req.user.role === 'gestor' && req.user.filial) {
-      padeiroQuery.filial = req.user.filial;
+    if (req.user.role === 'gestor_regional' || req.user.role === 'gestor') {
+      if (req.user.filial) {
+        padeiroQuery.filial = req.user.filial;
+        const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+        const ids = padeirosDaFilial.map(p => p.id);
+        metaQuery.padeiroId = { $in: ids };
+        atividadeQuery.padeiroId = { $in: ids };
+        avaliacaoQuery.padeiroId = { $in: ids };
+      }
     }
 
     let [
@@ -24,7 +31,7 @@ exports.getGeneralStats = async (req, res) => {
       Colaborador.find()
     ]);
 
-    if (req.user.role === 'gestor' && req.user.filial) {
+    if (isRegional && req.user.filial) {
       const ids = padeirosDocs.map(p => p.id);
       metasDocs = metasDocs.filter(m => ids.includes(m.padeiroId));
       atividadesDocs = atividadesDocs.filter(a => ids.includes(a.padeiroId));
