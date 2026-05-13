@@ -303,7 +303,7 @@ const Auth = {
       google.accounts.id.renderButton(parent, {
         theme: 'outline',
         size: 'large',
-        width: parent.offsetWidth,
+        width: (parent && parent.offsetWidth > 0) ? parent.offsetWidth : 300,
         text: 'signin_with',
         shape: 'pill',
         logo_alignment: 'left'

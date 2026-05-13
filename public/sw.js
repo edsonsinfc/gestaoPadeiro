@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v11';
+const CACHE_NAME = 'brago-padeiro-v12';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
   '/css/styles.css',
   '/css/modal-move.css',
   '/css/padeiro-flow.css',
-  '/js/app.js?v=2.3',
+  '/js/app.js',
   '/js/auth.js',
   '/js/components.js',
   '/js/admin-dashboard.js',
