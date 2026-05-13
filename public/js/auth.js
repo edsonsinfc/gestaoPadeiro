@@ -298,16 +298,22 @@ const Auth = {
       login_uri: 'https://app2.bragodistribuidora.com.br/'
     });
 
-    const parent = document.getElementById('google-login-btn');
-    if (parent) {
-      google.accounts.id.renderButton(parent, {
-        theme: 'outline',
-        size: 'large',
-        width: (parent && parent.offsetWidth > 0) ? parent.offsetWidth : 300,
-        text: 'signin_with',
-        shape: 'pill',
-        logo_alignment: 'left'
-      });
+    try {
+      const parent = document.getElementById('google-login-btn');
+      if (parent) {
+        google.accounts.id.renderButton(parent, {
+          theme: 'outline',
+          size: 'large',
+          width: (parent && parent.offsetWidth > 0) ? parent.offsetWidth : 300,
+          text: 'signin_with',
+          shape: 'pill',
+          logo_alignment: 'left'
+        });
+      }
+    } catch (err) {
+      console.error('❌ Erro ao renderizar botão do Google:', err);
+      // Tenta novamente em 1 segundo se falhar
+      setTimeout(() => this.initGoogleLogin(), 1000);
     }
   },
 
