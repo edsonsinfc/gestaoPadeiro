@@ -16,18 +16,37 @@ exports.listMetas = async (req, res) => {
 };
 
 exports.createMeta = async (req, res) => {
-  const nova = { ...req.body, criadoPor: req.user.id, criadoEm: new Date().toISOString() };
-  const meta = await Meta.create(nova);
-  res.status(201).json(meta);
+  try {
+    const validColumns = ['id', 'padeiroId', 'padeiroNome', 'metaKg', 'periodo', 'tipo', 'observacao', 'criadoPor', 'criadoEm', 'atualizadoEm'];
+    const nova = { criadoPor: req.user.id, criadoEm: new Date().toISOString() };
+    
+    validColumns.forEach(col => {
+      if (req.body[col] !== undefined) nova[col] = req.body[col];
+    });
+
+    const meta = await Meta.create(nova);
+    res.status(201).json(meta);
+  } catch (error) {
+    console.error('Erro ao criar meta:', error);
+    res.status(500).json({ error: 'Erro ao criar meta', details: error.message });
+  }
 };
 
 exports.updateMeta = async (req, res) => {
   try {
-    const meta = await Meta.findByIdAndUpdate(req.params.id, { ...req.body, atualizadoEm: new Date().toISOString() }, { new: true });
+    const validColumns = ['id', 'padeiroId', 'padeiroNome', 'metaKg', 'periodo', 'tipo', 'observacao', 'criadoPor', 'criadoEm', 'atualizadoEm'];
+    const updateData = { atualizadoEm: new Date().toISOString() };
+
+    validColumns.forEach(col => {
+      if (req.body[col] !== undefined) updateData[col] = req.body[col];
+    });
+
+    const meta = await Meta.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!meta) return res.status(404).json({ error: 'Não encontrado' });
     res.json(meta);
   } catch (e) {
-    res.status(400).json({ error: 'ID inválido' });
+    console.error('Erro ao atualizar meta:', e);
+    res.status(400).json({ error: 'Erro ao atualizar meta', details: e.message });
   }
 };
 

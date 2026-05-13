@@ -104,6 +104,7 @@ const TABLES = [
           metaKg DOUBLE,
           periodo VARCHAR(100),
           tipo VARCHAR(100),
+          observacao TEXT,
           criadoPor VARCHAR(255),
           criadoEm VARCHAR(100),
           atualizadoEm VARCHAR(100)
@@ -221,7 +222,19 @@ async function initTables() {
     await pool.execute("ALTER TABLE avaliacoes MODIFY COLUMN nota DOUBLE");
     
   } catch (e) {
-    console.log('   ⚠️ Migração parcial ou tabela inexistente:', e.message);
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (avaliacoes):', e.message);
+  }
+
+  // Migrations for 'metas' table
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM metas");
+    const colNames = cols.map(c => c.Field);
+
+    if (!colNames.includes('observacao')) {
+      await pool.execute("ALTER TABLE metas ADD COLUMN observacao TEXT");
+    }
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (metas):', e.message);
   }
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }
