@@ -9,7 +9,7 @@ exports.listAtividades = async (req, res) => {
     
     let atividades = await Atividade.find(query).sort({ data: -1 });
     
-    if (req.user.role === 'gestor' && req.user.filial) {
+    if (req.user.role === 'gestor_regional' && req.user.filial) {
       const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
       const ids = padeirosDaFilial.map(p => p.id);
       atividades = atividades.filter(a => ids.includes(a.padeiroId));

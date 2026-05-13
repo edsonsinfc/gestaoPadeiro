@@ -3,7 +3,7 @@ const { Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-
 
 exports.listPadeiros = async (req, res) => {
   let query = {};
-  if (req.user.role === 'gestor' && req.user.filial) {
+  if (req.user.role === 'gestor_regional' && req.user.filial) {
     query.filial = req.user.filial;
   }
   const padeiros = await Padeiro.find(query).select('-passwordHash -firstAccessToken');

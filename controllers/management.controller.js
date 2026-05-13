@@ -2,8 +2,8 @@ const bcrypt = require('bcryptjs');
 const { Admin } = require('../data/db-adapter');
 
 exports.listUsers = async (req, res) => {
-  console.log(`[AUTH DEBUG] User ${req.user.email} with role ${req.user.role} requesting admin list`);
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso restrito a administradores' });
+  const allowed = ['admin', 'gestor_geral'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     const admins = await Admin.find();
     res.json(admins.map(a => {
@@ -16,7 +16,8 @@ exports.listUsers = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso restrito a administradores' });
+  const allowed = ['admin', 'gestor_geral'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     const { nome, email, senha, role, filial } = req.body;
     
@@ -31,8 +32,8 @@ exports.createUser = async (req, res) => {
       nome,
       email,
       passwordHash,
-      role: role || 'gestor',
-      filial: role === 'gestor' ? filial : null,
+      role: role || 'gestor_regional',
+      filial: role === 'gestor_regional' ? filial : null,
       criadoEm: new Date().toISOString()
     });
 
@@ -46,7 +47,8 @@ exports.createUser = async (req, res) => {
 };
 
 exports.deleteUser = async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso restrito a administradores' });
+  const allowed = ['admin', 'gestor_geral'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     // Prevent self-deletion
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });

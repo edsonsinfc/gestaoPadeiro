@@ -9,8 +9,11 @@ exports.listAvaliacoes = async (req, res) => {
     if (req.query.padeiroId) {
       query.padeiroId = req.query.padeiroId;
     }
-    if (req.query.tipo) {
-      query.tipo = req.query.tipo;
+    if (req.user.role === 'gestor_regional' && req.user.filial) {
+      const { Padeiro } = require('../data/db-adapter');
+      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+      const ids = padeirosDaFilial.map(p => p.id);
+      query.padeiroId = { $in: ids };
     }
     const avaliacoes = await Avaliacao.find(query);
     res.json(avaliacoes);

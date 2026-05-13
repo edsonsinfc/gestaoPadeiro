@@ -223,7 +223,7 @@ const Gestao = {
           <div class="segmented-item ${this.currentTab === 'produtos' ? 'active' : ''}" onclick="Gestao.switchTab('produtos')">Produtos</div>
           <div class="segmented-item ${this.currentTab === 'clientes' ? 'active' : ''}" onclick="Gestao.switchTab('clientes')">Clientes</div>
           <div class="segmented-item ${this.currentTab === 'atividades' ? 'active' : ''}" onclick="Gestao.switchTab('atividades')">Registros</div>
-          ${API.getUser().role === 'admin' ? `
+          ${['admin', 'gestor_geral'].includes(API.getUser().role) ? `
             <div class="segmented-item ${this.currentTab === 'usuarios' ? 'active' : ''}" onclick="Gestao.switchTab('usuarios')">Usuários</div>
           ` : ''}
         </div>
@@ -240,14 +240,14 @@ const Gestao = {
     if (searchInput) searchInput.value = '';
 
     document.querySelectorAll('.segmented-item').forEach(t => t.classList.remove('active'));
-    const isAdmin = API.getUser().role === 'admin';
-    const items = isAdmin ? ['padeiros', 'produtos', 'clientes', 'atividades', 'usuarios'] : ['padeiros', 'produtos', 'clientes', 'atividades'];
+    const isSuper = ['admin', 'gestor_geral'].includes(API.getUser().role);
+    const items = isSuper ? ['padeiros', 'produtos', 'clientes', 'atividades', 'usuarios'] : ['padeiros', 'produtos', 'clientes', 'atividades'];
     const idx = items.indexOf(tab);
     document.querySelectorAll('.segmented-item')[idx]?.classList.add('active');
 
     const slider = document.querySelector('.segmented-control .segmented-slider');
     if (slider) {
-      slider.style.width = isAdmin ? '20%' : '25%';
+      slider.style.width = isSuper ? '20%' : '25%';
       slider.style.transform = `translateX(${idx * 100}%)`;
     }
     document.getElementById('gestao-content').innerHTML = Components.loading();
@@ -873,7 +873,7 @@ const Gestao = {
               <tr>
                 <td><strong>${u.nome}</strong></td>
                 <td>${u.email}</td>
-                <td>${Components.badge(u.role === 'admin' ? 'Administrador' : 'Gestor', u.role === 'admin' ? 'blue' : 'amber')}</td>
+                <td>${Components.badge(u.role === 'admin' ? 'Administrador' : u.role === 'gestor_geral' ? 'Gestor Geral' : 'Gestor Regional', u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : 'amber')}</td>
                 <td>${u.filial || 'Todas'}</td>
                 <td class="text-right">
                   <button class="btn-icon text-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')" title="Excluir">
@@ -896,7 +896,7 @@ const Gestao = {
               </div>
               <div class="apple-list-info">
                 <div class="apple-list-title">${u.nome}</div>
-                <div class="apple-list-subtitle">${u.role === 'admin' ? 'Admin' : 'Gestor'} • ${u.filial || 'Todas'}</div>
+                <div class="apple-list-subtitle">${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : 'Regional'} • ${u.filial || 'Todas'}</div>
               </div>
             </div>
             <i data-lucide="chevron-right" class="apple-chevron"></i>
@@ -929,9 +929,10 @@ const Gestao = {
         </div>
         <div class="input-group">
           <label class="label">Papel (Role)</label>
-          <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = this.value === 'gestor' ? 'block' : 'none'">
-            <option value="gestor">Gestor (Acesso a uma filial)</option>
-            <option value="admin">Administrador (Acesso total)</option>
+          <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = this.value === 'gestor_regional' ? 'block' : 'none'">
+            <option value="gestor_regional">Gestor Regional (Acesso a uma filial)</option>
+            <option value="gestor_geral">Gestor Geral (Acesso total)</option>
+            <option value="admin">Administrador (Acesso total + Desenvolvimento)</option>
           </select>
         </div>
         <div class="input-group" id="filial-selector">

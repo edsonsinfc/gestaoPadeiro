@@ -39,7 +39,8 @@ const App = {
     const token = API.token;
     if (user && token) {
       if (user.role === 'padeiro') LocationService.init(user);
-      this.navigate(user.role === 'admin' || user.role === 'gestor' ? 'admin-dashboard' : 'padeiro-inicio');
+      const isManagement = ['admin', 'gestor_geral', 'gestor_regional'].includes(user.role);
+      this.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } else {
       this.navigate('login');
     }
@@ -63,12 +64,12 @@ const App = {
     const user = API.getUser();
     if (!user) { this.navigate('login'); return; }
 
-    const isAdmin = user.role === 'admin' || user.role === 'gestor';
+    const isManagement = ['admin', 'gestor_geral', 'gestor_regional'].includes(user.role);
 
     // Build layout
     app.innerHTML = `
     <div class="app-layout">
-      ${this.renderSidebar(user, isAdmin)}
+      ${this.renderSidebar(user, isManagement)}
       <div class="main-content">
         ${this.renderHeader(route)}
         <div class="page-content" id="page-container">${Components.loading()}</div>
@@ -92,7 +93,7 @@ const App = {
       <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
         <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
       </div>
-      ${user.role === 'admin' ? `
+      ${(user.role === 'admin' || user.role === 'gestor_geral') ? `
       <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
         <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
       </div>
@@ -145,14 +146,14 @@ const App = {
         <img src="/assets/logo.svg" alt="BRAGO" class="sidebar-logo-img">
       </div>
       <nav class="sidebar-nav">
-        ${isAdmin ? adminNav : padeiroNav}
+        ${isManagement ? adminNav : padeiroNav}
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-user">
           <div class="avatar">${initials}</div>
           <div class="user-info-text">
             <div class="user-name">${user.nome.split(' ').slice(0, 2).join(' ')}</div>
-            <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.cargo || 'Padeiro'}</div>
+            <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.cargo || 'Padeiro'}</div>
           </div>
         </div>
         <div class="nav-item" onclick="Auth.logout()" style="margin-top:8px;color:var(--danger)">

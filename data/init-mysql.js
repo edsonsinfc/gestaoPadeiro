@@ -91,6 +91,7 @@ const TABLES = [
           email VARCHAR(255),
           passwordHash TEXT,
           role VARCHAR(50) DEFAULT 'admin',
+          filial VARCHAR(255),
           ativo BOOLEAN DEFAULT TRUE,
           criadoEm VARCHAR(100)
         )`
@@ -235,6 +236,18 @@ async function initTables() {
     }
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (metas):', e.message);
+  }
+
+  // Migrations for 'admins' table
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM admins");
+    const colNames = cols.map(c => c.Field);
+
+    if (!colNames.includes('filial')) {
+      await pool.execute("ALTER TABLE admins ADD COLUMN filial VARCHAR(255)");
+    }
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (admins):', e.message);
   }
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }
