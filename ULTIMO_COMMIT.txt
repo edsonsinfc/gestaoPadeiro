@@ -8,4 +8,10 @@ Resumo das Correções Finais:
 2. Unknown column 'save': Resolvido filtrando funções na geração de SQL e tornando métodos não-enumeráveis.
 3. Read only property 'toJSON': Resolvido tornando as propriedades editáveis (writable: true) e padronizando o wrapDoc.
 
-O sistema de gestão de padeiros está totalmente funcional e sincronizado com o repositório remoto.
+11. PWA & Autenticação (2026-05-13):
+   - Implementada detecção automática de atualização no PWA com recarregamento forçado.
+   - Alterada estratégia do Service Worker para Network-First no index.html.
+   - Sincronizados papéis de gestão (admin, gestor, gestor_geral, gestor_regional) no fluxo de login.
+   - Resolvido bug onde gestores eram redirecionados incorretamente após o login.
+
+O sistema de gestão de padeiros está totalmente funcional, com cache otimizado e controle de acesso robusto.
