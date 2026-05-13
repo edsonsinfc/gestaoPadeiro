@@ -73,7 +73,7 @@ const App = {
     // Build layout
     app.innerHTML = `
     <div class="app-layout">
-      ${this.renderSidebar(user, isManagement)}
+      ${this.renderSidebar(user)}
       <div class="main-content">
         ${this.renderHeader(route)}
         <div class="page-content" id="page-container">${Components.loading()}</div>
