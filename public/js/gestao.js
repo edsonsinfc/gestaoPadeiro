@@ -873,8 +873,13 @@ const Gestao = {
               <tr>
                 <td><strong>${u.nome}</strong></td>
                 <td>${u.email}</td>
-                <td>${Components.badge(u.role === 'admin' ? 'Administrador' : u.role === 'gestor_geral' ? 'Gestor Geral' : 'Gestor Regional', u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : 'amber')}</td>
-                <td>${u.filial || 'Todas'}</td>
+                <td>${Components.badge(
+                  u.role === 'admin' ? 'Administrador' : 
+                  u.role === 'gestor_geral' ? 'Gestor Geral' : 
+                  u.role === 'gestor_regional' ? 'Gestor Regional' : 'Gestor', 
+                  u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : 'amber'
+                )}</td>
+                <td>${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}</td>
                 <td class="text-right">
                   <button class="btn-icon text-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')" title="Excluir">
                     <i data-lucide="trash-2"></i>
@@ -896,7 +901,10 @@ const Gestao = {
               </div>
               <div class="apple-list-info">
                 <div class="apple-list-title">${u.nome}</div>
-                <div class="apple-list-subtitle">${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : 'Regional'} • ${u.filial || 'Todas'}</div>
+                <div class="apple-list-subtitle">
+                  ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : 'Gestor'} • 
+                  ${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}
+                </div>
               </div>
             </div>
             <i data-lucide="chevron-right" class="apple-chevron"></i>
