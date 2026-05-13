@@ -295,7 +295,7 @@ const Auth = {
     google.accounts.id.initialize({
       client_id: '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com',
       ux_mode: 'redirect',
-      login_uri: 'https://app2.bragodistribuidora.com.br/api/auth/google-login-redirect'
+      login_uri: 'https://app2.bragodistribuidora.com.br/'
     });
 
     const parent = document.getElementById('google-login-btn');
