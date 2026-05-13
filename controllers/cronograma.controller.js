@@ -19,7 +19,8 @@ exports.listCronograma = async (req, res) => {
   
   let tarefas = await Cronograma.find(query);
 
-  if (req.user.role === 'gestor' && req.user.filial) {
+  // Filter by branch if user is a Regional Manager
+  if ((req.user.role === 'gestor' || req.user.role === 'gestor_regional') && req.user.filial) {
     const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
     const ids = padeirosDaFilial.map(p => p.id);
     tarefas = tarefas.filter(t => ids.includes(t.padeiroId));
