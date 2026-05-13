@@ -42,7 +42,7 @@ app.use(errorHandler);
 
 
 // SPA fallback
-app.post('/', require('./controllers/auth.controller').googleLoginRedirect);
+app.post('/api/auth/google-login-redirect', require('./controllers/auth.controller').googleLoginRedirect);
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
