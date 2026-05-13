@@ -88,6 +88,70 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
+/**
+ * Handle Google Redirect (POST from Google)
+ */
+exports.googleLoginRedirect = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).send('Credencial ausente');
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const email = payload.email.toLowerCase().trim();
+
+    let user = null;
+    let role = null;
+
+    // Check admin
+    let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
+    if (admin) {
+      role = admin.role || 'admin';
+      user = { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null };
+    } else {
+      // Check padeiro
+      let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });
+      if (padeiro && padeiro.ativo) {
+        role = padeiro.role;
+        user = { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial };
+      }
+    }
+
+    if (!user) {
+      return res.send(`
+        <script>
+          alert('E-mail não cadastrado no sistema.');
+          window.location.href = '/';
+        </script>
+      `);
+    }
+
+    const token = jwt.sign({ ...user }, JWT_SECRET, { expiresIn: '12h' });
+
+    // HTML that saves data to localStorage and redirects to home
+    res.send(`
+      <html>
+        <head><title>Autenticando...</title></head>
+        <body>
+          <p>Autenticando, por favor aguarde...</p>
+          <script>
+            localStorage.setItem('brago_token', '${token}');
+            localStorage.setItem('brago_user', '${JSON.stringify(user)}');
+            window.location.href = '/';
+          </script>
+        </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error("Google Redirect error:", error);
+    res.status(401).send('Falha na autenticação');
+  }
+};
+
 exports.firstAccess = async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email é obrigatório' });
