@@ -1,4 +1,9 @@
 Projeto Gestão Padeiro
-Estado: Estável e Sincronizado
+Estado: Estável e Sincronizado (Correções de Construtor e SQL aplicadas)
 Data: 2026-05-13
-Objetivo: Garantir que o repositório remoto reflita a versão mais recente do sistema.
+Objetivo: Repositório atualizado com correções críticas no backend (mysqlDB.js).
+
+Principais ajustes de hoje:
+- Correção do erro 'Padeiro is not a constructor' ao criar novos registros.
+- Implementação de filtro para evitar que métodos internos (save, toJSON, toObject) sejam incluídos em comandos SQL.
+- Configuração de métodos do modelo como não-enumeráveis para maior estabilidade.
