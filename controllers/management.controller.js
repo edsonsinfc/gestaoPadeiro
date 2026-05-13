@@ -1,16 +1,24 @@
 const bcrypt = require('bcryptjs');
-const { Admin } = require('../data/db-adapter');
+const { Admin, Padeiro } = require('../data/db-adapter');
 
 exports.listUsers = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     const admins = await Admin.find();
-    res.json(admins.map(a => {
-      const { passwordHash, ...rest } = a;
+    const padeiros = await Padeiro.find();
+    
+    const combined = [
+      ...admins.map(a => ({ ...a, source: 'admin' })),
+      ...padeiros.map(p => ({ ...p, source: 'padeiro' }))
+    ];
+
+    res.json(combined.map(u => {
+      const { passwordHash, firstAccessToken, ...rest } = u;
       return rest;
     }));
   } catch (error) {
+    console.error('Error listing users:', error);
     res.status(500).json({ error: 'Erro ao listar usuários' });
   }
 };
@@ -34,6 +42,7 @@ exports.createUser = async (req, res) => {
       passwordHash,
       role: role || 'gestor_regional',
       filial: role === 'gestor_regional' ? filial : null,
+      ativo: req.body.ativo !== undefined ? (req.body.ativo === 'true' || req.body.ativo === true) : true,
       criadoEm: new Date().toISOString()
     });
 
@@ -53,7 +62,12 @@ exports.deleteUser = async (req, res) => {
     // Prevent self-deletion
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
     
-    await Admin.findByIdAndDelete(req.params.id);
+    // Try both collections
+    const deletedAdmin = await Admin.findByIdAndDelete(req.params.id);
+    if (!deletedAdmin) {
+      await Padeiro.findByIdAndDelete(req.params.id);
+    }
+    
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao excluir usuário' });
@@ -63,20 +77,29 @@ exports.updateUser = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
-    const { nome, email, senha, role, filial } = req.body;
+    const { nome, email, senha, role, filial, ativo } = req.body;
     const updateData = { nome, email, role };
     
+    if (ativo !== undefined) {
+      updateData.ativo = (ativo === 'true' || ativo === true);
+    }
+    
     if (role === 'gestor_regional') updateData.filial = filial;
-    else updateData.filial = null;
+    else if (role !== undefined) updateData.filial = null;
 
     if (senha) {
       updateData.passwordHash = await bcrypt.hash(senha, 10);
     }
 
-    await Admin.findByIdAndUpdate(req.params.id, updateData);
+    // Update in both potential collections
+    const updatedAdmin = await Admin.findByIdAndUpdate(req.params.id, updateData);
+    if (!updatedAdmin) {
+      await Padeiro.findByIdAndUpdate(req.params.id, updateData);
+    }
+    
     res.json({ success: true });
   } catch (error) {
-    console.error("Error updating admin:", error);
+    console.error("Error updating user:", error);
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
 };

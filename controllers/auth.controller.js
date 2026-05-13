@@ -18,6 +18,7 @@ exports.login = async (req, res) => {
     if (admin) {
       const valid = await bcrypt.compare(senha, admin.passwordHash);
       if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+      if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       
       const role = admin.role || 'admin';
       const token = jwt.sign({ 
@@ -71,6 +72,7 @@ exports.googleLogin = async (req, res) => {
 
     let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
     if (admin) {
+      if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       const role = admin.role || 'admin';
       const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '12h' });
       return res.json({ token, user: { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null } });
@@ -109,8 +111,10 @@ exports.googleLoginRedirect = async (req, res) => {
     // Check admin
     let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
     if (admin) {
-      role = admin.role || 'admin';
-      user = { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null };
+      if (admin.ativo) {
+        role = admin.role || 'admin';
+        user = { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null };
+      }
     } else {
       // Check padeiro
       let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });

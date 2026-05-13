@@ -865,21 +865,24 @@ const Gestao = {
               <th>Email</th>
               <th>Papel</th>
               <th>Filial</th>
+              <th>Status</th>
               <th class="text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
-            ${data.map(u => `
-              <tr>
+            ${data.sort((a,b) => a.nome.localeCompare(b.nome)).map(u => `
+              <tr style="${!u.ativo ? 'opacity: 0.6;' : ''}">
                 <td><strong>${u.nome}</strong></td>
                 <td>${u.email}</td>
                 <td>${Components.badge(
                   u.role === 'admin' ? 'Administrador' : 
                   u.role === 'gestor_geral' ? 'Gestor Geral' : 
-                  u.role === 'gestor_regional' ? 'Gestor Regional' : 'Gestor', 
-                  u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : 'amber'
+                  u.role === 'gestor_regional' ? 'Gestor Regional' : 
+                  u.role === 'padeiro' ? 'Padeiro' : 'Gestor', 
+                  u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : u.role === 'padeiro' ? 'green' : 'amber'
                 )}</td>
                 <td>${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}</td>
+                <td>${u.ativo ? '<span class="text-green font-bold">Ativo</span>' : '<span class="text-danger font-bold">Inativo</span>'}</td>
                 <td class="text-right">
                   <div class="row-actions flex gap-2 justify-end">
                     <button class="btn-icon text-blue" onclick="Gestao.openUsuarioForm('${u.id}')" title="Editar">
@@ -898,12 +901,12 @@ const Gestao = {
 
       <!-- Mobile List -->
       <div class="mobile-only apple-list">
-        ${data.map(u => `
-          <div class="apple-card">
+        ${data.sort((a,b) => a.nome.localeCompare(b.nome)).map(u => `
+          <div class="apple-card" style="${!u.ativo ? 'opacity: 0.6;' : ''}">
             <div class="apple-card-info" onclick="Gestao.openUsuarioForm('${u.id}')">
-              <div class="apple-card-name">${u.nome}</div>
+              <div class="apple-card-name">${u.nome} ${!u.ativo ? '<span style="font-size:10px; color:var(--apple-red);">(Inativo)</span>' : ''}</div>
               <div class="apple-list-subtitle" style="font-size: 13px; color: var(--apple-gray);">
-                ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : 'Gestor'} • 
+                ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : u.role === 'padeiro' ? 'Padeiro' : 'Gestor'} • 
                 ${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}
               </div>
             </div>
@@ -952,6 +955,13 @@ const Gestao = {
             <option value="Brago Goiania" ${u.filial === 'Brago Goiania' ? 'selected' : ''}>Brago Goiania</option>
             <option value="Brago Palmas" ${u.filial === 'Brago Palmas' ? 'selected' : ''}>Brago Palmas</option>
             <option value="Brago Campo Grande" ${u.filial === 'Brago Campo Grande' ? 'selected' : ''}>Brago Campo Grande</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="label">Status do Acesso</label>
+          <select name="ativo" class="input-control">
+            <option value="true" ${u.ativo !== false ? 'selected' : ''}>Ativo (Pode acessar)</option>
+            <option value="false" ${u.ativo === false ? 'selected' : ''}>Inativo (Acesso bloqueado)</option>
           </select>
         </div>
       </form>
