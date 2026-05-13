@@ -1,0 +1,4 @@
+Projeto Gestão Padeiro
+Estado: Estável e Sincronizado
+Data: 2026-05-13
+Objetivo: Garantir que o repositório remoto reflita a versão mais recente do sistema.
