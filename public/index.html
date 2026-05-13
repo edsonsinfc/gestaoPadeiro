@@ -128,10 +128,9 @@
       });
 
       // Handle the reload when a new service worker takes over
-      let refreshing = false;
-          console.log('🔄 Novo Service Worker disponível. Recomenda-se atualizar a página para aplicar as mudanças.');
-          // Removido reload automático para evitar loops
-        }
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('🔄 Novo Service Worker ativo. Atualizando a página...');
+        window.location.reload();
       });
     }
   </script>
