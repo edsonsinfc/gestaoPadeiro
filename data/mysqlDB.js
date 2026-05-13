@@ -128,7 +128,7 @@ class SqlCollection {
     const newDoc = { ...doc, id };
     delete newDoc._id;
 
-    const keys = Object.keys(newDoc);
+    const keys = Object.keys(newDoc).filter(k => typeof newDoc[k] !== 'function');
     const values = keys.map(k => typeof newDoc[k] === 'object' ? JSON.stringify(newDoc[k]) : newDoc[k]);
     const placeholders = keys.map(() => '?').join(', ');
     
@@ -149,7 +149,7 @@ class SqlCollection {
   }
 
   async findByIdAndUpdate(id, update, options = {}) {
-    const keys = Object.keys(update);
+    const keys = Object.keys(update).filter(k => typeof update[k] !== 'function');
     const values = keys.map(k => typeof update[k] === 'object' ? JSON.stringify(update[k]) : update[k]);
     const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
     
@@ -212,21 +212,36 @@ function createProxy(instance) {
   return new Proxy(target, {
     construct(t, args) {
       const doc = args[0] || {};
-      return {
-        ...doc,
-        save: async function() {
-          // Use the instance directly for method calls
-          if (this.id || this._id) {
-            return instance.findByIdAndUpdate(this.id || this._id, this);
-          } else {
-            const created = await instance.create(this);
-            Object.assign(this, created);
-            return this;
-          }
+      const d = { ...doc };
+      
+      Object.defineProperties(d, {
+        save: {
+          value: async function() {
+            // Use the instance directly for method calls
+            if (this.id || this._id) {
+              return instance.findByIdAndUpdate(this.id || this._id, this);
+            } else {
+              const created = await instance.create(this);
+              Object.assign(this, created);
+              return this;
+            }
+          },
+          enumerable: false,
+          configurable: true
         },
-        toJSON: function() { return this; },
-        toObject: function() { return this; }
-      };
+        toJSON: {
+          value: function() { return this; },
+          enumerable: false,
+          configurable: true
+        },
+        toObject: {
+          value: function() { return this; },
+          enumerable: false,
+          configurable: true
+        }
+      });
+
+      return d;
     }
   });
 }
