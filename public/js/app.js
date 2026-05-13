@@ -39,7 +39,7 @@ const App = {
     const token = API.token;
     if (user && token) {
       if (user.role === 'padeiro') LocationService.init(user);
-      const isManagement = ['admin', 'gestor_geral', 'gestor_regional'].includes(user.role);
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
       this.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } else {
       this.navigate('login');
@@ -50,6 +50,10 @@ const App = {
     this.currentRoute = route;
     this.routeData = data;
     const app = document.getElementById('app');
+    if (!app) {
+      console.error('❌ Elemento #app não encontrado no DOM!');
+      return;
+    }
 
     if (route === 'login') {
       app.innerHTML = Auth.renderLogin();
@@ -64,7 +68,7 @@ const App = {
     const user = API.getUser();
     if (!user) { this.navigate('login'); return; }
 
-    const isManagement = ['admin', 'gestor_geral', 'gestor_regional'].includes(user.role);
+    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
 
     // Build layout
     app.innerHTML = `

@@ -127,7 +127,8 @@ const Auth = {
       API.setToken(data.token);
       API.setUser(data.user);
       Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
-      App.navigate(data.user.role === 'admin' || data.user.role === 'gestor' ? 'admin-dashboard' : 'padeiro-inicio');
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(data.user.role);
+      App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } catch (err) {
       errorEl.classList.add('active');
       errorEl.textContent = err.message;
@@ -317,7 +318,8 @@ const Auth = {
       API.setToken(data.token);
       API.setUser(data.user);
       Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
-      App.navigate(data.user.role === 'admin' || data.user.role === 'gestor' ? 'admin-dashboard' : 'padeiro-inicio');
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(data.user.role);
+      App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } catch (err) {
       if (errorEl) {
         errorEl.classList.add('active');
