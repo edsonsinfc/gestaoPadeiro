@@ -970,8 +970,8 @@ const Gestao = {
     const footer = `
       <div class="flex justify-between w-full">
         <div>
-          ${id ? `
-            <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario(\`${u.id}\`, \`${u.nome}\`)">
+          ${u.id ? `
+            <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')">
               <i data-lucide="trash-2" style="width:16px; height:16px; vertical-align: middle; margin-right: 4px;"></i>
               Excluir Usuário
             </button>
@@ -1009,6 +1009,11 @@ const Gestao = {
   },
 
   deleteUsuario(id, nome) {
+    if (!id || id === 'undefined') {
+      console.error("Tentativa de excluir usuário sem ID válido", { id, nome });
+      return Components.toast('Erro: ID do usuário inválido.', 'error');
+    }
+    
     if (confirm(`Deseja realmente excluir o usuário ${nome}?`)) {
       API.delete(`/api/management/users/${id}`)
         .then(() => {
