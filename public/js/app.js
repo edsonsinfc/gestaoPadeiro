@@ -89,7 +89,8 @@ const App = {
     this.renderPage(route);
   },
 
-  renderSidebar(user, isManagement) {
+  renderSidebar(user) {
+    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
     const initials = user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     
     const adminNav = `
