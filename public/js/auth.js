@@ -65,6 +65,13 @@ const Auth = {
         <span>ENTRAR</span>
       </button>
 
+      <div class="comodato-divider">
+        <span>ou acesse com</span>
+      </div>
+
+      <!-- Google Login Button Container -->
+      <div id="google-login-btn" class="google-btn-container"></div>
+
       <!-- PWA Install Option -->
       <button type="button" id="pwa-install-btn" class="comodato-btn-pwa" style="display: flex;" onclick="Auth.handleInstallApp()">
         <i data-lucide="download" style="width: 18px; height: 18px; margin-right: 8px;"></i>
@@ -276,5 +283,47 @@ const Auth = {
     API.setUser(null);
     App.navigate('login');
     Components.toast('Sessão encerrada.', 'info');
+  },
+
+  initGoogleLogin() {
+    if (typeof google === 'undefined') {
+      setTimeout(() => this.initGoogleLogin(), 500);
+      return;
+    }
+
+    google.accounts.id.initialize({
+      client_id: '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com',
+      callback: (res) => this.handleGoogleLogin(res)
+    });
+
+    const parent = document.getElementById('google-login-btn');
+    if (parent) {
+      google.accounts.id.renderButton(parent, {
+        theme: 'outline',
+        size: 'large',
+        width: parent.offsetWidth,
+        text: 'signin_with',
+        shape: 'pill',
+        logo_alignment: 'left'
+      });
+    }
+  },
+
+  async handleGoogleLogin(response) {
+    const errorEl = document.getElementById('login-error');
+    try {
+      const data = await API.post('/api/auth/google-login', { credential: response.credential });
+      API.setToken(data.token);
+      API.setUser(data.user);
+      Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
+      App.navigate(data.user.role === 'admin' || data.user.role === 'gestor' ? 'admin-dashboard' : 'padeiro-inicio');
+    } catch (err) {
+      if (errorEl) {
+        errorEl.classList.add('active');
+        errorEl.textContent = err.message || 'Falha no login com Google';
+      } else {
+        Components.toast(err.message || 'Falha no login com Google', 'error');
+      }
+    }
   }
 };

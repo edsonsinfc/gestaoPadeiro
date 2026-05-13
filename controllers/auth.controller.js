@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { JWT_SECRET, BASE_URL } = require('../config');
+const { OAuth2Client } = require('google-auth-library');
+const { JWT_SECRET, BASE_URL, GOOGLE_CLIENT_ID } = require('../config');
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 const { Admin, Padeiro } = require('../data/db-adapter');
 const emailService = require('../data/emailService');
 
@@ -52,6 +54,37 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: 'Erro no servidor' });
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ error: 'Credencial do Google é obrigatória' });
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const email = payload.email.toLowerCase().trim();
+
+    let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
+    if (admin) {
+      const role = admin.role || 'admin';
+      const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '12h' });
+      return res.json({ token, user: { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null } });
+    }
+
+    let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });
+    if (!padeiro) return res.status(404).json({ error: 'E-mail não cadastrado no sistema.' });
+    if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
+
+    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '12h' });
+    return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
+  } catch (error) {
+    console.error("Google Login error:", error);
+    res.status(401).json({ error: 'Falha na autenticação com o Google' });
   }
 };
 

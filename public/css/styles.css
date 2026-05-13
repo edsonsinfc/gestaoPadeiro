@@ -268,6 +268,42 @@
 }
 
 
+/* Google Login Styles */
+.comodato-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+}
+
+.comodato-divider::before,
+.comodato-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comodato-divider:not(:empty)::before {
+  margin-right: .5em;
+}
+
+.comodato-divider:not(:empty)::after {
+  margin-left: .5em;
+}
+
+.google-btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  min-height: 44px;
+}
+
 .comodato-footer {
   position: absolute;
   bottom: 24px;
@@ -275,6 +311,7 @@
   font-size: 13px;
   color: #999;
 }
+
 
 /* Responsive */
 @media (max-width: 992px) {

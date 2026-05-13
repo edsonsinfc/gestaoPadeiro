@@ -13,3 +13,6 @@ uploads/
 *.bak.js
 MIGRATION_LOG.md
 AUDIT_FILES.txt
+
+# Google secrets
+client_secret_*.json

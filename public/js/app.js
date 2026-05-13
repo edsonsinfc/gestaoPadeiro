@@ -52,6 +52,7 @@ const App = {
 
     if (route === 'login') {
       app.innerHTML = Auth.renderLogin();
+      Auth.initGoogleLogin();
       return;
     }
     if (route === 'primeiro-acesso') {
