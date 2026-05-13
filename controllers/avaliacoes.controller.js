@@ -40,10 +40,13 @@ exports.createAvaliacao = async (req, res) => {
       if (req.body[col] !== undefined) nova[col] = req.body[col];
     });
 
-    // 2. Traduções de nomes do Frontend para o Banco
+    // 2. Traduções de nomes do Frontend para o Banco (Suporte a aliases do Legado e Mobile)
     if (req.body.nota !== undefined) nova.nota = req.body.nota;
+    if (req.body.media !== undefined) nova.nota = req.body.media;
     if (req.body.respostas !== undefined) nova.respostas = req.body.respostas;
+    if (req.body.notas !== undefined) nova.respostas = req.body.notas;
     if (req.body.observacao !== undefined) nova.observacao = req.body.observacao;
+    if (req.body.comentario !== undefined) nova.observacao = req.body.comentario;
 
     // Remove qualquer campo que não esteja na lista de colunas válidas (segurança extra)
     Object.keys(nova).forEach(key => {

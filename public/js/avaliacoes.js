@@ -383,7 +383,7 @@ const Avaliacoes = {
                 ${Components.starsDisplay(a.nota||0)}
               </div>
             </td>
-            <td class="text-secondary" style="font-size:13px">${a.comentario||'—'}</td>
+            <td class="text-secondary" style="font-size:13px">${a.observacao||a.comentario||'—'}</td>
           </tr>`).join('')}</tbody>
         </table>
       </div>
@@ -407,7 +407,7 @@ const Avaliacoes = {
                   ${[1,2,3,4,5].map(i => `<i data-lucide="star" size="10" style="color: ${i <= Math.round(a.nota) ? '#F59E0B' : '#E5E7EB'}; fill: ${i <= Math.round(a.nota) ? '#F59E0B' : 'transparent'};"></i>`).join('')}
                 </div>
               </div>
-              ${a.comentario ? `<div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-style: italic;">"${a.comentario}"</div>` : ''}
+              ${(a.observacao || a.comentario) ? `<div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-style: italic;">"${a.observacao || a.comentario}"</div>` : ''}
             </div>
           </div>`;
         }).join('')}
