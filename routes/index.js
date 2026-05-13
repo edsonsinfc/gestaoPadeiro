@@ -16,5 +16,6 @@ router.use('/cronograma', require('./cronograma.routes'));
 router.use('/stats', require('./stats.routes'));
 router.use('/criterios', require('./criterios.routes'));
 router.use('/upload', require('./upload.routes'));
+router.use('/tracking', require('./tracking.routes'));
 
 module.exports = router;

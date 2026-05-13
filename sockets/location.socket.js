@@ -1,4 +1,4 @@
-const { Localizacao } = require('../data/db-adapter');
+const { Localizacao, HistoricoLocalizacao } = require('../data/db-adapter');
 
 async function initLocationSocket(io) {
   const activeLocations = new Map();
@@ -50,7 +50,17 @@ async function initLocationSocket(io) {
           accuracy: data.coords.accuracy,
           lastUpdate: locationData.lastUpdate
         }, { upsert: true });
-      } catch (e) {
++
++        // Persist in history
++        await HistoricoLocalizacao.create({
++          userId: data.userId,
++          userName: data.userName,
++          lat: data.coords.lat,
++          lng: data.coords.lng,
++          accuracy: data.coords.accuracy,
++          timestamp: locationData.lastUpdate
++        });
+       } catch (e) {
         console.error("Erro ao salvar localização no banco:", e);
       }
       

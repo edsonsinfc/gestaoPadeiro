@@ -972,8 +972,8 @@ const Gestao = {
         <div>
           ${u.id ? `
             <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario('${u.id}', '${u.nome}')">
-              <i data-lucide="trash-2" style="width:16px; height:16px; vertical-align: middle; margin-right: 4px;"></i>
-              Excluir Usuário
+              <i data-lucide="archive" style="width:16px; height:16px; vertical-align: middle; margin-right: 4px;"></i>
+              Mover para Lixeira
             </button>
           ` : ''}
         </div>
@@ -1014,10 +1014,10 @@ const Gestao = {
       return Components.toast('Erro: ID do usuário inválido.', 'error');
     }
     
-    if (confirm(`Deseja realmente excluir o usuário ${nome}?`)) {
+    if (confirm(`Deseja realmente mover o usuário ${nome} para a lixeira? Ele não aparecerá mais no sistema.`)) {
       API.delete(`/api/management/users/${id}`)
         .then(() => {
-          Components.toast('Usuário excluído!', 'success');
+          Components.toast('Usuário movido para a lixeira!', 'success');
           Gestao.loadTab();
         })
         .catch(e => Components.toast(e.message, 'error'));

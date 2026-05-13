@@ -31,6 +31,7 @@ const TABLES = [
           firstAccessToken TEXT,
           firstAccessExpiry VARCHAR(50),
           ativo BOOLEAN DEFAULT TRUE,
+          deletado BOOLEAN DEFAULT FALSE,
           role VARCHAR(50) DEFAULT 'padeiro',
           criadoEm VARCHAR(100),
           atualizadoEm VARCHAR(100)
@@ -93,6 +94,7 @@ const TABLES = [
           role VARCHAR(50) DEFAULT 'admin',
           filial VARCHAR(255),
           ativo BOOLEAN DEFAULT TRUE,
+          deletado BOOLEAN DEFAULT FALSE,
           criadoEm VARCHAR(100)
         )`
       },
@@ -197,6 +199,20 @@ const TABLES = [
           lng DOUBLE,
           accuracy DOUBLE,
           lastUpdate VARCHAR(100)
+        )`
+      },
+      {
+        name: 'historico_localizacoes',
+        schema: `CREATE TABLE IF NOT EXISTS historico_localizacoes (
+          id VARCHAR(50) PRIMARY KEY,
+          userId VARCHAR(50),
+          userName VARCHAR(255),
+          lat DOUBLE,
+          lng DOUBLE,
+          accuracy DOUBLE,
+          timestamp VARCHAR(100),
+          INDEX (userId),
+          INDEX (timestamp)
         )`
       }
 ];

@@ -5,8 +5,8 @@ exports.listUsers = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
-    const admins = await Admin.find();
-    const padeiros = await Padeiro.find();
+    const admins = await Admin.find({ deletado: { $ne: true } });
+    const padeiros = await Padeiro.find({ deletado: { $ne: true } });
     
     const combined = [
       ...admins.map(a => ({ ...a, source: 'admin' })),
@@ -62,10 +62,12 @@ exports.deleteUser = async (req, res) => {
     // Prevent self-deletion
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
     
-    // Try both collections
-    const deletedAdmin = await Admin.findByIdAndDelete(req.params.id);
-    if (!deletedAdmin) {
-      await Padeiro.findByIdAndDelete(req.params.id);
+    // Soft delete: set deletado=true
+    const update = { deletado: true, ativo: false, atualizadoEm: new Date().toISOString() };
+    
+    const updatedAdmin = await Admin.findByIdAndUpdate(req.params.id, update);
+    if (!updatedAdmin) {
+      await Padeiro.findByIdAndUpdate(req.params.id, update);
     }
     
     res.json({ success: true });

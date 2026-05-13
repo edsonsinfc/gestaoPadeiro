@@ -262,5 +262,6 @@ module.exports = {
   Avaliacao: createProxy(new SqlCollection('Avaliacao', 'avaliacoes')),
   Cronograma: createProxy(new SqlCollection('Cronograma', 'cronogramas')),
   Criterio: createProxy(new SqlCollection('Criterio', 'criterios')),
-  Localizacao: createProxy(new SqlCollection('Localizacao', 'localizacoes'))
+  Localizacao: createProxy(new SqlCollection('Localizacao', 'localizacoes')),
+  HistoricoLocalizacao: createProxy(new SqlCollection('HistoricoLocalizacao', 'historico_localizacoes'))
 };

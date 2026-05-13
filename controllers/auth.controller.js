@@ -18,6 +18,7 @@ exports.login = async (req, res) => {
     if (admin) {
       const valid = await bcrypt.compare(senha, admin.passwordHash);
       if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+      if (admin.deletado) return res.status(403).json({ error: 'Usuário inexistente' });
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       
       const role = admin.role || 'admin';
@@ -43,7 +44,7 @@ exports.login = async (req, res) => {
 
     // Check padeiro
     let padeiro = await Padeiro.findOne({ email: new RegExp(`^${emailLower}$`, 'i') });
-    if (!padeiro) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (!padeiro || padeiro.deletado) return res.status(404).json({ error: 'Usuário não encontrado' });
     if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
     if (!padeiro.passwordHash) return res.status(403).json({ error: 'first_access', message: 'Primeiro acesso. Verifique seu e-mail para definir sua senha.' });
 
@@ -72,6 +73,7 @@ exports.googleLogin = async (req, res) => {
 
     let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
     if (admin) {
+      if (admin.deletado) return res.status(403).json({ error: 'Usuário inexistente' });
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       const role = admin.role || 'admin';
       const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '12h' });
@@ -79,7 +81,7 @@ exports.googleLogin = async (req, res) => {
     }
 
     let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });
-    if (!padeiro) return res.status(404).json({ error: 'E-mail não cadastrado no sistema.' });
+    if (!padeiro || padeiro.deletado) return res.status(404).json({ error: 'E-mail não cadastrado no sistema.' });
     if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
 
     const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '12h' });
@@ -110,7 +112,7 @@ exports.googleLoginRedirect = async (req, res) => {
 
     // Check admin
     let admin = await Admin.findOne({ email: new RegExp(`^${email}$`, 'i') });
-    if (admin) {
+    if (admin && !admin.deletado) {
       if (admin.ativo) {
         role = admin.role || 'admin';
         user = { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null };
@@ -118,7 +120,7 @@ exports.googleLoginRedirect = async (req, res) => {
     } else {
       // Check padeiro
       let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });
-      if (padeiro && padeiro.ativo) {
+      if (padeiro && !padeiro.deletado && padeiro.ativo) {
         role = padeiro.role;
         user = { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial };
       }
