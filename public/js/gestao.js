@@ -961,7 +961,7 @@ const Gestao = {
       <div class="flex justify-between w-full">
         <div>
           ${id ? `
-            <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario('${id}', '${u.nome}')">
+            <button class="btn btn-outline text-danger border-danger" onclick="Gestao.deleteUsuario(\`${id}\`, \`${u.nome}\`)">
               <i data-lucide="trash-2" style="width:16px; height:16px; vertical-align: middle; margin-right: 4px;"></i>
               Excluir Usuário
             </button>
