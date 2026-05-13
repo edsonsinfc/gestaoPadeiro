@@ -50,16 +50,16 @@ async function initLocationSocket(io) {
           accuracy: data.coords.accuracy,
           lastUpdate: locationData.lastUpdate
         }, { upsert: true });
-+
-+        // Persist in history
-+        await HistoricoLocalizacao.create({
-+          userId: data.userId,
-+          userName: data.userName,
-+          lat: data.coords.lat,
-+          lng: data.coords.lng,
-+          accuracy: data.coords.accuracy,
-+          timestamp: locationData.lastUpdate
-+        });
+
+        // Persist in history
+        await HistoricoLocalizacao.create({
+          userId: data.userId,
+          userName: data.userName,
+          lat: data.coords.lat,
+          lng: data.coords.lng,
+          accuracy: data.coords.accuracy,
+          timestamp: locationData.lastUpdate
+        });
        } catch (e) {
         console.error("Erro ao salvar localização no banco:", e);
       }

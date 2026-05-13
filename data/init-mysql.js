@@ -258,12 +258,19 @@ async function initTables() {
   try {
     const [cols] = await pool.query("SHOW COLUMNS FROM admins");
     const colNames = cols.map(c => c.Field);
-
-    if (!colNames.includes('filial')) {
-      await pool.execute("ALTER TABLE admins ADD COLUMN filial VARCHAR(255)");
-    }
+    if (!colNames.includes('filial')) await pool.execute("ALTER TABLE admins ADD COLUMN filial VARCHAR(255)");
+    if (!colNames.includes('deletado')) await pool.execute("ALTER TABLE admins ADD COLUMN deletado BOOLEAN DEFAULT FALSE");
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (admins):', e.message);
+  }
+
+  // Migrations for 'padeiros' table
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM padeiros");
+    const colNames = cols.map(c => c.Field);
+    if (!colNames.includes('deletado')) await pool.execute("ALTER TABLE padeiros ADD COLUMN deletado BOOLEAN DEFAULT FALSE");
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (padeiros):', e.message);
   }
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }
