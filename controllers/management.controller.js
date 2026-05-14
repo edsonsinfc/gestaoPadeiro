@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { Admin, Padeiro } = require('../data/db-adapter');
+const { Admin, Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-adapter');
 
 exports.listUsers = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
@@ -70,18 +70,30 @@ exports.deleteUser = async (req, res) => {
     // Prevent self-deletion
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
     
-    // Soft delete: set deletado=true
-    const update = { deletado: true, ativo: false, atualizadoEm: new Date().toISOString() };
+    const userId = req.params.id;
+
+    // Try to delete from Admin
+    const deletedAdmin = await Admin.findByIdAndDelete(userId);
     
-    const updatedAdmin = await Admin.findByIdAndUpdate(req.params.id, update);
-    if (!updatedAdmin) {
-      await Padeiro.findByIdAndUpdate(req.params.id, update);
+    // If not admin, try Padeiro and perform cascade delete
+    if (!deletedAdmin) {
+      await Promise.all([
+        Padeiro.findByIdAndDelete(userId),
+        Atividade.deleteMany({ padeiroId: userId }),
+        Meta.deleteMany({ padeiroId: userId }),
+        Avaliacao.deleteMany({ padeiroId: userId }),
+        Cronograma.deleteMany({ padeiroId: userId })
+      ]);
+    } else {
+      // If it was an admin, also clean up evaluations performed by them if necessary
+      // (Optional, but matches "any screen" requirement)
+      await Avaliacao.deleteMany({ avaliadoPor: userId });
     }
     
-    res.json({ success: true });
+    res.json({ success: true, message: 'Usuário e todos os seus registros foram excluídos permanentemente.' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Erro ao excluir usuário', details: error.message });
+    res.status(500).json({ error: 'Erro ao excluir usuário permanentemente', details: error.message });
   }
 };
 exports.updateUser = async (req, res) => {

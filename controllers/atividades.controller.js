@@ -2,7 +2,7 @@ const { Atividade, Padeiro, Cronograma } = require('../data/db-adapter');
 
 exports.listAtividades = async (req, res) => {
   try {
-    const query = {};
+    const query = { deletado: { $ne: true } };
     if (req.user.role === 'padeiro') query.padeiroId = req.user.id;
     if (req.query.padeiroId) query.padeiroId = req.query.padeiroId;
     if (req.query.data) query.data = req.query.data;
@@ -10,7 +10,7 @@ exports.listAtividades = async (req, res) => {
     let atividades = await Atividade.find(query).sort({ data: -1 });
     
     if (req.user.role === 'gestor_regional' && req.user.filial) {
-      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial, deletado: { $ne: true } });
       const ids = padeirosDaFilial.map(p => p.id);
       atividades = atividades.filter(a => ids.includes(a.padeiroId));
     }

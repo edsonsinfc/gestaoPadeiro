@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const { Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-adapter');
 
 exports.listPadeiros = async (req, res) => {
-  let query = {};
+  let query = { deletado: { $ne: true } };
   if (req.user.role === 'gestor_regional' && req.user.filial) {
     query.filial = req.user.filial;
   }

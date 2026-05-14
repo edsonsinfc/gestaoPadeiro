@@ -2,7 +2,7 @@ const { Padeiro, Produto, Cliente, Meta, Atividade, Avaliacao, Colaborador } = r
 
 exports.getGeneralStats = async (req, res) => {
   try {
-    const padeiroQuery = { ativo: true };
+    const padeiroQuery = { ativo: true, deletado: { $ne: true } };
     const metaQuery = {};
     const atividadeQuery = {};
     const avaliacaoQuery = {};
@@ -11,7 +11,7 @@ exports.getGeneralStats = async (req, res) => {
 
     if (isRegional && req.user.filial) {
       padeiroQuery.filial = req.user.filial;
-      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial, deletado: { $ne: true } });
       const ids = padeirosDaFilial.map(p => p.id);
       metaQuery.padeiroId = { $in: ids };
       atividadeQuery.padeiroId = { $in: ids };
@@ -155,7 +155,7 @@ exports.getGeneralStats = async (req, res) => {
 exports.getFiliaisStats = async (req, res) => {
   try {
     const [padeiros, atividades, avaliacoes] = await Promise.all([
-      Padeiro.find({ ativo: true }),
+      Padeiro.find({ ativo: true, deletado: { $ne: true } }),
       Atividade.find(),
       Avaliacao.find()
     ]);
@@ -192,7 +192,7 @@ exports.getFilialDetail = async (req, res) => {
   try {
     const filialNome = req.params.nome;
     const [padeiros, atividades, avaliacoes] = await Promise.all([
-      Padeiro.find({ filial: filialNome, ativo: true }),
+      Padeiro.find({ filial: filialNome, ativo: true, deletado: { $ne: true } }),
       Atividade.find(),
       Avaliacao.find()
     ]);
