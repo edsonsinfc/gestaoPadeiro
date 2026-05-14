@@ -55,6 +55,7 @@ const TABLES = [
           id VARCHAR(50) PRIMARY KEY,
           numero VARCHAR(50),
           nome VARCHAR(255),
+          ramoAtividade VARCHAR(255),
           cnpj VARCHAR(50),
           inscricaoEstadual VARCHAR(50),
           telefone VARCHAR(50),

@@ -61,6 +61,7 @@ class SqlCollection {
       } else if (typeof val === 'object' && val !== null) {
         if (val.$gte) { parts.push(`\`${key}\` >= ?`); values.push(val.$gte); }
         if (val.$lte) { parts.push(`\`${key}\` <= ?`); values.push(val.$lte); }
+        if (val.$ne !== undefined) { parts.push(`\`${key}\` <> ?`); values.push(val.$ne); }
         if (val.$in) { 
           if (Array.isArray(val.$in) && val.$in.length > 0) {
             parts.push(`\`${key}\` IN (?)`); 
