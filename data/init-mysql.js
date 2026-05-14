@@ -139,6 +139,7 @@ const TABLES = [
           longitude VARCHAR(50),
           observacao TEXT,
           notaCliente INT,
+          kgItens TEXT,
           atualizadoEm VARCHAR(100)
         )`
       },
@@ -271,6 +272,17 @@ async function initTables() {
     if (!colNames.includes('deletado')) await pool.execute("ALTER TABLE padeiros ADD COLUMN deletado BOOLEAN DEFAULT FALSE");
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (padeiros):', e.message);
+  }
+
+  // Migrations for 'atividades' table
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM atividades");
+    const colNames = cols.map(c => c.Field);
+    if (!colNames.includes('kgItens')) {
+      await pool.execute("ALTER TABLE atividades ADD COLUMN kgItens TEXT");
+    }
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (atividades):', e.message);
   }
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }

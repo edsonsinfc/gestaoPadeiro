@@ -66,7 +66,7 @@ exports.createAtividade = async (req, res) => {
       'produtoId', 'produtoNome', 'kgTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
-      'notaCliente', 'atualizadoEm'
+      'notaCliente', 'kgItens', 'atualizadoEm'
     ];
 
     const nova = {
@@ -110,7 +110,7 @@ exports.updateAtividade = async (req, res) => {
       'produtoId', 'produtoNome', 'kgTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
-      'notaCliente', 'atualizadoEm'
+      'notaCliente', 'kgItens', 'atualizadoEm'
     ];
 
     const updateData = {};
