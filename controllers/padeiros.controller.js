@@ -2,12 +2,17 @@ const bcrypt = require('bcryptjs');
 const { Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-adapter');
 
 exports.listPadeiros = async (req, res) => {
-  let query = { deletado: { $ne: true } };
-  if (req.user.role === 'gestor_regional' && req.user.filial) {
-    query.filial = req.user.filial;
+  try {
+    let query = { deletado: { $ne: true } };
+    if (req.user.role === 'gestor_regional' && req.user.filial) {
+      query.filial = req.user.filial;
+    }
+    const padeiros = await Padeiro.find(query).select('-passwordHash -firstAccessToken');
+    res.json(padeiros);
+  } catch (error) {
+    console.error('Erro ao listar padeiros:', error);
+    res.status(500).json({ error: 'Erro ao carregar lista de padeiros' });
   }
-  const padeiros = await Padeiro.find(query).select('-passwordHash -firstAccessToken');
-  res.json(padeiros);
 };
 
 exports.getPadeiro = async (req, res) => {

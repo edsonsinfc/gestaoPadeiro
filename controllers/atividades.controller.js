@@ -2,7 +2,7 @@ const { Atividade, Padeiro, Cronograma } = require('../data/db-adapter');
 
 exports.listAtividades = async (req, res) => {
   try {
-    const query = { deletado: { $ne: true } };
+    const query = {};
     if (req.user.role === 'padeiro') query.padeiroId = req.user.id;
     if (req.query.padeiroId) query.padeiroId = req.query.padeiroId;
     if (req.query.data) query.data = req.query.data;
