@@ -80,7 +80,8 @@ exports.deleteUser = async (req, res) => {
     
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao excluir usuário' });
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Erro ao excluir usuário', details: error.message });
   }
 };
 exports.updateUser = async (req, res) => {
@@ -110,6 +111,6 @@ exports.updateUser = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+    res.status(500).json({ error: 'Erro ao atualizar usuário', details: error.message });
   }
 };

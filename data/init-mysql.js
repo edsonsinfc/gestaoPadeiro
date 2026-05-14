@@ -95,7 +95,8 @@ const TABLES = [
           filial VARCHAR(255),
           ativo BOOLEAN DEFAULT TRUE,
           deletado BOOLEAN DEFAULT FALSE,
-          criadoEm VARCHAR(100)
+          criadoEm VARCHAR(100),
+          atualizadoEm VARCHAR(100)
         )`
       },
       {
@@ -261,6 +262,7 @@ async function initTables() {
     const colNames = cols.map(c => c.Field);
     if (!colNames.includes('filial')) await pool.execute("ALTER TABLE admins ADD COLUMN filial VARCHAR(255)");
     if (!colNames.includes('deletado')) await pool.execute("ALTER TABLE admins ADD COLUMN deletado BOOLEAN DEFAULT FALSE");
+    if (!colNames.includes('atualizadoEm')) await pool.execute("ALTER TABLE admins ADD COLUMN atualizadoEm VARCHAR(100)");
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (admins):', e.message);
   }

@@ -374,7 +374,7 @@ const API = {
           Components.toast('Sessão expirada ou dados inválidos.', 'error');
           App.navigate('login');
         }
-        throw new Error(data.message || data.error || 'Erro na requisição. Verifique seus dados.');
+        throw new Error(data.error || data.message || data.details || 'Erro na requisição. Verifique seus dados.');
       }
 
       // Cache successful GET requests
