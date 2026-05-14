@@ -1,6 +1,6 @@
 {
-  "name": "BRAGO Sistema Padeiro",
-  "short_name": "Brago Padeiro",
+  "name": "Smart Gestor",
+  "short_name": "Smart Gestor",
   "description": "Sistema de Gestão e Produção - BRAGO Distribuidora",
   "start_url": "/?pwa=true",
   "scope": "/",

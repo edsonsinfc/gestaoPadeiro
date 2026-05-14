@@ -508,7 +508,10 @@ const PadeiroFlow = {
         const dataUrl = canvas.toDataURL('image/png');
         const result = await API.uploadBase64(dataUrl, 'assinaturas');
         this.activity.assinatura = result.path;
-      } catch(e) { /* signature optional */ }
+      } catch(e) {
+        console.error('Erro ao fazer upload da assinatura:', e);
+        Components.toast('Erro ao salvar assinatura, mas a atividade será salva.', 'info');
+      }
     }
 
     this.activity.lastStep = 4;

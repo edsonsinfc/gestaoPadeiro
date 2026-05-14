@@ -436,6 +436,6 @@ const API = {
   },
 
   async uploadBase64(data, type = 'assinaturas') {
-    return this.post(`/api/upload-base64/${type}`, { data });
+    return this.post(`/api/upload/base64/${type}`, { data });
   }
 };
