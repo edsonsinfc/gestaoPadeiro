@@ -41,6 +41,7 @@ const App = {
       if (user.role === 'padeiro') LocationService.init(user);
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
       this.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+      
     } else {
       this.navigate('login');
     }
@@ -284,6 +285,36 @@ const App = {
     Components.renderIcons();
     // Bind iOS header scroll collapse behavior
     this.bindHeaderScroll();
+
+    // Auto-start tutorial for first-time admins
+    if (route === 'admin-dashboard' && !localStorage.getItem('brago_tutorial_seen')) {
+      const user = API.getUser();
+      if (user && ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role)) {
+        setTimeout(() => {
+          if (typeof Tutorial !== 'undefined') Tutorial.start();
+        }, 1500);
+      }
+    }
+
+    // Add floating tutorial button for bakers on home page
+    const existingFab = document.getElementById('baker-tutorial-fab');
+    if (existingFab) existingFab.remove();
+
+    if (route === 'padeiro-inicio') {
+      const user = API.getUser();
+      if (user && user.role === 'padeiro') {
+        const fab = document.createElement('button');
+        fab.id = 'baker-tutorial-fab';
+        fab.className = 'tutorial-fab';
+        fab.innerHTML = '<i data-lucide="help-circle"></i>';
+        fab.title = 'Ver Tutorial';
+        fab.onclick = () => {
+          if (typeof PadeiroTutorial !== 'undefined') PadeiroTutorial.start();
+        };
+        document.body.appendChild(fab);
+        Components.renderIcons();
+      }
+    }
   },
 
   // Desktop sidebar toggle (unchanged)

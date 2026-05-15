@@ -174,6 +174,94 @@ const AdminDashboard = {
 
       <div class="admin-v2-container fade-in">
         
+        <!-- HIG Welcome Section -->
+        <!-- HIG Welcome Section -->
+        <div class="card-v2 welcome-card-hig" style="
+          background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+          color: white;
+          border-radius: 16px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+          margin-bottom: 24px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+          box-sizing: border-box;
+        ">
+          <!-- Light Spot -->
+          <div style="
+            position: absolute;
+            top: 0; right: 0;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+            pointer-events: none;
+          "></div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px; z-index: 1; flex: 1 1 200px; min-width: 0;">
+            <h2 style="
+              font-size: 22px;
+              font-weight: 700;
+              margin: 0;
+              letter-spacing: -0.3px;
+              line-height: 1.2;
+              color: #FFCC00; /* Apple Gold/Orange for better visibility */
+            ">
+              Olá, ${API.getUser().nome.split(' ')[0]}! 
+              <span style="font-size: 20px; margin-left: 4px; vertical-align: middle;">👋</span>
+            </h2>
+            <p style="
+              font-size: 15px;
+              opacity: 0.9;
+              font-weight: 400;
+              margin: 0;
+              line-height: 1.4;
+              color: rgba(255, 255, 255, 0.9);
+            ">Pronto para gerenciar a produção de hoje?</p>
+          </div>
+
+          <div style="z-index: 1; flex-shrink: 0;">
+            <button class="btn-hig-glass" onclick="Tutorial.start()" style="
+              background: rgba(255, 255, 255, 0.2);
+              backdrop-filter: blur(12px);
+              -webkit-backdrop-filter: blur(12px);
+              color: white;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              border-radius: 12px;
+              padding: 10px 18px;
+              font-size: 14px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              cursor: pointer;
+              transition: all 150ms ease;
+              white-space: nowrap;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            ">
+              <i data-lucide="book-open" size="18" style="stroke-width: 2.5px;"></i>
+              Tutorial do Sistema
+            </button>
+          </div>
+        </div>
+
+        <style>
+          .btn-hig-glass:hover {
+            background: rgba(255, 255, 255, 0.28) !important;
+          }
+          .btn-hig-glass:active {
+            transform: scale(0.98);
+          }
+          .btn-hig-glass:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #0A84FF;
+          }
+        </style>
+
         <!-- KPI Grid -->
         <div class="kpi-grid-v2">
           <div class="kpi-card-v2 kpi-blue">

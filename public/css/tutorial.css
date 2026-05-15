@@ -1,0 +1,143 @@
+/**
+ * Tutorial Styles
+ * BRAGO Sistema Padeiro
+ */
+
+.tutorial-modal {
+    max-width: 400px !important;
+    border-radius: 28px !important; /* iOS style large radius */
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+    animation: tutorialBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes tutorialBounce {
+    from { opacity: 0; transform: scale(0.8) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.tutorial-icon-box {
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+@keyframes iconPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(30, 75, 255, 0.2); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(30, 75, 255, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(30, 75, 255, 0); }
+}
+
+.btn-touch {
+    min-height: 48px; /* Mobile touch target rule */
+    padding: 0 24px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.tutorial-highlight {
+    position: relative;
+    background: var(--primary-light) !important;
+    color: var(--primary) !important;
+    border-radius: 12px;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 4px rgba(30, 75, 255, 0.4), 0 0 20px rgba(30, 75, 255, 0.3);
+    z-index: 1001;
+    position: relative;
+    background-color: rgba(30, 75, 255, 0.05) !important;
+    border-radius: 8px;
+}
+
+/* Floating Tutorial Button */
+.tutorial-fab {
+  position: fixed;
+  bottom: 100px; /* Above the mobile nav if any, or just floating */
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(30, 75, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fab-pulse 2s infinite;
+}
+
+.tutorial-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(30, 75, 255, 0.5);
+}
+
+.tutorial-fab:active {
+  transform: scale(0.95);
+}
+
+.tutorial-fab i {
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes fab-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(30, 75, 255, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(30, 75, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 75, 255, 0); }
+}
+
+/* Adjust for desktop if needed */
+@media (min-width: 1024px) {
+  .tutorial-fab {
+    bottom: 32px;
+    right: 32px;
+  }
+}
+
+.tutorial-highlight i {
+    color: var(--primary) !important;
+}
+
+/* Modal adjustments for tutorial */
+.tutorial-modal .modal-header {
+    border-bottom: none;
+    padding: 24px 24px 8px;
+    text-align: center;
+}
+
+.tutorial-modal .modal-title {
+    width: 100%;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.tutorial-modal .modal-close {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+}
+
+.tutorial-modal .modal-body {
+    padding: 0 24px 24px;
+}
+
+.tutorial-modal .modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 16px 24px;
+    background: var(--surface-secondary);
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 600px) {
+    .tutorial-modal {
+        width: calc(100% - 32px) !important;
+        margin: 16px !important;
+        position: fixed;
+        bottom: 16px;
+        top: auto !important;
+        max-width: none !important;
+    }
+}
