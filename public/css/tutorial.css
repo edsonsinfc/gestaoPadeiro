@@ -8,6 +8,8 @@
     border-radius: 28px !important; /* iOS style large radius */
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+    max-height: 90dvh;
+    overflow-y: auto;
     animation: tutorialBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 

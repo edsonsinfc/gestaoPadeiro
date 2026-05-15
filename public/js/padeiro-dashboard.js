@@ -71,7 +71,7 @@ const PadeiroDashboard = {
       }
 
       c.innerHTML = `
-      <div class="pd-dashboard fade-in">
+      <div class="pd-dashboard fade-in" style="padding-bottom: 40px;">
         <!-- Hero Section -->
         <div class="pd-hero">
           <div class="pd-hero-bg"></div>
