@@ -118,7 +118,8 @@ exports.getGeneralStats = async (req, res) => {
       }
       atendimentosPorCliente[key].totalAtendimentos++;
       atendimentosPorCliente[key].totalKg += parseFloat(a.kgTotal) || 0;
-      if (a.notaCliente) atendimentosPorCliente[key].notas.push(a.notaCliente);
+      const nota = a.notaPadeiroCliente !== undefined && a.notaPadeiroCliente !== null ? a.notaPadeiroCliente : a.notaCliente;
+      if (nota) atendimentosPorCliente[key].notas.push(nota);
     });
     const rankingClientes = Object.values(atendimentosPorCliente)
       .map(c => ({

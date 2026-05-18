@@ -616,12 +616,26 @@ const Gestao = {
       <!-- Desktop Table -->
       <div class="table-responsive desktop-only" style="max-height:500px;">
         <table>
-          <thead style="position: sticky; top: 0; background: var(--system-bg);"><tr><th>#</th><th>Cliente</th><th>Status</th><th style="text-align: right;">Ações</th></tr></thead>
+          <thead style="position: sticky; top: 0; background: var(--system-bg);">
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Avaliação Média</th>
+              <th>Status</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
           <tbody>
             ${data.map(cl => `
               <tr>
                 <td class="text-tertiary" style="font-weight:600;">${cl.numero || '-'}</td>
                 <td style="font-weight:600; color: var(--text-primary);">${cl.nome}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-weight: 700; color: #FF9500;">${cl.notaMedia ? cl.notaMedia.toFixed(1) : 'N/A'}</span>
+                    ${cl.notaMedia ? Components.starsDisplay(Math.round(cl.notaMedia)) : ''}
+                  </div>
+                </td>
                 <td>${cl.ativo !== false ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Inativo</span>'}</td>
                 <td style="text-align: right;">
                   <div class="row-actions flex gap-2 justify-end">
@@ -646,8 +660,12 @@ const Gestao = {
               <div class="apple-card-top">
                 <span class="apple-card-name">${cl.nome}</span>
               </div>
-              <div class="apple-card-mid">
+              <div class="apple-card-mid" style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                 <span class="apple-badge-pill badge-apple-${cl.ativo !== false ? 'green' : 'red'}">${cl.ativo !== false ? 'Ativo' : 'Inativo'}</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #FF9500;">
+                  <i data-lucide="star" style="width: 14px; height: 14px; fill: #FF9500; color: #FF9500;"></i>
+                  ${cl.notaMedia ? cl.notaMedia.toFixed(1) : 'N/A'}
+                </span>
               </div>
             </div>
             <i data-lucide="chevron-right" class="apple-chevron" style="width:16px; height:16px;"></i>

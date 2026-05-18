@@ -1,8 +1,38 @@
-const { Cliente } = require('../data/db-adapter');
+const { Cliente, Atividade } = require('../data/db-adapter');
 
 exports.listClientes = async (req, res) => {
-  const clientes = await Cliente.find();
-  res.json(clientes);
+  try {
+    const [clientes, atividades] = await Promise.all([
+      Cliente.find(),
+      Atividade.find()
+    ]);
+
+    const notesByClient = {};
+    atividades.forEach(a => {
+      const key = a.clienteId;
+      if (!key) return;
+      if (!notesByClient[key]) notesByClient[key] = [];
+      const score = a.notaPadeiroCliente !== undefined && a.notaPadeiroCliente !== null ? a.notaPadeiroCliente : a.notaCliente;
+      if (score) notesByClient[key].push(score);
+    });
+
+    const enrichedClientes = clientes.map(c => {
+      const cJson = typeof c.toJSON === 'function' ? c.toJSON() : c;
+      const notes = notesByClient[c.id] || [];
+      const notaMedia = notes.length > 0 
+        ? notes.reduce((sum, n) => sum + parseFloat(n), 0) / notes.length 
+        : null;
+      return {
+        ...cJson,
+        notaMedia: notaMedia !== null ? Math.round(notaMedia * 10) / 10 : null
+      };
+    });
+
+    res.json(enrichedClientes);
+  } catch (error) {
+    console.error('Erro ao listar clientes:', error);
+    res.status(500).json({ error: 'Erro interno ao listar clientes' });
+  }
 };
 
 exports.createCliente = async (req, res) => {

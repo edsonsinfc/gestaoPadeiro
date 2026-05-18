@@ -125,12 +125,25 @@ class SqlCollection {
     return this.findOne({ id });
   }
 
+  async getColumns() {
+    if (this._columns) return this._columns;
+    try {
+      const [rows] = await pool.query(`SHOW COLUMNS FROM \`${this.tableName}\``);
+      this._columns = rows.map(r => r.Field);
+      return this._columns;
+    } catch (e) {
+      console.error(`Erro ao obter colunas de ${this.tableName}:`, e);
+      return null;
+    }
+  }
+
   async create(doc) {
     const id = doc.id || doc._id || Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
     const newDoc = { ...doc, id };
     delete newDoc._id;
 
-    const keys = Object.keys(newDoc).filter(k => typeof newDoc[k] !== 'function');
+    const cols = await this.getColumns();
+    const keys = Object.keys(newDoc).filter(k => typeof newDoc[k] !== 'function' && (!cols || cols.includes(k)));
     const values = keys.map(k => typeof newDoc[k] === 'object' ? JSON.stringify(newDoc[k]) : newDoc[k]);
     const placeholders = keys.map(() => '?').join(', ');
     
@@ -151,10 +164,13 @@ class SqlCollection {
   }
 
   async findByIdAndUpdate(id, update, options = {}) {
-    const keys = Object.keys(update).filter(k => typeof update[k] !== 'function');
+    const cols = await this.getColumns();
+    const keys = Object.keys(update).filter(k => typeof update[k] !== 'function' && (!cols || cols.includes(k)));
     const values = keys.map(k => typeof update[k] === 'object' ? JSON.stringify(update[k]) : update[k]);
     const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
     
+    if (keys.length === 0) return this.findById(id);
+
     const sql = `UPDATE \`${this.tableName}\` SET ${setClause} WHERE \`id\` = ?`;
     const [result] = await pool.query(sql, [...values, id]);
     

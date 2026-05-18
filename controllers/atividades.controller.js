@@ -66,7 +66,7 @@ exports.createAtividade = async (req, res) => {
       'produtoId', 'produtoNome', 'kgTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
-      'notaCliente', 'kgItens', 'atualizadoEm'
+      'notaCliente', 'notaPadeiroCliente', 'kgItens', 'atualizadoEm', 'lastStep'
     ];
 
     const nova = {
@@ -76,7 +76,8 @@ exports.createAtividade = async (req, res) => {
       status: 'em_andamento',
       inicioEm: now.toISOString(),
       data: today,
-      hora: now.toTimeString().split(' ')[0]
+      hora: now.toTimeString().split(' ')[0],
+      lastStep: 1
     };
 
     // Mescla apenas os campos permitidos do body
@@ -102,7 +103,7 @@ exports.updateAtividade = async (req, res) => {
       'produtoId', 'produtoNome', 'kgTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
-      'notaCliente', 'atualizadoEm', 'lastStep' // lastStep mantido aqui se for usado apenas no front ou se formos adicionar à tabela futuramente, mas por segurança, filtramos baseado na tabela
+      'notaCliente', 'notaPadeiroCliente', 'atualizadoEm', 'lastStep'
     ];
 
     const tableColumns = [
@@ -110,7 +111,7 @@ exports.updateAtividade = async (req, res) => {
       'produtoId', 'produtoNome', 'kgTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
-      'notaCliente', 'kgItens', 'atualizadoEm'
+      'notaCliente', 'notaPadeiroCliente', 'kgItens', 'atualizadoEm', 'lastStep'
     ];
 
     const updateData = {};

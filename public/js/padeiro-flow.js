@@ -9,6 +9,7 @@ const PadeiroFlow = {
   steps: [
     { label: 'Iniciar', icon: 'play' },
     { label: 'Produção', icon: 'package' },
+    { label: 'Avaliar Cliente', icon: 'smile' },
     { label: 'Avaliação', icon: 'star' },
     { label: 'Finalizar', icon: 'check-circle' }
   ],
@@ -49,8 +50,8 @@ const PadeiroFlow = {
   },
 
   renderResumeModal(container, em) {
-    const stepMap = {0:0, 1:1, 2:1, 3:2, 4:2, 5:3};
-    const stepLabel = this.steps[stepMap[em.lastStep||0]]?.label || 'Iniciar';
+    const stepMap = {0:0, 1:1, 2:2, 3:3, 4:4};
+    const stepLabel = this.steps[stepMap[parseInt(em.lastStep)||0]]?.label || 'Iniciar';
     container.innerHTML = `
       <div class="pf-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
         <div class="pf-resume-card">
@@ -73,12 +74,12 @@ const PadeiroFlow = {
   confirmResume() {
     if (this.pendingResume) {
       this.activity = this.pendingResume;
-      const oldStep = this.pendingResume.lastStep || 0;
-      // Map old 6-step to new 4-step
+      const oldStep = parseInt(this.pendingResume.lastStep) || 0;
       if (oldStep <= 0) this.currentStep = 0;
-      else if (oldStep <= 2) this.currentStep = 1;
-      else if (oldStep <= 4) this.currentStep = 2;
-      else this.currentStep = 3;
+      else if (oldStep === 1) this.currentStep = 1;
+      else if (oldStep === 2) this.currentStep = 2;
+      else if (oldStep === 3) this.currentStep = 3;
+      else this.currentStep = 4;
       this.pendingResume = null;
     }
     this.renderWizard(document.getElementById('page-container'));
@@ -149,8 +150,9 @@ const PadeiroFlow = {
     switch(this.currentStep) {
       case 0: this.stepIniciar(c); break;
       case 1: this.stepProducao(c); break;
-      case 2: this.stepAvaliacao(c); break;
-      case 3: this.stepFinalizar(c); break;
+      case 2: this.stepAvaliarCliente(c); break;
+      case 3: this.stepAvaliacao(c); break;
+      case 4: this.stepFinalizar(c); break;
     }
     Components.renderIcons();
   },
@@ -433,7 +435,49 @@ const PadeiroFlow = {
     this.renderWizard(document.getElementById('page-container'));
   },
 
-  // STEP 2: AVALIAÇÃO (Nota + Assinatura combinados)
+  // STEP 2: AVALIAR CLIENTE (Nota do padeiro para o cliente)
+  stepAvaliarCliente(c) {
+    c.innerHTML = `
+      <div class="pf-step-header">
+        <div class="pf-step-icon" style="background: rgba(255, 149, 0, 0.1); color: #FF9500;"><i data-lucide="smile" style="width:24px;height:24px"></i></div>
+        <div>
+          <h2 class="pf-step-title">Avaliar Cliente</h2>
+          <p class="pf-step-sub">Como foi o atendimento com o cliente hoje?</p>
+        </div>
+      </div>
+
+      <!-- Rating -->
+      <div class="pf-section">
+        <div class="pf-section-label"><i data-lucide="smile" style="width:14px;height:14px"></i> Nota para o Cliente</div>
+        <div class="pf-rating-box" style="margin-top:12px;">
+          <p class="pf-rating-hint">Toque nas estrelas para avaliar o cliente</p>
+          <div class="pf-stars-wrap">${Components.starRating(this.activity.notaPadeiroCliente || 0, 'nota-padeiro-cliente')}</div>
+        </div>
+      </div>
+
+      <button id="pf-btn-avaliar-cliente" class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.saveAvaliacaoCliente()">
+        <i data-lucide="arrow-right" style="width:18px;height:18px"></i> Continuar
+      </button>`;
+    Components.renderIcons();
+  },
+
+  async saveAvaliacaoCliente() {
+    const stars = document.querySelector('[data-name="nota-padeiro-cliente"]');
+    const score = parseInt(stars?.dataset.value) || 0;
+    if (score === 0) {
+      Components.toast('Dê uma nota para o cliente para continuar.', 'warning');
+      return;
+    }
+
+    this.activity.notaPadeiroCliente = score;
+    this.activity.lastStep = 3;
+    await this.updateActivity();
+
+    this.currentStep = 3;
+    this.renderWizard(document.getElementById('page-container'));
+  },
+
+  // STEP 3: AVALIAÇÃO (Nota + Assinatura combinados)
   stepAvaliacao(c) {
     c.innerHTML = `
       <div class="pf-step-header">
@@ -449,7 +493,7 @@ const PadeiroFlow = {
         <div class="pf-section-label"><i data-lucide="star" style="width:14px;height:14px"></i> Avaliação do Atendimento</div>
         <div class="pf-rating-box">
           <p class="pf-rating-hint">Toque nas estrelas para avaliar</p>
-          <div class="pf-stars-wrap">${Components.starRating(this.activity.nota || 0, 'nota-cliente')}</div>
+          <div class="pf-stars-wrap">${Components.starRating(this.activity.notaCliente || this.activity.nota || 0, 'nota-cliente')}</div>
         </div>
         <div class="pf-field-group" style="margin-top:16px">
           <label class="pf-label">Comentário (opcional)</label>
@@ -479,26 +523,41 @@ const PadeiroFlow = {
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 3; ctx.lineCap = 'round';
     let drawing = false;
+    this.isSignatureDrawn = false;
     const getPos = (e) => {
       const r = canvas.getBoundingClientRect();
       const t = e.touches ? e.touches[0] : e;
       return { x: (t.clientX-r.left)*(canvas.width/r.width), y: (t.clientY-r.top)*(canvas.height/r.height) };
     };
-    canvas.addEventListener('mousedown', e => { drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
-    canvas.addEventListener('mousemove', e => { if(drawing){const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();} });
+    canvas.addEventListener('mousedown', e => { drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); this.isSignatureDrawn = true; });
+    canvas.addEventListener('mousemove', e => { if(drawing){const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();this.isSignatureDrawn = true;} });
     canvas.addEventListener('mouseup', () => drawing=false);
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }, {passive:false});
-    canvas.addEventListener('touchmove', e => { e.preventDefault(); if(drawing){const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();} }, {passive:false});
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); this.isSignatureDrawn = true; }, {passive:false});
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if(drawing){const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();this.isSignatureDrawn = true;} }, {passive:false});
   },
 
   clearSignature() {
     const canvas = document.getElementById('signature-canvas');
-    if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (canvas) {
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      this.isSignatureDrawn = false;
+    }
   },
 
   async saveAvaliacao() {
     const stars = document.querySelector('[data-name="nota-cliente"]');
-    this.activity.notaCliente = parseInt(stars.dataset.value) || 0;
+    const score = parseInt(stars.dataset.value) || 0;
+    if (score === 0) {
+      Components.toast('Por favor, avalie o atendimento antes de continuar.', 'warning');
+      return;
+    }
+
+    if (!this.isSignatureDrawn) {
+      Components.toast('A assinatura do responsável é obrigatória para prosseguir.', 'warning');
+      return;
+    }
+
+    this.activity.notaCliente = score;
     this.activity.comentario = document.getElementById('flow-nota-obs').value;
 
     // Save signature
@@ -537,12 +596,12 @@ const PadeiroFlow = {
       }
     }
 
-    this.currentStep = 3;
+    this.currentStep = 4;
     this.renderWizard(document.getElementById('page-container'));
   },
 
 
-  // STEP 3: FINALIZAR
+  // STEP 4: FINALIZAR
   stepFinalizar(c) {
     const inicio = new Date(this.activity.inicioEm);
     const minMin = this.activity.tempoMinimoMinutos || 0;
@@ -562,7 +621,8 @@ const PadeiroFlow = {
         <div class="pf-summary-row"><span>Cliente</span><strong>${this.activity.clienteNome||'—'}</strong></div>
         <div class="pf-summary-row"><span>Produção</span><strong>${this.activity.kgTotal||0} kg</strong></div>
         <div class="pf-summary-row"><span>Produtos</span><strong>${(this.activity.kgItens||[]).length} itens</strong></div>
-        <div class="pf-summary-row"><span>Avaliação</span><strong>${this.activity.notaCliente||0} ★</strong></div>
+        <div class="pf-summary-row"><span>Sua Nota ao Cliente</span><strong>${this.activity.notaPadeiroCliente||0} ★</strong></div>
+        <div class="pf-summary-row"><span>Nota Recebida do Cliente</span><strong>${this.activity.notaCliente||0} ★</strong></div>
       </div>
 
       <div id="timer-container" style="text-align:center;margin:24px 0;">
@@ -613,12 +673,14 @@ const PadeiroFlow = {
           </div>
           <h1 class="pf-success-title">Atividade Concluída!</h1>
           <p class="pf-success-sub">Seu registro foi salvo com sucesso.</p>
-          <div class="pf-success-stats">
+          <div class="pf-success-stats" style="flex-wrap:wrap;gap:16px;">
             <div class="pf-stat"><span class="pf-stat-val">${this.activity.kgTotal||0}</span><span class="pf-stat-label">KG</span></div>
             <div class="pf-stat-divider"></div>
             <div class="pf-stat"><span class="pf-stat-val">${(this.activity.kgItens||[]).length}</span><span class="pf-stat-label">Produtos</span></div>
             <div class="pf-stat-divider"></div>
-            <div class="pf-stat"><span class="pf-stat-val">${this.activity.notaCliente||0}★</span><span class="pf-stat-label">Nota</span></div>
+            <div class="pf-stat"><span class="pf-stat-val">${this.activity.notaPadeiroCliente||0}★</span><span class="pf-stat-label">Nota ao Cliente</span></div>
+            <div class="pf-stat-divider"></div>
+            <div class="pf-stat"><span class="pf-stat-val">${this.activity.notaCliente||0}★</span><span class="pf-stat-label">Nota do Cliente</span></div>
           </div>
           <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-inicio')">
             <i data-lucide="home" style="width:18px;height:18px"></i> Voltar ao Painel

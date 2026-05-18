@@ -124,6 +124,7 @@ const atividadeSchema = new Schema({
   longitude: Schema.Types.Mixed,
   observacao: String,
   notaCliente: Number,
+  notaPadeiroCliente: Number,
   atualizadoEm: String
 }, { strict: false, timestamps: false, versionKey: false });
 

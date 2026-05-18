@@ -141,6 +141,7 @@ const TABLES = [
           longitude VARCHAR(50),
           observacao TEXT,
           notaCliente INT,
+          notaPadeiroCliente INT,
           kgItens TEXT,
           atualizadoEm VARCHAR(100)
         )`
@@ -281,8 +282,23 @@ async function initTables() {
   try {
     const [cols] = await pool.query("SHOW COLUMNS FROM atividades");
     const colNames = cols.map(c => c.Field);
-    if (!colNames.includes('kgItens')) {
-      await pool.execute("ALTER TABLE atividades ADD COLUMN kgItens TEXT");
+    
+    const fields = [
+      { name: 'cronogramaId', type: 'VARCHAR(50)' },
+      { name: 'produtoId', type: 'VARCHAR(50)' },
+      { name: 'produtoNome', type: 'VARCHAR(255)' },
+      { name: 'tempoMinimoMinutos', type: 'INT DEFAULT 0' },
+      { name: 'observacao', type: 'TEXT' },
+      { name: 'kgItens', type: 'TEXT' },
+      { name: 'notaPadeiroCliente', type: 'INT' },
+      { name: 'terminadoEm', type: 'VARCHAR(100)' }
+    ];
+
+    for (const f of fields) {
+      if (!colNames.includes(f.name)) {
+        await pool.execute(`ALTER TABLE atividades ADD COLUMN \`${f.name}\` ${f.type}`);
+        console.log(`      ➕ Adicionada coluna faltante \`${f.name}\` em atividades`);
+      }
     }
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (atividades):', e.message);
