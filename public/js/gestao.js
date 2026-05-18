@@ -960,13 +960,14 @@ const Gestao = {
         </div>
         <div class="input-group">
           <label class="label">Papel (Role)</label>
-          <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = this.value === 'gestor_regional' ? 'block' : 'none'">
+          <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = (this.value === 'gestor_regional' || this.value === 'padeiro') ? 'block' : 'none'">
+            <option value="padeiro" ${u.role === 'padeiro' ? 'selected' : ''}>Padeiro (Acesso ao App do Padeiro)</option>
             <option value="gestor_regional" ${u.role === 'gestor_regional' || u.role === 'gestor' ? 'selected' : ''}>Gestor Regional (Acesso a uma filial)</option>
             <option value="gestor_geral" ${u.role === 'gestor_geral' ? 'selected' : ''}>Gestor Geral (Acesso total)</option>
             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador (Acesso total + Desenvolvimento)</option>
           </select>
         </div>
-        <div class="input-group" id="filial-selector" style="display: ${u.role === 'gestor_regional' || u.role === 'gestor' || (!id) ? 'block' : 'none'}">
+        <div class="input-group" id="filial-selector" style="display: ${u.role === 'gestor_regional' || u.role === 'gestor' || u.role === 'padeiro' || (!id) ? 'block' : 'none'}">
           <label class="label">Filial Atribuída</label>
           <select name="filial" class="input-control">
             <option value="Brago Brasília" ${u.filial === 'Brago Brasília' ? 'selected' : ''}>Brago Brasília</option>
