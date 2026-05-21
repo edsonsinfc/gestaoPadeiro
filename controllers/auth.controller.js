@@ -144,8 +144,10 @@ exports.googleLoginRedirect = async (req, res) => {
         <body>
           <p>Autenticando, por favor aguarde...</p>
           <script>
-            localStorage.setItem('brago_token', '${token}');
-            localStorage.setItem('brago_user', '${JSON.stringify(user)}');
+            const token = ${JSON.stringify(token)};
+            const user = ${JSON.stringify(user)};
+            localStorage.setItem('brago_token', token);
+            localStorage.setItem('brago_user', JSON.stringify(user));
             window.location.href = '/';
           </script>
         </body>
