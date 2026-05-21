@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v16';
+const CACHE_NAME = 'brago-padeiro-v17';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

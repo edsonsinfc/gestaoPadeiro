@@ -293,7 +293,8 @@ async function initTables() {
       { name: 'kgItens', type: 'TEXT' },
       { name: 'notaPadeiroCliente', type: 'INT' },
       { name: 'terminadoEm', type: 'VARCHAR(100)' },
-      { name: 'lTotal', type: 'DOUBLE' }
+      { name: 'lTotal', type: 'DOUBLE' },
+      { name: 'observacaoCliente', type: 'TEXT' }
     ];
 
     for (const f of fields) {

@@ -476,6 +476,21 @@ const PadeiroFlow = {
         </div>
       </div>
 
+      <!-- Observação -->
+      <div class="pf-field-group" style="margin-bottom:24px;">
+        <label class="pf-label" style="display:flex;align-items:center;gap:6px;">
+          <i data-lucide="message-square" style="width:14px;height:14px"></i> Observação sobre o atendimento
+          <span style="font-size:11px;font-weight:500;color:#94a3b8;margin-left:4px;">(opcional)</span>
+        </label>
+        <textarea
+          class="pf-textarea"
+          id="flow-obs-cliente"
+          rows="3"
+          placeholder="Ex: cliente solicitou produto diferente, houve atraso, feedback positivo..."
+          style="margin-top:4px;"
+        >${this.activity.observacaoCliente || ''}</textarea>
+      </div>
+
       <button id="pf-btn-avaliar-cliente" class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.saveAvaliacaoCliente()">
         <i data-lucide="arrow-right" style="width:18px;height:18px"></i> Continuar
       </button>`;
@@ -490,7 +505,9 @@ const PadeiroFlow = {
       return;
     }
 
+    const obsEl = document.getElementById('flow-obs-cliente');
     this.activity.notaPadeiroCliente = score;
+    this.activity.observacaoCliente  = obsEl ? obsEl.value.trim() : '';
     this.activity.lastStep = 3;
     await this.updateActivity();
 
@@ -644,6 +661,7 @@ const PadeiroFlow = {
         ${this.activity.lTotal  > 0 ? `<div class="pf-summary-row"><span>Produção (Litros)</span><strong>${this.activity.lTotal} L</strong></div>`  : ''}
         <div class="pf-summary-row"><span>Produtos</span><strong>${(this.activity.kgItens||[]).length} itens</strong></div>
         <div class="pf-summary-row"><span>Sua Nota ao Cliente</span><strong>${this.activity.notaPadeiroCliente||0} ★</strong></div>
+        ${this.activity.observacaoCliente ? `<div class="pf-summary-row"><span>Obs. do Atendimento</span><strong style="font-size:12px;color:#475569;text-align:right;max-width:60%;word-break:break-word;">${this.activity.observacaoCliente}</strong></div>` : ''}
         <div class="pf-summary-row"><span>Nota Recebida do Cliente</span><strong>${this.activity.notaCliente||0} ★</strong></div>
       </div>
 

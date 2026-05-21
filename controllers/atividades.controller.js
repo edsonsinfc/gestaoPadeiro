@@ -65,7 +65,7 @@ exports.createAtividade = async (req, res) => {
       'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'cronogramaId',
       'produtoId', 'produtoNome', 'kgTotal', 'lTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
-      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
+      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao', 'observacaoCliente',
       'notaCliente', 'notaPadeiroCliente', 'kgItens', 'atualizadoEm', 'lastStep'
     ];
 
@@ -102,7 +102,7 @@ exports.updateAtividade = async (req, res) => {
       'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'cronogramaId',
       'produtoId', 'produtoNome', 'kgTotal', 'lTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
-      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
+      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao', 'observacaoCliente',
       'notaCliente', 'notaPadeiroCliente', 'atualizadoEm', 'lastStep'
     ];
 
@@ -110,7 +110,7 @@ exports.updateAtividade = async (req, res) => {
       'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'cronogramaId',
       'produtoId', 'produtoNome', 'kgTotal', 'lTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
-      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao',
+      'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao', 'observacaoCliente',
       'notaCliente', 'notaPadeiroCliente', 'kgItens', 'atualizadoEm', 'lastStep'
     ];
 
