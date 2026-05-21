@@ -195,8 +195,7 @@ const PadeiroFlow = {
           <div class="pf-select-lock"><i data-lucide="${canSelect ? 'chevron-down' : 'lock'}" style="width:14px;height:14px"></i></div>
         </div>
       </div>
-      <div class="pf-step-header">
-        <div class="pf-step-icon pf-icon-blue"><i data-lucide="play" style="width:24px;height:24px"></i></div>
+      <div class="pf-step-header" style="text-align: center; justify-content: center; width: 100%;">
         <div>
           <h2 class="pf-step-title">Iniciar Atendimento</h2>
           <p class="pf-step-sub">${canSelect ? 'Selecione uma das suas tarefas de hoje.' : 'Confirme sua tarefa agendada para hoje.'}</p>
