@@ -219,7 +219,7 @@ const PadeiroFlow = {
     const nome = sel.options[sel.selectedIndex]?.dataset.nome;
     try {
       if (!this.activity.cronogramaId) await this.fetchTodayClient();
-      const body = { clienteId: sel.value, clienteNome: nome, cronogramaId: this.activity.cronogramaId || null };
+      const body = { clienteId: sel.value, clienteNome: nome, cronogramaId: this.activity.cronogramaId || null, lastStep: 1 };
       const a = await API.post('/api/atividades', body);
       this.activity = a;
       if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'em_andamento' });
@@ -298,10 +298,10 @@ const PadeiroFlow = {
       <div class="pf-section">
         <div class="pf-section-label"><i data-lucide="camera" style="width:14px;height:14px"></i> Fotos da Produção</div>
         <div id="foto-preview-grid">
-          <div class="pf-photo-add" onclick="document.getElementById('flow-fotos-hidden').click()">
+          <div class="pf-photo-add" onclick="PadeiroFlow.saveDraftLocally(); document.getElementById('flow-fotos-hidden').click()">
             <i data-lucide="plus-circle" style="width:24px;height:24px"></i>
             <span>Adicionar</span>
-            <input type="file" id="flow-fotos-hidden" accept="image/*" capture="environment" multiple style="display:none">
+            <input type="file" id="flow-fotos-hidden" accept="image/*" style="display:none">
           </div>
         </div>
       </div>
@@ -340,6 +340,7 @@ const PadeiroFlow = {
     itemsContainer.addEventListener('input', () => this.calculateTotals());
     itemsContainer.addEventListener('change', () => this.calculateTotals());
     
+    this.restoreDraftLocally();
     this.calculateTotals(); // Initial calc
     Components.renderIcons();
   },
@@ -413,7 +414,52 @@ const PadeiroFlow = {
     }
   },
 
-  async compressImage(file, maxWidth = 1080, maxHeight = 1080, quality = 0.7) {
+  saveDraftLocally() {
+    const totalKg = document.getElementById('flow-kg-total')?.value || '';
+    const totalL  = document.getElementById('flow-l-total')?.value || '';
+    const items = [];
+    document.querySelectorAll('.pf-prod-row').forEach(row => {
+      const sv = row.querySelector('.kg-produto-search')?.value || '';
+      const un = row.querySelector('.kg-unidade')?.value || 'KG';
+      const v = row.querySelector('.kg-valor')?.value || '';
+      items.push({ sv, un, v });
+    });
+    const draft = { totalKg, totalL, items };
+    localStorage.setItem('brago_padeiro_draft', JSON.stringify(draft));
+  },
+
+  restoreDraftLocally() {
+    const draftStr = localStorage.getItem('brago_padeiro_draft');
+    if (!draftStr) return;
+    try {
+      const draft = JSON.parse(draftStr);
+      if (draft.totalKg) document.getElementById('flow-kg-total').value = draft.totalKg;
+      if (draft.totalL) document.getElementById('flow-l-total').value = draft.totalL;
+      
+      if (draft.items && draft.items.length > 0) {
+        const container = document.getElementById('kg-items');
+        container.innerHTML = ''; // clear initial row
+        draft.items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'pf-prod-row fade-in';
+          div.innerHTML = `
+            <input class="pf-input kg-produto-search" list="produtos-list" placeholder="Buscar produto..." value="${item.sv}">
+            <input class="pf-input pf-input-sm kg-valor" type="number" step="0.1" placeholder="0.0" value="${item.v}">
+            <select class="pf-input pf-input-unit kg-unidade">
+              <option value="KG" ${item.un === 'KG' ? 'selected' : ''}>KG</option>
+              <option value="L" ${item.un === 'L' ? 'selected' : ''}>L</option>
+              <option value="UN" ${item.un === 'UN' ? 'selected' : ''}>UN</option>
+              <option value="PCT" ${item.un === 'PCT' ? 'selected' : ''}>PCT</option>
+            </select>
+            <button class="pf-row-btn pf-row-del" onclick="PadeiroFlow.removeKgRow(this)" style="${draft.items.length > 1 ? '' : 'visibility:hidden'}"><i data-lucide="x" style="width:16px;height:16px"></i></button>`;
+          container.appendChild(div);
+        });
+      }
+      this.calculateTotals();
+    } catch(e) {}
+  },
+
+  async compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.6) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
@@ -520,6 +566,7 @@ const PadeiroFlow = {
       }
     }
 
+    localStorage.removeItem('brago_padeiro_draft');
     await this.updateActivity();
     this.currentStep = 2;
     this.renderWizard(document.getElementById('page-container'));
