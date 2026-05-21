@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v19';
+const CACHE_NAME = 'brago-padeiro-v20';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
