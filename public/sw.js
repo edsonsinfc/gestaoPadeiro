@@ -1,38 +1,7 @@
-const CACHE_NAME = 'brago-padeiro-v17';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/variables.css',
-  '/css/reset.css',
-  '/css/layout.css',
-  '/css/components.css',
-  '/css/animations.css',
-  '/css/styles.css',
-  '/css/modal-move.css',
-  '/css/padeiro-flow.css',
-  '/js/app.js',
-  '/js/auth.js',
-  '/js/components.js',
-  '/js/admin-dashboard.js',
-  '/js/gestao.js',
-  '/js/filiais.js',
-  '/js/metas.js',
-  '/js/avaliacoes.js',
-  '/js/cronograma.js',
-  '/js/padeiro-flow.js',
-  '/js/padeiro-agenda.js',
-  '/js/padeiro-dashboard.js',
-  '/js/relatorios.js',
-  '/js/location-service.js',
-  '/js/rastreamento.js',
-  '/js/dev.js',
-  '/js/modules/cronograma/cronograma.styles.js',
-  '/js/modules/cronograma/cronograma.render.js',
-  '/js/modules/cronograma/cronograma.drag.js',
-  '/js/modules/cronograma/cronograma.tasks.js',
-  '/js/modules/cronograma/cronograma.mensal.js',
-  '/js/modules/cronograma/cronograma.smart.js',
-  '/assets/logo.svg',
+const CACHE_NAME = 'brago-padeiro-v18';
+
+// Arquivos externos (CDN) — cache-first, raramente mudam
+const STATIC_CDN = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://unpkg.com/lucide@latest',
   'https://cdn.jsdelivr.net/npm/chart.js',
@@ -41,75 +10,121 @@ const ASSETS_TO_CACHE = [
   'https://unpkg.com/@turf/turf@6/turf.min.js'
 ];
 
+// Assets locais que devem ser pré-cacheados (fallback offline)
+const LOCAL_ASSETS = [
+  '/',
+  '/index.html',
+  '/assets/logo.svg'
+];
 
-// Install Event: Cache essential assets
+// ─── INSTALL: Pré-cacheia apenas assets mínimos e ativa imediatamente ─────────
 self.addEventListener('install', (event) => {
+  console.log('[SW v18] Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching system assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Cacheia assets locais essenciais (ignora erros de CDN)
+      return cache.addAll(LOCAL_ASSETS).catch(() => {});
     })
   );
+  // CRÍTICO: Ativa imediatamente sem esperar aba fechar
   self.skipWaiting();
 });
 
-// Activate Event: Cleanup old caches
+// ─── ACTIVATE: Remove caches antigos e toma controle de todos os clientes ────
 self.addEventListener('activate', (event) => {
+  console.log('[SW v18] Ativando — limpando caches antigos...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('[SW] Clearing old cache');
-            return caches.delete(cache);
-          }
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => {
+          console.log('[SW] Removendo cache antigo:', k);
+          return caches.delete(k);
         })
-      );
-    })
+      )
+    )
   );
+  // CRÍTICO: Assume controle de todas as abas abertas imediatamente
   self.clients.claim();
 });
 
-// Fetch Event: Offline-first strategy for assets, Network-first for API
+// ─── FETCH: Estratégias por tipo de recurso ───────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Skip API calls and Socket.io (should not be cached/intercepted)
-  if (event.request.url.includes('/api/') || event.request.url.includes('/socket.io/')) {
-    return;
+  const url = event.request.url;
+
+  // 1. API e Socket.io — sempre rede, nunca cache
+  if (url.includes('/api/') || url.includes('/socket.io/')) {
+    return; // deixa o browser lidar normalmente
   }
 
-  // Network-first strategy for the main page to ensure users always get the latest version
-  if (event.request.mode === 'navigate' || event.request.url.endsWith('/') || event.request.url.endsWith('index.html')) {
+  // 2. Assets CDN externos — Cache-First (raramente mudam)
+  if (STATIC_CDN.some((cdn) => url.startsWith(cdn.split('/').slice(0, 3).join('/')))) {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html', { ignoreSearch: true });
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+          }
+          return res;
+        });
       })
     );
     return;
   }
 
+  // 3. JS, CSS e HTML locais — Network-First (prioriza atualizações)
+  if (
+    url.includes('/js/') ||
+    url.includes('/css/') ||
+    event.request.mode === 'navigate' ||
+    url.endsWith('.html')
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          // Atualiza o cache com a versão mais recente
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+          }
+          return res;
+        })
+        .catch(() => {
+          // Offline: usa cache como fallback
+          return caches.match(event.request).then(
+            (cached) => cached || caches.match('/index.html')
+          );
+        })
+    );
+    return;
+  }
+
+  // 4. Demais assets (imagens, SVG, etc.) — Stale-While-Revalidate
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((response) => {
-      // Return from cache OR fetch from network
-      return response || fetch(event.request).then((fetchResponse) => {
-        return fetchResponse;
-      });
-    }).catch(() => {
-      // Fallback for when offline and asset not in cache
-      if (event.request.mode === 'navigate') {
-        return caches.match('/index.html', { ignoreSearch: true });
-      }
-      
-      return new Response('Offline - Recurso não disponível', { 
-        status: 503, 
-        headers: { 'Content-Type': 'text/plain' } 
-      });
+    caches.match(event.request).then((cached) => {
+      const networkFetch = fetch(event.request).then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+        }
+        return res;
+      }).catch(() => cached);
+
+      return cached || networkFetch;
     })
   );
 });
 
-// Message Event: Handle commands from the client
+// ─── MESSAGES: Força atualização manual via postMessage ──────────────────────
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data?.type === 'SKIP_WAITING') {
+    console.log('[SW] Forçando atualização via SKIP_WAITING...');
     self.skipWaiting();
+  }
+  if (event.data?.type === 'CLEAR_CACHE') {
+    caches.delete(CACHE_NAME).then(() => {
+      console.log('[SW] Cache limpo com sucesso!');
+    });
   }
 });

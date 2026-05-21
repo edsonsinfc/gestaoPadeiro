@@ -88,54 +88,128 @@
   <script src="/js/tutorial.js?v=1.0"></script>
   <script src="/js/padeiro-tutorial.js?v=1.0"></script>
   <script src="/js/app.js?v=2.6"></script>
+  <!-- Update Banner (hidden by default) -->
+  <div id="pwa-update-banner" style="
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background: linear-gradient(135deg, #1E4BFF 0%, #1032CC 100%);
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(30,75,255,0.4);
+    display: none;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 280px;
+    max-width: 90vw;
+    animation: slideUpBanner 0.4s cubic-bezier(0.16,1,0.3,1) both;
+  ">
+    <span style="font-size:20px;">🔄</span>
+    <span style="flex:1;">Nova versão disponível!</span>
+    <button onclick="window.__applyUpdate()" style="
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    ">Atualizar agora</button>
+  </div>
+  <style>
+    @keyframes slideUpBanner {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+
   <script>
-    // Service Worker Registration — Required for PWA standalone mode
+    // ─── Service Worker: Update-First Strategy ───────────────────────────────
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        console.log('🌐 Iniciando registro do Service Worker...');
-        navigator.serviceWorker.register('/sw.js')
-          .then((reg) => {
-            console.log('✅ Service Worker registrado. Scope:', reg.scope);
-            
-            // Periodically check for updates
-            setInterval(() => {
-              console.log('🔍 Verificando atualizações do PWA...');
-              reg.update();
-            }, 60 * 60 * 1000);
+      let newWorker = null;
 
-            // Manual check for update on registration
-            reg.update();
+      // Mostra o banner de atualização
+      function showUpdateBanner() {
+        const banner = document.getElementById('pwa-update-banner');
+        if (banner) {
+          banner.style.display = 'flex';
+          // Auto-aplica após 10 segundos sem interação
+          setTimeout(() => { if (newWorker) window.__applyUpdate(); }, 10000);
+        }
+      }
 
-            reg.onupdatefound = () => {
-              const installingWorker = reg.installing;
-              console.log('📥 Nova versão do PWA sendo baixada...');
-              
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed') {
-                  if (navigator.serviceWorker.controller) {
-                    console.log('✨ Atualização instalada com sucesso! Aplicando...');
-                    if (window.Components && window.Components.toast) {
-                      Components.toast('Nova versão disponível! Atualizando...', 'info');
-                    }
-                    // Small delay to let user see toast if possible
-                    setTimeout(() => {
-                      if (installingWorker) {
-                        installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                      }
-                    }, 1000);
-                  }
-                }
-              };
-            };
-          })
-          .catch((err) => {
-            console.error('❌ Falha ao registrar Service Worker:', err);
+      // Aplica a atualização imediatamente
+      window.__applyUpdate = function() {
+        if (newWorker) {
+          newWorker.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          window.location.reload();
+        }
+      };
+
+      // Força limpeza total do cache e reload
+      window.__forceUpdate = function() {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+        }
+        // Limpa todos os caches via CacheStorage API
+        if ('caches' in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+        }
+        setTimeout(() => window.location.reload(true), 500);
+      };
+
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('✅ SW registrado. Scope:', reg.scope);
+
+        // Verifica atualização imediatamente
+        reg.update();
+
+        // Verifica a cada 5 minutos
+        setInterval(() => reg.update(), 5 * 60 * 1000);
+
+        // Detecta quando uma nova versão está sendo instalada
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          console.log('📥 Nova versão do SW encontrada — instalando...');
+
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              // Há um SW antigo ativo — novo está pronto
+              console.log('✨ Nova versão instalada e pronta!');
+              newWorker = installing;
+              showUpdateBanner();
+            }
+            if (installing.state === 'activated' && !navigator.serviceWorker.controller) {
+              // Primeira instalação — já está ativo
+              console.log('🎉 PWA instalado pela primeira vez!');
+            }
           });
+        });
+
+        // Se já há um SW esperando (ex: reload com nova versão pendente)
+        if (reg.waiting) {
+          console.log('⏳ SW atualizado aguardando ativação');
+          newWorker = reg.waiting;
+          showUpdateBanner();
+        }
+
+      }).catch((err) => {
+        console.error('❌ Falha ao registrar SW:', err);
       });
 
-      // Handle the reload when a new service worker takes over
+      // Quando o SW toma controle: recarrega a página automaticamente
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 Novo Service Worker ativo. Atualizando a página...');
+        console.log('🔄 Novo SW ativo — recarregando...');
         window.location.reload();
       });
     }
