@@ -36,11 +36,18 @@ Object.assign(Cronograma, {
       return;
     }
 
+    let btn = null;
+    let originalText = '';
     try {
-      const btn = document.querySelector('.modal-footer .btn-primary');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></div> Salvando...';
-      btn.disabled = true;
+      btn = document.querySelector('#global-modal .btn-primary') || 
+            document.querySelector('.modal-footer .btn-primary') || 
+            (typeof event !== 'undefined' && event && event.target ? event.target.closest('button') : null);
+      
+      originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></div> Salvando...';
+        btn.disabled = true;
+      }
 
       await API.post('/api/cronograma/templates', {
         nome,
@@ -51,6 +58,10 @@ Object.assign(Cronograma, {
       Components.closeModal();
       alert('Template salvo com sucesso!');
     } catch (e) {
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
       alert('Erro ao salvar template: ' + e.message);
     }
   },
