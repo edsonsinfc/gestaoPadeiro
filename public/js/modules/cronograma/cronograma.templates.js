@@ -37,7 +37,7 @@ Object.assign(Cronograma, {
     }
 
     try {
-      const btn = document.querySelector('.modal-actions .btn-primary');
+      const btn = document.querySelector('.modal-footer .btn-primary');
       const originalText = btn.innerHTML;
       btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></div> Salvando...';
       btn.disabled = true;
