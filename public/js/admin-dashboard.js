@@ -384,7 +384,7 @@ const AdminDashboard = {
                 <div class="kpi-icon-box" style="width: 32px; height: 32px; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border-radius: 8px;">
                   <i data-lucide="trophy" style="width: 18px; height: 18px;"></i>
                 </div>
-                10 Melhores Padeiros
+                10 mais
               </h3>
             </div>
             ${(stats.top10Pads || stats.top3Pads || []).length === 0 
@@ -419,7 +419,7 @@ const AdminDashboard = {
                 <div class="kpi-icon-box" style="width: 32px; height: 32px; background: rgba(255, 59, 48, 0.15); color: #FF3B30; border-radius: 8px;">
                   <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
                 </div>
-                10 Piores Padeiros
+                10 menos
               </h3>
             </div>
             ${(stats.pontoCritico || []).length === 0 
