@@ -40,12 +40,12 @@ window.Rastreamento = {
           border: 1px solid var(--separator);
           flex-wrap: wrap;
         }
-        .trail-user-picker, .trail-date-picker {
+        .trail-user-picker, .trail-date-picker, .trail-time-picker {
           display: flex;
           align-items: center;
           gap: 8px;
         }
-        .trail-user-picker select, .trail-date-picker input {
+        .trail-user-picker select, .trail-date-picker input, .trail-time-picker input {
           border: 1px solid var(--separator);
           border-radius: var(--radius-sm);
           padding: 6px 12px;
@@ -54,6 +54,9 @@ window.Rastreamento = {
           outline: none;
           background: var(--bg-body);
           color: var(--text-primary);
+          min-width: 120px;
+        }
+        .trail-user-picker select {
           min-width: 180px;
         }
         .trail-btn {
@@ -112,6 +115,14 @@ window.Rastreamento = {
             <div class="trail-date-picker">
               <label class="label-uppercase">Data:</label>
               <input type="date" id="trail-date" value="${new Date().toISOString().split('T')[0]}" onchange="Rastreamento.onDateChange()">
+            </div>
+            <div class="trail-time-picker">
+              <label class="label-uppercase">Início:</label>
+              <input type="time" id="trail-start-time" value="00:00" onchange="Rastreamento.onTimeChange()">
+            </div>
+            <div class="trail-time-picker">
+              <label class="label-uppercase">Fim:</label>
+              <input type="time" id="trail-end-time" value="23:59" onchange="Rastreamento.onTimeChange()">
             </div>
             <div class="flex gap-2">
               <button class="trail-btn" id="btn-load-trail" onclick="Rastreamento.loadTrail()">
@@ -267,12 +278,24 @@ window.Rastreamento = {
     }
   },
 
+  onTimeChange() {
+    if (this.selectedUserId) {
+      this.loadTrail();
+    }
+  },
+
   selectUserForTrail(userId) {
     this.selectedUserId = userId;
     
-    // Set default date to today
+    // Set default date and times
     const dateInput = document.getElementById('trail-date');
     if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    
+    const startInput = document.getElementById('trail-start-time');
+    if (startInput) startInput.value = '00:00';
+    
+    const endInput = document.getElementById('trail-end-time');
+    if (endInput) endInput.value = '23:59';
     
     // Update the dropdown value to select this user
     const selectEl = document.getElementById('trail-user-select');
@@ -313,10 +336,42 @@ window.Rastreamento = {
         return;
       }
 
+      // Filter points based on selected start and end time
+      const startTimeInput = document.getElementById('trail-start-time');
+      const endTimeInput = document.getElementById('trail-end-time');
+      const startTimeVal = startTimeInput ? startTimeInput.value : '00:00';
+      const endTimeVal = endTimeInput ? endTimeInput.value : '23:59';
+
+      const [startH, startM] = startTimeVal.split(':').map(Number);
+      const [endH, endM] = endTimeVal.split(':').map(Number);
+      
+      const startMinutes = startH * 60 + startM;
+      const endMinutes = endH * 60 + endM;
+
+      const filteredSessions = data.sessions.map(session => {
+        const filteredPoints = session.points.filter(p => {
+          const dateObj = new Date(p.timestamp);
+          const localH = dateObj.getHours();
+          const localM = dateObj.getMinutes();
+          const pointMinutes = localH * 60 + localM;
+          return pointMinutes >= startMinutes && pointMinutes <= endMinutes;
+        });
+        return {
+          ...session,
+          points: filteredPoints
+        };
+      }).filter(session => session.points.length > 0);
+
+      if (filteredSessions.length === 0) {
+        Components.toast('Nenhum ponto registrado neste intervalo de horário', 'info');
+        if (infoEl) infoEl.innerHTML = 'Sem dados no horário selecionado.';
+        return;
+      }
+
       const colors = ['#1E4BFF', '#E8450A', '#10B981', '#F59E0B', '#EF4444'];
       let sessionIndex = 0;
 
-      data.sessions.forEach(session => {
+      filteredSessions.forEach(session => {
         const color = colors[sessionIndex % colors.length];
         const latlngs = session.points.map(p => [p.lat, p.lng]);
         
@@ -364,7 +419,8 @@ window.Rastreamento = {
         sessionIndex++;
       });
 
-      if (infoEl) infoEl.innerHTML = `${data.totalPoints} pontos em ${data.sessions.length} sessões.`;
+      let totalFilteredPoints = filteredSessions.reduce((acc, s) => acc + s.points.length, 0);
+      if (infoEl) infoEl.innerHTML = `${totalFilteredPoints} pontos em ${filteredSessions.length} sessões.`;
       
       // Fit bounds to trail
       this.map.fitBounds(this.trailLayers.getBounds().pad(0.1));
