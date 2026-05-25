@@ -52,8 +52,8 @@ window.Rastreamento = {
           font-family: inherit;
           font-size: 14px;
           outline: none;
-          background: var(--bg-body);
-          color: var(--text-primary);
+          background: var(--bg-card);
+          color: var(--text-main);
           min-width: 120px;
         }
         .trail-user-picker select {
