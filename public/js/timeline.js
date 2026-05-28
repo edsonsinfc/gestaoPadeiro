@@ -575,9 +575,6 @@ const Timeline = {
         border-bottom: 0.5px solid var(--border-color);
         padding: 12px 16px;
       }
-      @media (prefers-color-scheme: dark) {
-        .tl-nav-bar { background: rgba(0, 0, 0, 0.85); }
-      }
       
       .tl-nav-top {
         display: flex;

@@ -16,6 +16,8 @@ AUDIT_FILES.txt
 
 # Google secrets
 client_secret_*.json
+google-service-account.json
+data/gen-lang-client-*.json
 
 # Ferramentas locais
 public/conversor-tabela.html

@@ -810,6 +810,88 @@ window.Rastreamento = {
       Components.toast('Erro ao carregar trajeto', 'error');
       if (infoEl) infoEl.innerHTML = 'Erro ao carregar.';
     }
+
+    this.loadTimeline(date);
+  },
+
+  async loadTimeline(date) {
+    const container = document.getElementById('timeline-content');
+    if (!container) return;
+    container.innerHTML = '<div style="color:var(--mac-tertiary); font-size:13px; text-align:center; padding-top:40px;">Carregando timeline...</div>';
+
+    try {
+      const atividades = await API.get(`/api/atividades?padeiroId=${this.selectedUserId}&data=${date}`);
+      
+      if (!atividades || atividades.length === 0) {
+        container.innerHTML = '<div style="color:var(--mac-tertiary); font-size:13px; text-align:center; padding-top:40px;">Nenhuma atividade iniciada ou concluída nesta data.</div>';
+        return;
+      }
+
+      // Filtrar as que tem a timeline populada. Trata o caso de timeline nula/vazia de versões antigas.
+      const actsWithTimeline = atividades.filter(a => Array.isArray(a.timeline) && a.timeline.length > 0);
+      
+      if (actsWithTimeline.length === 0) {
+        container.innerHTML = '<div style="color:var(--mac-tertiary); font-size:13px; text-align:center; padding-top:40px;">As atividades deste dia não possuem registros de timeline de localização.</div>';
+        return;
+      }
+
+      let html = '';
+      actsWithTimeline.forEach(act => {
+        html += `<div class="ml-timeline-activity-card">
+          <div class="ml-timeline-activity-title">
+            <i data-lucide="package" style="width:18px;height:18px;color:var(--mac-accent)"></i> 
+            Atendimento: ${act.clienteNome}
+          </div>
+          <div class="ml-timeline">`;
+        
+        act.timeline.forEach(ev => {
+          const t = new Date(ev.timestamp);
+          const timeStr = isNaN(t) ? '--:--' : t.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+          
+          let mapLink = '';
+          if (ev.lat && ev.lng) {
+            mapLink = `<button class="ml-timeline-map-btn" onclick="Rastreamento.focusTimelinePoint(${ev.lat}, ${ev.lng})">
+                         <i data-lucide="map-pin" style="width:12px;height:12px;"></i> Ver no mapa
+                       </button>`;
+          } else {
+            mapLink = `<span style="font-size:11px;color:var(--mac-tertiary);display:inline-block;margin-top:4px;">Sem GPS</span>`;
+          }
+
+          html += `
+            <div class="ml-timeline-item">
+              <div class="ml-timeline-dot"></div>
+              <div class="ml-timeline-time">${timeStr}</div>
+              <div class="ml-timeline-title">${ev.step}</div>
+              ${mapLink}
+            </div>
+          `;
+        });
+
+        html += `</div></div>`;
+      });
+
+      container.innerHTML = html;
+      if (window.lucide) lucide.createIcons();
+
+    } catch (e) {
+      console.error('Erro ao carregar timeline:', e);
+      container.innerHTML = '<div style="color:var(--mac-destructive); font-size:13px; text-align:center; padding-top:40px;">Erro ao carregar timeline de eventos.</div>';
+    }
+  },
+
+  focusTimelinePoint(lat, lng) {
+    this.switchTab('mapa');
+    if (!this.timelinePointMarker) {
+      this.timelinePointMarker = L.circleMarker([lat, lng], {
+        radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, opacity: 1, fillOpacity: 1
+      }).addTo(this.map);
+    } else {
+      this.timelinePointMarker.setLatLng([lat, lng]);
+    }
+    
+    // Bind popup to explain it's an event
+    this.timelinePointMarker.bindPopup('<div class="map-popup"><strong>Ponto do Evento</strong><br>Local onde a etapa foi registrada.</div>').openPopup();
+    this.map.setView([lat, lng], 18);
   },
 
   async resetUserTracking() {

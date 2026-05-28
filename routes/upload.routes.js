@@ -11,4 +11,7 @@ router.post('/:type', authMiddleware, (req, res, next) => {
 
 router.post('/base64/:type', authMiddleware, ctrl.uploadBase64);
 
+// Rota de proxy para servir arquivos do Google Drive
+router.get('/file/:fileId', ctrl.serveFile);
+
 module.exports = router;

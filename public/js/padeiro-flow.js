@@ -327,11 +327,11 @@ const PadeiroFlow = {
         </div>
         <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
           <div class="pf-total-wrap">
-            <input class="pf-total-input" id="flow-kg-total" type="number" step="0.1" value="${this.activity.kgTotal||''}" placeholder="0.0">
+            <input class="pf-total-input" id="flow-kg-total" type="number" step="0.1" value="${this.activity.kgTotal||''}" placeholder="0.0" readonly style="background-color: #f1f5f9; cursor: not-allowed; color: #475569;">
             <span class="pf-total-unit">KG Total</span>
           </div>
           <div class="pf-total-wrap">
-            <input class="pf-total-input" id="flow-l-total" type="number" step="0.1" value="${this.activity.lTotal||''}" placeholder="0.0" style="border-color:rgba(16,185,129,0.4);">
+            <input class="pf-total-input" id="flow-l-total" type="number" step="0.1" value="${this.activity.lTotal||''}" placeholder="0.0" readonly style="border-color:rgba(16,185,129,0.4); background-color: #f1f5f9; cursor: not-allowed; color: #475569;">
             <span class="pf-total-unit" style="color:#10b981;">L Total</span>
           </div>
         </div>
