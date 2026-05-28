@@ -197,33 +197,57 @@ exports.syncClientesFromJson = async (req, res) => {
     }
 
     const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    console.log(`[SYNC CLIENTES] Iniciando sincronização de ${data.length} clientes via API...`);
+    console.log(`[SYNC CLIENTES] Iniciando sincronização inteligente de ${data.length} clientes via API...`);
 
-    // Limpar clientes antigos (MySQL)
-    const { pool } = require('../data/mysqlDB');
-    await pool.query('DELETE FROM clientes');
-
+    let atualizados = 0;
     let inseridos = 0;
+
     for (const item of data) {
       if (!item.nome) continue;
-      await Cliente.create({
-        id: item.id || Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
-        codigo: item.codigo ? String(item.codigo) : '',
-        nome: item.nome ? String(item.nome) : '',
-        nomeFantasia: item.nomeFantasia ? String(item.nomeFantasia) : '',
-        inscricaoEstadual: item.inscricaoEstadual ? String(item.inscricaoEstadual) : '',
-        cnpj: item.cnpj ? String(item.cnpj) : '',
-        endereco: item.endereco ? String(item.endereco) : '',
-        bairro: item.bairro ? String(item.bairro) : '',
-        estado: item.estado ? String(item.estado) : '',
-        ativo: item.ativo !== undefined ? !!item.ativo : true,
-        criadoEm: item.criadoEm || new Date().toISOString()
-      });
-      inseridos++;
+      
+      const codigo = item.codigo ? String(item.codigo) : '';
+      
+      // Procurar se o cliente já existe em produção pelo código
+      let existing = null;
+      if (codigo) {
+        existing = await Cliente.findOne({ codigo });
+      }
+
+      if (existing) {
+        // Atualiza apenas os dados fiscais e cadastrais, mantendo o Nome/Nome Fantasia que o padeiro já usa!
+        await Cliente.findByIdAndUpdate(existing.id, {
+          inscricaoEstadual: item.inscricaoEstadual ? String(item.inscricaoEstadual) : existing.inscricaoEstadual,
+          cnpj: item.cnpj ? String(item.cnpj) : existing.cnpj,
+          endereco: item.endereco ? String(item.endereco) : existing.endereco,
+          bairro: item.bairro ? String(item.bairro) : existing.bairro,
+          estado: item.estado ? String(item.estado) : existing.estado,
+          ativo: item.ativo !== undefined ? !!item.ativo : existing.ativo
+        });
+        atualizados++;
+      } else {
+        // Insere como novo cliente
+        await Cliente.create({
+          id: item.id || Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+          codigo: codigo,
+          nome: item.nome ? String(item.nome) : '',
+          nomeFantasia: item.nomeFantasia ? String(item.nomeFantasia) : '',
+          inscricaoEstadual: item.inscricaoEstadual ? String(item.inscricaoEstadual) : '',
+          cnpj: item.cnpj ? String(item.cnpj) : '',
+          endereco: item.endereco ? String(item.endereco) : '',
+          bairro: item.bairro ? String(item.bairro) : '',
+          estado: item.estado ? String(item.estado) : '',
+          ativo: item.ativo !== undefined ? !!item.ativo : true,
+          criadoEm: item.criadoEm || new Date().toISOString()
+        });
+        inseridos++;
+      }
     }
 
-    console.log(`[SYNC CLIENTES] Sincronização concluída! ${inseridos} clientes importados.`);
-    res.json({ success: true, message: `Banco de dados sincronizado com sucesso! ${inseridos} clientes importados.` });
+    console.log(`[SYNC CLIENTES] Sincronização inteligente concluída! Atualizados: ${atualizados}, Inseridos: ${inseridos}`);
+    res.json({ 
+      success: true, 
+      message: `Sincronização realizada com sucesso! Sem impacto visual para os padeiros: ${atualizados} clientes atualizados com dados fiscais e ${inseridos} novos clientes inseridos.` 
+    });
   } catch (error) {
     console.error('Erro na sincronização de clientes:', error);
     res.status(500).json({ error: 'Erro interno ao sincronizar os clientes.', details: error.message });
