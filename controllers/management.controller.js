@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { Admin, Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-adapter');
+const { Admin, Padeiro, Atividade, Meta, Avaliacao, Cronograma, Cliente } = require('../data/db-adapter');
 
 exports.listUsers = async (req, res) => {
   const allowed = ['admin', 'gestor_geral'];
@@ -180,5 +180,52 @@ exports.updateUser = async (req, res) => {
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ error: 'Erro ao atualizar usuário', details: error.message });
+  }
+};
+
+exports.syncClientesFromJson = async (req, res) => {
+  const allowed = ['admin', 'gestor_geral'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
+
+  const path = require('path');
+  const fs = require('fs');
+
+  try {
+    const filePath = path.join(__dirname, '..', 'data', 'clientes.json');
+    if (!fs.existsSync(filePath)) {
+      return res.status(400).json({ error: 'Arquivo data/clientes.json não encontrado no servidor.' });
+    }
+
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    console.log(`[SYNC CLIENTES] Iniciando sincronização de ${data.length} clientes via API...`);
+
+    // Limpar clientes antigos (MySQL)
+    const { pool } = require('../data/mysqlDB');
+    await pool.query('DELETE FROM clientes');
+
+    let inseridos = 0;
+    for (const item of data) {
+      if (!item.nome) continue;
+      await Cliente.create({
+        id: item.id || Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+        codigo: item.codigo ? String(item.codigo) : '',
+        nome: item.nome ? String(item.nome) : '',
+        nomeFantasia: item.nomeFantasia ? String(item.nomeFantasia) : '',
+        inscricaoEstadual: item.inscricaoEstadual ? String(item.inscricaoEstadual) : '',
+        cnpj: item.cnpj ? String(item.cnpj) : '',
+        endereco: item.endereco ? String(item.endereco) : '',
+        bairro: item.bairro ? String(item.bairro) : '',
+        estado: item.estado ? String(item.estado) : '',
+        ativo: item.ativo !== undefined ? !!item.ativo : true,
+        criadoEm: item.criadoEm || new Date().toISOString()
+      });
+      inseridos++;
+    }
+
+    console.log(`[SYNC CLIENTES] Sincronização concluída! ${inseridos} clientes importados.`);
+    res.json({ success: true, message: `Banco de dados sincronizado com sucesso! ${inseridos} clientes importados.` });
+  } catch (error) {
+    console.error('Erro na sincronização de clientes:', error);
+    res.status(500).json({ error: 'Erro interno ao sincronizar os clientes.', details: error.message });
   }
 };

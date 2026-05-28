@@ -17,4 +17,7 @@ router.get('/users', authMiddleware, adminOnly, mgmtCtrl.listUsers);
 router.post('/users', authMiddleware, adminOnly, mgmtCtrl.createUser);
 router.delete('/users/:id', authMiddleware, adminOnly, mgmtCtrl.deleteUser);
 
+// Rota administrativa para forçar sincronização de clientes a partir do JSON do repositório
+router.post('/sync-clientes', authMiddleware, adminOnly, mgmtCtrl.syncClientesFromJson);
+
 module.exports = router;
