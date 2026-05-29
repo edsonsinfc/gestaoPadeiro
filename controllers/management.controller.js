@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const { Admin, Padeiro, Atividade, Meta, Avaliacao, Cronograma, Cliente } = require('../data/db-adapter');
 
 exports.listUsers = async (req, res) => {
-  const allowed = ['admin', 'gestor_geral'];
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     let admins, padeiros;
@@ -32,7 +32,7 @@ exports.listUsers = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-  const allowed = ['admin', 'gestor_geral'];
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     const { nome, email, senha, role, filial } = req.body;
@@ -79,7 +79,7 @@ exports.createUser = async (req, res) => {
 };
 
 exports.deleteUser = async (req, res) => {
-  const allowed = ['admin', 'gestor_geral'];
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     // Prevent self-deletion
@@ -112,7 +112,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 exports.updateUser = async (req, res) => {
-  const allowed = ['admin', 'gestor_geral'];
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
     const { nome, email, senha, role, filial, ativo } = req.body;
@@ -184,7 +184,7 @@ exports.updateUser = async (req, res) => {
 };
 
 exports.syncClientesFromJson = async (req, res) => {
-  const allowed = ['admin', 'gestor_geral'];
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
 
   const path = require('path');

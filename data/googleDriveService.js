@@ -28,41 +28,58 @@ function initDrive() {
   if (driveClient) return driveClient;
   if (!googleapis) return null;
 
-  const envJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH || 'google-service-account.json';
-  const resolvedPath = path.isAbsolute(keyPath) ? keyPath : path.join(__dirname, '..', keyPath);
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-  if (!envJson && !fs.existsSync(resolvedPath)) {
-    console.warn(`⚠️  Google Service Account JSON não encontrado (nem no .env nem como arquivo). Usando armazenamento em disco local.`);
-    return null;
-  }
-
   if (!folderId) {
     console.warn('⚠️  GOOGLE_DRIVE_FOLDER_ID não está definido no .env. Usando armazenamento em disco local.');
     return null;
   }
 
+  // Verificar se credenciais OAuth2 estão configuradas
+  const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRES_TOKEN || process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+
   try {
     let auth;
-    if (envJson) {
-      // Se a credencial JSON estiver direto no .env como string
-      const credentials = JSON.parse(envJson);
-      auth = new googleapis.google.auth.GoogleAuth({
-        credentials,
-        scopes: SCOPES,
-      });
-    } else {
-      // Caso contrário, lê do arquivo físico
-      auth = new googleapis.google.auth.GoogleAuth({
-        keyFile: resolvedPath,
-        scopes: SCOPES,
-      });
+    if (clientId && clientSecret && refreshToken) {
+      // Configurar usando OAuth2 com Refresh Token
+      auth = new googleapis.google.auth.OAuth2(clientId, clientSecret);
+      auth.setCredentials({ refresh_token: refreshToken });
+      
+      driveClient = googleapis.google.drive({ version: 'v3', auth });
+      isConfigured = true;
+      console.log('✅ Google Drive API configurada com sucesso usando OAuth2 (Client ID & Refresh Token).');
+      return driveClient;
     }
-    driveClient = googleapis.google.drive({ version: 'v3', auth });
-    isConfigured = true;
-    console.log('✅ Google Drive API configurada com sucesso usando Service Account.');
-    return driveClient;
+
+    // Fallback para Service Account
+    const envJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH || 'google-service-account.json';
+    const resolvedPath = path.isAbsolute(keyPath) ? keyPath : path.join(__dirname, '..', keyPath);
+
+    if (envJson || fs.existsSync(resolvedPath)) {
+      if (envJson) {
+        // Se a credencial JSON estiver direto no .env como string
+        const credentials = JSON.parse(envJson);
+        auth = new googleapis.google.auth.GoogleAuth({
+          credentials,
+          scopes: SCOPES,
+        });
+      } else {
+        // Caso contrário, lê do arquivo físico
+        auth = new googleapis.google.auth.GoogleAuth({
+          keyFile: resolvedPath,
+          scopes: SCOPES,
+        });
+      }
+      driveClient = googleapis.google.drive({ version: 'v3', auth });
+      isConfigured = true;
+      console.log('✅ Google Drive API configurada com sucesso usando Service Account.');
+      return driveClient;
+    }
+
+    console.warn('⚠️  Nenhuma credencial do Google Drive encontrada (OAuth2 ou Service Account). Usando armazenamento em disco local.');
+    return null;
   } catch (error) {
     console.error('❌ Erro ao inicializar cliente Google Drive:', error.message);
     return null;

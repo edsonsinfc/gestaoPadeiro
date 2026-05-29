@@ -132,7 +132,7 @@ const Auth = {
         LocationService.captureAction('Login (App Aberto)');
       }
 
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(data.user.role);
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);
       App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } catch (err) {
       errorEl.classList.add('active');
@@ -333,7 +333,7 @@ const Auth = {
         LocationService.captureAction('Login (Google)');
       }
 
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(data.user.role);
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);
       App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
     } catch (err) {
       if (errorEl) {

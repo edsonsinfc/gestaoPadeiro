@@ -39,7 +39,7 @@ const App = {
     const token = API.token;
     if (user && token) {
       if (user.role === 'padeiro') LocationService.init(user);
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
       const savedRoute = localStorage.getItem('currentRoute');
       this.navigate(savedRoute || (isManagement ? 'admin-dashboard' : 'padeiro-inicio'));
       
@@ -49,6 +49,20 @@ const App = {
   },
 
   navigate(route, data = {}) {
+    const pageContainer = document.getElementById('page-container');
+    const user = API.getUser();
+    
+    if (pageContainer && this.currentRoute !== 'login' && route !== 'login' && user) {
+      pageContainer.classList.add('page-exit-active');
+      setTimeout(() => {
+        this.executeNavigation(route, data);
+      }, 180);
+    } else {
+      this.executeNavigation(route, data);
+    }
+  },
+
+  executeNavigation(route, data = {}) {
     this.currentRoute = route;
     this.routeData = data;
     localStorage.setItem('currentRoute', route);
@@ -61,7 +75,7 @@ const App = {
     if (route === 'login') {
       const user = API.getUser();
       if (user && API.token) {
-        const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
+        const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
         this.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
         return;
       }
@@ -77,7 +91,7 @@ const App = {
     const user = API.getUser();
     if (!user) { this.navigate('login'); return; }
 
-    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
+    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
 
     // Enforce role-based routing
     if (!isManagement) {
@@ -123,50 +137,83 @@ const App = {
   },
 
   renderSidebar(user) {
-    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role);
+    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
     const initials = user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     
-    const adminNav = `
-      <div class="nav-section-title">Principal</div>
-      <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
-        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
-      </div>
-      ${(user.role === 'admin' || user.role === 'gestor_geral') ? `
-      <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
-        <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
-      </div>
-      ` : ''}
-      <div class="nav-item" data-route="cronograma" onclick="App.navigate('cronograma')">
-        <span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-text">Cronograma</span>
-      </div>
-      <div class="nav-section-divider"></div>
-      <div class="nav-section-title">Operacional</div>
-      <div class="nav-item" data-route="gestao" onclick="App.navigate('gestao')">
-        <span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-text">Gestão</span>
-      </div>
-      <div class="nav-item" data-route="metas" onclick="App.navigate('metas')">
-        <span class="nav-icon"><i data-lucide="target"></i></span><span class="nav-text">Metas</span>
-      </div>
-      <div class="nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
-        <span class="nav-icon"><i data-lucide="star"></i></span><span class="nav-text">Avaliações</span>
-      </div>
-      <div class="nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
-        <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Rastreamento</span>
-      </div>
-      <div class="nav-item" data-route="timeline" onclick="App.navigate('timeline')">
-        <span class="nav-icon"><i data-lucide="clock"></i></span><span class="nav-text">Timeline</span>
-      </div>
-      <div class="nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
-        <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
-      </div>
-      <div class="nav-section-divider"></div>
-      <div class="nav-section-title">Sistema</div>
-      ${user.role === 'admin' ? `
-      <div class="nav-item" data-route="dev" onclick="App.navigate('dev')">
-        <span class="nav-icon"><i data-lucide="terminal"></i></span><span class="nav-text">Desenvolvimento</span>
-      </div>
-      ` : ''}
-    `;
+    let adminNav = '';
+    if (user.role === 'master_gestor') {
+      adminNav = `
+        <div class="nav-section-title">Principal</div>
+        <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
+          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
+        </div>
+        <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
+          <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
+        </div>
+        <div class="nav-section-divider"></div>
+        <div class="nav-section-title">Inteligência</div>
+        <div class="nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
+          <span class="nav-icon"><i data-lucide="map-pin"></i></span><span class="nav-text">Rastreamento</span>
+        </div>
+        <div class="nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
+          <span class="nav-icon"><i data-lucide="star"></i></span><span class="nav-text">Avaliações</span>
+        </div>
+        <div class="nav-item" data-route="timeline" onclick="App.navigate('timeline')">
+          <span class="nav-icon"><i data-lucide="clock"></i></span><span class="nav-text">Timeline</span>
+        </div>
+        <div class="nav-item" data-route="gestao" onclick="App.navigate('gestao')">
+          <span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-text">Gestão</span>
+        </div>
+        <div class="nav-item" data-route="metas" onclick="App.navigate('metas')">
+          <span class="nav-icon"><i data-lucide="target"></i></span><span class="nav-text">Metas</span>
+        </div>
+        <div class="nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
+          <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
+        </div>
+      `;
+    } else {
+      adminNav = `
+        <div class="nav-section-title">Principal</div>
+        <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
+          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
+        </div>
+        ${(user.role === 'admin' || user.role === 'gestor_geral') ? `
+        <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
+          <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
+        </div>
+        ` : ''}
+        <div class="nav-item" data-route="cronograma" onclick="App.navigate('cronograma')">
+          <span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-text">Cronograma</span>
+        </div>
+        <div class="nav-section-divider"></div>
+        <div class="nav-section-title">Operacional</div>
+        <div class="nav-item" data-route="gestao" onclick="App.navigate('gestao')">
+          <span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-text">Gestão</span>
+        </div>
+        <div class="nav-item" data-route="metas" onclick="App.navigate('metas')">
+          <span class="nav-icon"><i data-lucide="target"></i></span><span class="nav-text">Metas</span>
+        </div>
+        <div class="nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
+          <span class="nav-icon"><i data-lucide="star"></i></span><span class="nav-text">Avaliações</span>
+        </div>
+        <div class="nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
+          <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Rastreamento</span>
+        </div>
+        <div class="nav-item" data-route="timeline" onclick="App.navigate('timeline')">
+          <span class="nav-icon"><i data-lucide="clock"></i></span><span class="nav-text">Timeline</span>
+        </div>
+        <div class="nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
+          <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
+        </div>
+        <div class="nav-section-divider"></div>
+        <div class="nav-section-title">Sistema</div>
+        ${user.role === 'admin' ? `
+        <div class="nav-item" data-route="dev" onclick="App.navigate('dev')">
+          <span class="nav-icon"><i data-lucide="terminal"></i></span><span class="nav-text">Desenvolvimento</span>
+        </div>
+        ` : ''}
+      `;
+    }
 
     const padeiroNav = `
       <div class="nav-section-title">Menu</div>
@@ -197,7 +244,7 @@ const App = {
           <div class="avatar">${initials}</div>
           <div class="user-info-text">
             <div class="user-name">${user.nome.split(' ').slice(0, 2).join(' ')}</div>
-            <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.cargo || 'Padeiro'}</div>
+            <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</div>
           </div>
         </div>
         <div class="nav-item" onclick="Auth.logout()" style="margin-top:8px;color:var(--danger)">
@@ -286,9 +333,16 @@ const App = {
   },
 
   async renderPage(route) {
+    const user = API.getUser();
     try {
       switch (route) {
-        case 'admin-dashboard': await AdminDashboard.render(); break;
+        case 'admin-dashboard': 
+          if (user.role === 'master_gestor') {
+            await MasterGestor.render();
+          } else {
+            await AdminDashboard.render();
+          }
+          break;
         case 'filiais': 
           if (typeof Filiais === 'undefined') {
             console.error('❌ Erro: Objeto Filiais não foi carregado corretamente.');
@@ -305,7 +359,13 @@ const App = {
           if (route === 'clientes') Gestao.currentTab = 'clientes';
           await Gestao.render(); 
           break;
-        case 'metas': await Metas.render(); break;
+        case 'metas': 
+          if (user && user.role === 'master_gestor') {
+            await MasterMetas.render();
+          } else {
+            await Metas.render();
+          }
+          break;
         case 'avaliacoes': await Avaliacoes.render(); break;
         case 'rastreamento': await Rastreamento.render(); break;
         case 'timeline': await Timeline.render(); break;
