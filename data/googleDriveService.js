@@ -24,30 +24,56 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googl
 let driveClient = null;
 let isConfigured = false;
 
+function loadDriveConfig() {
+  // 1. Tentar carregar do arquivo de configuração (viaja junto com o git)
+  const configPath = path.join(__dirname, '..', 'config', 'google-drive-config.json');
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config.clientId && config.clientSecret && config.refreshToken) {
+        return {
+          folderId: config.folderId || process.env.GOOGLE_DRIVE_FOLDER_ID,
+          clientId: config.clientId,
+          clientSecret: config.clientSecret,
+          refreshToken: config.refreshToken
+        };
+      }
+    } catch (e) {
+      console.warn('⚠️  Erro ao ler google-drive-config.json:', e.message);
+    }
+  }
+
+  // 2. Fallback: ler das variáveis de ambiente (.env)
+  return {
+    folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+    clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+    refreshToken: process.env.GOOGLE_DRIVE_REFRES_TOKEN || process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+  };
+}
+
 function initDrive() {
   if (driveClient) return driveClient;
   if (!googleapis) return null;
 
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-  if (!folderId) {
-    console.warn('⚠️  GOOGLE_DRIVE_FOLDER_ID não está definido no .env. Usando armazenamento em disco local.');
+  const config = loadDriveConfig();
+
+  if (!config.folderId) {
+    console.warn('⚠️  GOOGLE_DRIVE_FOLDER_ID não está definido. Usando armazenamento em disco local.');
     return null;
   }
 
-  // Verificar se credenciais OAuth2 estão configuradas
-  const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_DRIVE_REFRES_TOKEN || process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
-
   try {
     let auth;
-    if (clientId && clientSecret && refreshToken) {
+    if (config.clientId && config.clientSecret && config.refreshToken) {
       // Configurar usando OAuth2 com Refresh Token
-      auth = new googleapis.google.auth.OAuth2(clientId, clientSecret);
-      auth.setCredentials({ refresh_token: refreshToken });
+      auth = new googleapis.google.auth.OAuth2(config.clientId, config.clientSecret);
+      auth.setCredentials({ refresh_token: config.refreshToken });
       
       driveClient = googleapis.google.drive({ version: 'v3', auth });
       isConfigured = true;
+      // Guardar folderId para uso nos uploads
+      process.env.GOOGLE_DRIVE_FOLDER_ID = config.folderId;
       console.log('✅ Google Drive API configurada com sucesso usando OAuth2 (Client ID & Refresh Token).');
       return driveClient;
     }
@@ -59,14 +85,12 @@ function initDrive() {
 
     if (envJson || fs.existsSync(resolvedPath)) {
       if (envJson) {
-        // Se a credencial JSON estiver direto no .env como string
         const credentials = JSON.parse(envJson);
         auth = new googleapis.google.auth.GoogleAuth({
           credentials,
           scopes: SCOPES,
         });
       } else {
-        // Caso contrário, lê do arquivo físico
         auth = new googleapis.google.auth.GoogleAuth({
           keyFile: resolvedPath,
           scopes: SCOPES,
