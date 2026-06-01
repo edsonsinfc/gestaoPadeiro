@@ -6,8 +6,9 @@ exports.listMetas = async (req, res) => {
   
   let metas = await Meta.find(query);
 
-  if (req.user.role === 'gestor_regional' && req.user.filial) {
-    const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+  if (req.user.role !== 'admin' && req.user.role !== 'padeiro' && req.user.filial && req.user.filial !== 'null') {
+    const filiais = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
+    const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiais } });
     const ids = padeirosDaFilial.map(p => p.id);
     metas = metas.filter(m => ids.includes(m.padeiroId));
   }

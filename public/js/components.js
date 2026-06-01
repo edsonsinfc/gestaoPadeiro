@@ -432,7 +432,15 @@ const API = {
         body: formData
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro no upload');
+      if (!res.ok) {
+        if (res.status === 401) {
+          this.setToken(null);
+          this.setUser(null);
+          Components.toast('Sua sessão expirou, faça login novamente.', 'error');
+          if (typeof App !== 'undefined') App.navigate('login');
+        }
+        throw new Error(data.error || 'Erro no upload');
+      }
       return data;
     } catch (err) {
       if (!navigator.onLine && !isSyncing) {

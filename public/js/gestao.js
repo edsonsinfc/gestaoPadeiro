@@ -931,7 +931,7 @@ const Gestao = {
                   u.role === 'padeiro' ? 'Padeiro' : 'Gestor', 
                   u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : u.role === 'padeiro' ? 'green' : 'amber'
                 )}</td>
-                <td>${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}</td>
+                <td>${(u.filial && u.filial !== 'null') ? (Array.isArray(u.filial) ? u.filial.join(', ') : u.filial) : 'Todas'}</td>
                 <td>${u.ativo ? '<span class="text-green font-bold">Ativo</span>' : '<span class="text-danger font-bold">Inativo</span>'}</td>
                 <td class="text-right">
                   <div class="row-actions flex gap-2 justify-end">
@@ -957,7 +957,7 @@ const Gestao = {
               <div class="apple-card-name">${u.nome} ${!u.ativo ? '<span style="font-size:10px; color:var(--apple-red);">(Inativo)</span>' : ''}</div>
               <div class="apple-list-subtitle" style="font-size: 13px; color: var(--apple-gray);">
                 ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : u.role === 'padeiro' ? 'Padeiro' : 'Gestor'} • 
-                ${(u.filial && u.filial !== 'null') ? u.filial : 'Todas'}
+                ${(u.filial && u.filial !== 'null') ? (Array.isArray(u.filial) ? u.filial.join(', ') : u.filial) : 'Todas'}
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -992,21 +992,26 @@ const Gestao = {
         </div>
         <div class="input-group">
           <label class="label">Papel (Role)</label>
-          <select name="role" class="input-control" onchange="document.getElementById('filial-selector').style.display = (this.value === 'gestor_regional' || this.value === 'padeiro') ? 'block' : 'none'">
+          <select name="role" class="input-control" onchange="
+            const fs = document.getElementById('filial-selector');
+            fs.style.display = (this.value === 'admin') ? 'none' : 'block';
+          ">
             <option value="padeiro" ${u.role === 'padeiro' ? 'selected' : ''}>Padeiro (Acesso ao App do Padeiro)</option>
             <option value="gestor_regional" ${u.role === 'gestor_regional' || u.role === 'gestor' ? 'selected' : ''}>Gestor Regional (Acesso a uma filial)</option>
             <option value="gestor_geral" ${u.role === 'gestor_geral' ? 'selected' : ''}>Gestor Geral (Acesso total)</option>
             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador (Acesso total + Desenvolvimento)</option>
           </select>
         </div>
-        <div class="input-group" id="filial-selector" style="display: ${u.role === 'gestor_regional' || u.role === 'gestor' || u.role === 'padeiro' || (!id) ? 'block' : 'none'}">
-          <label class="label">Filial Atribuída</label>
-          <select name="filial" class="input-control">
-            <option value="Brago Brasília" ${u.filial === 'Brago Brasília' ? 'selected' : ''}>Brago Brasília</option>
-            <option value="Brago Goiania" ${u.filial === 'Brago Goiania' ? 'selected' : ''}>Brago Goiania</option>
-            <option value="Brago Palmas" ${u.filial === 'Brago Palmas' ? 'selected' : ''}>Brago Palmas</option>
-            <option value="Brago Campo Grande" ${u.filial === 'Brago Campo Grande' ? 'selected' : ''}>Brago Campo Grande</option>
-          </select>
+        <div class="input-group" id="filial-selector" style="display: ${u.role === 'admin' ? 'none' : 'block'}">
+          <label class="label">Filiais Atribuídas</label>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 8px 0;">Selecione uma ou mais filiais. Se nenhuma for marcada, terá acesso a todas.</p>
+          <div class="checkbox-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            ${['Brago Brasília', 'Brago Goiania', 'Brago Palmas', 'Brago Campo Grande'].map(f => {
+              const uFiliais = Array.isArray(u.filial) ? u.filial : (u.filial && u.filial !== 'null' ? [u.filial] : []);
+              const checked = uFiliais.includes(f) ? 'checked' : '';
+              return `<label style="display: flex; align-items: center; gap: 5px; cursor: pointer; background: var(--system-bg); padding: 5px 10px; border-radius: 6px;"><input type="checkbox" name="filial" value="${f}" ${checked}> ${f}</label>`;
+            }).join('')}
+          </div>
         </div>
         <div class="input-group">
           <label class="label">Status do Acesso</label>
@@ -1043,6 +1048,14 @@ const Gestao = {
     const form = document.getElementById('form-usuario');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
+
+    // Pegar todas as filiais selecionadas como array
+    const filiais = formData.getAll('filial');
+    if (filiais.length > 0) {
+      data.filial = filiais;
+    } else {
+      data.filial = null;
+    }
 
     try {
       if (id) {

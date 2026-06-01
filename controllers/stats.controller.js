@@ -7,11 +7,12 @@ exports.getGeneralStats = async (req, res) => {
     const atividadeQuery = {};
     const avaliacaoQuery = {};
     
-    const isRegional = req.user.role === 'gestor_regional' || req.user.role === 'gestor';
+    const hasFilialFilter = req.user.role !== 'admin' && req.user.filial && req.user.filial !== 'null';
 
-    if (isRegional && req.user.filial) {
-      padeiroQuery.filial = req.user.filial;
-      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial, deletado: { $ne: true } });
+    if (hasFilialFilter) {
+      const filiaisArray = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
+      padeiroQuery.filial = { $in: filiaisArray };
+      const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiaisArray }, deletado: { $ne: true } });
       const ids = padeirosDaFilial.map(p => p.id);
       metaQuery.padeiroId = { $in: ids };
       atividadeQuery.padeiroId = { $in: ids };

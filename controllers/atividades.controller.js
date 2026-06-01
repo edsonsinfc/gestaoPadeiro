@@ -9,8 +9,9 @@ exports.listAtividades = async (req, res) => {
     
     let atividades = await Atividade.find(query).sort({ data: -1 });
     
-    if (req.user.role === 'gestor_regional' && req.user.filial) {
-      const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial, deletado: { $ne: true } });
+    if (req.user.role !== 'admin' && req.user.role !== 'padeiro' && req.user.filial && req.user.filial !== 'null') {
+      const filiais = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
+      const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiais }, deletado: { $ne: true } });
       const ids = padeirosDaFilial.map(p => p.id);
       atividades = atividades.filter(a => ids.includes(a.padeiroId));
     }

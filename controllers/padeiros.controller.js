@@ -4,8 +4,8 @@ const { Padeiro, Atividade, Meta, Avaliacao, Cronograma } = require('../data/db-
 exports.listPadeiros = async (req, res) => {
   try {
     let query = { deletado: { $ne: true } };
-    if (req.user.role === 'gestor_regional' && req.user.filial) {
-      query.filial = req.user.filial;
+    if (req.user.role !== 'admin' && req.user.filial && req.user.filial !== 'null') {
+      query.filial = Array.isArray(req.user.filial) ? { $in: req.user.filial } : req.user.filial;
     }
     const padeiros = await Padeiro.find(query).select('-passwordHash -firstAccessToken');
     res.json(padeiros);

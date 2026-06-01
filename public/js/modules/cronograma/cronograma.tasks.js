@@ -8,9 +8,132 @@
  */
 
 Object.assign(Cronograma, {
+
+  // ──────────────────────────────────────────────────────────────
+  // HELPER: Gera HTML do campo de busca de cliente com dropdown
+  // ──────────────────────────────────────────────────────────────
+  _clienteSearchHTML(selectedId = '', selectedNome = '') {
+    return `
+      <div class="cliente-search-wrapper" id="cliente-search-wrapper">
+        <input type="hidden" id="tarefa-cliente-id" value="${selectedId}">
+        <input type="hidden" id="tarefa-cliente-nome" value="${selectedNome}">
+        <div class="cliente-search-input-wrap">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            class="cliente-search-field${selectedNome ? ' has-value' : ''}"
+            id="tarefa-cliente-search"
+            placeholder="Pesquisar cliente..."
+            value="${selectedNome}"
+            autocomplete="off"
+          >
+        </div>
+        <div class="cliente-dropdown" id="cliente-dropdown"></div>
+      </div>`;
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // HELPER: Inicializa o comportamento interativo do campo de busca
+  // ──────────────────────────────────────────────────────────────
+  _initClienteSearch() {
+    const clientes = this.clientes.filter(c => c.ativo !== false);
+    const input    = document.getElementById('tarefa-cliente-search');
+    const dropdown = document.getElementById('cliente-dropdown');
+    const hiddenId  = document.getElementById('tarefa-cliente-id');
+    const hiddenNome = document.getElementById('tarefa-cliente-nome');
+
+    if (!input || !dropdown) return;
+
+    const renderItems = (filter = '') => {
+      const q = filter.trim().toLowerCase();
+      const filtered = q
+        ? clientes.filter(c => {
+            const nome   = (c.nomeFantasia || c.nome || '').toLowerCase();
+            const bairro = (c.bairro || '').toLowerCase();
+            return nome.includes(q) || bairro.includes(q);
+          })
+        : clientes;
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = `
+          <div class="cliente-dropdown-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 8px;opacity:.4"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Nenhum cliente encontrado
+          </div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtered.map(c => {
+        const nome   = c.nomeFantasia || c.nome || '';
+        const bairro = c.bairro || '';
+        const initials = nome.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+        const display  = nome + (bairro ? ` - ${bairro}` : '');
+        const safeDisplay = display.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return `
+          <div class="cliente-dropdown-item"
+               data-id="${c.id}"
+               data-nome="${safeDisplay}"
+               onmousedown="Cronograma._selectCliente('${c.id}', '${safeDisplay}')">
+            <div class="item-avatar">${initials || '?'}</div>
+            <div class="item-info">
+              <div class="item-name">${nome}</div>
+              ${bairro ? `<div class="item-bairro">${bairro}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    };
+
+    // Abre o dropdown ao focar
+    input.addEventListener('focus', () => {
+      renderItems(input.value);
+      dropdown.classList.add('open');
+    });
+
+    // Fecha ao perder foco (mousedown do item é disparado antes do blur)
+    input.addEventListener('blur', () => {
+      setTimeout(() => dropdown.classList.remove('open'), 200);
+    });
+
+    // Filtra ao digitar
+    input.addEventListener('input', () => {
+      // Limpa a seleção se o usuário editar manualmente
+      hiddenId.value   = '';
+      hiddenNome.value = '';
+      input.classList.remove('has-value');
+      input.classList.remove('input-error');
+      renderItems(input.value);
+      if (!dropdown.classList.contains('open')) dropdown.classList.add('open');
+    });
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // HELPER: Seleciona um cliente do dropdown
+  // ──────────────────────────────────────────────────────────────
+  _selectCliente(id, nome) {
+    const hiddenId   = document.getElementById('tarefa-cliente-id');
+    const hiddenNome = document.getElementById('tarefa-cliente-nome');
+    const input      = document.getElementById('tarefa-cliente-search');
+    const dropdown   = document.getElementById('cliente-dropdown');
+
+    if (hiddenId)   hiddenId.value   = id;
+    if (hiddenNome) hiddenNome.value = nome;
+    if (input) {
+      input.value = nome;
+      input.classList.add('has-value');
+      input.classList.remove('input-error');
+      input.style.borderColor = '';
+    }
+    if (dropdown) dropdown.classList.remove('open');
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // MODAL: Adicionar cliente ao cronograma (mobile/quick)
+  // ──────────────────────────────────────────────────────────────
   openQuickAddForm(dateStr, padeiroId) {
     const padeiro = this.padeiros.find(p => p.id === padeiroId);
-    
+
     Components.showModal('Adicionar Cliente', `
       <form id="tarefa-form">
         <div class="form-group" style="background: var(--system-bg); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
@@ -24,12 +147,7 @@ Object.assign(Cronograma, {
         </div>
         <div class="form-group">
           <label>Cliente</label>
-          <select class="input-control" name="clienteId" id="tarefa-cliente" required style="padding-left: 16px;">
-            <option value="">Selecione o cliente...</option>
-            ${this.clientes.filter(c => c.ativo !== false).map(c =>
-              `<option value="${c.id}" data-nome="${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '')}">${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '')}</option>`
-            ).join('')}
-          </select>
+          ${this._clienteSearchHTML()}
         </div>
         <div class="flex gap-4">
           <div class="form-group w-full">
@@ -58,24 +176,31 @@ Object.assign(Cronograma, {
        <button class="btn btn-primary" onclick="Cronograma.saveQuickAdd('${padeiroId}')"><i data-lucide="plus"></i> Adicionar</button>`
     );
     Components.renderIcons();
+    this._initClienteSearch();
   },
 
   async saveQuickAdd(padeiroId) {
     const form = document.getElementById('tarefa-form');
-    if (!form.checkValidity()) return form.reportValidity();
 
-    const fd = new FormData(form);
+    // Validar cliente (campo customizado não usa checkValidity nativo)
+    const clienteId   = document.getElementById('tarefa-cliente-id')?.value?.trim();
+    const clienteNome = document.getElementById('tarefa-cliente-nome')?.value?.trim();
+    if (!clienteId) {
+      const field = document.getElementById('tarefa-cliente-search');
+      if (field) field.classList.add('input-error');
+      Components.toast('Selecione um cliente da lista.', 'error');
+      return;
+    }
+
+    const fd   = new FormData(form);
     const body = Object.fromEntries(fd);
+    body.clienteId   = clienteId;
+    body.clienteNome = clienteNome;
 
     const padeiro = this.padeiros.find(p => p.id === padeiroId);
     if (padeiro) {
       body.padeiroNome = padeiro.nome;
-      body.codTec = padeiro.codTec;
-    }
-
-    const clienteSel = document.getElementById('tarefa-cliente');
-    if (clienteSel && clienteSel.selectedIndex > 0) {
-      body.clienteNome = clienteSel.options[clienteSel.selectedIndex].dataset.nome;
+      body.codTec      = padeiro.codTec;
     }
 
     try {
@@ -86,6 +211,9 @@ Object.assign(Cronograma, {
     } catch (e) { Components.toast(e.message, 'error'); }
   },
 
+  // ──────────────────────────────────────────────────────────────
+  // MODAL: Nova / Editar Tarefa (formulário completo)
+  // ──────────────────────────────────────────────────────────────
   openTaskForm(id, preDate) {
     const t = id ? this.tarefas.find(x => x.id === id) : {};
     const isEdit = !!id;
@@ -97,19 +225,14 @@ Object.assign(Cronograma, {
           <label>Padeiro</label>
           <select class="input-control" name="padeiroId" id="tarefa-padeiro" required style="padding-left: 16px;">
             <option value="">Selecione o padeiro...</option>
-            ${this.padeiros.filter(p => p.ativo).map(p => 
+            ${this.padeiros.filter(p => p.ativo).map(p =>
               `<option value="${p.id}" data-nome="${p.nome}" data-cod="${p.codTec}" ${t.padeiroId === p.id ? 'selected' : ''}>${p.nome} — COD ${p.codTec}</option>`
             ).join('')}
           </select>
         </div>
         <div class="form-group">
           <label>Cliente</label>
-          <select class="input-control" name="clienteId" id="tarefa-cliente" required style="padding-left: 16px;">
-            <option value="">Selecione o cliente...</option>
-            ${this.clientes.filter(c => c.ativo !== false).map(c => 
-              `<option value="${c.id}" data-nome="${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '')}" ${t.clienteId === c.id ? 'selected' : ''}>${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '')}</option>`
-            ).join('')}
-          </select>
+          ${this._clienteSearchHTML(t.clienteId || '', t.clienteNome || '')}
         </div>
         <div class="flex gap-4">
           <div class="form-group w-full">
@@ -147,35 +270,47 @@ Object.assign(Cronograma, {
        <button class="btn btn-primary" onclick="Cronograma.saveTask('${id || ''}')">Salvar</button>`
     );
     Components.renderIcons();
+    this._initClienteSearch();
   },
 
   async saveTask(id) {
     const form = document.getElementById('tarefa-form');
     if (!form.checkValidity()) return form.reportValidity();
-    
-    const fd = new FormData(form);
+
+    // Validar cliente (campo customizado)
+    const clienteId   = document.getElementById('tarefa-cliente-id')?.value?.trim();
+    const clienteNome = document.getElementById('tarefa-cliente-nome')?.value?.trim();
+    if (!clienteId) {
+      const field = document.getElementById('tarefa-cliente-search');
+      if (field) field.classList.add('input-error');
+      Components.toast('Selecione um cliente da lista.', 'error');
+      return;
+    }
+
+    const fd   = new FormData(form);
     const body = Object.fromEntries(fd);
+    body.clienteId   = clienteId;
+    body.clienteNome = clienteNome;
 
     const padeiroSel = document.getElementById('tarefa-padeiro');
-    const clienteSel = document.getElementById('tarefa-cliente');
-    if (padeiroSel.selectedIndex > 0) {
+    if (padeiroSel && padeiroSel.selectedIndex > 0) {
       const opt = padeiroSel.options[padeiroSel.selectedIndex];
       body.padeiroNome = opt.dataset.nome;
-      body.codTec = opt.dataset.cod;
-    }
-    if (clienteSel.selectedIndex > 0) {
-      body.clienteNome = clienteSel.options[clienteSel.selectedIndex].dataset.nome;
+      body.codTec      = opt.dataset.cod;
     }
 
     try {
       if (id) await API.put(`/api/cronograma/${id}`, body);
-      else await API.post('/api/cronograma', body);
+      else    await API.post('/api/cronograma', body);
       Components.closeModal();
       Components.toast(id ? 'Tarefa atualizada!' : 'Tarefa criada!', 'success');
       await this.render();
     } catch (e) { Components.toast(e.message, 'error'); }
   },
 
+  // ──────────────────────────────────────────────────────────────
+  // Excluir tarefa
+  // ──────────────────────────────────────────────────────────────
   async deleteTask(id) {
     if (confirm('Excluir esta tarefa?')) {
       try {
@@ -187,6 +322,9 @@ Object.assign(Cronograma, {
     }
   },
 
+  // ──────────────────────────────────────────────────────────────
+  // Excluir todo o cronograma
+  // ──────────────────────────────────────────────────────────────
   async deleteAllTasks() {
     if (confirm('ATENÇÃO: Você está prestes a excluir TODO o cronograma. Esta ação não pode ser desfeita. Deseja continuar?')) {
       try {
@@ -199,13 +337,16 @@ Object.assign(Cronograma, {
     }
   },
 
+  // ──────────────────────────────────────────────────────────────
+  // MODAL: Detalhe da Tarefa (somente leitura)
+  // ──────────────────────────────────────────────────────────────
   openTaskDetail(id) {
     const t = this.tarefas.find(x => x.id === id);
     if (!t) return;
     const padeiro = this.padeiros.find(p => p.id === t.padeiroId);
     let statusClass = 'badge-blue';
-    let statusText = 'Pendente';
-    if (t.status === 'concluida') { statusClass = 'badge-success'; statusText = 'Concluída'; }
+    let statusText  = 'Pendente';
+    if (t.status === 'concluida')    { statusClass = 'badge-success'; statusText = 'Concluída'; }
     if (t.status === 'em_andamento') { statusClass = 'badge-primary'; statusText = 'Andamento'; }
 
     Components.showModal('Detalhes da Tarefa', `
@@ -253,6 +394,9 @@ Object.assign(Cronograma, {
     Components.renderIcons();
   },
 
+  // ──────────────────────────────────────────────────────────────
+  // Reordenar tarefas
+  // ──────────────────────────────────────────────────────────────
   async changeTaskOrder(taskId, direction) {
     const task = this.tarefas.find(t => t.id === taskId);
     if (!task) return;
@@ -262,7 +406,7 @@ Object.assign(Cronograma, {
       .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
 
     const currentIndex = siblings.findIndex(t => t.id === taskId);
-    const targetIndex = currentIndex + direction;
+    const targetIndex  = currentIndex + direction;
 
     if (targetIndex < 0 || targetIndex >= siblings.length) return;
 
@@ -272,26 +416,24 @@ Object.assign(Cronograma, {
     const oldPos = task.posicao || 0;
     const newPos = targetTask.posicao || 0;
 
-    // If both are 0, we need to assign proper indexes first
+    // If both are 0, assign proper indexes first
     if (oldPos === newPos) {
       siblings.forEach((t, i) => t.posicao = i * 10);
       task.posicao = siblings.findIndex(t => t.id === taskId) * 10;
       const targetSibling = siblings[siblings.findIndex(t => t.id === taskId) + direction];
-      
+
       const temp = task.posicao;
       task.posicao = targetSibling.posicao;
       targetSibling.posicao = temp;
-      
-      // Save all siblings that changed
+
       await Promise.all(siblings.map(t => API.put(`/api/cronograma/${t.id}`, { posicao: t.posicao })));
     } else {
-      task.posicao = newPos;
+      task.posicao       = newPos;
       targetTask.posicao = oldPos;
-      
-      // Save both
+
       await Promise.all([
-        API.put(`/api/cronograma/${task.id}`, { posicao: task.posicao }),
-        API.put(`/api/cronograma/${targetTask.id}`, { posicao: targetTask.posicao })
+        API.put(`/api/cronograma/${task.id}`,       { posicao: task.posicao }),
+        API.put(`/api/cronograma/${targetTask.id}`, { posicao: targetTask.posicao }),
       ]);
     }
 

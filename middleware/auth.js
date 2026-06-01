@@ -8,7 +8,7 @@ function authMiddleware(req, res, next) {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (e) {
-    return res.status(401).json({ error: 'Token inválido' });
+    return res.status(401).json({ error: 'Sua sessão expirou, faça login novamente.' });
   }
 }
 

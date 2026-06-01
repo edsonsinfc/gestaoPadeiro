@@ -63,7 +63,7 @@ exports.createUser = async (req, res) => {
         email,
         passwordHash,
         role: role || 'gestor_regional',
-        filial: role === 'gestor_regional' ? filial : null,
+        filial: role !== 'admin' ? (filial || null) : null,
         ativo: req.body.ativo !== undefined ? (req.body.ativo === 'true' || req.body.ativo === true) : true,
         criadoEm: new Date().toISOString()
       });
@@ -122,9 +122,9 @@ exports.updateUser = async (req, res) => {
       updateData.ativo = (ativo === 'true' || ativo === true);
     }
     
-    if (role === 'gestor_regional' || role === 'padeiro') {
-      updateData.filial = filial;
-    } else if (role !== undefined) {
+    if (role !== 'admin') {
+      updateData.filial = filial || null;
+    } else {
       updateData.filial = null;
     }
 
@@ -179,7 +179,7 @@ exports.updateUser = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).json({ error: 'Erro ao atualizar usuário', details: error.message });
+    res.status(500).json({ error: 'Erro ao atualizar usuário', details: error.message, stack: error.stack });
   }
 };
 

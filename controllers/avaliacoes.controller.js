@@ -9,10 +9,11 @@ exports.listAvaliacoes = async (req, res) => {
     if (req.query.padeiroId) {
       query.padeiroId = req.query.padeiroId;
     }
-    if (req.user.role === 'gestor_regional' || req.user.role === 'gestor') {
+    if (req.user.role !== 'admin' && req.user.role !== 'padeiro') {
       if (req.user.filial) {
         const { Padeiro } = require('../data/db-adapter');
-        const padeirosDaFilial = await Padeiro.find({ filial: req.user.filial });
+        const filiais = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
+        const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiais } });
         const ids = padeirosDaFilial.map(p => p.id);
         query.padeiroId = { $in: ids };
       }

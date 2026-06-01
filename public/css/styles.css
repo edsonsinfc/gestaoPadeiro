@@ -1439,6 +1439,7 @@ tr:hover .row-actions {
 .matrix-table {
   width: 100%;
   min-width: 1000px;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -5410,4 +5411,174 @@ tr:hover .row-actions {
     justify-content: center !important;
     width: 100% !important;
   }
+}
+
+/* ==========================================
+   SEARCHABLE CLIENT DROPDOWN (Cronograma)
+   ========================================== */
+.cliente-search-wrapper {
+  position: relative;
+}
+
+.cliente-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cliente-search-input-wrap svg.search-icon,
+.cliente-search-input-wrap i.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.cliente-search-field {
+  width: 100%;
+  background-color: var(--input-bg);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-input);
+  padding: 12px 14px 12px 38px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+  cursor: text;
+}
+
+.cliente-search-field::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.cliente-search-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+  background-color: var(--surface-bg);
+}
+
+.cliente-search-field.has-value {
+  font-weight: 500;
+}
+
+.cliente-search-field.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px var(--danger-light) !important;
+}
+
+.cliente-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0,0,0,0.07);
+  z-index: 99999;
+  max-height: 230px;
+  overflow-y: auto;
+  display: none;
+  scrollbar-width: thin;
+}
+
+.cliente-dropdown.open {
+  display: block;
+  animation: clienteDropdownIn 0.17s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes clienteDropdownIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cliente-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: background 0.12s ease;
+  border-bottom: 1px solid var(--separator);
+  user-select: none;
+}
+
+.cliente-dropdown-item:last-child {
+  border-bottom: none;
+  border-radius: 0 0 12px 12px;
+}
+
+.cliente-dropdown-item:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+.cliente-dropdown-item:only-child {
+  border-radius: 12px;
+}
+
+.cliente-dropdown-item:hover,
+.cliente-dropdown-item.highlighted {
+  background-color: var(--primary-light);
+}
+
+.cliente-dropdown-item:hover .item-name,
+.cliente-dropdown-item.highlighted .item-name {
+  color: var(--primary);
+}
+
+.cliente-dropdown-item .item-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.cliente-dropdown-item .item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cliente-dropdown-item .item-name {
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.12s;
+}
+
+.cliente-dropdown-item .item-bairro {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cliente-dropdown-empty {
+  padding: 22px 14px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.cliente-dropdown-empty i {
+  display: block;
+  margin: 0 auto 8px;
+  opacity: 0.4;
 }
