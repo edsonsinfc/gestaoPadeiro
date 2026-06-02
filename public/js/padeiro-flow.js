@@ -320,9 +320,43 @@ const PadeiroFlow = {
     const nome = sel.options[sel.selectedIndex]?.dataset.nome;
     try {
       if (!this.activity.cronogramaId) await this.fetchTodayClient();
-      const body = { clienteId: sel.value, clienteNome: nome, cronogramaId: this.activity.cronogramaId || null, lastStep: 1, timeline: [] };
+      
+      const clientGeneratedId = 'act_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+      const today = this.getTodayLocal();
+      const now = new Date();
+      
+      let tempoMinimoMinutos = 0;
+      try {
+        const agenda = await API.get('/api/cronograma/agenda');
+        const slot = agenda.find(a => (a.id || a._id) === this.activity.cronogramaId);
+        if (slot) tempoMinimoMinutos = slot.tempoMinimoMinutos || 0;
+      } catch (e) {}
+
+      const body = { 
+        id: clientGeneratedId,
+        clienteId: sel.value, 
+        clienteNome: nome, 
+        cronogramaId: this.activity.cronogramaId || null, 
+        lastStep: 1, 
+        timeline: [],
+        inicioEm: now.toISOString(),
+        data: today,
+        hora: now.toTimeString().split(' ')[0],
+        tempoMinimoMinutos: tempoMinimoMinutos
+      };
+
       const a = await API.post('/api/atividades', body);
-      this.activity = a;
+      
+      if (a && a.offline) {
+        this.activity = {
+          ...body,
+          status: 'em_andamento'
+        };
+        this.saveDraftLocally();
+      } else {
+        this.activity = a;
+      }
+      
       if (!this.activity.timeline) this.activity.timeline = [];
       
       // Captura localização e salva
@@ -1037,6 +1071,6 @@ const PadeiroFlow = {
   async updateActivity() {
     const id = this.activity._id || this.activity.id;
     const res = await API.put(`/api/atividades/${id}`, this.activity);
-    if (res) this.activity = { ...this.activity, ...res };
+    if (res && !res.offline) this.activity = { ...this.activity, ...res };
   }
 };

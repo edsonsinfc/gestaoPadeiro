@@ -63,7 +63,7 @@ exports.createAtividade = async (req, res) => {
 
     // Filtro de campos permitidos para a tabela MySQL 'atividades'
     const allowedFields = [
-      'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'cronogramaId',
+      'id', 'padeiroId', 'padeiroNome', 'clienteId', 'clienteNome', 'cronogramaId',
       'produtoId', 'produtoNome', 'kgTotal', 'lTotal', 'status', 'data', 'hora',
       'inicioEm', 'terminadoEm', 'fimEm', 'tempoMinimoMinutos', 'fotos',
       'assinatura', 'localizacao', 'latitude', 'longitude', 'observacao', 'observacaoCliente',
