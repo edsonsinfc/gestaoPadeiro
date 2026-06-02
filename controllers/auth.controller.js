@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
         role: role, 
         nome: admin.nome,
         filial: admin.filial || null 
-      }, JWT_SECRET, { expiresIn: '12h' });
+      }, JWT_SECRET, { expiresIn: '5d' });
       
       return res.json({ 
         token, 
@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
     const valid = await bcrypt.compare(senha, padeiro.passwordHash);
     if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
 
-    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
     return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
   } catch (error) {
     console.error("Login error:", error);
@@ -76,7 +76,7 @@ exports.googleLogin = async (req, res) => {
       if (admin.deletado) return res.status(403).json({ error: 'Usuário inexistente' });
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       const role = admin.role || 'admin';
-      const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '12h' });
+      const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '5d' });
       return res.json({ token, user: { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null } });
     }
 
@@ -84,7 +84,7 @@ exports.googleLogin = async (req, res) => {
     if (!padeiro || padeiro.deletado) return res.status(404).json({ error: 'E-mail não cadastrado no sistema.' });
     if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
 
-    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
     return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
   } catch (error) {
     console.error("Google Login error:", error);
@@ -135,7 +135,7 @@ exports.googleLoginRedirect = async (req, res) => {
       `);
     }
 
-    const token = jwt.sign({ ...user }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ ...user }, JWT_SECRET, { expiresIn: '5d' });
 
     // HTML that saves data to localStorage and redirects to home
     res.send(`

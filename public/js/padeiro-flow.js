@@ -43,12 +43,76 @@ const PadeiroFlow = {
 
     try {
       const atividades = await API.get('/api/atividades');
-      const em = atividades.find(a => a.status === 'em_andamento' && a.data === today);
-      if (em) { this.pendingResume = em; this.confirmResume(); return; }
+      const em = atividades.find(a => a.status === 'em_andamento');
+      if (em) {
+        if (em.data === today) {
+          this.pendingResume = em;
+          this.confirmResume();
+          return;
+        } else {
+          this.pendingPreviousResume = em;
+          this.renderPendingPreviousActivityScreen(container, em);
+          return;
+        }
+      }
     } catch(e) {}
 
     App.routeData = {};
     this.renderWizard(container);
+  },
+
+  renderPendingPreviousActivityScreen(container, em) {
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    };
+    
+    container.innerHTML = `
+      <div class="pf-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
+        <div class="pf-resume-card" style="border: 2px solid #f59e0b; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15); background: var(--surface-bg);">
+          <div class="pf-resume-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; width: 72px; height: 72px; border-radius: 50%;">
+            <i data-lucide="alert-triangle" style="width:36px;height:36px"></i>
+          </div>
+          <h2 class="pf-resume-title" style="color: #d97706; font-size: 20px; font-weight: 800; margin-bottom: 8px;">Atividade Pendente!</h2>
+          <p class="pf-resume-sub" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
+            Por favor, finalize a atividade anterior antes de iniciar uma nova.
+          </p>
+          <div class="pf-resume-info" style="text-align: left; background: #fafbfc; border: 1px solid #f1f5f9; border-radius: 14px; padding: 18px; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+              Identificamos que você iniciou um atendimento em <strong>${formatDate(em.data)}</strong> para o cliente abaixo, mas ele não foi concluído:
+            </p>
+            <div class="pf-resume-row" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
+              <span style="font-size: 13px; color: var(--text-tertiary);">Cliente:</span>
+              <strong style="font-size: 13px; color: var(--text-primary); text-align: right; max-width: 70%;">${em.clienteNome||'—'}</strong>
+            </div>
+            <div class="pf-resume-row" style="display: flex; justify-content: space-between; padding: 6px 0;">
+              <span style="font-size: 13px; color: var(--text-tertiary);">Iniciado em:</span>
+              <strong style="font-size: 13px; color: var(--text-primary);">${formatDate(em.data)} às ${em.hora ? em.hora.slice(0, 5) : '—'}</strong>
+            </div>
+          </div>
+          <button class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.confirmResumePrevious()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);">
+            <i data-lucide="play" style="width:18px;height:18px"></i> Retomar e Finalizar Atividade
+          </button>
+          <button class="pf-btn-ghost" onclick="App.navigate('padeiro-inicio')" style="margin-top: 12px;">
+            <i data-lucide="calendar" style="width:16px;height:16px;margin-right:6px;"></i> Voltar para a Agenda
+          </button>
+        </div>
+      </div>`;
+    Components.renderIcons();
+  },
+
+  confirmResumePrevious() {
+    if (this.pendingPreviousResume) {
+      this.activity = this.pendingPreviousResume;
+      const oldStep = parseInt(this.pendingPreviousResume.lastStep) || 0;
+      this.currentStep = oldStep;
+      this.pendingPreviousResume = null;
+      this.renderWizard(document.getElementById('page-container'));
+    }
   },
 
   renderResumeModal(container, em) {

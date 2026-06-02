@@ -478,8 +478,17 @@ const PadeiroAgenda = {
     try {
       const atividades = await API.get('/api/atividades');
       const emAndamento = atividades.find(a => a.status === 'em_andamento');
-      if (emAndamento && emAndamento.clienteId !== clienteId) {
-        if (!confirm('Você já tem uma atividade em andamento. Deseja iniciar outra?')) return;
+      if (emAndamento) {
+        const today = new Date().toISOString().split('T')[0];
+        if (emAndamento.data !== today) {
+          Components.toast('Você possui uma atividade pendente de finalização!', 'warning');
+          App.navigate('padeiro-atividade');
+          return;
+        }
+        
+        if (emAndamento.clienteId !== clienteId) {
+          if (!confirm('Você já tem uma atividade em andamento. Deseja iniciar outra?')) return;
+        }
       }
     } catch(e) {}
 
