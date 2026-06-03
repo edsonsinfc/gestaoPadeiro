@@ -302,10 +302,10 @@ const OfflineManager = {
       Components.toast('Conexão restabelecida! Sincronizando dados...', 'success');
       this.syncPending();
     });
-    // Check periodically anyway
+    // Check periodically anyway (every 5 minutes)
     setInterval(() => {
       if (navigator.onLine) this.syncPending();
-    }, 60000);
+    }, 300000);
   },
 
   async syncPending() {
