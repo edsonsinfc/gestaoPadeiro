@@ -363,7 +363,11 @@ const PadeiroFlow = {
       await this.captureTimelineEvent('Início do Atendimento');
       await this.updateActivity();
 
-      if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'em_andamento' });
+      try {
+        if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'em_andamento' });
+      } catch (err) {
+        console.warn('Aviso: Erro ao atualizar status na agenda (pode ter sido excluida).', err);
+      }
       this.currentStep = 1;
       this.renderWizard(document.getElementById('page-container'));
       Components.toast('Atividade iniciada!', 'success');
@@ -1038,7 +1042,11 @@ const PadeiroFlow = {
     this.activity.fimEm = new Date().toISOString();
     await this.captureTimelineEvent('Atividade Encerrada');
     await this.updateActivity();
-    if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'concluida' });
+    try {
+      if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'concluida' });
+    } catch (err) {
+      console.warn('Aviso: Erro ao concluir tarefa na agenda (pode ter sido excluida).', err);
+    }
     this.renderSuccess();
   },
 
