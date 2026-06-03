@@ -190,7 +190,7 @@ const PadeiroAgenda = {
       }
 
       const padeiros = data.padeiros || [];
-      const agenda = data.agenda || [];
+      let agenda = data.agenda || [];
       
       let filteredPadeiros = [];
       if (user.role === 'padeiro') {
@@ -199,11 +199,24 @@ const PadeiroAgenda = {
         if (self) {
           filteredPadeiros = [self];
         } else {
-          // If not in the filial list, fetch self directly or show error
-          // For now, let's allow seeing self even if filial doesn't match
-          const allPadeiros = await API.get('/api/padeiros');
-          const me = allPadeiros.find(p => p && (p.codTec === user.codTec || p.id === user.id));
-          if (me) filteredPadeiros = [me];
+          // Padeiro not found in this filial — fetch own record to get real filial
+          try {
+            const allPadeiros = await API.get('/api/padeiros');
+            const me = allPadeiros.find(p => p && (p.codTec === user.codTec || p.id === user.id));
+            if (me) {
+              filteredPadeiros = [me];
+              // If filial is different, re-fetch agenda with correct filial
+              if (me.filial && me.filial !== this.selectedFilial) {
+                this.selectedFilial = me.filial;
+                const correctedData = await API.get(`/api/admin/agenda-semanal?filial=${encodeURIComponent(me.filial)}&semana=${monStr}`);
+                if (correctedData && correctedData.agenda) {
+                  agenda = correctedData.agenda;
+                }
+              }
+            }
+          } catch(e) {
+            console.warn('Fallback padeiro lookup failed:', e);
+          }
         }
       } else {
         filteredPadeiros = padeiros;
