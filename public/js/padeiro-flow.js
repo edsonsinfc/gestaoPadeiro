@@ -235,7 +235,7 @@ const PadeiroFlow = {
     };
 
     if (typeof LocationService !== 'undefined') {
-      const locData = await LocationService.captureAction(`Atividade: ${stepName}`, { atividadeId: this.activity.id, clienteId: this.activity.clienteId, clienteNome: this.activity.clienteNome });
+      const locData = await LocationService.captureAction(stepName, { atividadeId: this.activity.id, clienteId: this.activity.clienteId, clienteNome: this.activity.clienteNome });
       if (locData && locData.coords) {
         event.lat = locData.coords.lat;
         event.lng = locData.coords.lng;

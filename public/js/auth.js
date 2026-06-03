@@ -129,7 +129,12 @@ const Auth = {
       Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
       
       if (data.user.role === 'padeiro' && typeof LocationService !== 'undefined') {
-        LocationService.captureAction('Login (App Aberto)');
+        // Inicializa o LocationService ANTES de capturar o login
+        // para garantir que o socket esteja conectado
+        await LocationService.init(data.user);
+        // Pequeno delay para garantir conexão do socket
+        await new Promise(r => setTimeout(r, 500));
+        await LocationService.captureAction('Login no Aplicativo');
       }
 
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);
@@ -330,7 +335,10 @@ const Auth = {
       Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
       
       if (data.user.role === 'padeiro' && typeof LocationService !== 'undefined') {
-        LocationService.captureAction('Login (Google)');
+        // Inicializa o LocationService ANTES de capturar o login
+        await LocationService.init(data.user);
+        await new Promise(r => setTimeout(r, 500));
+        await LocationService.captureAction('Login no Aplicativo');
       }
 
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);

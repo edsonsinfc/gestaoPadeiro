@@ -78,3 +78,31 @@ exports.getTimelineEvents = async (req, res, next) => {
     next(err);
   }
 };
+
+// POST endpoint - Fallback HTTP para quando socket não está conectado
+exports.createTimelineEvent = async (req, res, next) => {
+  try {
+    const { userId, userName, action, timestamp, source, coords, clienteId, clienteNome } = req.body;
+    
+    if (!userId || !action) {
+      return res.status(400).json({ error: 'userId e action são obrigatórios' });
+    }
+
+    await TimelineEvent.create({
+      padeiroId: userId,
+      padeiroNome: userName,
+      action: action,
+      lat: coords ? coords.lat : null,
+      lng: coords ? coords.lng : null,
+      accuracy: coords ? coords.accuracy : null,
+      source: source || 'http_fallback',
+      timestamp: timestamp || new Date().toISOString(),
+      clienteId: clienteId || null,
+      clienteNome: clienteNome || null
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};

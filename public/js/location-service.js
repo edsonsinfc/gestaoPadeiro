@@ -14,6 +14,12 @@ const LocationService = {
   async init(user) {
     if (!user || user.role !== 'padeiro') return;
 
+    // Proteção contra inicialização dupla
+    if (this.socket && this.socket.connected) {
+      console.log('📡 LocationService já inicializado, ignorando re-init.');
+      return;
+    }
+
     console.log('📡 Inicializando rastreamento GPS para:', user.nome);
     this.requestWakeLock();
 
@@ -186,9 +192,9 @@ const LocationService = {
     try {
       const pos = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 30000, 
-          enableHighAccuracy: true,
-          maximumAge: 15000 // Usa cache de até 15 segundos para acelerar
+          timeout: 5000, 
+          enableHighAccuracy: false,
+          maximumAge: 30000
         });
       });
       eventData.coords = {
@@ -198,13 +204,46 @@ const LocationService = {
       };
       console.log(`📍 Ação Capturada com GPS: ${actionName}`, eventData.coords);
     } catch (e) {
-      console.warn(`⚠️ Ação '${actionName}' registrada sem GPS nativo. Erro:`, e.message);
-      // Fallback para uma API de IP se precisar ou deixa null
-      eventData.source = 'error_or_fallback';
+      console.warn(`⚠️ GPS nativo falhou para '${actionName}'. Tentando fallback por IP...`);
+      // Fallback: localização por IP (funciona em HTTP)
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const geo = await res.json();
+          if (geo.latitude && geo.longitude) {
+            eventData.coords = {
+              lat: geo.latitude,
+              lng: geo.longitude,
+              accuracy: 5000
+            };
+            eventData.source = 'ip-fallback';
+            console.log(`📍 Ação capturada com IP fallback: ${actionName}`, eventData.coords);
+          }
+        }
+      } catch (ipErr) {
+        console.warn('⚠️ Fallback por IP também falhou:', ipErr.message);
+        eventData.source = 'error_or_fallback';
+      }
     }
 
-    if (this.socket) {
+    if (this.socket && this.socket.connected) {
       this.socket.emit('timeline-event', eventData);
+    } else {
+      // Fallback: envia via HTTP se socket não estiver conectado
+      // Isso evita perda silenciosa de eventos
+      console.warn('⚠️ Socket não conectado, enviando timeline-event via HTTP fallback');
+      try {
+        await fetch('/api/timeline-events', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API.token}`
+          },
+          body: JSON.stringify(eventData)
+        });
+      } catch (httpErr) {
+        console.error('❌ Falha no fallback HTTP para timeline-event:', httpErr);
+      }
     }
     
     return eventData;

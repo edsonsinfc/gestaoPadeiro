@@ -217,18 +217,24 @@ const Timeline = {
     // Ordenar cronologicamente
     this.timelineEvents.sort((a, b) => a.timestamp - b.timestamp);
 
-    // Definir etapas esperadas (standard steps)
+    // Definir etapas esperadas (TODOS os passos do fluxo completo)
+    // keywords: array de alternativas para match robusto (nomes antigos com 'Atividade:' e novos sem prefixo)
     const expectedSteps = [
-      { titulo: 'Login no Aplicativo', keyword: 'Login' },
-      { titulo: 'Iniciou Atendimento', keyword: 'Início' },
-      { titulo: 'Finalizou Produção', keyword: 'Fim da Produção' },
-      { titulo: 'Coletou Assinatura', keyword: 'Assinatura' },
-      { titulo: 'Atividade Encerrada', keyword: 'Encerrada' }
+      { titulo: 'Login no Aplicativo', keywords: ['Login no Aplicativo', 'Login (App Aberto)', 'Login (Google)', 'Login'] },
+      { titulo: 'Início do Atendimento', keywords: ['Início do Atendimento', 'Atividade: Início do Atendimento', 'Início'] },
+      { titulo: 'Fim da Produção', keywords: ['Fim da Produção', 'Atividade: Fim da Produção', 'Produção'] },
+      { titulo: 'Avaliação do Cliente', keywords: ['Avaliação do Cliente', 'Atividade: Avaliação do Cliente', 'Avaliação'] },
+      { titulo: 'Assinatura e Avaliação', keywords: ['Assinatura e Avaliação', 'Atividade: Assinatura e Avaliação', 'Assinatura'] },
+      { titulo: 'Atividade Encerrada', keywords: ['Atividade Encerrada', 'Atividade: Atividade Encerrada', 'Encerrada'] }
     ];
 
-    // Verificar quais já foram concluídas
+    // Verificar quais já foram concluídas (match robusto com múltiplas keywords)
     expectedSteps.forEach(step => {
-      const alreadyDone = this.timelineEvents.some(e => e.titulo && e.titulo.includes(step.keyword));
+      const alreadyDone = this.timelineEvents.some(e => {
+        if (!e.titulo) return false;
+        const tituloLower = e.titulo.toLowerCase();
+        return step.keywords.some(kw => tituloLower.includes(kw.toLowerCase()));
+      });
       if (!alreadyDone) {
         this.timelineEvents.push({
           id: eventId++,
@@ -248,10 +254,11 @@ const Timeline = {
     // Re-ordenar (pendentes ficarão no final por causa do timestamp alto)
     this.timelineEvents.sort((a, b) => a.timestamp - b.timestamp);
 
-    // Se tiver eventos, marcar o último como "atual"
-    if (this.timelineEvents.length > 0) {
-      this.timelineEvents[this.timelineEvents.length - 1].status = 'atual';
-      this.timelineEvents[this.timelineEvents.length - 1].statusBadge = { label: 'Último', color: 'blue' };
+    // Se tiver eventos, marcar o último concluído como "atual"
+    const lastDoneIndex = this.timelineEvents.reduce((acc, e, i) => e.status === 'concluido' ? i : acc, -1);
+    if (lastDoneIndex >= 0) {
+      this.timelineEvents[lastDoneIndex].status = 'atual';
+      this.timelineEvents[lastDoneIndex].statusBadge = { label: 'Último', color: 'blue' };
     }
   },
 
