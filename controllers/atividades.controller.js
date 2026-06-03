@@ -9,6 +9,22 @@ exports.listAtividades = async (req, res) => {
     
     let atividades = await Atividade.find(query).sort({ data: -1 });
     
+    // Clean up and filter out orphaned activities that reference a deleted cronograma task
+    const activitiesWithCronograma = atividades.filter(a => a.cronogramaId);
+    if (activitiesWithCronograma.length > 0) {
+      const cronogramaIds = [...new Set(activitiesWithCronograma.map(a => a.cronogramaId))];
+      const existingCronogramas = await Cronograma.find({ id: { $in: cronogramaIds } });
+      const existingIds = new Set(existingCronogramas.map(c => c.id));
+      
+      const orphanedIds = cronogramaIds.filter(id => !existingIds.has(id));
+      if (orphanedIds.length > 0) {
+        // Delete orphaned activities from database to prevent future issues
+        await Atividade.deleteMany({ cronogramaId: { $in: orphanedIds } });
+        // Filter them out of the current response list
+        atividades = atividades.filter(a => !a.cronogramaId || !orphanedIds.includes(a.cronogramaId));
+      }
+    }
+    
     if (req.user.role !== 'admin' && req.user.role !== 'padeiro' && req.user.filial && req.user.filial !== 'null') {
       const filiais = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
       const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiais }, deletado: { $ne: true } });
