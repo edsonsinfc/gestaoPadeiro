@@ -267,11 +267,23 @@ const PadeiroFlow = {
       agendaHoje = agenda.filter(a => a.data === today && (!a.status || a.status === 'pendente' || a.status === 'em_andamento'));
     } catch(e) {}
     
-    // Default pre-selection if not already set
-    if (!this.activity.clienteId && agendaHoje.length > 0) {
-      this.activity.clienteId = agendaHoje[0].clienteId;
-      this.activity.clienteNome = agendaHoje[0].clienteNome;
-      this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
+    // Garantir que a tarefa atualizada do servidor (novo ID caso recriada) seja usada
+    if (agendaHoje.length > 0) {
+      if (!this.activity.clienteId) {
+        this.activity.clienteId = agendaHoje[0].clienteId;
+        this.activity.clienteNome = agendaHoje[0].clienteNome;
+        this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
+      } else {
+        const matchingTask = agendaHoje.find(a => a.clienteId === this.activity.clienteId);
+        if (matchingTask) {
+          this.activity.cronogramaId = matchingTask.id || matchingTask._id;
+          this.activity.clienteNome = matchingTask.clienteNome;
+        } else {
+          this.activity.clienteId = agendaHoje[0].clienteId;
+          this.activity.clienteNome = agendaHoje[0].clienteNome;
+          this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
+        }
+      }
     }
 
     const has = !!this.activity.clienteId;
