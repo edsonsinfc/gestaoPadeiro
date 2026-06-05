@@ -1,0 +1,630 @@
+/* Apple HIG Desktop Styles for BRAGO Distribuidora */
+/* This file only applies to desktop screens to avoid breaking mobile */
+
+@media (max-width: 767px) {
+  .hig-desktop-only { display: none !important; }
+}
+
+@media (min-width: 768px) {
+  .hig-mobile-only { display: none !important; }
+
+  :root {
+    /* Tipografia */
+    --hig-font: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    
+    /* Paleta de Cores */
+    --hig-bg-primary: #FFFFFF;
+    --hig-bg-secondary: rgba(246, 246, 246, 0.92);
+    --hig-bg-tertiary: #F5F5F7;
+    --hig-bg-card: #FFFFFF;
+    
+    /* Labels */
+    --hig-label-primary: #1C1C1E;
+    --hig-label-secondary: #6C6C70;
+    --hig-label-tertiary: #AEAEB2;
+    --hig-label-quaternary: #C7C7CC;
+    
+    /* Separadores */
+    --hig-separator: rgba(0, 0, 0, 0.08);
+    --hig-separator-light: rgba(0, 0, 0, 0.05);
+    
+    /* System Colors */
+    --hig-system-blue: #007AFF;
+    --hig-system-green: #34C759;
+    --hig-system-orange: #FF9500;
+    --hig-system-red: #FF3B30;
+    --hig-system-purple: #AF52DE;
+    --hig-system-teal: #30B0C7;
+    --hig-system-yellow: #FFCC00;
+    
+    /* Tonal */
+    --hig-fill-blue: rgba(0, 122, 255, 0.10);
+    --hig-fill-green: rgba(52, 199, 89, 0.10);
+    --hig-fill-orange: rgba(255, 149, 0, 0.10);
+    --hig-fill-purple: rgba(175, 82, 222, 0.10);
+    
+    /* Bordas e Raios */
+    --hig-radius-sm: 6px;
+    --hig-radius-md: 10px;
+    --hig-radius-lg: 14px;
+    --hig-radius-xl: 18px;
+    --hig-radius-2xl: 22px;
+    
+    /* Sombras e Transições */
+    --hig-shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --hig-shadow-elevated: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+    --hig-transition-fast: all 120ms ease;
+    --hig-transition-base: all 180ms ease;
+  }
+
+  /* Aplicação da Tipografia Global (Apenas no Desktop) */
+  body {
+    font-family: var(--hig-font);
+  }
+
+  /* -------------------------------------
+   * REDESIGN DA SIDEBAR
+   * ------------------------------------- */
+  
+  .hig-sidebar {
+    width: 240px !important;
+    min-height: 100vh;
+    background: #0A2540 !important; /* Azul marinho */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-right: none !important;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    z-index: 100;
+  }
+
+  /* Header / Logo */
+  .hig-sidebar-logo {
+    padding: 20px 16px 18px;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hig-sidebar-logo-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.2px;
+    display: block;
+  }
+
+  .hig-sidebar-logo-subtitle {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 1px;
+  }
+
+  /* Área de Navegação */
+  .hig-sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 10px !important;
+    scrollbar-width: none;
+  }
+  .hig-sidebar-nav::-webkit-scrollbar { display: none; }
+
+  /* Labels de Seção */
+  .hig-sidebar-section-label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    letter-spacing: 0.7px !important;
+    text-transform: uppercase !important;
+    padding: 18px 8px 5px !important;
+    display: block !important;
+    user-select: none;
+    margin-bottom: 0 !important;
+  }
+
+  .hig-sidebar-section-label:first-child {
+    padding-top: 8px !important;
+  }
+
+  /* Itens de Navegação */
+  .hig-sidebar-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: var(--hig-transition-fast) !important;
+    white-space: nowrap !important;
+    margin-bottom: 1px !important;
+    border: none !important;
+  }
+  
+  .hig-sidebar-nav-item .nav-text {
+    font-weight: inherit !important;
+  }
+
+  .hig-sidebar-nav-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+  }
+
+  .hig-sidebar-nav-item.active,
+  .hig-sidebar-nav-item[aria-current="page"] {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+  }
+
+  /* Ícone */
+  .hig-sidebar-nav-item .nav-icon {
+    font-size: 20px !important;
+    width: 22px !important;
+    flex-shrink: 0 !important;
+    opacity: 0.8 !important;
+    color: inherit !important;
+    margin-right: 0 !important;
+  }
+  
+  .hig-sidebar-nav-item .nav-icon i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hig-sidebar-nav-item.active .nav-icon,
+  .hig-sidebar-nav-item[aria-current="page"] .nav-icon {
+    opacity: 1 !important;
+  }
+
+  /* Footer / Usuário + Logout */
+  .hig-sidebar-footer {
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hig-sidebar-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: -0.3px;
+  }
+
+  .hig-sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hig-sidebar-user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+
+  .hig-sidebar-user-role {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    display: block;
+  }
+
+  .hig-sidebar-logout-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+    transition: var(--hig-transition-fast);
+  }
+
+  .hig-sidebar-logout-btn:hover {
+    color: var(--hig-system-red);
+    background: rgba(255, 59, 48, 0.15);
+  }
+  
+  .main-content {
+    background: var(--hig-bg-tertiary) !important;
+  }
+
+  /* -------------------------------------
+   * REDESIGN DO DASHBOARD (Aba Início)
+   * ------------------------------------- */
+  
+  .hig-dashboard-content {
+    padding: 32px 36px !important;
+    max-width: 1200px !important;
+    background: var(--hig-bg-tertiary) !important;
+    min-height: 100vh !important;
+    margin: 0 auto;
+  }
+
+  /* Header da Página */
+  .hig-page-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .hig-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--hig-label-primary);
+    letter-spacing: -0.3px;
+    margin: 0;
+  }
+
+  .hig-page-date {
+    font-size: 13px;
+    color: var(--hig-label-tertiary);
+    font-weight: 400;
+  }
+
+  /* Banner de Boas-vindas */
+  .hig-welcome-card {
+    background: var(--hig-bg-card);
+    border: 0.5px solid rgba(0, 0, 0, 0.07);
+    border-radius: var(--hig-radius-xl);
+    box-shadow: var(--hig-shadow-card);
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .hig-welcome-greeting {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--hig-label-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+  }
+
+  .hig-welcome-subtitle {
+    font-size: 15px;
+    color: var(--hig-label-secondary);
+    margin: 0;
+  }
+
+  .hig-tutorial-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--hig-fill-blue);
+    color: var(--hig-system-blue);
+    border: none;
+    border-radius: var(--hig-radius-md);
+    padding: 9px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--hig-transition-fast);
+    white-space: nowrap;
+  }
+
+  .hig-tutorial-btn:hover {
+    background: rgba(0, 122, 255, 0.14);
+  }
+
+  .hig-tutorial-btn i {
+    font-size: 15px;
+  }
+
+  /* Grid de 4 Métricas Principais */
+  .hig-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .hig-metric-card {
+    background: var(--hig-bg-card);
+    border: 0.5px solid rgba(0, 0, 0, 0.07);
+    border-radius: var(--hig-radius-xl);
+    box-shadow: var(--hig-shadow-card);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transition: var(--hig-transition-base);
+  }
+
+  .hig-metric-card:hover {
+    box-shadow: var(--hig-shadow-elevated);
+    transform: translateY(-1px);
+  }
+
+  /* Ícone container */
+  .hig-metric-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--hig-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .hig-metric-icon-wrap i {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Variantes de cor dos ícones */
+  .hig-metric-icon-wrap.blue   { background: var(--hig-fill-blue); color: var(--hig-system-blue); }
+  .hig-metric-icon-wrap.purple { background: var(--hig-fill-purple); color: var(--hig-system-purple); }
+  .hig-metric-icon-wrap.green  { background: var(--hig-fill-green); color: var(--hig-system-green); }
+  .hig-metric-icon-wrap.orange { background: var(--hig-fill-orange); color: var(--hig-system-orange); }
+
+  /* Número */
+  .hig-metric-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--hig-label-primary);
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  /* Label */
+  .hig-metric-label {
+    font-size: 13px;
+    color: var(--hig-label-secondary);
+    font-weight: 400;
+  }
+
+  /* Card Clientes Atendidos Neste Mês */
+  .hig-clients-card {
+    background: var(--hig-bg-card);
+    border: 0.5px solid rgba(0, 0, 0, 0.07);
+    border-radius: var(--hig-radius-xl);
+    box-shadow: var(--hig-shadow-card);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .hig-clients-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--hig-radius-lg);
+    background: var(--hig-fill-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .hig-clients-icon-wrap i {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: var(--hig-system-green);
+  }
+
+  .hig-clients-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--hig-label-tertiary);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .hig-clients-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--hig-label-primary);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  /* Card Produção Mensal */
+  .hig-production-card {
+    background: var(--hig-bg-card);
+    border: 0.5px solid rgba(0, 0, 0, 0.07);
+    border-radius: var(--hig-radius-xl);
+    box-shadow: var(--hig-shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* Header da seção */
+  .hig-production-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .hig-production-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--hig-label-primary);
+  }
+
+  .hig-production-title i {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+    color: var(--hig-system-blue);
+  }
+
+  .hig-production-badge {
+    background: var(--hig-fill-blue);
+    color: var(--hig-system-blue);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-transform: capitalize;
+  }
+
+  /* Grid de sub-métricas */
+  .hig-production-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    border-radius: var(--hig-radius-lg);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .hig-production-stat-item {
+    padding: 18px 20px;
+    border-right: 0.5px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .hig-production-stat-item:last-child {
+    border-right: none;
+  }
+
+  .hig-production-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--hig-label-primary);
+    letter-spacing: -0.3px;
+    line-height: 1;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .hig-production-stat-unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--hig-label-tertiary);
+  }
+
+  .hig-production-stat-label {
+    font-size: 12px;
+    color: var(--hig-label-secondary);
+  }
+
+  /* Legenda do gráfico */
+  .hig-chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .hig-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--hig-label-secondary);
+  }
+
+  .hig-legend-dot {
+    width: 10px;
+    height: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .hig-legend-dot.kg { background: var(--hig-system-blue); }
+  .hig-legend-dot.litros { background: var(--hig-system-purple); }
+
+  /* Área do gráfico */
+  .hig-chart-container {
+    height: 200px;
+    position: relative;
+  }
+
+  /* Collapsible Sidebar (Desktop) */
+  .hig-sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .hig-sidebar.collapsed {
+    width: 72px !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-logo-img,
+  .hig-sidebar.collapsed .hig-logo-text-group {
+    display: none !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-logo {
+    justify-content: center !important;
+    padding: 20px 0 !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-desktop-toggle-btn {
+    margin-left: 0 !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-section-label {
+    display: none !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-nav-item {
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-nav-item .nav-text {
+    display: none !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-footer {
+    justify-content: center !important;
+    padding: 12px 0 !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-avatar {
+    margin: 0 !important;
+  }
+  
+  .hig-sidebar.collapsed .hig-sidebar-user-info,
+  .hig-sidebar.collapsed .hig-sidebar-logout-btn {
+    display: none !important;
+  }
+
+  .hig-desktop-toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+  }
+}

@@ -35,37 +35,52 @@ const App = {
       if (installBtn) installBtn.style.display = 'none';
     });
 
+    // Add popstate listener for back button navigation
+    window.addEventListener('popstate', (event) => {
+      if (event.state && event.state.route) {
+        this.navigate(event.state.route, event.state.data, false);
+      }
+    });
+
     const user = API.getUser();
     const token = API.token;
     if (user && token) {
       if (user.role === 'padeiro') LocationService.init(user);
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
       const savedRoute = localStorage.getItem('currentRoute');
-      this.navigate(savedRoute || (isManagement ? 'admin-dashboard' : 'padeiro-inicio'));
-      
+      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+      history.replaceState({ route: initialRoute, data: {} }, '', '');
+      this.navigate(initialRoute, {}, false);
     } else {
-      this.navigate('login');
+      history.replaceState({ route: 'login', data: {} }, '', '');
+      this.navigate('login', {}, false);
     }
   },
 
-  navigate(route, data = {}) {
+  navigate(route, data = {}, pushToHistory = true) {
     const pageContainer = document.getElementById('page-container');
     const user = API.getUser();
     
     if (pageContainer && this.currentRoute !== 'login' && route !== 'login' && user) {
       pageContainer.classList.add('page-exit-active');
       setTimeout(() => {
-        this.executeNavigation(route, data);
+        this.executeNavigation(route, data, pushToHistory);
       }, 180);
     } else {
-      this.executeNavigation(route, data);
+      this.executeNavigation(route, data, pushToHistory);
     }
   },
 
-  executeNavigation(route, data = {}) {
+  executeNavigation(route, data = {}, pushToHistory = true) {
     this.currentRoute = route;
     this.routeData = data;
     localStorage.setItem('currentRoute', route);
+    
+    if (pushToHistory) {
+      if (!history.state || history.state.route !== route) {
+        history.pushState({ route, data }, '', '');
+      }
+    }
     const app = document.getElementById('app');
     if (!app) {
       console.error('❌ Elemento #app não encontrado no DOM!');
@@ -93,6 +108,15 @@ const App = {
 
     const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
 
+    const body = document.body;
+    if (isManagement) {
+      body.classList.add('user-is-management');
+      body.classList.remove('user-is-padeiro');
+    } else {
+      body.classList.add('user-is-padeiro');
+      body.classList.remove('user-is-management');
+    }
+
     // Enforce role-based routing
     if (!isManagement) {
       const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda'];
@@ -118,6 +142,7 @@ const App = {
         ${this.renderHeader(route)}
         <div class="page-content" id="page-container">${Components.loading()}</div>
       </div>
+      ${this.renderBottomNavbar(user)}
     </div>`;
 
     // Highlight active nav
@@ -143,72 +168,72 @@ const App = {
     let adminNav = '';
     if (user.role === 'master_gestor') {
       adminNav = `
-        <div class="nav-section-title">Principal</div>
-        <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
+        <div class="nav-section-title hig-sidebar-section-label">Principal</div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
           <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
         </div>
-        <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="filiais" onclick="App.navigate('filiais')">
           <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
         </div>
-        <div class="nav-section-divider"></div>
-        <div class="nav-section-title">Inteligência</div>
-        <div class="nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
+        <div class="nav-section-divider hig-mobile-only"></div>
+        <div class="nav-section-title hig-sidebar-section-label">Inteligência</div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
           <span class="nav-icon"><i data-lucide="map-pin"></i></span><span class="nav-text">Rastreamento</span>
         </div>
-        <div class="nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
           <span class="nav-icon"><i data-lucide="star"></i></span><span class="nav-text">Avaliações</span>
         </div>
-        <div class="nav-item" data-route="timeline" onclick="App.navigate('timeline')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="timeline" onclick="App.navigate('timeline')">
           <span class="nav-icon"><i data-lucide="clock"></i></span><span class="nav-text">Timeline</span>
         </div>
-        <div class="nav-item" data-route="gestao" onclick="App.navigate('gestao')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="gestao" onclick="App.navigate('gestao')">
           <span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-text">Gestão</span>
         </div>
-        <div class="nav-item" data-route="metas" onclick="App.navigate('metas')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="metas" onclick="App.navigate('metas')">
           <span class="nav-icon"><i data-lucide="target"></i></span><span class="nav-text">Metas</span>
         </div>
-        <div class="nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
           <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
         </div>
       `;
     } else {
       adminNav = `
-        <div class="nav-section-title">Principal</div>
-        <div class="nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
+        <div class="nav-section-title hig-sidebar-section-label">Principal</div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="admin-dashboard" onclick="App.navigate('admin-dashboard')">
           <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Dashboard</span>
         </div>
         ${(user.role === 'admin' || user.role === 'gestor_geral') ? `
-        <div class="nav-item" data-route="filiais" onclick="App.navigate('filiais')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="filiais" onclick="App.navigate('filiais')">
           <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Filiais</span>
         </div>
         ` : ''}
-        <div class="nav-item" data-route="cronograma" onclick="App.navigate('cronograma')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="cronograma" onclick="App.navigate('cronograma')">
           <span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-text">Cronograma</span>
         </div>
-        <div class="nav-section-divider"></div>
-        <div class="nav-section-title">Operacional</div>
-        <div class="nav-item" data-route="gestao" onclick="App.navigate('gestao')">
+        <div class="nav-section-divider hig-mobile-only"></div>
+        <div class="nav-section-title hig-sidebar-section-label">Operacional</div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="gestao" onclick="App.navigate('gestao')">
           <span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-text">Gestão</span>
         </div>
-        <div class="nav-item" data-route="metas" onclick="App.navigate('metas')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="metas" onclick="App.navigate('metas')">
           <span class="nav-icon"><i data-lucide="target"></i></span><span class="nav-text">Metas</span>
         </div>
-        <div class="nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="avaliacoes" onclick="App.navigate('avaliacoes')">
           <span class="nav-icon"><i data-lucide="star"></i></span><span class="nav-text">Avaliações</span>
         </div>
-        <div class="nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="rastreamento" onclick="App.navigate('rastreamento')">
           <span class="nav-icon"><i data-lucide="map"></i></span><span class="nav-text">Rastreamento</span>
         </div>
-        <div class="nav-item" data-route="timeline" onclick="App.navigate('timeline')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="timeline" onclick="App.navigate('timeline')">
           <span class="nav-icon"><i data-lucide="clock"></i></span><span class="nav-text">Timeline</span>
         </div>
-        <div class="nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
           <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
         </div>
-        <div class="nav-section-divider"></div>
-        <div class="nav-section-title">Sistema</div>
+        <div class="nav-section-divider hig-mobile-only"></div>
+        <div class="nav-section-title hig-sidebar-section-label">Sistema</div>
         ${user.role === 'admin' ? `
-        <div class="nav-item" data-route="dev" onclick="App.navigate('dev')">
+        <div class="nav-item hig-sidebar-nav-item" data-route="dev" onclick="App.navigate('dev')">
           <span class="nav-icon"><i data-lucide="terminal"></i></span><span class="nav-text">Desenvolvimento</span>
         </div>
         ` : ''}
@@ -216,30 +241,41 @@ const App = {
     }
 
     const padeiroNav = `
-      <div class="nav-section-title">Menu</div>
-      <div class="nav-item" data-route="padeiro-inicio" onclick="App.navigate('padeiro-inicio')">
+      <div class="nav-section-title hig-sidebar-section-label">Menu</div>
+      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-inicio" onclick="App.navigate('padeiro-inicio')">
         <span class="nav-icon"><i data-lucide="home"></i></span><span class="nav-text">Início</span>
       </div>
-      <div class="nav-item" data-route="padeiro-atividade" onclick="App.navigate('padeiro-atividade')">
+      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-atividade" onclick="App.navigate('padeiro-atividade')">
         <span class="nav-icon"><i data-lucide="clipboard-list"></i></span><span class="nav-text">Nova Atividade</span>
       </div>
-      <div class="nav-item" data-route="padeiro-agenda" onclick="App.navigate('padeiro-agenda')">
+      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-agenda" onclick="App.navigate('padeiro-agenda')">
         <span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-text">Minha Agenda</span>
       </div>
     `;
 
     return `
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
+    <aside class="sidebar hig-sidebar" id="sidebar">
+      <div class="sidebar-header hig-mobile-only">
         <button class="sidebar-toggle-btn" onclick="App.toggleSidebar()">
           <i data-lucide="menu"></i>
         </button>
         <img src="/assets/logo.svg" alt="BRAGO" class="sidebar-logo-img">
       </div>
-      <nav class="sidebar-nav">
+      <div class="hig-sidebar-logo hig-desktop-only" style="align-items: center; gap: 10px;">
+        <img src="/assets/logo.svg" alt="BRAGO" style="height: 32px; filter: brightness(0) invert(1);" class="hig-logo-img">
+        <div class="hig-logo-text-group">
+          <span class="hig-sidebar-logo-name">Smart</span>
+          <span class="hig-sidebar-logo-subtitle">Gestor</span>
+        </div>
+        <button class="sidebar-toggle-btn hig-desktop-toggle-btn" onclick="App.toggleSidebar()" style="margin-left: auto; color: rgba(255, 255, 255, 0.7); background: transparent; border: none; cursor: pointer; padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; outline: none; transition: background-color 0.2s;">
+          <i data-lucide="menu" style="width: 20px; height: 20px;"></i>
+        </button>
+      </div>
+      <nav class="sidebar-nav hig-sidebar-nav">
         ${isManagement ? adminNav : padeiroNav}
       </nav>
-      <div class="sidebar-footer">
+      <!-- Mobile Footer -->
+      <div class="sidebar-footer hig-mobile-only">
         <div class="sidebar-user">
           <div class="avatar">${initials}</div>
           <div class="user-info-text">
@@ -247,11 +283,79 @@ const App = {
             <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</div>
           </div>
         </div>
-        <div class="nav-item" onclick="Auth.logout()" style="margin-top:8px;color:var(--danger)">
+        <div class="nav-item hig-sidebar-nav-item" onclick="Auth.logout()" style="margin-top:8px;color:var(--danger)">
           <span class="nav-icon"><i data-lucide="log-out"></i></span><span class="nav-text">Sair</span>
         </div>
       </div>
+      <!-- Desktop HIG Footer -->
+      <div class="hig-sidebar-footer hig-desktop-only">
+        <div class="hig-sidebar-avatar">${initials}</div>
+        <div class="hig-sidebar-user-info">
+          <span class="hig-sidebar-user-name">${user.nome.split(' ').slice(0, 2).join(' ')}</span>
+          <span class="hig-sidebar-user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</span>
+        </div>
+        <button class="hig-sidebar-logout-btn" onclick="Auth.logout()" aria-label="Sair do sistema">
+          <i data-lucide="log-out" aria-hidden="true"></i>
+        </button>
+      </div>
     </aside>`;
+  },
+
+  renderBottomNavbar(user) {
+    const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
+    if (isManagement) return '';
+    let items = [];
+
+    if (isManagement) {
+      if (user.role === 'master_gestor') {
+        items = [
+          { route: 'admin-dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+          { route: 'filiais', label: 'Filiais', icon: 'map' },
+          { route: 'rastreamento', label: 'Rastreio', icon: 'map-pin' },
+          { route: 'avaliacoes', label: 'Avaliações', icon: 'star' },
+          { route: 'timeline', label: 'Timeline', icon: 'clock' },
+          { route: 'gestao', label: 'Gestão', icon: 'users' },
+          { route: 'metas', label: 'Metas', icon: 'target' },
+          { route: 'relatorios', label: 'Relatórios', icon: 'bar-chart-2' }
+        ];
+      } else {
+        items = [
+          { route: 'admin-dashboard', label: 'Dashboard', icon: 'layout-dashboard' }
+        ];
+        if (user.role === 'admin' || user.role === 'gestor_geral') {
+          items.push({ route: 'filiais', label: 'Filiais', icon: 'map' });
+        }
+        items.push({ route: 'cronograma', label: 'Cronograma', icon: 'calendar-days' });
+        items.push({ route: 'gestao', label: 'Gestão', icon: 'users' });
+        items.push({ route: 'metas', label: 'Metas', icon: 'target' });
+        items.push({ route: 'avaliacoes', label: 'Avaliações', icon: 'star' });
+        items.push({ route: 'rastreamento', label: 'Rastreio', icon: 'map' });
+        items.push({ route: 'timeline', label: 'Timeline', icon: 'clock' });
+        items.push({ route: 'relatorios', label: 'Relatórios', icon: 'bar-chart-2' });
+        if (user.role === 'admin') {
+          items.push({ route: 'dev', label: 'Dev', icon: 'terminal' });
+        }
+      }
+    } else {
+      items = [
+        { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
+        { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days', highlighted: true },
+        { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' }
+      ];
+    }
+
+    const htmlItems = items.map(item => `
+      <div class="nav-item bottom-nav-item ${item.highlighted ? 'highlighted-nav-item' : ''}" data-route="${item.route}" onclick="App.navigate('${item.route}')">
+        <span class="bottom-nav-icon"><i data-lucide="${item.icon}"></i></span>
+        <span class="bottom-nav-label">${item.label}</span>
+      </div>
+    `).join('');
+
+    return `
+      <nav class="bottom-navbar">
+        ${htmlItems}
+      </nav>
+    `;
   },
 
   // Header configuration per route
@@ -385,36 +489,6 @@ const App = {
     Components.renderIcons();
     // Bind iOS header scroll collapse behavior
     this.bindHeaderScroll();
-
-    // Auto-start tutorial for first-time admins
-    if (route === 'admin-dashboard' && !localStorage.getItem('brago_tutorial_seen')) {
-      const user = API.getUser();
-      if (user && ['admin', 'gestor', 'gestor_geral', 'gestor_regional'].includes(user.role)) {
-        setTimeout(() => {
-          if (typeof Tutorial !== 'undefined') Tutorial.start();
-        }, 1500);
-      }
-    }
-
-    // Add floating tutorial button for bakers on home page
-    const existingFab = document.getElementById('baker-tutorial-fab');
-    if (existingFab) existingFab.remove();
-
-    if (route === 'padeiro-inicio') {
-      const user = API.getUser();
-      if (user && user.role === 'padeiro') {
-        const fab = document.createElement('button');
-        fab.id = 'baker-tutorial-fab';
-        fab.className = 'tutorial-fab';
-        fab.innerHTML = '<i data-lucide="help-circle"></i>';
-        fab.title = 'Ver Tutorial';
-        fab.onclick = () => {
-          if (typeof PadeiroTutorial !== 'undefined') PadeiroTutorial.start();
-        };
-        document.body.appendChild(fab);
-        Components.renderIcons();
-      }
-    }
   },
 
   // Desktop sidebar toggle with localStorage and Leaflet map support

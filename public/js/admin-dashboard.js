@@ -120,6 +120,12 @@ const AdminDashboard = {
         .donut-dot-v2 { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .donut-pct-v2 { color: #8E8E93; font-weight: 400; margin-left: auto; font-variant-numeric: tabular-nums; }
 
+        @media (max-width: 768px) {
+          .admin-v2-container {
+            padding-bottom: 90px !important;
+          }
+        }
+
         @media (max-width: 1024px) { .kpi-grid-v2 { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 850px) { .dashboard-grid-2-v2 { grid-template-columns: 1fr; } }
         
@@ -212,10 +218,14 @@ const AdminDashboard = {
       </style>
 
       <div class="admin-v2-container fade-in">
-        
-        <!-- HIG Welcome Section -->
-        <!-- HIG Welcome Section -->
-        <div class="card-v2 welcome-card-hig" style="
+
+        <div class="hig-page-header hig-desktop-only">
+          <h1 class="hig-page-title">Início</h1>
+          <span class="hig-page-date">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        </div>
+
+        <!-- HIG Welcome Section (Mobile) -->
+        <div class="card-v2 welcome-card-hig hig-mobile-only" style="
           background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
           color: white;
           border-radius: 16px;
@@ -248,7 +258,7 @@ const AdminDashboard = {
               margin: 0;
               letter-spacing: -0.3px;
               line-height: 1.2;
-              color: #FFCC00; /* Apple Gold/Orange for better visibility */
+              color: #FFCC00;
             ">
               Olá, ${API.getUser().nome.split(' ')[0]}! 
               <span style="font-size: 20px; margin-left: 4px; vertical-align: middle;">👋</span>
@@ -263,29 +273,16 @@ const AdminDashboard = {
             ">Pronto para gerenciar a produção de hoje?</p>
           </div>
 
-          <div style="z-index: 1; flex-shrink: 0;">
-            <button class="btn-hig-glass" onclick="Tutorial.start()" style="
-              background: rgba(255, 255, 255, 0.2);
-              backdrop-filter: blur(12px);
-              -webkit-backdrop-filter: blur(12px);
-              color: white;
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              border-radius: 12px;
-              padding: 10px 18px;
-              font-size: 14px;
-              font-weight: 600;
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              cursor: pointer;
-              transition: all 150ms ease;
-              white-space: nowrap;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            ">
-              <i data-lucide="book-open" size="18" style="stroke-width: 2.5px;"></i>
-              Tutorial do Sistema
-            </button>
+
+        </div>
+
+        <!-- HIG Welcome Section (Desktop) -->
+        <div class="hig-welcome-card hig-desktop-only">
+          <div class="hig-welcome-text-group">
+            <h2 class="hig-welcome-greeting">Olá, ${API.getUser().nome.split(' ')[0]}! <span>👋</span></h2>
+            <p class="hig-welcome-subtitle">Pronto para gerenciar a produção de hoje?</p>
           </div>
+
         </div>
 
         <style>
@@ -301,8 +298,8 @@ const AdminDashboard = {
           }
         </style>
 
-        <!-- KPI Grid -->
-        <div class="kpi-grid-v2">
+        <!-- KPI Grid (Mobile) -->
+        <div class="kpi-grid-v2 hig-mobile-only">
           <div class="kpi-card-v2 kpi-blue">
             <div class="kpi-icon-box"><i data-lucide="chef-hat"></i></div>
             <div>
@@ -333,8 +330,32 @@ const AdminDashboard = {
           </div>
         </div>
 
-        <!-- CLIENTES ATENDIDOS (MENSAL) -->
-        <div class="card-v2" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; padding: 24px;">
+        <!-- KPI Grid (Desktop) -->
+        <div class="hig-metrics-grid hig-desktop-only">
+          <div class="hig-metric-card">
+            <div class="hig-metric-icon-wrap blue"><i data-lucide="chef-hat"></i></div>
+            <span class="hig-metric-value">${stats.totalPadeiros}</span>
+            <span class="hig-metric-label">Padeiros Ativos</span>
+          </div>
+          <div class="hig-metric-card">
+            <div class="hig-metric-icon-wrap purple"><i data-lucide="package"></i></div>
+            <span class="hig-metric-value">${stats.totalProdutos}</span>
+            <span class="hig-metric-label">Produtos Cadastrados</span>
+          </div>
+          <div class="hig-metric-card">
+            <div class="hig-metric-icon-wrap green"><i data-lucide="building-2"></i></div>
+            <span class="hig-metric-value">${stats.totalClientes}</span>
+            <span class="hig-metric-label">Clientes Ativos</span>
+          </div>
+          <div class="hig-metric-card">
+            <div class="hig-metric-icon-wrap orange"><i data-lucide="star"></i></div>
+            <span class="hig-metric-value">${stats.mediaAvaliacaoCliente || '—'}</span>
+            <span class="hig-metric-label">Média Avaliações</span>
+          </div>
+        </div>
+
+        <!-- CLIENTES ATENDIDOS (MENSAL) (Mobile) -->
+        <div class="card-v2 hig-mobile-only" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; padding: 24px;">
           <div style="display: flex; align-items: center; gap: 20px;">
             <div class="kpi-icon-box" style="background: rgba(52, 199, 89, 0.12); color: #34C759; width: 56px; height: 56px; border-radius: 16px;">
               <i data-lucide="store" style="width: 28px; height: 28px;"></i>
@@ -346,8 +367,19 @@ const AdminDashboard = {
           </div>
         </div>
 
-        <!-- TOTAL PRODUZIDO MENSAL -->
-        <div class="card-v2 w-full">
+        <!-- CLIENTES ATENDIDOS (MENSAL) (Desktop) -->
+        <div class="hig-clients-card hig-desktop-only">
+          <div class="hig-clients-icon-wrap">
+            <i data-lucide="store"></i>
+          </div>
+          <div>
+            <span class="hig-clients-label">Clientes Atendidos neste Mês</span>
+            <span class="hig-clients-value">${stats.totalClientesAtendidos || 0}</span>
+          </div>
+        </div>
+
+        <!-- TOTAL PRODUZIDO MENSAL (Mobile) -->
+        <div class="card-v2 w-full hig-mobile-only">
           <div class="card-v2-header">
             <h3 class="card-v2-title">
               <div class="kpi-icon-box" style="width: 32px; height: 32px; background: rgba(28, 126, 242, 0.1); color: #1C7EF2; border-radius: 8px;">
@@ -389,6 +421,46 @@ const AdminDashboard = {
           </div>
         </div>
 
+        <!-- TOTAL PRODUZIDO MENSAL (Desktop) -->
+        <div class="hig-production-card hig-desktop-only">
+          <div class="hig-production-header">
+            <div class="hig-production-title">
+              <i data-lucide="bar-chart-3"></i>
+              Produção Mensal
+            </div>
+            <div class="hig-production-badge">${mesLabel}</div>
+          </div>
+          <div class="hig-production-stats">
+            <div class="hig-production-stat-item">
+              <div class="hig-production-stat-value">${stats.totalProduzidoMes} <span class="hig-production-stat-unit">kg</span></div>
+              <div class="hig-production-stat-label">Total Produzido (Kg)</div>
+            </div>
+            <div class="hig-production-stat-item">
+              <div class="hig-production-stat-value">${stats.totalLitrosMes || '0.0'} <span class="hig-production-stat-unit">L</span></div>
+              <div class="hig-production-stat-label">Total Produzido (Litros)</div>
+            </div>
+            <div class="hig-production-stat-item">
+              <div class="hig-production-stat-value">${(stats.rankingProducao || []).length}</div>
+              <div class="hig-production-stat-label">Padeiros Ativos</div>
+            </div>
+            <div class="hig-production-stat-item">
+              <div class="hig-production-stat-value">
+                ${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit" style="margin-right:2px;">kg</span>
+                <span style="color: #D1D1D6; margin: 0 4px; font-weight: 300;">|</span>
+                ${(stats.rankingProducao || []).length > 0 ? ((stats.totalLitrosMes || 0) / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit">L</span>
+              </div>
+              <div class="hig-production-stat-label">Média por Padeiro</div>
+            </div>
+          </div>
+          
+          <div class="hig-chart-legend">
+            <div class="hig-legend-item"><div class="hig-legend-dot kg"></div> Produção (kg)</div>
+            <div class="hig-legend-item"><div class="hig-legend-dot litros"></div> Produção (Litros)</div>
+          </div>
+          <div class="hig-chart-container">
+            <canvas id="producaoChartDesktop"></canvas>
+          </div>
+        </div>
         <div class="dashboard-grid-2-v2">
           <!-- 10 MELHORES PADS -->
           <div class="card-v2">
@@ -554,6 +626,7 @@ const AdminDashboard = {
         const prodKgVals = prodData.map(p => p ? p.totalKg : 0);
         const prodLVals = prodData.map(p => p ? p.totalLiters : 0);
         this.initBarChart('producaoChart', prodLabels, prodKgVals, prodLVals);
+        this.initBarChart('producaoChartDesktop', prodLabels, prodKgVals, prodLVals);
         
         this.initDoughnutChart('cargoChart', stats.porCargo);
         this.initDoughnutChart('filialChart', stats.porFilial);

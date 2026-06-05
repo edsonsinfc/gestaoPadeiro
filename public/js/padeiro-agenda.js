@@ -334,13 +334,13 @@ const PadeiroAgenda = {
 
     container.innerHTML = `
       <div class="agenda-mobile-view fade-in">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-6" style="animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0s;">
           <h2 style="font-size: 22px; font-weight: 800; margin: 0;">Minha Agenda</h2>
           <div class="badge badge-primary">${String(this.selectedFilial || 'Brago').split(' ')[1] || 'Brago'}</div>
         </div>
 
         <!-- Days Slider -->
-        <div class="days-slider">
+        <div class="days-slider" style="animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.08s;">
           ${weekDates.map((date, idx) => {
             const dateStr = date.toISOString().split('T')[0];
             const dayTasks = agenda.filter(t => t.padeiroId === me.id && t.data === dateStr);
@@ -357,7 +357,7 @@ const PadeiroAgenda = {
         </div>
 
         <!-- Day Summary -->
-        <div class="day-summary-banner">
+        <div class="day-summary-banner" style="animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.16s;">
           <div>
             <div class="text-tertiary uppercase font-bold" style="font-size: 10px; letter-spacing: 1px;">${dayLabels[this.selectedDayIndex]}</div>
             <div style="font-size: 18px; font-weight: 700;">${selectedDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</div>
@@ -371,27 +371,23 @@ const PadeiroAgenda = {
         <!-- Tasks List -->
         <div class="tasks-container">
           ${tasks.length === 0 ? `
-            <div style="text-align:center; padding:40px 20px; color:var(--text-tertiary);">
+            <div style="text-align:center; padding:40px 20px; color:var(--text-tertiary); animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.24s;">
               <i data-lucide="calendar-check" size="48" style="opacity:0.3; margin-bottom:12px;"></i>
               <p>Nenhuma tarefa agendada para hoje.</p>
             </div>
           ` : `
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4" style="animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.24s;">
               <span class="font-bold" style="font-size: 14px;">${tasks.length} Tarefas</span>
               <span class="text-tertiary" style="font-size: 12px;">${completedTasks}/${tasks.length} concluídas</span>
             </div>
-            ${tasks.map(t => this.renderTaskCardMobile(t)).join('')}
+            ${tasks.map((t, index) => this.renderTaskCardMobile(t, index)).join('')}
           `}
         </div>
-
-        <button class="fab-add" onclick="PadeiroAgenda.addTask('${me.id}', '${selectedDateStr}')">
-          <i data-lucide="plus"></i>
-        </button>
       </div>
     `;
   },
 
-  renderTaskCardMobile(t) {
+  renderTaskCardMobile(t, index = 0) {
     const status = t.status || 'pendente';
     const isLate = status === 'pendente' && new Date(t.data + ' ' + (t.horario || '08:00')) < new Date();
     
@@ -410,7 +406,7 @@ const PadeiroAgenda = {
     const config = statusConfig[status];
 
     return `
-      <div class="task-card-premium" onclick="PadeiroAgenda.startActivity('${t.id}', '${t.clienteId}', '${t.clienteNome}')">
+      <div class="task-card-premium" style="animation: pdKpiIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: ${0.32 + index * 0.08}s;" onclick="PadeiroAgenda.startActivity('${t.id}', '${t.clienteId}', '${t.clienteNome}')">
         <div class="task-priority-bar" style="background: ${category.color};"></div>
         
         <div class="task-icon-box" style="background: ${category.color}15; color: ${category.color};">

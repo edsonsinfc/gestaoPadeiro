@@ -9,6 +9,16 @@
 
 Object.assign(Cronograma, {
   async render() {
+    this.savedScrolls = {};
+    document.querySelectorAll('.baker-row-mobile').forEach(row => {
+      const bakerId = row.dataset.bakerId;
+      const scrollEl = row.querySelector('.days-scroll-mobile');
+      if (bakerId && scrollEl) {
+        this.savedScrolls[bakerId] = scrollEl.scrollLeft;
+      }
+    });
+    this.savedVerticalScroll = window.scrollY || document.documentElement.scrollTop;
+
     this.renderStyles();
     const c = document.getElementById('page-container');
     c.innerHTML = Components.loading();
@@ -36,19 +46,30 @@ Object.assign(Cronograma, {
     <style>
       @media (max-width: 430px) {
         .cronograma-actions {
-          flex-direction: column !important;
-          gap: 12px !important;
+          display: grid !important;
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 8px !important;
           width: 100% !important;
         }
         .cronograma-actions .btn {
           width: 100% !important;
-          height: 50px !important;
-          border-radius: 14px !important;
+          height: 44px !important;
+          border-radius: 12px !important;
           font-weight: 600 !important;
+          font-size: 12px !important;
           justify-content: center !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
         }
-        .btn-primary.btn-pill {
+        .matrix-task-card {
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+        }
+        .cronograma-actions .btn-primary {
+          grid-column: span 2 !important;
+          height: 48px !important;
+          font-size: 14px !important;
+          border-radius: 14px !important;
           box-shadow: 0 4px 14px rgba(28,126,242,0.3) !important;
         }
       }
@@ -119,6 +140,23 @@ Object.assign(Cronograma, {
   },
 
   renderSemanal() {
+    const tempScrolls = { ...this.savedScrolls };
+    this.savedScrolls = {}; // Reset
+
+    const tempVerticalScroll = this.savedVerticalScroll !== undefined ? this.savedVerticalScroll : (window.scrollY || document.documentElement.scrollTop);
+    this.savedVerticalScroll = undefined; // Reset
+
+    // If tempScrolls is empty, see if we can read current DOM scroll positions
+    if (Object.keys(tempScrolls).length === 0) {
+      document.querySelectorAll('.baker-row-mobile').forEach(row => {
+        const bakerId = row.dataset.bakerId;
+        const scrollEl = row.querySelector('.days-scroll-mobile');
+        if (bakerId && scrollEl) {
+          tempScrolls[bakerId] = scrollEl.scrollLeft;
+        }
+      });
+    }
+
     const dates = this.getWeekDates();
     const startStr = dates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
     const endStr = dates[5].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
@@ -203,7 +241,7 @@ Object.assign(Cronograma, {
                 const bakerInitial = p.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
                 
                 return `
-                <tr class="baker-row-mobile ${isExpanded ? 'expanded' : ''}">
+                <tr class="baker-row-mobile ${isExpanded ? 'expanded' : ''}" data-baker-id="${p.id}">
                   <!-- Mobile View Container -->
                   <td colspan="7" class="mobile-only" style="padding:0 !important; border:none !important;">
                     <div class="baker-header-mobile" onclick="Cronograma.toggleBaker('${p.id}')">
@@ -227,7 +265,7 @@ Object.assign(Cronograma, {
                           .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
                         
                         return `
-                        <div class="day-column-mobile">
+                        <div class="day-column-mobile" data-date="${dateStr}" data-padeiro-id="${p.id}" data-padeiro-nome="${p.nome}" data-padeiro-cod="${p.codTec}">
                           <div class="day-label-mobile">
                             <span>${dayName} ${dayNum}</span>
                             ${dateStr === today ? '<span class="badge badge-primary" style="font-size:8px; padding:1px 4px;">Hoje</span>' : ''}
@@ -285,6 +323,20 @@ Object.assign(Cronograma, {
       </table>
     </div>`;
     Components.renderIcons();
+    
+    // Restore scroll positions
+    Object.keys(tempScrolls).forEach(bakerId => {
+      const row = document.querySelector(`.baker-row-mobile[data-baker-id="${bakerId}"]`);
+      const scrollEl = row?.querySelector('.days-scroll-mobile');
+      if (scrollEl) {
+        scrollEl.scrollLeft = tempScrolls[bakerId];
+      }
+    });
+
+    // Restore vertical scroll position
+    if (tempVerticalScroll !== undefined) {
+      window.scrollTo(0, tempVerticalScroll);
+    }
   },
 
   renderMatrixCard(t) {
@@ -301,6 +353,9 @@ Object.assign(Cronograma, {
          ondragend="Cronograma.onDragEnd(event)"
          ondragover="Cronograma.onDragOverTask(event)"
          ondrop="Cronograma.onDropTask(event, '${t.id}')"
+         ontouchstart="Cronograma.onTouchStart(event, '${t.id}')"
+         ontouchmove="Cronograma.onTouchMove(event)"
+         ontouchend="Cronograma.onTouchEnd(event)"
          onclick="Cronograma.openTaskDetail('${t.id}')">
       <div class="matrix-reorder-btns">
         <button class="reorder-btn" onclick="event.stopPropagation(); Cronograma.changeTaskOrder('${t.id}', -1)" title="Mover para cima">

@@ -1,14 +1,24 @@
 const { Produto } = require('../data/db-adapter');
 
 exports.listProdutos = async (req, res) => {
-  const produtos = await Produto.find();
-  res.json(produtos);
+  try {
+    const produtos = await Produto.find();
+    res.json(produtos);
+  } catch (error) {
+    console.error('Erro ao listar produtos:', error);
+    res.status(500).json({ error: 'Erro ao listar produtos' });
+  }
 };
 
 exports.createProduto = async (req, res) => {
-  const novo = { ...req.body, ativo: true, criadoEm: new Date().toISOString() };
-  const produto = await Produto.create(novo);
-  res.status(201).json(produto);
+  try {
+    const novo = { ...req.body, ativo: true, criadoEm: new Date().toISOString() };
+    const produto = await Produto.create(novo);
+    res.status(201).json(produto);
+  } catch (error) {
+    console.error('Erro ao criar produto:', error);
+    res.status(500).json({ error: 'Erro ao criar produto' });
+  }
 };
 
 exports.updateProduto = async (req, res) => {

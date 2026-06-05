@@ -219,4 +219,249 @@ Object.assign(Cronograma, {
       Components.toast('Erro ao duplicar: ' + err.message, 'error');
     }
   },
+
+  onTouchStart(e, taskId) {
+    if (e.target.closest('.reorder-btn, button, a')) return;
+    
+    const touch = e.touches[0];
+    this.touchStartX = touch.clientX;
+    this.touchStartY = touch.clientY;
+    this.lastTouchX = touch.clientX;
+    this.lastTouchY = touch.clientY;
+    this.draggedTaskId = taskId;
+    this.touchStartCard = e.currentTarget;
+    this.isLongPressActive = false;
+    
+    // Disable native HTML5 drag on touch to prevent iOS/Android native drag from hijacking the touch events
+    if (this.touchStartCard.hasAttribute('draggable')) {
+      this.touchStartCard.setAttribute('draggable', 'false');
+    }
+
+    // Clear any previous timeout
+    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+    
+    // Feedback visual imediato de "pressionado"
+    this.touchStartCard.style.transform = 'scale(0.98)';
+    this.touchStartCard.style.transition = 'transform 0.2s';
+    
+    // Start long press detection (150ms)
+    this.longPressTimeout = setTimeout(() => {
+      this.isLongPressActive = true;
+      
+      // Tactile vibration feedback if supported
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(20); } catch(e){}
+      }
+      
+      // Feedback na tela para o usuário (e para nós sabermos que o timeout rodou)
+      Components.toast('Card arrastado!', 'success');
+      
+      // Get viewport bounding box of the card
+      const rect = this.touchStartCard.getBoundingClientRect();
+      this.touchOffsetX = this.lastTouchX - rect.left;
+      this.touchOffsetY = this.lastTouchY - rect.top;
+      
+      // Create drag ghost card for elevated "suspended" feedback
+      this.dragGhost = this.touchStartCard.cloneNode(true);
+      const reorder = this.dragGhost.querySelector('.matrix-reorder-btns');
+      if (reorder) reorder.remove();
+      
+      Object.assign(this.dragGhost.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        zIndex: '2147483647',
+        pointerEvents: 'none',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+        transform: 'scale(1.05) rotate(2.5deg)',
+        opacity: '1',
+        transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        backgroundColor: '#ffffff',
+        border: '3px solid #1C7EF2',
+        borderRadius: '12px',
+        margin: '0',
+        boxSizing: 'border-box',
+        userSelect: 'none',
+        webkitUserSelect: 'none',
+        webkitTouchCallout: 'none'
+      });
+      
+      document.body.appendChild(this.dragGhost);
+      this.touchStartCard.style.opacity = '0.35';
+      this.lastTouchTarget = null;
+      
+      // Travar rolagem da página enquanto arrasta
+      document.body.style.overflow = 'hidden';
+    }, 250); // 250ms hold threshold
+  },
+
+  onTouchMove(e) {
+    if (!this.draggedTaskId || !this.touchStartCard) return;
+
+    const touch = e.touches[0];
+    this.lastTouchX = touch.clientX;
+    this.lastTouchY = touch.clientY;
+
+    if (!this.isLongPressActive) {
+      return; // Do not prevent scrolling or translate if drag isn't active yet
+    }
+
+    if (e.cancelable) {
+      e.preventDefault(); // Prevent page scrolling during active drag
+    }
+
+    if (this.dragGhost) {
+      const x = touch.clientX - this.touchOffsetX;
+      const y = touch.clientY - this.touchOffsetY;
+      this.dragGhost.style.left = `${x}px`;
+      this.dragGhost.style.top = `${y}px`;
+    }
+
+    // Handle horizontal auto-scrolling when dragging near screen edges
+    const scrollContainer = this.touchStartCard.closest('.days-scroll-mobile');
+    if (scrollContainer) {
+      const rect = scrollContainer.getBoundingClientRect();
+      const edgeThreshold = 50; // pixels from edge
+      if (touch.clientX > rect.right - edgeThreshold || touch.clientX < rect.left + edgeThreshold) {
+        this.startAutoScroll(scrollContainer);
+      } else {
+        this.stopAutoScroll();
+      }
+    }
+
+    // We must temporarily hide the ghost to reliably find the element underneath
+    // because some mobile browsers ignore pointer-events: none for touch
+    let prevDisplay = '';
+    if (this.dragGhost) {
+      prevDisplay = this.dragGhost.style.display || 'block';
+      this.dragGhost.style.display = 'none';
+    }
+    
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    if (this.dragGhost) {
+      this.dragGhost.style.display = prevDisplay;
+    }
+    
+    if (!targetElement) return;
+
+    const cell = targetElement.closest('.day-column-mobile, .matrix-cell');
+    const taskCard = targetElement.closest('.matrix-task-card');
+
+    document.querySelectorAll('.drag-over, .drag-target-top').forEach(el => {
+      if (el !== cell && el !== taskCard) {
+        el.classList.remove('drag-over', 'drag-target-top');
+      }
+    });
+
+    if (taskCard && taskCard.dataset.taskId !== this.draggedTaskId) {
+      taskCard.classList.add('drag-target-top');
+      this.lastTouchTarget = { type: 'task', id: taskCard.dataset.taskId, element: taskCard };
+    } else if (cell) {
+      cell.classList.add('drag-over');
+      this.lastTouchTarget = { type: 'cell', element: cell };
+    }
+  },
+
+  async onTouchEnd(e) {
+    this.stopAutoScroll();
+    
+    if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
+    
+    const wasDrag = this.isLongPressActive;
+    const currentTaskId = this.draggedTaskId;
+
+    if (this.dragGhost) {
+      this.dragGhost.remove();
+      this.dragGhost = null;
+    }
+
+    if (this.touchStartCard) {
+      this.touchStartCard.style.opacity = '1';
+      this.touchStartCard.style.transform = '';
+      this.touchStartCard.setAttribute('draggable', 'true');
+    }
+
+    document.body.style.overflow = '';
+
+    document.querySelectorAll('.drag-over, .drag-target-top').forEach(el => {
+      el.classList.remove('drag-over', 'drag-target-top');
+    });
+
+    this.lastTouchX = null;
+    this.lastTouchY = null;
+    this.isLongPressActive = false;
+
+    // If it was NOT a drag (i.e. just a simple tap), open details modal
+    if (!wasDrag && currentTaskId) {
+      this.draggedTaskId = null;
+      this.touchStartCard = null;
+      this.lastTouchTarget = null;
+      Cronograma.openTaskDetail(currentTaskId);
+      return;
+    }
+
+    if (!this.draggedTaskId) return;
+
+    if (this.lastTouchTarget) {
+      const { type, id, element } = this.lastTouchTarget;
+      let cell = null;
+      let targetTaskId = null;
+
+      if (type === 'task') {
+        targetTaskId = id;
+        cell = element.closest('.day-column-mobile, .matrix-cell');
+      } else if (type === 'cell') {
+        cell = element;
+      }
+
+      if (cell) {
+        const mockEvent = {
+          preventDefault: () => {},
+          stopPropagation: () => {},
+          dataTransfer: {
+            getData: () => this.draggedTaskId
+          }
+        };
+
+        await this.handleDrop(mockEvent, cell, targetTaskId);
+      }
+    }
+
+    this.draggedTaskId = null;
+    this.touchStartCard = null;
+    this.lastTouchTarget = null;
+  },
+
+  startAutoScroll(scrollContainer) {
+    if (this.autoScrollInterval) return;
+    
+    const rect = scrollContainer.getBoundingClientRect();
+    const edgeThreshold = 50;
+    
+    this.autoScrollInterval = setInterval(() => {
+      if (!this.draggedTaskId || !this.lastTouchX) {
+        this.stopAutoScroll();
+        return;
+      }
+      
+      const x = this.lastTouchX;
+      if (x > rect.right - edgeThreshold) {
+        scrollContainer.scrollLeft += 12; // Scroll right
+      } else if (x < rect.left + edgeThreshold) {
+        scrollContainer.scrollLeft -= 12; // Scroll left
+      } else {
+        this.stopAutoScroll();
+      }
+    }, 25);
+  },
+
+  stopAutoScroll() {
+    if (this.autoScrollInterval) {
+      clearInterval(this.autoScrollInterval);
+      this.autoScrollInterval = null;
+    }
+  }
 });

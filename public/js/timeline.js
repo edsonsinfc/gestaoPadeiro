@@ -198,6 +198,13 @@ const Timeline = {
     let eventId = 1;
 
     events.forEach(t => {
+      // Ignorar eventos de login no aplicativo
+      if (t.action) {
+        const actionLower = t.action.toLowerCase();
+        if (actionLower === 'login no aplicativo' || actionLower === 'login (app aberto)' || actionLower === 'login (google)' || actionLower === 'login') {
+          return;
+        }
+      }
       const dt = new Date(t.timestamp);
       const hora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       this.timelineEvents.push({
@@ -220,7 +227,6 @@ const Timeline = {
     // Definir etapas esperadas (TODOS os passos do fluxo completo)
     // keywords: array de alternativas para match robusto (nomes antigos com 'Atividade:' e novos sem prefixo)
     const expectedSteps = [
-      { titulo: 'Login no Aplicativo', keywords: ['Login no Aplicativo', 'Login (App Aberto)', 'Login (Google)', 'Login'] },
       { titulo: 'Início do Atendimento', keywords: ['Início do Atendimento', 'Atividade: Início do Atendimento', 'Início'] },
       { titulo: 'Fim da Produção', keywords: ['Fim da Produção', 'Atividade: Fim da Produção', 'Produção'] },
       { titulo: 'Avaliação do Cliente', keywords: ['Avaliação do Cliente', 'Atividade: Avaliação do Cliente', 'Avaliação'] },

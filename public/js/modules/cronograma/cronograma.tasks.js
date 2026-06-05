@@ -204,10 +204,11 @@ Object.assign(Cronograma, {
     }
 
     try {
-      await API.post('/api/cronograma', body);
+      const criada = await API.post('/api/cronograma', body);
+      this.tarefas.push(criada);
       Components.closeModal();
       Components.toast('Cliente adicionado!', 'success');
-      await this.render();
+      this.renderSemanal();
     } catch (e) { Components.toast(e.message, 'error'); }
   },
 
@@ -300,11 +301,18 @@ Object.assign(Cronograma, {
     }
 
     try {
-      if (id) await API.put(`/api/cronograma/${id}`, body);
-      else    await API.post('/api/cronograma', body);
+      if (id) {
+        const atualizada = await API.put(`/api/cronograma/${id}`, body);
+        const index = this.tarefas.findIndex(t => t.id === id);
+        if (index !== -1) this.tarefas[index] = atualizada;
+      }
+      else {
+        const criada = await API.post('/api/cronograma', body);
+        this.tarefas.push(criada);
+      }
       Components.closeModal();
       Components.toast(id ? 'Tarefa atualizada!' : 'Tarefa criada!', 'success');
-      await this.render();
+      this.renderSemanal();
     } catch (e) { Components.toast(e.message, 'error'); }
   },
 
@@ -317,7 +325,10 @@ Object.assign(Cronograma, {
         await API.delete(`/api/cronograma/${id}`);
         Components.closeModal();
         Components.toast('Tarefa excluída.', 'success');
-        await Cronograma.render();
+        
+        // Optimistically update local tasks list and render weekly view without page reload
+        this.tarefas = this.tarefas.filter(t => t.id !== id);
+        this.renderSemanal();
       } catch (e) { Components.toast(e.message, 'error'); }
     }
   },
@@ -389,6 +400,7 @@ Object.assign(Cronograma, {
           <div style="font-size:14px;line-height:1.5;">${t.observacao}</div>
         </div>` : ''}
     `, `<button class="btn btn-secondary" onclick="Components.closeModal()">Fechar</button>
+        <button class="btn btn-outline" style="color:var(--primary); border-color:var(--primary);" onclick="Cronograma.openDuplicateTaskToDaysModal('${id}')">Duplicar p/ Dias</button>
         <button class="btn btn-primary" onclick="Components.closeModal();Cronograma.openTaskForm('${id}')">Editar Tarefa</button>`
     );
     Components.renderIcons();
@@ -438,5 +450,79 @@ Object.assign(Cronograma, {
     }
 
     this.renderSemanal();
+  },
+
+  openDuplicateTaskToDaysModal(id) {
+    const t = this.tarefas.find(x => x.id === id);
+    if (!t) return;
+
+    const dates = this.getWeekDates();
+    const dayLabels = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+    Components.showModal('Duplicar para outros dias', `
+      <div style="margin-bottom: 16px; font-size:14px; line-height:1.5;">
+        Duplicar a tarefa de <b>${t.clienteNome}</b> para os seguintes dias desta semana:
+      </div>
+      <form id="duplicate-days-form" style="display:flex; flex-direction:column; gap:10px;">
+        ${dates.map((date, idx) => {
+          const dateStr = date.toISOString().split('T')[0];
+          const formattedDate = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+          const isCurrentDay = t.data === dateStr;
+          return `
+            <label style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--system-bg); border-radius:10px; cursor:${isCurrentDay ? 'not-allowed' : 'pointer'}; opacity:${isCurrentDay ? 0.6 : 1}">
+              <input type="checkbox" name="selectedDates" value="${dateStr}" ${isCurrentDay ? 'disabled' : ''} style="width:20px; height:20px; accent-color:var(--primary);">
+              <div>
+                <span style="font-weight:600;">${dayLabels[idx]}</span>
+                <span style="color:var(--text-tertiary); font-size:12px; margin-left:4px;">${formattedDate}</span>
+              </div>
+            </label>
+          `;
+        }).join('')}
+      </form>
+    `, `
+      <button class="btn btn-secondary" onclick="Cronograma.openTaskDetail('${id}')">Voltar</button>
+      <button class="btn btn-primary" onclick="Cronograma.duplicateTaskToDays('${id}')">Duplicar</button>
+    `);
+    Components.renderIcons();
+  },
+
+  async duplicateTaskToDays(id) {
+    const t = this.tarefas.find(x => x.id === id);
+    if (!t) return;
+
+    const checkedBoxes = document.querySelectorAll('#duplicate-days-form input[name="selectedDates"]:checked');
+    if (checkedBoxes.length === 0) {
+      Components.toast('Selecione ao menos um dia para duplicar.', 'warning');
+      return;
+    }
+
+    const selectedDates = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    try {
+      const criadas = await Promise.all(selectedDates.map(date => {
+        const novaTarefa = {
+          clienteId:   t.clienteId,
+          clienteNome: t.clienteNome,
+          padeiroId:   t.padeiroId,
+          padeiroNome: t.padeiroNome,
+          codTec:      t.codTec,
+          data:        date,
+          horario:     t.horario,
+          horarioFim:  t.horarioFim,
+          status:      'pendente',
+          posicao:     t.posicao || 0,
+          observacao:  t.observacao ? `[Cópia] ${t.observacao}` : '[Cópia]'
+        };
+        return API.post('/api/cronograma', novaTarefa);
+      }));
+
+      this.tarefas.push(...criadas);
+
+      Components.closeModal();
+      Components.toast('Tarefa duplicada com sucesso!', 'success');
+      this.renderSemanal();
+    } catch (e) {
+      Components.toast('Erro ao duplicar tarefa: ' + e.message, 'error');
+    }
   },
 });

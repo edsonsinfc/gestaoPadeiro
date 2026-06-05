@@ -30,7 +30,7 @@ const fs = require('fs');
 const driveMappings = require('./data/driveMappings');
 const googleDriveService = require('./data/googleDriveService');
 
-app.use('/uploads/:type/:filename', async (req, res, next) => {
+app.use('/storage/:type/:filename', async (req, res, next) => {
   const { type, filename } = req.params;
   const localPath = path.join(__dirname, 'uploads', type, filename);
   

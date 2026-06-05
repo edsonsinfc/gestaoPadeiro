@@ -309,10 +309,80 @@ const OfflineManager = {
   },
 
   async syncPending() {
-    // Sync Requests
-    const pending = await this.getPendingRequests();
-    for (const req of pending) {
+    // Passo 1: Sincronizar Uploads PRIMEIRO
+    const uploads = await this.getPendingUploads();
+    const uploadedPaths = {}; // Mapa para guardar filename -> real path
+    
+    for (const up of uploads) {
       try {
+        const files = up.fileData.map(f => new File([f.blob], f.name, { type: f.type }));
+        const result = await API.uploadFiles(files, up.type, true);
+        if (result && result.files) {
+          result.files.forEach(f => {
+            // Usa o filename original ou ajustado para mapear
+            uploadedPaths[f.filename] = f;
+            uploadedPaths[f.filename.replace(/^compress_/, '')] = f; // caso tenha mudado
+          });
+        }
+        await this.deleteUpload(up.id);
+      } catch (err) {
+        console.error(`[Offline] Falha ao sincronizar upload ${up.id}:`, err);
+      }
+    }
+
+    // Passo 2: Sincronizar Requisições e Atualizar Placeholders
+    const pending = await this.getPendingRequests();
+    
+    // Tratamento especial para assinaturas (base64) enviadas offline
+    // Se houve envio de assinatura, ele foi salvo como pendingRequest também.
+    // Vamos processá-los primeiro para pegar os paths.
+    const signatureRequests = pending.filter(req => req.url.includes('/api/upload/base64/assinaturas'));
+    let lastSignaturePath = null;
+    
+    for (const req of signatureRequests) {
+      try {
+        const res = await API.request(req.url, { 
+          method: req.method, 
+          body: JSON.stringify(req.body),
+          isSyncing: true 
+        });
+        if (res && res.path) lastSignaturePath = res.path;
+        await this.deleteRequest(req.id);
+      } catch (err) {
+        console.error(`[Offline] Falha ao sincronizar assinatura ${req.id}:`, err);
+      }
+    }
+
+    // Agora processa as requisições normais (ex: atualização da atividade)
+    const normalRequests = pending.filter(req => !req.url.includes('/api/upload/base64'));
+    
+    for (const req of normalRequests) {
+      try {
+        // Se for requisição com body JSON, injetar os caminhos reais
+        if (req.body) {
+          // Atualiza fotos
+          if (Array.isArray(req.body.fotos)) {
+            req.body.fotos = req.body.fotos.map(foto => {
+              if (foto.offline || foto.path === 'offline_pending') {
+                const realUpload = uploadedPaths[foto.filename] || uploadedPaths[foto.name];
+                if (realUpload) {
+                  return {
+                    filename: realUpload.filename,
+                    path: realUpload.path,
+                    size: realUpload.size
+                  };
+                }
+              }
+              return foto;
+            });
+          }
+          
+          // Se a assinatura faltou por estar offline, injeta a última sincronizada
+          if (lastSignaturePath && req.body.assinatura === undefined) {
+            req.body.assinatura = lastSignaturePath;
+          }
+        }
+
         await API.request(req.url, { 
           method: req.method, 
           body: JSON.stringify(req.body),
@@ -324,21 +394,9 @@ const OfflineManager = {
       }
     }
 
-    // Sync Uploads
-    const uploads = await this.getPendingUploads();
-    for (const up of uploads) {
-      try {
-        const files = up.fileData.map(f => new File([f.blob], f.name, { type: f.type }));
-        await API.uploadFiles(files, up.type, true);
-        await this.deleteUpload(up.id);
-      } catch (err) {
-        console.error(`[Offline] Falha ao sincronizar upload ${up.id}:`, err);
-      }
-    }
-
     if (pending.length > 0 || uploads.length > 0) {
       Components.toast('Sincronização concluída!', 'success');
-      // Trigger a refresh if needed, but NOT if the user is currently registering an activity
+      // Atualiza a tela se não estiver no meio do formulário
       if (typeof App !== 'undefined' && App.currentRoute && App.currentRoute !== 'padeiro-atividade') {
         App.renderPage(App.currentRoute);
       }
@@ -371,8 +429,12 @@ const API = {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
     try {
-      const res = await fetch(url, { ...options, headers });
+      const res = await fetch(url, { ...options, headers, signal: controller.signal });
+      clearTimeout(timeoutId);
       
       const data = await res.json();
       if (!res.ok) {
@@ -392,8 +454,9 @@ const API = {
 
       return data;
     } catch (err) {
+      clearTimeout(timeoutId);
       // HANDLE OFFLINE
-      const isOffline = !navigator.onLine || err.message.includes('Failed to fetch') || err.message.includes('Network error');
+      const isOffline = !navigator.onLine || err.name === 'AbortError' || err.message.includes('Failed to fetch') || err.message.includes('Network error');
       
       if (isOffline) {
         if (method === 'GET') {
@@ -425,12 +488,18 @@ const API = {
 
     const formData = new FormData();
     Array.from(files).forEach(f => formData.append('files', f));
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for uploads
+
     try {
       const res = await fetch(`/api/upload/${type}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${this.token}` },
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 401) {

@@ -192,9 +192,9 @@ const LocationService = {
     try {
       const pos = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 5000, 
-          enableHighAccuracy: false,
-          maximumAge: 30000
+          timeout: 15000, 
+          enableHighAccuracy: true, // Use true for GPS hardware
+          maximumAge: 60000 // Accept 1 minute old cache to speed up
         });
       });
       eventData.coords = {

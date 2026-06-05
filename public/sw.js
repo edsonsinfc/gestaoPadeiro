@@ -1,9 +1,8 @@
-const CACHE_NAME = 'brago-padeiro-v39';
+const CACHE_NAME = 'brago-padeiro-v40';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://unpkg.com/lucide@latest',
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -46,6 +45,7 @@ const LOCAL_ASSETS = [
   '/js/modules/cronograma/cronograma.mensal.js',
   '/js/modules/cronograma/cronograma.smart.js',
   '/js/modules/cronograma/cronograma.templates.js',
+  '/js/lucide.min.js',
   '/assets/logo.svg'
 ];
 

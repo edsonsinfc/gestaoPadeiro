@@ -36,9 +36,14 @@ exports.listClientes = async (req, res) => {
 };
 
 exports.createCliente = async (req, res) => {
-  const novo = { ...req.body, ativo: true, criadoEm: new Date().toISOString() };
-  const cliente = await Cliente.create(novo);
-  res.status(201).json(cliente);
+  try {
+    const novo = { ...req.body, ativo: true, criadoEm: new Date().toISOString() };
+    const cliente = await Cliente.create(novo);
+    res.status(201).json(cliente);
+  } catch (error) {
+    console.error('Erro ao criar cliente:', error);
+    res.status(500).json({ error: 'Erro ao criar cliente' });
+  }
 };
 
 exports.updateCliente = async (req, res) => {

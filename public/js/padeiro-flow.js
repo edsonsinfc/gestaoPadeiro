@@ -243,7 +243,11 @@ const PadeiroFlow = {
     } else {
       try {
         const pos = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: true });
+          navigator.geolocation.getCurrentPosition(resolve, reject, { 
+            timeout: 15000, 
+            enableHighAccuracy: true,
+            maximumAge: 60000 // Aceita localização de até 1 minuto atrás
+          });
         });
         event.lat = pos.coords.latitude;
         event.lng = pos.coords.longitude;
@@ -749,6 +753,12 @@ const PadeiroFlow = {
       return;
     }
 
+    const btn = document.getElementById('pf-btn-producao');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px; border-top-color: white; border-right-color: white; border-bottom-color: white;"></span> ${this.selectedFiles.length > 0 ? 'Enviando fotos...' : 'Salvando...'}`;
+    }
+
     this.activity.kgTotal  = parseFloat(totalKg) || 0;
     this.activity.lTotal   = parseFloat(totalL)  || 0;
     this.activity.kgItens  = items;
@@ -772,11 +782,20 @@ const PadeiroFlow = {
         });
     }
 
-    localStorage.removeItem('brago_padeiro_draft');
-    await this.captureTimelineEvent('Fim da Produção');
-    await this.updateActivity();
-    this.currentStep = 2;
-    this.renderWizard(document.getElementById('page-container'));
+    try {
+      localStorage.removeItem('brago_padeiro_draft');
+      await this.captureTimelineEvent('Fim da Produção');
+      await this.updateActivity();
+      this.currentStep = 2;
+      this.renderWizard(document.getElementById('page-container'));
+    } catch (err) {
+      console.error(err);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="arrow-right" style="width:18px;height:18px"></i> Continuar`;
+        Components.renderIcons();
+      }
+    }
   },
 
   // STEP 2: AVALIAR CLIENTE (Nota do padeiro para o cliente)
@@ -1036,9 +1055,12 @@ const PadeiroFlow = {
       btn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px"></span> Finalizando envios...`;
       
       try {
-        await Promise.all([
-          this.backgroundUploadPromise || Promise.resolve(),
-          this.backgroundSignaturePromise || Promise.resolve()
+        await Promise.race([
+          Promise.all([
+            this.backgroundUploadPromise || Promise.resolve(),
+            this.backgroundSignaturePromise || Promise.resolve()
+          ]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de envio')), 15000))
         ]);
       } catch (e) {
         console.error('Erro ao aguardar uploads pendentes:', e);
@@ -1059,6 +1081,10 @@ const PadeiroFlow = {
     } catch (err) {
       console.warn('Aviso: Erro ao concluir tarefa na agenda (pode ter sido excluida).', err);
     }
+    
+    // Limpar o rascunho para não carregar de volta no próximo atendimento
+    localStorage.removeItem('pf_draft');
+    
     this.renderSuccess();
   },
 

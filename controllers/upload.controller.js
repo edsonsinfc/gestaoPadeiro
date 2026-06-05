@@ -17,7 +17,7 @@ exports.uploadFiles = async (req, res) => {
     const files = req.files.map(f => {
       return {
         filename: f.filename,
-        path: `/uploads/${type}/${f.filename}`,
+        path: `/storage/${type}/${f.filename}`,
         size: f.size
       };
     });
@@ -68,7 +68,7 @@ exports.uploadBase64 = async (req, res) => {
     fs.writeFileSync(localPath, cleanBase64, 'base64');
 
     // 2. Responde instantaneamente para o frontend
-    res.json({ success: true, path: `/uploads/${type}/${fname}`, filename: fname });
+    res.json({ success: true, path: `/storage/${type}/${fname}`, filename: fname });
 
     // 3. Dispara o upload em background com pequeno delay
     setTimeout(async () => {
