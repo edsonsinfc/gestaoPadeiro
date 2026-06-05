@@ -301,26 +301,11 @@ Object.assign(Cronograma, {
     if (!this.draggedTaskId || !this.touchStartCard) return;
 
     const touch = e.touches[0];
-    const dx = touch.clientX - this.lastTouchX;
-    const dy = touch.clientY - this.lastTouchY;
-    
-    // Update last touch position AFTER we calc dx/dy, but wait, we need dx from start
-    const moveFromStartX = Math.abs(touch.clientX - this.touchStartX);
-    const moveFromStartY = Math.abs(touch.clientY - this.touchStartY);
-
     this.lastTouchX = touch.clientX;
     this.lastTouchY = touch.clientY;
 
     if (!this.isLongPressActive) {
-      // If user moved finger more than 10px before the 250ms long press, it's a scroll. Cancel drag.
-      if (moveFromStartX > 10 || moveFromStartY > 10) {
-        if (this.longPressTimeout) {
-          clearTimeout(this.longPressTimeout);
-          this.longPressTimeout = null;
-        }
-        this.touchStartCard.style.transform = '';
-      }
-      return; // Do not prevent scrolling
+      return; // Do not prevent scrolling or translate if drag isn't active yet
     }
 
     if (e.cancelable) {
@@ -346,8 +331,19 @@ Object.assign(Cronograma, {
       }
     }
 
-    // Find the element underneath the finger
+    // We must temporarily hide the ghost to reliably find the element underneath
+    // because some mobile browsers ignore pointer-events: none for touch
+    let prevDisplay = '';
+    if (this.dragGhost) {
+      prevDisplay = this.dragGhost.style.display || 'block';
+      this.dragGhost.style.display = 'none';
+    }
+    
     const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    if (this.dragGhost) {
+      this.dragGhost.style.display = prevDisplay;
+    }
     
     if (!targetElement) return;
 
