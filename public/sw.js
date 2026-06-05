@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v40';
+const CACHE_NAME = 'brago-padeiro-v41';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
@@ -49,17 +49,16 @@ const LOCAL_ASSETS = [
   '/assets/logo.svg'
 ];
 
-// ─── INSTALL: Pré-cacheia apenas assets mínimos e ativa imediatamente ─────────
+// ─── INSTALL: Pré-cacheia apenas assets mínimos ─────────
 self.addEventListener('install', (event) => {
-  console.log('[SW v18] Instalando...');
+  console.log('[SW v41] Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       // Cacheia assets locais essenciais (ignora erros de CDN)
       return cache.addAll(LOCAL_ASSETS).catch(() => {});
     })
   );
-  // CRÍTICO: Ativa imediatamente sem esperar aba fechar
-  self.skipWaiting();
+  // O skipWaiting foi removido daqui para permitir que o banner de "Atualizar agora" apareça
 });
 
 // ─── ACTIVATE: Remove caches antigos e toma controle de todos os clientes ────
