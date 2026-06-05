@@ -183,6 +183,14 @@
         // Verifica a cada 5 minutos
         setInterval(() => reg.update(), 5 * 60 * 1000);
 
+        // Verifica atualização imediatamente quando o app volta ao primeiro plano
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            console.log('👀 App em foco. Checando atualização em background...');
+            reg.update();
+          }
+        });
+
         // Detecta quando uma nova versão está sendo instalada
         reg.addEventListener('updatefound', () => {
           const installing = reg.installing;
