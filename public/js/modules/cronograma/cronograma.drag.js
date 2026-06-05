@@ -21,19 +21,19 @@ Object.assign(Cronograma, {
     e.target.style.opacity = '1';
   },
   onDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; },
-  onDragOverTask(e) { 
-    e.preventDefault(); 
+  onDragOverTask(e) {
+    e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     e.currentTarget.classList.add('drag-target-top');
   },
-  onDragEnter(e) { 
-    e.preventDefault(); 
+  onDragEnter(e) {
+    e.preventDefault();
     if (e.currentTarget.classList.contains('matrix-cell')) {
       e.currentTarget.classList.add('drag-over');
     }
   },
-  onDragLeave(e) { 
+  onDragLeave(e) {
     if (e.currentTarget.classList.contains('matrix-cell')) {
       e.currentTarget.classList.remove('drag-over');
     }
@@ -45,7 +45,7 @@ Object.assign(Cronograma, {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove('drag-target-top');
-    
+
     const cell = e.currentTarget.closest('.matrix-cell');
     await this.handleDrop(e, cell, targetTaskId);
   },
@@ -59,15 +59,15 @@ Object.assign(Cronograma, {
     if (cell.classList.contains('matrix-cell')) {
       cell.classList.remove('drag-over');
     }
-    
-    const newDate      = cell.dataset.date;
+
+    const newDate = cell.dataset.date;
     const newPadeiroId = cell.dataset.padeiroId;
     const newPadeiroNome = cell.dataset.padeiroNome;
-    const newPadeiroCod  = cell.dataset.padeiroCod;
-    
+    const newPadeiroCod = cell.dataset.padeiroCod;
+
     const taskId = e.dataTransfer.getData('text/plain') || this.draggedTaskId;
     if (!taskId || !newDate || !newPadeiroId) return;
-    
+
     const task = this.tarefas.find(t => t.id === taskId);
     if (!task) return;
 
@@ -78,18 +78,18 @@ Object.assign(Cronograma, {
 
     if (targetTaskId) {
       const targetTask = this.tarefas.find(t => t.id === targetTaskId);
-      targetPos = (targetTask.posicao || 0) - 1; 
+      targetPos = (targetTask.posicao || 0) - 1;
     } else {
-      targetPos = siblings.length > 0 ? (siblings[siblings.length - 1].posicao || 0) + 10 : 0; 
+      targetPos = siblings.length > 0 ? (siblings[siblings.length - 1].posicao || 0) + 10 : 0;
     }
-    
+
     if (task.padeiroId !== newPadeiroId) {
       this.selectedMdAction = 'mover';
       const padeiroOrigNome = task.padeiroNome || task.padeiro || 'padeiro original';
       const dataFmt = new Date(newDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 
       Components.showModal(
-        '', 
+        '',
         `<div class="md-modal-header">
           <h3 class="md-modal-title">Mover ou Duplicar?</h3>
           <button class="md-modal-close" onclick="Components.closeModal()"><i data-lucide="x" size="18"></i></button>
@@ -130,10 +130,10 @@ Object.assign(Cronograma, {
         null,
         'md-modal-container'
       );
-      
+
       const modalHeader = document.querySelector('#global-modal .modal-header');
       if (modalHeader) modalHeader.style.display = 'none';
-      
+
       Components.renderIcons();
       return;
     }
@@ -161,29 +161,29 @@ Object.assign(Cronograma, {
     if (!task) return;
 
     // Optimistic
-    task.data        = newDate;
-    task.padeiroId   = newPadeiroId;
+    task.data = newDate;
+    task.padeiroId = newPadeiroId;
     task.padeiroNome = newPadeiroNome;
-    task.codTec      = newPadeiroCod;
+    task.codTec = newPadeiroCod;
     if (targetPos !== undefined) task.posicao = targetPos;
-    
+
     // Re-normalize all positions in that cell to keep them clean
     const cellTasks = this.tarefas
       .filter(t => t.data === newDate && t.padeiroId === newPadeiroId)
       .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
-    
+
     cellTasks.forEach((t, i) => t.posicao = i * 10);
-    
+
     this.renderSemanal();
 
     try {
       // Save all positions to keep sync
-      await Promise.all(cellTasks.map(t => API.put(`/api/cronograma/${t.id}`, { 
-        data: t.data, 
+      await Promise.all(cellTasks.map(t => API.put(`/api/cronograma/${t.id}`, {
+        data: t.data,
         padeiroId: t.padeiroId,
         padeiroNome: t.padeiroNome,
         codTec: t.codTec,
-        posicao: t.posicao 
+        posicao: t.posicao
       })));
       Components.toast('✅ Atualizado!', 'success');
     } catch (err) {
@@ -199,17 +199,17 @@ Object.assign(Cronograma, {
 
     try {
       const novaTarefa = {
-        clienteId:   task.clienteId,
+        clienteId: task.clienteId,
         clienteNome: task.clienteNome,
-        padeiroId:   newPadeiroId,
+        padeiroId: newPadeiroId,
         padeiroNome: newPadeiroNome,
-        codTec:      newPadeiroCod,
-        data:        newDate,
-        horario:     task.horario,
-        horarioFim:  task.horarioFim,
-        status:      'pendente',
-        posicao:     targetPos || 0,
-        observacao:  task.observacao ? `[Cópia] ${task.observacao}` : '[Cópia]'
+        codTec: newPadeiroCod,
+        data: newDate,
+        horario: task.horario,
+        horarioFim: task.horarioFim,
+        status: 'pendente',
+        posicao: targetPos || 0,
+        observacao: task.observacao ? `[Cópia] ${task.observacao}` : '[Cópia]'
       };
       const criada = await API.post('/api/cronograma', novaTarefa);
       this.tarefas.push(criada);
@@ -222,7 +222,7 @@ Object.assign(Cronograma, {
 
   onTouchStart(e, taskId) {
     if (e.target.closest('.reorder-btn, button, a')) return;
-    
+
     const touch = e.touches[0];
     this.touchStartX = touch.clientX;
     this.touchStartY = touch.clientY;
@@ -231,7 +231,7 @@ Object.assign(Cronograma, {
     this.draggedTaskId = taskId;
     this.touchStartCard = e.currentTarget;
     this.isLongPressActive = false;
-    
+
     // Disable native HTML5 drag on touch to prevent iOS/Android native drag from hijacking the touch events
     if (this.touchStartCard.hasAttribute('draggable')) {
       this.touchStartCard.setAttribute('draggable', 'false');
@@ -239,33 +239,33 @@ Object.assign(Cronograma, {
 
     // Clear any previous timeout
     if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
-    
+
     // Feedback visual imediato de "pressionado"
     this.touchStartCard.style.transform = 'scale(0.98)';
     this.touchStartCard.style.transition = 'transform 0.2s';
-    
+
     // Start long press detection (150ms)
     this.longPressTimeout = setTimeout(() => {
       this.isLongPressActive = true;
-      
+
       // Tactile vibration feedback if supported
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        try { navigator.vibrate(20); } catch(e){}
+        try { navigator.vibrate(20); } catch (e) { }
       }
-      
+
       // Feedback na tela para o usuário (e para nós sabermos que o timeout rodou)
       Components.toast('Card arrastado!', 'success');
-      
+
       // Get viewport bounding box of the card
       const rect = this.touchStartCard.getBoundingClientRect();
       this.touchOffsetX = this.lastTouchX - rect.left;
       this.touchOffsetY = this.lastTouchY - rect.top;
-      
+
       // Create drag ghost card for elevated "suspended" feedback
       this.dragGhost = this.touchStartCard.cloneNode(true);
       const reorder = this.dragGhost.querySelector('.matrix-reorder-btns');
       if (reorder) reorder.remove();
-      
+
       Object.assign(this.dragGhost.style, {
         position: 'fixed',
         top: `${rect.top}px`,
@@ -287,11 +287,11 @@ Object.assign(Cronograma, {
         webkitUserSelect: 'none',
         webkitTouchCallout: 'none'
       });
-      
+
       document.body.appendChild(this.dragGhost);
       this.touchStartCard.style.opacity = '0.35';
       this.lastTouchTarget = null;
-      
+
       // Travar rolagem da página enquanto arrasta
       document.body.style.overflow = 'hidden';
     }, 250); // 250ms hold threshold
@@ -338,13 +338,13 @@ Object.assign(Cronograma, {
       prevDisplay = this.dragGhost.style.display || 'block';
       this.dragGhost.style.display = 'none';
     }
-    
+
     const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-    
+
     if (this.dragGhost) {
       this.dragGhost.style.display = prevDisplay;
     }
-    
+
     if (!targetElement) return;
 
     const cell = targetElement.closest('.day-column-mobile, .matrix-cell');
@@ -367,9 +367,9 @@ Object.assign(Cronograma, {
 
   async onTouchEnd(e) {
     this.stopAutoScroll();
-    
+
     if (this.longPressTimeout) clearTimeout(this.longPressTimeout);
-    
+
     const wasDrag = this.isLongPressActive;
     const currentTaskId = this.draggedTaskId;
 
@@ -419,8 +419,8 @@ Object.assign(Cronograma, {
 
       if (cell) {
         const mockEvent = {
-          preventDefault: () => {},
-          stopPropagation: () => {},
+          preventDefault: () => { },
+          stopPropagation: () => { },
           dataTransfer: {
             getData: () => this.draggedTaskId
           }
@@ -437,16 +437,16 @@ Object.assign(Cronograma, {
 
   startAutoScroll(scrollContainer) {
     if (this.autoScrollInterval) return;
-    
+
     const rect = scrollContainer.getBoundingClientRect();
     const edgeThreshold = 50;
-    
+
     this.autoScrollInterval = setInterval(() => {
       if (!this.draggedTaskId || !this.lastTouchX) {
         this.stopAutoScroll();
         return;
       }
-      
+
       const x = this.lastTouchX;
       if (x > rect.right - edgeThreshold) {
         scrollContainer.scrollLeft += 12; // Scroll right
