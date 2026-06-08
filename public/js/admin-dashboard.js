@@ -337,6 +337,40 @@ const AdminDashboard = {
                 </div>
               </div>
 
+              <!-- Card: Pontos Críticos (Worst Members List) -->
+              <div class="db-card card-members worst-members" style="margin-top: 0;">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title text-red">Pontos Críticos</span>
+                    <span class="db-card-subtitle">Menores notas de avaliação</span>
+                  </div>
+                  <button class="db-card-btn-action" onclick="App.navigate('avaliacoes')">+ Ver Todos</button>
+                </div>
+                <div class="db-members-list">
+                  ${(stats.pontoCritico || []).slice(0, 3).map((p, i) => {
+                    return `
+                    <div class="db-member-item">
+                      <div class="db-member-left">
+                        ${Components.avatar(p.nome, 'avatar-sm')}
+                        <div class="db-member-info">
+                          <span class="db-member-name">${p.nome}</span>
+                          <span class="db-member-role">${p.cargo} • ${p.totalAvals} aval.</span>
+                        </div>
+                      </div>
+                      <div class="db-member-right">
+                        <span class="db-member-metric text-red">${p.media.toFixed(1)} ★</span>
+                        <span class="db-status-badge worst">
+                          ${i === 0 ? 'Mín 1' : i === 1 ? 'Mín 2' : 'Mín 3'}
+                        </span>
+                      </div>
+                    </div>`;
+                  }).join('') || `<div class="db-empty">
+                    <i data-lucide="check-circle-2" style="color: #34c759; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;"></i>
+                    <span style="color: #34c759; font-weight: 600;">Tudo certo!</span>
+                  </div>`}
+                </div>
+              </div>
+
             </div>
 
             <!-- Column 2: Atendimento de Clientes & Distribuição de Cargo -->
@@ -404,40 +438,6 @@ const AdminDashboard = {
                       </div>
                     </div>`;
                   }).join('') || '<div class="db-empty">Nenhum cliente atendido</div>'}
-                </div>
-              </div>
-
-              <!-- Card: Pontos Críticos (Worst Members List) -->
-              <div class="db-card card-members worst-members" style="margin-top: 0;">
-                <div class="db-card-header">
-                  <div class="db-card-title-group">
-                    <span class="db-card-title text-red">Pontos Críticos</span>
-                    <span class="db-card-subtitle">Menores notas de avaliação</span>
-                  </div>
-                  <button class="db-card-btn-action" onclick="App.navigate('avaliacoes')">+ Ver Todos</button>
-                </div>
-                <div class="db-members-list">
-                  ${(stats.pontoCritico || []).slice(0, 3).map((p, i) => {
-                    return `
-                    <div class="db-member-item">
-                      <div class="db-member-left">
-                        ${Components.avatar(p.nome, 'avatar-sm')}
-                        <div class="db-member-info">
-                          <span class="db-member-name">${p.nome}</span>
-                          <span class="db-member-role">${p.cargo} • ${p.totalAvals} aval.</span>
-                        </div>
-                      </div>
-                      <div class="db-member-right">
-                        <span class="db-member-metric text-red">${p.media.toFixed(1)} ★</span>
-                        <span class="db-status-badge worst">
-                          ${i === 0 ? 'Mín 1' : i === 1 ? 'Mín 2' : 'Mín 3'}
-                        </span>
-                      </div>
-                    </div>`;
-                  }).join('') || `<div class="db-empty">
-                    <i data-lucide="check-circle-2" style="color: #34c759; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;"></i>
-                    <span style="color: #34c759; font-weight: 600;">Tudo certo!</span>
-                  </div>`}
                 </div>
               </div>
 
