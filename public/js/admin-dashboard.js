@@ -223,7 +223,213 @@ const AdminDashboard = {
 
       <div class="admin-v2-container fade-in">
 
-        <div class="hig-page-header hig-desktop-only">
+        <!-- ==========================================
+             SEÇÃO DESKTOP: REDESIGN PREMIUM MOCKUP
+             ========================================== -->
+        <div class="hig-desktop-only db-desktop-wrapper">
+          
+          <!-- Header -->
+          <div class="db-header">
+            <div class="db-title-group">
+              <h1 class="db-title">Dashboard</h1>
+              <p class="db-subtitle">Uma visão rápida das tarefas e atualizações da equipe.</p>
+            </div>
+            <div class="db-header-actions">
+              <button class="db-btn-secondary" onclick="App.navigate('relatorios')">Relatórios</button>
+              <button class="db-btn-primary" onclick="Cronograma.openTaskForm()">+ Nova Tarefa</button>
+            </div>
+          </div>
+
+          <!-- Row 1: KPI Grid -->
+          <div class="db-kpi-grid">
+            <!-- Card 1: Blue (Tasks Completed) -->
+            <div class="db-kpi-card blue">
+              <div class="db-kpi-top">
+                <span class="db-kpi-label text-white-50">Padeiros Ativos</span>
+                <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+              </div>
+              <span class="db-kpi-val text-white">${stats.totalPadeiros}</span>
+              <span class="db-kpi-desc text-white-50">Padeiros operando no sistema</span>
+            </div>
+
+            <!-- Card 2: White (Tasks In Progress) -->
+            <div class="db-kpi-card white">
+              <div class="db-kpi-top">
+                <span class="db-kpi-label">Produtos Cadastrados</span>
+                <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+              </div>
+              <span class="db-kpi-val">${stats.totalProdutos}</span>
+              <span class="db-kpi-desc">Catálogo de produtos</span>
+            </div>
+
+            <!-- Card 3: White (Pending Reviews) -->
+            <div class="db-kpi-card white">
+              <div class="db-kpi-top">
+                <span class="db-kpi-label">Clientes Ativos</span>
+                <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+              </div>
+              <span class="db-kpi-val">${stats.totalClientes}</span>
+              <span class="db-kpi-desc">Total de clientes registrados</span>
+            </div>
+
+            <!-- Card 4: White (Overdue Tasks) -->
+            <div class="db-kpi-card white">
+              <div class="db-kpi-top">
+                <span class="db-kpi-label">Média Avaliações</span>
+                <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+              </div>
+              <span class="db-kpi-val">${stats.mediaAvaliacaoCliente || '0.0'}</span>
+              <span class="db-kpi-desc">Satisfação média</span>
+            </div>
+          </div>
+
+          <!-- Row 2: Bento Grid Layout -->
+          <div class="db-main-grid">
+            
+            <!-- Column 1: Produção Mensal & Melhores Padeiros -->
+            <div class="db-col col-main" style="grid-column: span 1;">
+              
+              <!-- Card: Produção Mensal (Vertical Chart) -->
+              <div class="db-card card-chart">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title">Produção Mensal</span>
+                    <span class="db-card-subtitle">Totais e médias de fabricação</span>
+                  </div>
+                  <div class="db-chart-legend">
+                    <div class="db-legend-item"><span class="db-legend-dot kg"></span> kg</div>
+                    <div class="db-legend-item"><span class="db-legend-dot litros"></span> L</div>
+                  </div>
+                </div>
+                <div class="db-chart-canvas-wrap">
+                  <canvas id="producaoChartDesktopNew"></canvas>
+                </div>
+              </div>
+
+              <!-- Card: Melhores Padeiros (Members List) -->
+              <div class="db-card card-members">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title">Melhores Padeiros</span>
+                    <span class="db-card-subtitle">Top produtores do mês</span>
+                  </div>
+                  <button class="db-card-btn-action" onclick="App.navigate('gestao')">+ Ver Todos</button>
+                </div>
+                <div class="db-members-list">
+                  ${(stats.top10Pads || stats.top3Pads || []).slice(0, 3).map((p, i) => {
+                    return `
+                    <div class="db-member-item">
+                      <div class="db-member-left">
+                        ${Components.avatar(p.nome, 'avatar-sm')}
+                        <div class="db-member-info">
+                          <span class="db-member-name">${p.nome}</span>
+                          <span class="db-member-role">${p.cargo} • ${p.totalAtividades} ativ.</span>
+                        </div>
+                      </div>
+                      <div class="db-member-right">
+                        <span class="db-member-metric">${p.totalKg.toFixed(1)} kg</span>
+                        <span class="db-status-badge ${i === 0 ? 'completed' : i === 1 ? 'in-progress' : 'pending'}">
+                          ${i === 0 ? 'Top 1' : i === 1 ? 'Top 2' : 'Top 3'}
+                        </span>
+                      </div>
+                    </div>`;
+                  }).join('') || '<div class="db-empty">Sem dados de produção</div>'}
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Column 2: Atendimento de Clientes & Distribuição de Cargo -->
+            <div class="db-col col-sub" style="grid-column: span 1;">
+
+              <!-- Card: Atendimento de Clientes (Meeting card style) -->
+              <div class="db-card card-meeting">
+                <span class="db-card-label-small">Desempenho</span>
+                <h4 class="db-meeting-title">Clientes Atendidos</h4>
+                <span class="db-meeting-subtitle">Neste mês</span>
+                
+                <div class="db-meeting-stats">
+                  <span class="db-meeting-val">${stats.totalClientesAtendidos || 0}</span>
+                  <span class="db-meeting-unit">Clientes</span>
+                </div>
+
+                <button class="db-btn-meeting" onclick="App.navigate('gestao')">
+                  <i data-lucide="users" style="width: 16px; height: 16px;"></i> Ver Clientes
+                </button>
+              </div>
+
+              <!-- Card: Distribuição por Cargo (Doughnut Gauge) -->
+              <div class="db-card card-gauge">
+                <span class="db-card-label-small">Distribuição por Cargo</span>
+                <div class="db-gauge-chart-wrap">
+                  <canvas id="cargoChartDesktopNew"></canvas>
+                  <div class="db-gauge-center">
+                    <span class="db-gauge-val">${stats.totalPadeiros}</span>
+                    <span class="db-gauge-lbl">Padeiros</span>
+                  </div>
+                </div>
+                <div id="cargoLegendDesktopNew" class="db-gauge-legend"></div>
+              </div>
+
+            </div>
+
+            <!-- Column 3: Clientes Premium & Time Tracker -->
+            <div class="db-col col-sub" style="grid-column: span 1;">
+
+              <!-- Card: Clientes Premium (Tasks style) -->
+              <div class="db-card card-tasks">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title">Clientes Premium</span>
+                    <span class="db-card-subtitle">Ranking por volume (Kg)</span>
+                  </div>
+                  <button class="db-card-badge-btn" onclick="App.navigate('gestao')">+ Ver</button>
+                </div>
+                <div class="db-tasks-list">
+                  ${(stats.rankingClientes || []).slice(0, 4).map((c, i) => {
+                    const cleanName = (c.nomeFantasia || c.nome).split(' - ')[0];
+                    return `
+                    <div class="db-task-item">
+                      <div class="db-task-left">
+                        <div class="db-task-icon-circle ${i === 0 ? 'blue' : i === 1 ? 'green' : i === 2 ? 'orange' : 'purple'}">
+                          <span>${i + 1}</span>
+                        </div>
+                        <div class="db-task-info">
+                          <span class="db-task-name" title="${c.nomeFantasia || c.nome}">${cleanName}</span>
+                          <span class="db-task-due">${c.totalAtendimentos} visitas</span>
+                        </div>
+                      </div>
+                      <div class="db-task-right">
+                        <span class="db-task-val">${c.totalKg.toFixed(0)} kg</span>
+                      </div>
+                    </div>`;
+                  }).join('') || '<div class="db-empty">Nenhum cliente atendido</div>'}
+                </div>
+              </div>
+
+              <!-- Card: Time Tracker (stopwatch in mockup) -->
+              <div class="db-card card-tracker">
+                <div class="db-tracker-bg-glow"></div>
+                <span class="db-tracker-title">Painel Brago</span>
+                <span class="db-tracker-time" id="desktop-tracker-clock">00:00:00</span>
+                <div class="db-tracker-controls">
+                  <button class="db-tracker-btn play" id="desktop-tracker-play-btn" onclick="AdminDashboard.toggleTracker()"><i data-lucide="play" id="desktop-tracker-play-icon"></i></button>
+                  <button class="db-tracker-btn stop" onclick="AdminDashboard.resetTracker()"><i data-lucide="square"></i></button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==========================================
+             SEÇÃO MOBILE: MANTIDA 100% IDENTICA
+             ========================================== -->
+        <div class="hig-mobile-only" style="display:flex; flex-direction:column; gap:24px; width:100%;">
+
+          <div class="hig-page-header hig-desktop-only">
           <h1 class="hig-page-title">Início</h1>
           <span class="hig-page-date">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
         </div>
@@ -638,8 +844,8 @@ const AdminDashboard = {
             </div>
             <div id="filialLegend" class="donut-legend-v2"></div>
           </div>
-        </div>
-
+        </div> 
+        </div> <!-- Fim de hig-mobile-only -->
       </div>`;
 
       // Draw Charts using Chart.js
@@ -648,11 +854,18 @@ const AdminDashboard = {
         const prodLabels = prodData.map(p => (p && p.nome) ? p.nome.split(' ').slice(0, 2).join(' ') : '—');
         const prodKgVals = prodData.map(p => p ? p.totalKg : 0);
         const prodLVals = prodData.map(p => p ? p.totalLiters : 0);
-        this.initBarChart('producaoChart', prodLabels, prodKgVals, prodLVals);
-        this.initBarChart('producaoChartDesktop', prodLabels, prodKgVals, prodLVals);
         
+        // Mobile charts
+        this.initBarChart('producaoChart', prodLabels, prodKgVals, prodLVals);
         this.initDoughnutChart('cargoChart', stats.porCargo);
         this.initDoughnutChart('filialChart', stats.porFilial);
+
+        // Desktop charts (New Redesign Layout)
+        this.initBarChart('producaoChartDesktopNew', prodLabels, prodKgVals, prodLVals);
+        this.initDoughnutChart('cargoChartDesktopNew', stats.porCargo);
+        
+        // Initialize tracker
+        this.initTracker();
       }, 0);
 
     } catch (err) {
@@ -661,12 +874,90 @@ const AdminDashboard = {
     }
   },
 
+  trackerInterval: null,
+  trackerSeconds: 0,
+  trackerRunning: false,
+
+  initTracker() {
+    const clock = document.getElementById('desktop-tracker-clock');
+    if (!clock) return;
+    
+    // Start session timer automatically on desktop
+    if (!this.trackerRunning) {
+      this.trackerRunning = true;
+      const playIcon = document.getElementById('desktop-tracker-play-icon');
+      const playBtn = document.getElementById('desktop-tracker-play-btn');
+      if (playIcon) playIcon.setAttribute('data-lucide', 'pause');
+      if (playBtn) playBtn.classList.add('paused');
+      
+      this.trackerInterval = setInterval(() => {
+        const clockEl = document.getElementById('desktop-tracker-clock');
+        if (!clockEl) {
+          clearInterval(this.trackerInterval);
+          this.trackerRunning = false;
+          return;
+        }
+        this.trackerSeconds++;
+        const h = String(Math.floor(this.trackerSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((this.trackerSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(this.trackerSeconds % 60).padStart(2, '0');
+        clockEl.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+  },
+
+  toggleTracker() {
+    const playIcon = document.getElementById('desktop-tracker-play-icon');
+    const playBtn = document.getElementById('desktop-tracker-play-btn');
+    const clock = document.getElementById('desktop-tracker-clock');
+    if (!clock) return;
+
+    if (this.trackerRunning) {
+      clearInterval(this.trackerInterval);
+      this.trackerRunning = false;
+      if (playIcon) playIcon.setAttribute('data-lucide', 'play');
+      if (playBtn) playBtn.classList.remove('paused');
+    } else {
+      this.trackerRunning = true;
+      if (playIcon) playIcon.setAttribute('data-lucide', 'pause');
+      if (playBtn) playBtn.classList.add('paused');
+      this.trackerInterval = setInterval(() => {
+        const clockEl = document.getElementById('desktop-tracker-clock');
+        if (!clockEl) {
+          clearInterval(this.trackerInterval);
+          this.trackerRunning = false;
+          return;
+        }
+        this.trackerSeconds++;
+        const h = String(Math.floor(this.trackerSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((this.trackerSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(this.trackerSeconds % 60).padStart(2, '0');
+        clockEl.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+    Components.renderIcons();
+  },
+
+  resetTracker() {
+    clearInterval(this.trackerInterval);
+    this.trackerRunning = false;
+    this.trackerSeconds = 0;
+    const clock = document.getElementById('desktop-tracker-clock');
+    if (clock) clock.textContent = '00:00:00';
+    const playIcon = document.getElementById('desktop-tracker-play-icon');
+    const playBtn = document.getElementById('desktop-tracker-play-btn');
+    if (playIcon) playIcon.setAttribute('data-lucide', 'play');
+    if (playBtn) playBtn.classList.remove('paused');
+    Components.renderIcons();
+  },
+
   initBarChart(canvasId, labels, kgData, lData) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return;
     
     const isEmpty = (!kgData || kgData.length === 0) && (!lData || lData.length === 0);
     const chartLabels = isEmpty ? ['Sem1', 'Sem2', 'Sem3', 'Sem4'] : labels;
+    const isNewDesktop = canvasId === 'producaoChartDesktopNew';
     
     const datasets = [];
     if (isEmpty) {
@@ -683,21 +974,23 @@ const AdminDashboard = {
       datasets.push({
         label: 'Produção (kg)',
         data: kgData,
-        backgroundColor: 'rgba(28, 126, 242, 0.85)',
-        borderColor: '#1C7EF2',
+        backgroundColor: isNewDesktop ? '#5e52ff' : 'rgba(28, 126, 242, 0.85)',
+        borderColor: isNewDesktop ? '#5e52ff' : '#1C7EF2',
         borderWidth: 0,
-        borderRadius: 8,
-        barPercentage: 0.45,
+        borderRadius: isNewDesktop ? 9999 : 8,
+        borderSkipped: false,
+        barPercentage: isNewDesktop ? 0.35 : 0.45,
         categoryPercentage: 0.7
       });
       datasets.push({
         label: 'Produção (L)',
         data: lData,
-        backgroundColor: 'rgba(175, 82, 222, 0.85)',
-        borderColor: '#AF52DE',
+        backgroundColor: isNewDesktop ? '#af52de' : 'rgba(175, 82, 222, 0.85)',
+        borderColor: isNewDesktop ? '#af52de' : '#AF52DE',
         borderWidth: 0,
-        borderRadius: 8,
-        barPercentage: 0.45,
+        borderRadius: isNewDesktop ? 9999 : 8,
+        borderSkipped: false,
+        barPercentage: isNewDesktop ? 0.35 : 0.45,
         categoryPercentage: 0.7
       });
     }
@@ -713,7 +1006,7 @@ const AdminDashboard = {
         maintainAspectRatio: false,
         plugins: {
           legend: { 
-            display: !isEmpty,
+            display: !isEmpty && !isNewDesktop,
             position: 'top',
             labels: {
               boxWidth: 12,
@@ -751,6 +1044,7 @@ const AdminDashboard = {
     const labels = Object.keys(dataObj);
     const data = Object.values(dataObj);
     const colors = ['#FF9500', '#007AFF', '#34C759', '#AF52DE', '#FF3B30', '#5856D6', '#FF2D55'];
+    const isNewDesktop = canvasId === 'cargoChartDesktopNew';
     
     new Chart(ctx, {
       type: 'doughnut',
@@ -766,7 +1060,9 @@ const AdminDashboard = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '75%',
+        cutout: isNewDesktop ? '80%' : '75%',
+        circumference: isNewDesktop ? 180 : 360,
+        rotation: isNewDesktop ? 270 : 0,
         plugins: {
           legend: { display: false }
         }
