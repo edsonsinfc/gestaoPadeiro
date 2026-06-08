@@ -100,6 +100,8 @@ const AdminDashboard = {
           align-items: center; padding: 18px 0; border-bottom: 1px solid #F2F2F7; 
         }
         .client-item-v2:last-child { border-bottom: none; }
+        .client-item-v2.desktop-only { display: grid; }
+        .client-item-v2.mobile-only { display: none !important; }
         .client-header-v2 { 
           display: grid; grid-template-columns: 40px 1.5fr 1fr 1fr 1fr 100px; 
           padding: 12px 0; border-bottom: 1px solid #D1D1D6;
@@ -131,6 +133,8 @@ const AdminDashboard = {
         
         /* Mobile Fixes (iPhone/Compact) */
         @media (max-width: 600px) {
+          .client-item-v2.desktop-only { display: none !important; }
+          .client-item-v2.mobile-only { display: grid !important; }
           .client-header-v2 { display: none; }
           .client-item-v2 {
             grid-template-columns: 32px 1fr auto;
@@ -557,7 +561,26 @@ const AdminDashboard = {
             </div>
             <div class="client-list-v2">
               ${(stats.rankingClientes || []).map((c, i) => `
-                <div class="client-item-v2">
+                <!-- Item Desktop -->
+                <div class="client-item-v2 desktop-only">
+                  <div class="client-pos-v2 ${i < 3 ? 'top' : ''}">${i + 1}°</div>
+                  <div class="client-name-v2">${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '') || '—'}</div>
+                  <div class="client-data-v2">${c.totalAtendimentos} visitas</div>
+                  <div class="client-kg-v2" style="color: #1C7EF2;">
+                    ${c.totalKg.toFixed(1)} kg
+                    <span style="color: #D1D1D6; margin: 0 4px;">•</span>
+                    <span class="client-liters-v2" style="color: #AF52DE; font-weight: 700; font-size: 13px;">${(c.totalLiters || 0).toFixed(1)} L</span>
+                  </div>
+                  <div class="client-rating-v2">${c.notaMedia ? Components.starsDisplay(c.notaMedia) : '—'}</div>
+                  <div class="client-status-v2">
+                    ${c.totalAtendimentos >= 5 ? '<span class="badge-pill-v2" style="background:rgba(52,199,89,0.1);color:#34C759;padding:2px 8px;font-size:10px">Frequente</span>' : 
+                      c.totalAtendimentos >= 2 ? '<span class="badge-pill-v2" style="padding:2px 8px;font-size:10px">Regular</span>' : 
+                      '<span class="badge-pill-v2" style="background:rgba(175,82,222,0.1);color:#AF52DE;padding:2px 8px;font-size:10px">Novo</span>'}
+                  </div>
+                </div>
+
+                <!-- Item Mobile -->
+                <div class="client-item-v2 mobile-only">
                   <div class="client-pos-v2 ${i < 3 ? 'top' : ''}">${i + 1}°</div>
                   <div class="client-info-v2">
                     <div class="client-name-v2">${(c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '') || '—'}</div>
