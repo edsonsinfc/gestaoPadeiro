@@ -341,7 +341,7 @@ Object.assign(Cronograma, {
 
   renderMatrixCard(t) {
     const status = t.status || 'pendente';
-    let statusClass = '';
+    let statusClass = 'pendente';
     let statusText = 'Pendente';
     if (status === 'concluida') { statusClass = 'concluida'; statusText = 'Concluída'; }
     if (status === 'em_andamento') { statusClass = 'em_andamento'; statusText = 'Andamento'; }

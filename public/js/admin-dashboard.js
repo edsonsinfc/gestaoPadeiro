@@ -94,20 +94,17 @@ const AdminDashboard = {
         .worst-item-v2 .ranking-pos-v2 { color: #FF3B30; }
         .worst-item-v2 .ranking-kg-v2 { color: #FF3B30; }
         
-        .client-list-v2 { display: flex; flex-direction: column; gap: 4px; }
+        .client-list-v2 { display: flex; flex-direction: column; gap: 0; }
         .client-item-v2 { 
           display: grid; grid-template-columns: 40px 1.5fr 1fr 1fr 1fr 100px; 
-          align-items: center; padding: 14px 12px; border-bottom: 1px solid #F2F2F7; 
-          transition: background-color 180ms ease, transform 120ms ease;
-          border-radius: 8px;
+          align-items: center; padding: 18px 0; border-bottom: 1px solid #F2F2F7; 
         }
         .client-item-v2:last-child { border-bottom: none; }
         .client-item-v2.desktop-only { display: grid; }
-        .client-item-v2.desktop-only:hover { background: #F6F6F9; }
         .client-item-v2.mobile-only { display: none !important; }
         .client-header-v2 { 
           display: grid; grid-template-columns: 40px 1.5fr 1fr 1fr 1fr 100px; 
-          padding: 12px 12px; border-bottom: 1px solid #D1D1D6;
+          padding: 12px 0; border-bottom: 1px solid #D1D1D6;
           font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .client-pos-v2 { font-size: 16px; font-weight: 800; color: #8E8E93; }
@@ -576,9 +573,9 @@ const AdminDashboard = {
                   </div>
                   <div class="client-rating-v2">${c.notaMedia ? Components.starsDisplay(c.notaMedia) : '—'}</div>
                   <div class="client-status-v2">
-                    ${c.totalAtendimentos >= 5 ? '<span class="badge-pill-v2" style="background:rgba(52,199,89,0.12);color:#24B243;padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px">Frequente</span>' : 
-                      c.totalAtendimentos >= 2 ? '<span class="badge-pill-v2" style="background:rgba(0,122,255,0.12);color:#007AFF;padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px">Regular</span>' : 
-                      '<span class="badge-pill-v2" style="background:rgba(175,82,222,0.12);color:#AF52DE;padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px">Novo</span>'}
+                    ${c.totalAtendimentos >= 5 ? '<span class="badge-pill-v2" style="background:rgba(52,199,89,0.1);color:#34C759;padding:2px 8px;font-size:10px">Frequente</span>' : 
+                      c.totalAtendimentos >= 2 ? '<span class="badge-pill-v2" style="padding:2px 8px;font-size:10px">Regular</span>' : 
+                      '<span class="badge-pill-v2" style="background:rgba(175,82,222,0.1);color:#AF52DE;padding:2px 8px;font-size:10px">Novo</span>'}
                   </div>
                 </div>
 
