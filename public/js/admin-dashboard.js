@@ -40,7 +40,8 @@ const AdminDashboard = {
           top10Pads: (stats.top10Pads || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm)),
           top3Pads: (stats.top3Pads || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm)),
           rankingClientes: (stats.rankingClientes || []).filter(c => c && (c.nomeFantasia || c.nome) && ((c.nomeFantasia || c.nome) + (c.bairro ? ' - ' + c.bairro : '')).toLowerCase().includes(this.searchTerm)),
-          pontoCritico: (stats.pontoCritico || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm))
+          pontoCritico: (stats.pontoCritico || []).filter(p => p && p.nome && p.nome.toLowerCase().includes(this.searchTerm)),
+          produtosMaisUsados: (stats.produtosMaisUsados || []).filter(p => p && p.produtoNome && p.produtoNome.toLowerCase().includes(this.searchTerm))
         };
       }
 
@@ -371,6 +372,48 @@ const AdminDashboard = {
                 </div>
               </div>
 
+              <!-- Card: Padeiros Pendentes Hoje (Inativos) -->
+              <div class="db-card card-members pending-members" style="margin-top: 24px; border: 1px solid #FFCC00; background: #FFFDF0;">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title" style="color: #d97706;">Pendentes Hoje</span>
+                    <span class="db-card-subtitle">Sem atividade hoje</span>
+                  </div>
+                  ${(stats.padeirosInativos || []).length > 0 ? `<button class="db-card-btn-action" style="background: #25D366; color: white; padding: 4px 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px;" onclick="PushService.notifyAllInactive()">
+                    <i data-lucide="bell-ring" style="width: 14px; height: 14px;"></i> Alerta Push
+                  </button>` : ''}
+                </div>
+                <div class="db-members-list" style="max-height: 200px; overflow-y: auto;">
+                  ${(stats.padeirosInativos || []).length > 0 ? (stats.padeirosInativos || []).map((p, i) => {
+                    const waLink = p.telefone ? `https://wa.me/55${p.telefone.replace(/\\D/g, '')}?text=${encodeURIComponent('Olá ' + p.nome + ', não se esqueça de registrar suas produções de hoje no sistema! Qualquer dúvida me avise.')}` : '#';
+                    return `
+                    <div class="db-member-item">
+                      <div class="db-member-left">
+                        ${Components.avatar(p.nome, 'avatar-sm')}
+                        <div class="db-member-info">
+                          <span class="db-member-name">${p.nome}</span>
+                          <span class="db-member-role">${p.filial || 'Sem Filial'}</span>
+                        </div>
+                      </div>
+                      <div class="db-member-right">
+                        ${p.telefone ? `
+                          <a href="${waLink}" target="_blank" style="background: #25D366; color: white; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Cobrar via WhatsApp">
+                            <i data-lucide="message-circle" style="width: 14px; height: 14px;"></i>
+                          </a>
+                        ` : `
+                          <span style="font-size: 11px; color: #94a3b8; font-style: italic;">Sem cel.</span>
+                        `}
+                      </div>
+                    </div>`;
+                  }).join('') : `
+                  <div class="db-empty">
+                    <i data-lucide="check-circle-2" style="color: #34c759; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;"></i>
+                    <span style="color: #34c759; font-weight: 600;">Todos os padeiros ativos!</span>
+                  </div>
+                  `}
+                </div>
+              </div>
+
             </div>
 
             <!-- Column 2: Atendimento de Clientes & Distribuição de Cargo -->
@@ -441,25 +484,66 @@ const AdminDashboard = {
                 </div>
               </div>
 
-              <!-- Card: Temporizador de Fornada -->
-              <div class="db-card card-tracker fornada-tracker" id="desktop-fornada-card">
-                <div class="db-tracker-bg-glow"></div>
-                <span class="db-tracker-title"><i data-lucide="flame" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Fornadas</span>
+              <!-- Card: Padeiro Destaque -->
+              <div class="db-card card-destaque" style="background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%); color: #fff; padding: 24px; border-radius: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -30px; left: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
                 
-                <div class="db-fornada-presets">
-                  <button class="db-preset-btn active" onclick="AdminDashboard.setFornadaPreset('pao-francais', 900)">Pão Francês (15m)</button>
-                  <button class="db-preset-btn" onclick="AdminDashboard.setFornadaPreset('pao-queijo', 1200)">Pão de Queijo (20m)</button>
-                  <button class="db-preset-btn" onclick="AdminDashboard.setFornadaPreset('bolo', 2100)">Bolo (35m)</button>
-                </div>
+                <span style="align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 99px; margin-bottom: 16px;">Padeiro Destaque</span>
+                
+                ${stats.top10Pads && stats.top10Pads.length > 0 ? `
+                  <div style="width: 80px; height: 80px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #1E4BFF; margin-bottom: 12px; border: 4px solid rgba(255,255,255,0.3); box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1;">
+                    ${stats.top10Pads[0].nome.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase()}
+                  </div>
+                  <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #fff; z-index: 1;">${stats.top10Pads[0].nome}</h1>
+                  <h2 style="font-size: 14px; font-weight: 500; margin: 0 0 20px 0; color: rgba(255,255,255,0.8); z-index: 1;">${stats.top10Pads[0].cargo || 'Padeiro'}</h2>
+                  
+                  <div style="display: flex; gap: 16px; width: 100%; justify-content: center; z-index: 1;">
+                    <div style="background: rgba(0,0,0,0.15); padding: 10px 16px; border-radius: 12px; flex: 1;">
+                      <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 4px;">Produção</div>
+                      <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #fff;">${stats.top10Pads[0].totalKg.toFixed(0)} <span style="font-size: 12px; font-weight: 500;">kg</span></h3>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.15); padding: 10px 16px; border-radius: 12px; flex: 1;">
+                      <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 4px;">Avaliação</div>
+                      <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #fff;">${stats.top10Pads[0].notaMedia !== null ? stats.top10Pads[0].notaMedia.toFixed(1) : '-'} <span style="font-size: 12px; font-weight: 500;">★</span></h3>
+                    </div>
+                  </div>
+                ` : `
+                  <div style="flex: 1; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); font-size: 14px; z-index: 1;">
+                    Nenhum dado no mês
+                  </div>
+                `}
+              </div>
 
-                <div class="db-tracker-time-wrap">
-                  <span class="db-tracker-time" id="desktop-tracker-clock">15:00</span>
-                  <span class="db-fornada-status" id="desktop-fornada-status">Forno pronto para aquecer 🥖</span>
+              <!-- Card: Produtos mais usados (Tasks style) -->
+              <div class="db-card card-tasks">
+                <div class="db-card-header">
+                  <div class="db-card-title-group">
+                    <span class="db-card-title">Produtos mais usados</span>
+                    <span class="db-card-subtitle">Ranking por volume produzido</span>
+                  </div>
+                  <button class="db-card-badge-btn" onclick="App.navigate('gestao')">+ Ver</button>
                 </div>
-
-                <div class="db-tracker-controls">
-                  <button class="db-tracker-btn play" id="desktop-tracker-play-btn" onclick="AdminDashboard.toggleTracker()"><i data-lucide="play" id="desktop-tracker-play-icon"></i></button>
-                  <button class="db-tracker-btn stop" onclick="AdminDashboard.resetTracker()"><i data-lucide="rotate-ccw"></i></button>
+                <div class="db-tasks-list">
+                  ${(stats.produtosMaisUsados || []).slice(0, 4).map((p, i) => {
+                    const parts = p.produtoNome.split(' - ');
+                    const cleanName = parts.length > 1 ? parts.slice(1).join(' - ') : parts[0];
+                    return `
+                    <div class="db-task-item">
+                      <div class="db-task-left">
+                        <div class="db-task-icon-circle ${i === 0 ? 'blue' : i === 1 ? 'green' : i === 2 ? 'orange' : 'purple'}">
+                          <span>${i + 1}</span>
+                        </div>
+                        <div class="db-task-info">
+                          <span class="db-task-name" title="${p.produtoNome}">${cleanName}</span>
+                          <span class="db-task-due">${p.totalAtendimentos} produções</span>
+                        </div>
+                      </div>
+                      <div class="db-task-right">
+                        <span class="db-task-val">${p.totalQtd % 1 === 0 ? p.totalQtd.toFixed(0) : p.totalQtd.toFixed(1)} ${p.unidade.toLowerCase()}</span>
+                      </div>
+                    </div>`;
+                  }).join('') || '<div class="db-empty">Nenhum produto registrado</div>'}
                 </div>
               </div>
 

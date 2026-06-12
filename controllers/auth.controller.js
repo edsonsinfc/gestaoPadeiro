@@ -8,13 +8,16 @@ const emailService = require('../data/emailService');
 
 exports.login = async (req, res) => {
   const { email, senha } = req.body;
-  if (!email || !senha) return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+  if (!email || !senha) return res.status(400).json({ error: 'Nome de usuário (ou e-mail) e senha são obrigatórios' });
 
-  const emailLower = email.toLowerCase().trim();
+  const identifierLower = email.toLowerCase().trim();
 
   try {
     // Check admin
-    let admin = await Admin.findOne({ email: new RegExp(`^${emailLower}$`, 'i') });
+    let admin = await Admin.findOne({ nome: { $like: `${identifierLower}%` } });
+    if (!admin) {
+      admin = await Admin.findOne({ email: { $like: identifierLower } });
+    }
     if (admin) {
       const valid = await bcrypt.compare(senha, admin.passwordHash);
       if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
@@ -43,7 +46,10 @@ exports.login = async (req, res) => {
     }
 
     // Check padeiro
-    let padeiro = await Padeiro.findOne({ email: new RegExp(`^${emailLower}$`, 'i') });
+    let padeiro = await Padeiro.findOne({ nome: { $like: `${identifierLower}%` } });
+    if (!padeiro) {
+      padeiro = await Padeiro.findOne({ email: { $like: identifierLower } });
+    }
     if (!padeiro || padeiro.deletado) return res.status(404).json({ error: 'Usuário não encontrado' });
     if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
     if (!padeiro.passwordHash) return res.status(403).json({ error: 'first_access', message: 'Primeiro acesso. Verifique seu e-mail para definir sua senha.' });

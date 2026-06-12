@@ -102,4 +102,4 @@ function clearActiveLocations() {
   }
 }
 
-module.exports = { initLocationSocket, clearActiveLocations };
+module.exports = { initLocationSocket, clearActiveLocations, getIo: () => ioInstance };

@@ -30,6 +30,11 @@
   --brago-blob-bg: #E1E7FF;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* COMODATO LOGIN STYLE */
 .login-page {
   min-height: 100vh;

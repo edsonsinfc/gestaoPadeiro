@@ -3,7 +3,27 @@ const { Produto } = require('../data/db-adapter');
 exports.listProdutos = async (req, res) => {
   try {
     const produtos = await Produto.find();
-    res.json(produtos);
+    
+    // Check if the FTP catalog is loaded/available
+    let catalog = {};
+    if (typeof global.getFtpCatalog === 'function') {
+      try {
+        catalog = await global.getFtpCatalog();
+      } catch (err) {
+        console.warn('Erro ao obter catálogo FTP no controller:', err);
+      }
+    }
+    
+    // Map products to include the temFoto flag
+    const result = produtos.map(p => {
+      const pObj = p.toObject ? p.toObject() : p;
+      return {
+        ...pObj,
+        temFoto: !!(p.codigo && catalog[p.codigo])
+      };
+    });
+    
+    res.json(result);
   } catch (error) {
     console.error('Erro ao listar produtos:', error);
     res.status(500).json({ error: 'Erro ao listar produtos' });

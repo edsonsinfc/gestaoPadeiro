@@ -11,6 +11,7 @@ const corsMiddleware = require('./config/cors');
 const { authMiddleware, adminOnly } = require('./middleware/auth');
 const errorHandler = require('./middleware/errorHandler');
 const { initLocationSocket } = require('./sockets/location.socket');
+const webpush = require('web-push');
 
 
 
@@ -75,11 +76,343 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // ============================================================
+// FTP PRODUCT IMAGE PROXY (read-only, optimized)
+// ============================================================
+const ftp = require('basic-ftp');
+const PRODUTO_IMG_CACHE = path.join(__dirname, 'public', 'img', 'produtos');
+if (!fs.existsSync(PRODUTO_IMG_CACHE)) {
+  fs.mkdirSync(PRODUTO_IMG_CACHE, { recursive: true });
+}
+
+// Catálogo FTP em memória: { "14510": "14510.JPG", "12103": "12103.jpg", ... }
+let ftpCatalog = null;
+let ftpCatalogLoading = null;
+
+async function loadFtpCatalog() {
+  if (ftpCatalog) return ftpCatalog;
+  if (ftpCatalogLoading) return ftpCatalogLoading;
+
+  ftpCatalogLoading = (async () => {
+    const client = new ftp.Client();
+    client.ftp.verbose = false;
+    try {
+      await client.access({
+        host: 'cloud-6010.reposit.com.br',
+        port: 30037,
+        user: 'brago',
+        password: 'brago@cloud',
+        secure: false
+      });
+      const files = await client.list();
+      client.close();
+
+      const catalog = {};
+      const validExts = ['.jpg', '.jpeg', '.png', '.webp', '.bmp'];
+      for (const f of files) {
+        if (f.type === 2) continue; // skip directories
+        const dotIdx = f.name.lastIndexOf('.');
+        if (dotIdx === -1) continue;
+        const ext = f.name.substring(dotIdx).toLowerCase();
+        if (!validExts.includes(ext)) continue;
+        const baseName = f.name.substring(0, dotIdx);
+        // Guardar apenas a primeira ocorrência (prioridade: jpg > png etc já pela ordem do FTP)
+        if (!catalog[baseName]) {
+          catalog[baseName] = f.name;
+        }
+      }
+      ftpCatalog = catalog;
+      console.log(`📸 [FTP] Catálogo carregado: ${Object.keys(catalog).length} fotos de produtos encontradas`);
+      return catalog;
+    } catch (err) {
+      client.close();
+      console.error('❌ [FTP] Erro ao carregar catálogo:', err.message);
+      ftpCatalogLoading = null; // Reset para permitir tentar de novo nas próximas requisições
+      return {};
+    }
+  })();
+
+  return ftpCatalogLoading;
+}
+
+// Expõe o getter globalmente de forma imediata
+global.getFtpCatalog = loadFtpCatalog;
+
+// Inicia o carregamento em background no startup do servidor
+loadFtpCatalog().catch(err => console.error('❌ [FTP] Erro inicial de catálogo:', err.message));
+
+// Fila de downloads sequenciais (uma conexão FTP por vez)
+let downloadQueue = Promise.resolve();
+
+function enqueueDownload(remoteFile, destPath) {
+  downloadQueue = downloadQueue.then(async () => {
+    if (fs.existsSync(destPath)) return; // já baixou enquanto esperava
+    const client = new ftp.Client();
+    client.ftp.verbose = false;
+    try {
+      await client.access({
+        host: 'cloud-6010.reposit.com.br',
+        port: 30037,
+        user: 'brago',
+        password: 'brago@cloud',
+        secure: false
+      });
+      await client.downloadTo(destPath, remoteFile);
+      client.close();
+      console.log(`📸 [FTP] Foto baixada: ${remoteFile}`);
+    } catch (err) {
+      try { client.close(); } catch(e) {}
+      if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+      console.error(`❌ [FTP] Erro download ${remoteFile}:`, err.message);
+    }
+  });
+  return downloadQueue;
+}
+
+app.get('/api/foto-produto/:codigo', async (req, res) => {
+  const codigo = req.params.codigo.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!codigo) return res.status(400).json({ error: 'Código inválido' });
+
+  // 1. Verificar cache local
+  const validExts = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'JPG', 'PNG'];
+  for (const ext of validExts) {
+    const cachedPath = path.join(PRODUTO_IMG_CACHE, `${codigo}.${ext}`);
+    if (fs.existsSync(cachedPath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.sendFile(cachedPath);
+    }
+  }
+
+  // 2. Consultar catálogo em memória (rápido, sem I/O)
+  const catalog = await loadFtpCatalog();
+  const remoteFile = catalog[codigo];
+
+  if (!remoteFile) {
+    return res.status(404).json({ error: 'Foto não encontrada' });
+  }
+
+  // 3. Verificar se temos o arquivo mapeado no Google Drive
+  if (googleDriveService.isEnabled()) {
+    try {
+      let fileId = driveMappings.getMapping(remoteFile);
+      if (!fileId) {
+        fileId = await googleDriveService.findFileByName(remoteFile);
+        if (fileId) {
+          driveMappings.saveMapping(remoteFile, fileId);
+        }
+      }
+
+      if (fileId) {
+        const { stream, contentType, contentLength } = await googleDriveService.getFileStream(fileId);
+        res.setHeader('Content-Type', contentType);
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return stream.pipe(res);
+      }
+    } catch (err) {
+      console.error(`❌ [FOTO-PRODUTO Proxy] Erro ao buscar do Drive (${remoteFile}):`, err.message);
+    }
+  }
+
+  // 4. Baixar do FTP (enfileirado para não sobrecarregar)
+  const destPath = path.join(PRODUTO_IMG_CACHE, remoteFile);
+  await enqueueDownload(remoteFile, destPath);
+
+  if (fs.existsSync(destPath)) {
+    // Se o Drive estiver ativo, envia em background para futuras requisições
+    if (googleDriveService.isEnabled()) {
+      (async () => {
+        try {
+          console.log(`☁️ [FOTO-PRODUTO] Iniciando upload em background pro Drive: ${remoteFile}`);
+          const mimeType = remoteFile.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+          const uploadResult = await googleDriveService.uploadStream(fs.createReadStream(destPath), remoteFile, mimeType, 'produtos');
+          if (uploadResult.isDrive && uploadResult.fileId) {
+            driveMappings.saveMapping(remoteFile, uploadResult.fileId);
+          }
+        } catch (e) {
+          console.error(`❌ [FOTO-PRODUTO] Erro no upload em background pro Drive:`, e.message);
+        }
+      })();
+    }
+
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(destPath);
+  }
+
+  return res.status(500).json({ error: 'Erro ao baixar foto' });
+});
+
+// ============================================================
 // API ROUTES
 // ============================================================
 app.get('/api/ping', (req, res) => res.json({ pong: true }));
 app.use('/api', require('./routes'));
 
+// ============================================================
+// WEB PUSH NOTIFICATIONS
+// ============================================================
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:admin@brago.com.br',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+  console.log('🔔 Web Push configurado com sucesso!');
+}
+
+// Rota pública: retorna a chave pública VAPID para o frontend
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
+});
+
+// Rota: inscrever dispositivo para push
+app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
+  try {
+    const { PushSubscription } = require('./data/db-adapter');
+    const { subscription } = req.body;
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: 'Subscription inválida' });
+    }
+    
+    const padeiroId = req.user.id;
+    const id = 'push_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    
+    // Remove inscrições antigas do mesmo endpoint
+    await PushSubscription.deleteMany({ endpoint: subscription.endpoint });
+    
+    await PushSubscription.create({
+      id,
+      padeiroId,
+      endpoint: subscription.endpoint,
+      keys_p256dh: subscription.keys.p256dh,
+      keys_auth: subscription.keys.auth
+    });
+    
+    console.log(`🔔 Push inscrito: padeiro ${padeiroId}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Erro ao inscrever push:', err);
+    res.status(500).json({ error: 'Erro ao inscrever' });
+  }
+});
+
+// Rota: enviar notificação push para padeiros inativos
+app.post('/api/push/notify', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { PushSubscription, Padeiro, Atividade } = require('./data/db-adapter');
+    
+    // Buscar padeiros inativos hoje
+    const hoje = new Date().toISOString().split('T')[0];
+    const padeiros = await Padeiro.find({ ativo: true, deletado: { $ne: true } });
+    const atividades = await Atividade.find({ data: hoje, status: 'finalizada' });
+    const ativosHoje = new Set(atividades.map(a => a.padeiroId));
+    const inativos = padeiros.filter(p => !ativosHoje.has(p.id));
+    const inativosIds = inativos.map(p => p.id);
+    
+    if (inativosIds.length === 0) {
+      return res.json({ sent: 0, message: 'Todos padeiros já registraram atividade hoje!' });
+    }
+    
+    // Buscar inscrições push dos inativos
+    const allSubs = await PushSubscription.find();
+    const subsInativos = allSubs.filter(s => inativosIds.includes(s.padeiroId));
+    
+    const payload = JSON.stringify({
+      title: '🍞 Brago - Lembrete de Produção',
+      body: 'Você ainda não registrou suas produções de hoje. Acesse o sistema agora!',
+      icon: '/img/icon-192.png',
+      badge: '/img/icon-192.png',
+      url: '/'
+    });
+    
+    let sent = 0;
+    let failed = 0;
+    for (const sub of subsInativos) {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth }
+        }, payload);
+        sent++;
+      } catch (err) {
+        failed++;
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          // Inscrição expirou, remover
+          await PushSubscription.deleteMany({ endpoint: sub.endpoint });
+        }
+      }
+    }
+    
+    console.log(`🔔 Push enviado: ${sent} sucesso, ${failed} falha, ${inativos.length} inativos`);
+    res.json({ sent, failed, totalInativos: inativos.length });
+  } catch (err) {
+    console.error('❌ Erro ao enviar push:', err);
+    res.status(500).json({ error: 'Erro ao enviar notificações' });
+  }
+});
+
+// ============================================================
+// CRON: ALERTA DE OCIOSIDADE DOS PADEIROS
+// ============================================================
+async function checkAndAlertInactiveBakers() {
+  try {
+    const { PushSubscription, Cronograma, Atividade } = require('./data/db-adapter');
+    // Pegar data local considerando timezone BR (-3)
+    const agora = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
+    const hoje = agora.toISOString().split('T')[0];
+    const hora = agora.getUTCHours(); // O UTC agora equivale ao horário de Brasília pela subtração acima
+    
+    // Só alerta entre 09h e 17h
+    if (hora < 9 || hora > 17) return;
+
+    // Quem tem tarefa pendente hoje?
+    const agendaHoje = await Cronograma.find({ data: hoje, status: 'pendente' });
+    if (agendaHoje.length === 0) return;
+
+    const padeirosComPendencias = new Set(agendaHoje.map(c => c.padeiroId));
+    
+    // Quem já tem atividade hoje?
+    const atividades = await Atividade.find({ data: hoje });
+    const ativosHoje = new Set(atividades.map(a => a.padeiroId));
+
+    // Inativos = tem pendência mas NÃO fez nenhuma atividade
+    const inativosIds = [...padeirosComPendencias].filter(id => !ativosHoje.has(id));
+
+    if (inativosIds.length === 0) return;
+
+    // Buscar inscrições
+    const allSubs = await PushSubscription.find();
+    const subsInativos = allSubs.filter(s => inativosIds.includes(s.padeiroId));
+    
+    if (subsInativos.length === 0) return;
+
+    const payload = JSON.stringify({
+      title: '🍞 Lembrete Brago',
+      body: 'Você tem produções agendadas para hoje. Acesse o sistema agora para dar andamento!',
+      icon: '/img/icon-192.png',
+      badge: '/img/icon-192.png',
+      url: '/'
+    });
+    
+    for (const sub of subsInativos) {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth }
+        }, payload);
+      } catch (err) {
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await PushSubscription.deleteMany({ endpoint: sub.endpoint });
+        }
+      }
+    }
+    console.log(`⏰ [CRON] Alerta de ociosidade enviado para ${subsInativos.length} dispositivos.`);
+  } catch (error) {
+    console.error('❌ [CRON] Erro ao checar ociosidade:', error);
+  }
+}
+
+// Rodar a cada 2 horas (120 minutos = 7200000 ms)
+setInterval(checkAndAlertInactiveBakers, 2 * 60 * 60 * 1000);
 
 
 // Global Error Handler for Multer and others

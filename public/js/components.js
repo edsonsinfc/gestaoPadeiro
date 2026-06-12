@@ -51,6 +51,66 @@ const Components = {
     }
   },
 
+  // Apple HIG Style Alert
+  showAlert(title, message, btnText = 'OK') {
+    let overlay = document.getElementById('ios-alert-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ios-alert-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.right = '0';
+      overlay.style.bottom = '0';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+      overlay.style.zIndex = '99999999'; // Extremely high z-index to appear over pf-modal-overlay (which has 9999999)
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.2s ease';
+      document.body.appendChild(overlay);
+    }
+    
+    overlay.innerHTML = `
+      <div style="background: #ffffff; width: 270px; border-radius: 14px; text-align: center; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);" id="ios-alert-box">
+        <div style="padding: 20px 16px 16px;">
+          <h3 style="margin: 0 0 6px; font-size: 17px; font-weight: 600; color: #000; line-height: 1.2;">${title}</h3>
+          <p style="margin: 0; font-size: 13px; font-weight: 400; color: #333; line-height: 1.35;">${message}</p>
+        </div>
+        <div style="border-top: 1px solid rgba(0,0,0,0.1); display: flex;">
+          <button style="flex: 1; padding: 12px; background: none; border: none; font-size: 17px; font-weight: 600; color: #007aff; cursor: pointer; user-select: none;" onclick="Components.closeAlert()">${btnText}</button>
+        </div>
+      </div>
+    `;
+    
+    // Prevent background scrolling
+    document.body.style.overflow = 'hidden';
+    
+    // Animate in
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+      const box = document.getElementById('ios-alert-box');
+      if (box) box.style.transform = 'scale(1)';
+    });
+  },
+
+  closeAlert() {
+    const overlay = document.getElementById('ios-alert-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+      const box = document.getElementById('ios-alert-box');
+      if (box) box.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        // Restore scrolling if no other modals are active
+        if (!document.getElementById('global-modal') && !document.querySelector('.pf-modal-ios.active')) {
+          document.body.style.overflow = '';
+        }
+      }, 200);
+    }
+  },
+
   // Confirm dialog
   confirm(message, onConfirm) {
     this._confirmCallback = onConfirm;

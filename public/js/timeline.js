@@ -546,8 +546,9 @@ const Timeline = {
       
       if (typeof L !== 'undefined') {
         const map = L.map('timeline-modal-map', { zoomControl: false }).setView([lat, lng], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}', {
+          attribution: '&copy; Google Maps',
+          maxZoom: 20
         }).addTo(map);
         L.marker([lat, lng]).addTo(map);
       }

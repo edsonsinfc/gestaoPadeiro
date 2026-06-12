@@ -133,7 +133,60 @@ exports.getGeneralStats = async (req, res) => {
       .sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
       .slice(0, 10);
 
+    const produtosMaisUsadosMap = {};
+    atividades.filter(a => a.status === 'finalizada').forEach(a => {
+      let items = [];
+      if (a.kgItens) {
+        if (typeof a.kgItens === 'string') {
+          try {
+            items = JSON.parse(a.kgItens);
+          } catch (e) {
+            items = [];
+          }
+        } else if (Array.isArray(a.kgItens)) {
+          items = a.kgItens;
+        }
+      }
+      items.forEach(item => {
+        const name = item.produtoNome || item.produto || 'Produto Desconhecido';
+        const id = item.produtoId || '';
+        const qtd = parseFloat(item.quantidade) || parseFloat(item.kg) || 0;
+        const un = (item.unidade || 'KG').toUpperCase();
+        
+        if (!produtosMaisUsadosMap[name]) {
+          produtosMaisUsadosMap[name] = {
+            produtoNome: name,
+            produtoId: id,
+            totalQtd: 0,
+            unidade: un,
+            totalAtendimentos: 0
+          };
+        }
+        produtosMaisUsadosMap[name].totalQtd += qtd;
+        produtosMaisUsadosMap[name].totalAtendimentos++;
+      });
+    });
+
+    const produtosMaisUsados = Object.values(produtosMaisUsadosMap)
+      .sort((a, b) => b.totalQtd - a.totalQtd)
+      .slice(0, 5);
+
+    // Calcular Padeiros Inativos Hoje
+    const Hoje = new Date().toISOString().split('T')[0];
+    const atividadesHoje = atividades.filter(a => a.data && a.data.startsWith(Hoje) && a.status === 'finalizada');
+    const padeirosAtivosHojeIds = new Set(atividadesHoje.map(a => a.padeiroId));
+    
+    const padeirosInativos = padeiros
+      .filter(p => !padeirosAtivosHojeIds.has(p.id))
+      .map(p => ({
+        id: p.id,
+        nome: p.nome,
+        telefone: p.telefone || '',
+        filial: p.filial || ''
+      }));
+
     res.json({
+      produtosMaisUsados,
       totalPadeiros: padeiros.length,
       totalProdutos: produtos.length,
       totalClientes: clientes.length,
@@ -151,7 +204,8 @@ exports.getGeneralStats = async (req, res) => {
       top10Pads,
       pontoCritico,
       rankingClientes,
-      rankingProducao: rankingProducao.slice(0, 10)
+      rankingProducao: rankingProducao.slice(0, 10),
+      padeirosInativos
     });
   } catch (error) {
     console.error("Dashboard Stats Error:", error);

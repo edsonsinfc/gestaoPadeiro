@@ -165,3 +165,19 @@ exports.updateTarefaStatus = async (req, res) => {
     res.status(400).json({ error: 'ID inválido' });
   }
 };
+
+exports.getPadeiroProgress = async (req, res) => {
+  const { padeiroId, data } = req.query;
+  if (!padeiroId || !data) {
+    return res.status(400).json({ error: 'padeiroId e data são obrigatórios' });
+  }
+  try {
+    const totalTasks = await Cronograma.countDocuments({ padeiroId, data });
+    const completedTasks = await Cronograma.countDocuments({ padeiroId, data, status: 'concluida' });
+    const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    res.json({ totalTasks, completedTasks, percent });
+  } catch (error) {
+    console.error('Erro ao buscar progresso:', error);
+    res.status(500).json({ error: 'Erro ao carregar progresso' });
+  }
+};

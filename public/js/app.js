@@ -134,20 +134,72 @@ const App = {
       }
     }
 
-    // Build layout
-    app.innerHTML = `
-    <div class="app-layout">
-      ${this.renderSidebar(user)}
-      <div class="main-content">
-        ${this.renderHeader(route)}
-        <div class="page-content" id="page-container">${Components.loading()}</div>
-      </div>
-      ${this.renderBottomNavbar(user)}
-    </div>`;
+    // Build layout if needed
+    const existingLayout = document.querySelector('.app-layout');
+    if (!existingLayout) {
+      app.innerHTML = `
+      <div class="app-layout">
+        ${this.renderSidebar(user)}
+        <div class="main-content">
+          <div id="header-wrapper">
+            ${this.renderHeader(route)}
+          </div>
+          <div class="page-content" id="page-container">${Components.loading()}</div>
+        </div>
+        ${this.renderBottomNavbar(user)}
+      </div>`;
+    } else {
+      const headerWrapper = document.getElementById('header-wrapper');
+      if (headerWrapper) {
+        headerWrapper.innerHTML = this.renderHeader(route);
+      }
+      document.getElementById('page-container').innerHTML = Components.loading();
+    }
 
+    // Highlight active nav
     // Highlight active nav
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.route === route);
+    });
+
+    // Update nav indicator (if exists)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+      const indicator = document.getElementById('nav-indicator');
+      const activeItem = document.querySelector(`.bottom-nav-item.active`);
+      if (indicator && activeItem) {
+        const targetLeft = activeItem.offsetLeft + (activeItem.offsetWidth / 2) - 30; // 30 is half of 60px
+        const currentLeft = parseFloat(indicator.style.left) || targetLeft;
+        
+        if (currentLeft !== targetLeft) {
+          const distance = Math.abs(targetLeft - currentLeft);
+          const movingRight = targetLeft > currentLeft;
+          
+          indicator.style.transition = 'width 0.2s cubic-bezier(0.25, 1, 0.5, 1), left 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+          
+          // Stretch step
+          if (movingRight) {
+            indicator.style.width = `${distance + 60}px`;
+          } else {
+            indicator.style.left = `${targetLeft}px`;
+            indicator.style.width = `${distance + 60}px`;
+          }
+          
+          // Snap back step
+          setTimeout(() => {
+            indicator.style.width = '60px';
+            if (movingRight) {
+              indicator.style.left = `${targetLeft}px`;
+            }
+          }, 200);
+        } else {
+          // First render
+          indicator.style.transition = 'none';
+          indicator.style.width = '60px';
+          indicator.style.left = `${targetLeft}px`;
+        }
+      }
+    });
     });
 
     // Restore sidebar collapsed state on desktop
@@ -339,20 +391,21 @@ const App = {
     } else {
       items = [
         { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
-        { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days', highlighted: true },
+        { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
         { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' }
       ];
     }
 
     const htmlItems = items.map(item => `
-      <div class="nav-item bottom-nav-item ${item.highlighted ? 'highlighted-nav-item' : ''}" data-route="${item.route}" onclick="App.navigate('${item.route}')">
+      <div class="nav-item bottom-nav-item" data-route="${item.route}" onclick="App.navigate('${item.route}')">
         <span class="bottom-nav-icon"><i data-lucide="${item.icon}"></i></span>
         <span class="bottom-nav-label">${item.label}</span>
       </div>
     `).join('');
 
     return `
-      <nav class="bottom-navbar">
+      <nav class="bottom-navbar" id="bottom-navbar">
+        <div class="nav-indicator" id="nav-indicator"></div>
         ${htmlItems}
       </nav>
     `;
@@ -440,6 +493,8 @@ const App = {
     const pageContainer = document.getElementById('page-container');
     if (pageContainer) {
       pageContainer.classList.remove('tf-page-active');
+      pageContainer.classList.remove('metas-view');
+      pageContainer.classList.remove('page-exit-active');
     }
     document.body.classList.remove('tf-page-active');
     const user = API.getUser();

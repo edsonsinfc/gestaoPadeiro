@@ -37,7 +37,7 @@ const Auth = {
       <div class="comodato-input-group">
         <label class="comodato-label">Usuário</label>
         <div class="comodato-input-wrapper">
-          <input class="comodato-input" type="email" id="login-email" placeholder="exemplo@email.com" required autocomplete="username">
+          <input class="comodato-input" type="text" id="login-email" placeholder="Nome de usuário ou e-mail" required autocomplete="username">
         </div>
       </div>
       

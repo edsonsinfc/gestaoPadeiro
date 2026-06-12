@@ -62,6 +62,7 @@ class SqlCollection {
         if (val.$gte) { parts.push(`\`${key}\` >= ?`); values.push(val.$gte); }
         if (val.$lte) { parts.push(`\`${key}\` <= ?`); values.push(val.$lte); }
         if (val.$ne !== undefined) { parts.push(`\`${key}\` <> ?`); values.push(val.$ne); }
+        if (val.$like !== undefined) { parts.push(`LOWER(\`${key}\`) LIKE LOWER(?)`); values.push(val.$like); }
         if (val.$in) { 
           if (Array.isArray(val.$in) && val.$in.length > 0) {
             parts.push(`\`${key}\` IN (?)`); 
@@ -282,5 +283,6 @@ module.exports = {
   Localizacao: createProxy(new SqlCollection('Localizacao', 'localizacoes')),
   HistoricoLocalizacao: createProxy(new SqlCollection('HistoricoLocalizacao', 'historico_localizacoes')),
   CronogramaTemplate: createProxy(new SqlCollection('CronogramaTemplate', 'cronograma_templates')),
-  TimelineEvent: createProxy(new SqlCollection('TimelineEvent', 'timeline_events'))
+  TimelineEvent: createProxy(new SqlCollection('TimelineEvent', 'timeline_events')),
+  PushSubscription: createProxy(new SqlCollection('PushSubscription', 'push_subscriptions'))
 };

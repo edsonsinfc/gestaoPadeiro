@@ -21,5 +21,6 @@ router.delete('/:id', authMiddleware, adminOnly, ctrl.deleteTarefa);
 // Padeiro specific routes (moved from server.js /api/padeiro/agenda)
 router.get('/agenda', authMiddleware, ctrl.getPadeiroAgenda);
 router.patch('/agenda/:id/status', authMiddleware, ctrl.updateTarefaStatus);
+router.get('/progress', authMiddleware, ctrl.getPadeiroProgress);
 
 module.exports = router;

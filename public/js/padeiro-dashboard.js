@@ -8,11 +8,15 @@ const PadeiroDashboard = {
     c.innerHTML = Components.loading();
     const user = API.getUser();
     try {
-      const [metas, atividades, avaliacoes] = await Promise.all([
+      const [metas, atividades, avaliacoes, stats] = await Promise.all([
         API.get('/api/metas'),
         API.get('/api/atividades'),
-        API.get('/api/avaliacoes')
+        API.get('/api/avaliacoes'),
+        API.get('/api/stats')
       ]);
+
+      const destaque = (stats && stats.top10Pads && stats.top10Pads.length > 0) ? stats.top10Pads[0] : null;
+      const isDestaque = destaque && destaque.id === user.id;
 
       const minhasMetas = metas.filter(m => m.padeiroId === user.id);
       const minhasAtividades = atividades.filter(a => a.padeiroId === user.id);
@@ -112,6 +116,40 @@ const PadeiroDashboard = {
             </div>
           </div>
         </div>
+
+        ${isDestaque ? `
+        <!-- Card Padeiro Destaque Banner -->
+        <div class="db-card card-destaque fade-in" style="background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%); color: #fff; padding: 16px; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(30,75,255,0.25); display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
+            <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none;"></div>
+            <div style="position: absolute; bottom: -30px; left: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #1E4BFF; border: 3px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.1); flex-shrink: 0; z-index: 1;">
+              ${initials}
+            </div>
+            
+            <div style="flex: 1; min-width: 0; z-index: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <i data-lucide="award" style="width: 14px; height: 14px; color: #FFD700; flex-shrink: 0;"></i>
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #FFD700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Padeiro Destaque</span>
+              </div>
+              
+              <h1 style="font-size: 18px; font-weight: 700; margin: 0 0 2px 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">${user.nome}</h1>
+              <h2 style="font-size: 12px; font-weight: 500; margin: 0 0 8px 0; color: rgba(255,255,255,0.8); line-height: 1;">${user.cargo || 'Padeiro'}</h2>
+              
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 2px;">Produção</span>
+                  <span style="font-size: 14px; font-weight: 700; color: #fff; line-height: 1;">${(destaque.totalKg || kgMes).toFixed(1)} <span style="font-size: 10px; font-weight: 500;">kg</span></span>
+                </div>
+                <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.2);"></div>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 2px;">Avaliação</span>
+                  <span style="font-size: 14px; font-weight: 700; color: #fff; line-height: 1;">${destaque.notaMedia !== undefined && destaque.notaMedia !== null ? destaque.notaMedia.toFixed(1) : (mediaCliente || 0).toFixed(1)} <span style="font-size: 10px; font-weight: 500; color: #FFD700;">★</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- KPI Cards -->
         <div class="pd-kpi-row">

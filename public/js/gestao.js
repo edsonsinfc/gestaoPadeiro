@@ -215,6 +215,7 @@ const Gestao = {
 
     c.innerHTML = `
     <div class="fade-in gestao-view">
+      <div id="gestao-kpi-container" class="hig-desktop-only"></div>
       <div class="flex justify-between items-center mb-6 gestao-header-main">
         <h1 class="page-title" style="margin-bottom:0; font-size: 24px; font-weight: 700;">Gestão</h1>
         <div class="segmented-control" style="margin-bottom:0;" onclick="Components.createRipple(event, this)">
@@ -257,11 +258,100 @@ const Gestao = {
   async loadTab() {
     try {
       const endpoint = this.currentTab === 'usuarios' ? 'management/users' : this.currentTab;
-      const data = await API.get(`/api/${endpoint}`);
+      const [data] = await Promise.all([
+        API.get(`/api/${endpoint}`),
+        this.loadStats()
+      ]);
       this.allData[this.currentTab] = data;
       this.renderTabContent(data);
     } catch (e) {
       document.getElementById('gestao-content').innerHTML = `<div class="toast error">Erro: ${e.message}</div>`;
+    }
+  },
+
+  async loadStats() {
+    try {
+      if (window.innerWidth <= 767) return;
+      const container = document.getElementById('gestao-kpi-container');
+      if (!container) return;
+
+      if (!container.innerHTML) {
+        container.innerHTML = `
+          <div class="db-kpi-grid gestao-kpi-grid" style="margin-bottom: 24px; gap: 18px;">
+            <div class="db-kpi-card white" style="height: 120px; background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.7); opacity: 0.7; display: flex; align-items: center; justify-content: center;">
+              <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-top-color: #5e52ff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <div class="db-kpi-card blue" style="height: 120px; opacity: 0.7; display: flex; align-items: center; justify-content: center;">
+              <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #ffffff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <div class="db-kpi-card white" style="height: 120px; background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.7); opacity: 0.7; display: flex; align-items: center; justify-content: center;">
+              <div class="spinner" style="width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-top-color: #5e52ff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const stats = await API.get('/api/stats');
+      const isSuper = App.user && App.user.role === 'super';
+      
+      container.innerHTML = `
+        <div class="db-kpi-grid gestao-kpi-grid" style="margin-bottom: 24px; gap: 18px; grid-template-columns: repeat(${isSuper ? 5 : 4}, 1fr);">
+          <!-- Card 1: Padeiros Ativos (White, clickable) -->
+          <div class="db-kpi-card white" onclick="Gestao.switchTab('padeiros')" style="cursor: pointer;">
+            <div class="db-kpi-top">
+              <span class="db-kpi-label">Padeiros Ativos</span>
+              <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <span class="db-kpi-val">${stats.totalPadeiros || 0}</span>
+            <span class="db-kpi-desc">Padeiros operando no sistema</span>
+          </div>
+
+          <!-- Card 2: Produtos (White) -->
+          <div class="db-kpi-card white" onclick="Gestao.switchTab('produtos')" style="cursor: pointer;">
+            <div class="db-kpi-top">
+              <span class="db-kpi-label">Produtos Cadastrados</span>
+              <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <span class="db-kpi-val">${stats.totalProdutos || 0}</span>
+            <span class="db-kpi-desc">Produtos em catálogo</span>
+          </div>
+
+          <!-- Card 3: Clientes Ativos (Blue, highlighted, clickable) -->
+          <div class="db-kpi-card blue" onclick="Gestao.switchTab('clientes')" style="cursor: pointer;">
+            <div class="db-kpi-top">
+              <span class="db-kpi-label text-white-50">Clientes Ativos</span>
+              <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <span class="db-kpi-val text-white">${stats.totalClientes || 0}</span>
+            <span class="db-kpi-desc text-white-50">Total de clientes registrados</span>
+          </div>
+
+          <!-- Card 4: Registros de Produção (White, clickable) -->
+          <div class="db-kpi-card white" onclick="Gestao.switchTab('atividades')" style="cursor: pointer;">
+            <div class="db-kpi-top">
+              <span class="db-kpi-label">Registros de Produção</span>
+              <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <span class="db-kpi-val">${stats.totalAtividades || 0}</span>
+            <span class="db-kpi-desc">Atividades registradas no total</span>
+          </div>
+          
+          ${isSuper ? `
+          <!-- Card 5: Usuários (White) -->
+          <div class="db-kpi-card white" onclick="Gestao.switchTab('usuarios')" style="cursor: pointer;">
+            <div class="db-kpi-top">
+              <span class="db-kpi-label">Usuários</span>
+              <div class="db-kpi-arrow-circle"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <span class="db-kpi-val">${stats.totalColaboradores || 0}</span>
+            <span class="db-kpi-desc">Usuários com acesso</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      Components.renderIcons();
+    } catch (e) {
+      console.error("Erro ao carregar estatísticas na Gestão:", e);
     }
   },
 
@@ -541,8 +631,11 @@ const Gestao = {
               <tr>
                 <td>
                   <div class="row-user-info" style="display: flex; align-items: center; gap: 12px;">
-                    <div class="row-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: rgba(30, 75, 255, 0.1); color: var(--hig-system-blue); display: flex; align-items: center; justify-content: center;">
-                      <i data-lucide="package" style="width: 18px; height: 18px;"></i>
+                    <div class="row-avatar" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background-color: rgba(30, 75, 255, 0.1); color: var(--hig-system-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #f1f5f9;">
+                      ${p.temFoto && p.codigo 
+                        ? `<img src="/api/foto-produto/${p.codigo}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                        : `<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='85' height='85' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 5h18M3 19h18M3 12h18'/></svg>" style="width: 100%; height: 100%; object-fit: cover;">`
+                      }
                     </div>
                     <div>
                       <div style="font-weight: 600; color: var(--hig-label-primary); font-size: 14px;">${p.descricao}</div>
@@ -567,8 +660,11 @@ const Gestao = {
       <div class="apple-list mobile-only">
         ${data.map(p => `
           <div class="apple-card" onclick="Gestao.openProdutoForm('${p.id}')">
-            <div class="apple-avatar" style="background-color: rgba(0, 122, 255, 0.1); color: #007AFF;">
-              <i data-lucide="package" style="width:22px; height:22px;"></i>
+            <div class="apple-avatar" style="background-color: rgba(0, 122, 255, 0.1); color: #007AFF; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #f1f5f9;">
+              ${p.temFoto && p.codigo 
+                ? `<img src="/api/foto-produto/${p.codigo}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                : `<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='85' height='85' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 5h18M3 19h18M3 12h18'/></svg>" style="width: 100%; height: 100%; object-fit: cover;">`
+              }
             </div>
             <div class="apple-card-info">
               <div class="apple-card-top">

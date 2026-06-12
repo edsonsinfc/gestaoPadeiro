@@ -14,6 +14,10 @@ const PadeiroFlow = {
     { label: 'Finalizar', icon: 'check-circle' }
   ],
   selectedFiles: [],
+  multiSelectMode: false,
+  multiSelectedIds: new Set(),
+  _longPressTimer: null,
+  _longPressMoved: false,
 
   getTodayLocal() {
     const n = new Date();
@@ -24,6 +28,12 @@ const PadeiroFlow = {
     const container = document.getElementById('page-container');
     container.innerHTML = Components.loading();
     this.currentStep = 0;
+    this.cartItems = {};
+    this.selectedFiles = [];
+    this.selectedFotosBase64 = [];
+    this.isSignatureDrawn = false;
+    this.backgroundUploadPromise = null;
+    this.backgroundSignaturePromise = null;
     this.activity = prefill;
     this.activity.timeline = this.activity.timeline || [];
 
@@ -154,6 +164,12 @@ const PadeiroFlow = {
   async startFresh() {
     this.pendingResume = null;
     this.activity = { timeline: [] };
+    this.cartItems = {};
+    this.selectedFiles = [];
+    this.selectedFotosBase64 = [];
+    this.isSignatureDrawn = false;
+    this.backgroundUploadPromise = null;
+    this.backgroundSignaturePromise = null;
     this.currentStep = 0;
     await this.fetchTodayClient();
     this.renderWizard(document.getElementById('page-container'));
@@ -179,39 +195,59 @@ const PadeiroFlow = {
 
     container.innerHTML = `
       <div class="pf-container fade-in">
-        <!-- Header -->
-        <div class="pf-header">
-          <div class="pf-header-left">
-            <button class="pf-back-btn" onclick="App.navigate('padeiro-inicio')">
-              <i data-lucide="arrow-left" style="width:20px;height:20px"></i>
-            </button>
-            <div>
-              <h1 class="pf-title">Registro de Atividade</h1>
-              <p class="pf-date">${dataStr}</p>
+        <!-- Header Top Block (Brago Blue) -->
+        <div class="pf-pizza-header-block">
+          <div class="pf-pizza-header-top">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <button class="pf-pizza-back-btn" onclick="App.navigate('padeiro-inicio')">
+                <i data-lucide="arrow-left" style="width:20px;height:20px"></i>
+              </button>
+              <div>
+                <h1 class="pf-title" style="margin:0; font-size:22px; font-weight:800;">Registro de Atividade</h1>
+                <p class="pf-date" style="margin:2px 0 0; font-size:13px;">${dataStr}</p>
+              </div>
+            </div>
+            <div class="pf-pizza-search-icon">
+              <i data-lucide="search" style="width:24px;height:24px"></i>
             </div>
           </div>
-        </div>
 
-        <!-- Stepper -->
-        <div class="pf-stepper">
-          <div class="pf-stepper-track">
-            <div class="pf-stepper-progress" style="width:${this.currentStep === 0 ? '0' : Math.round((this.currentStep / (this.steps.length - 1)) * 100)}%"></div>
+          <!-- Stepper inside Header -->
+          <div class="pf-stepper" style="margin-bottom:0; padding:0 10px;">
+            <div class="pf-stepper-track" style="left:30px; right:30px;">
+              <div class="pf-stepper-progress" style="width:${this.currentStep === 0 ? '0' : Math.round((this.currentStep / (this.steps.length - 1)) * 100)}%"></div>
+            </div>
+            ${this.steps.map((s, i) => {
+              const cls = i === this.currentStep ? 'active' : (i < this.currentStep ? 'completed' : '');
+              const inner = i < this.currentStep ? '<i data-lucide="check" style="width:16px;height:16px"></i>' : `<i data-lucide="${s.icon}" style="width:16px;height:16px"></i>`;
+              return `<div class="pf-step ${cls}"><div class="pf-step-dot">${inner}</div><span class="pf-step-label">${s.label}</span></div>`;
+            }).join('')}
           </div>
-          ${this.steps.map((s, i) => {
-            const cls = i === this.currentStep ? 'active' : (i < this.currentStep ? 'completed' : '');
-            const inner = i < this.currentStep ? '<i data-lucide="check" style="width:16px;height:16px"></i>' : `<i data-lucide="${s.icon}" style="width:16px;height:16px"></i>`;
-            return `<div class="pf-step ${cls}"><div class="pf-step-dot">${inner}</div><span class="pf-step-label">${s.label}</span></div>`;
-          }).join('')}
         </div>
 
         <!-- Content -->
-        <div class="pf-card" id="wizard-content"></div>
+        <div id="wizard-content" style="padding: 0 8px 40px 8px;"></div>
       </div>`;
     this.renderStep();
     Components.renderIcons();
   },
 
   renderStep() {
+    // Clean up multi-select mode if active
+    if (this.multiSelectMode) {
+      this.multiSelectMode = false;
+      this.multiSelectedIds = new Set();
+      document.body.classList.remove('pf-multiselect-mode');
+    const bar = document.getElementById('pf-multiselect-bar');
+      if (bar) bar.classList.remove('active');
+    }
+    
+    // Hide FAB if not in step 1 (Produção)
+    const fab = document.getElementById('pf-cart-fab');
+    if (fab && this.currentStep !== 1) {
+      fab.classList.remove('visible');
+    }
+
     const c = document.getElementById('wizard-content');
     switch(this.currentStep) {
       case 0: this.stepIniciar(c); break;
@@ -407,68 +443,180 @@ const PadeiroFlow = {
     let produtos = [];
     try { produtos = await API.get('/api/produtos'); } catch(e) {}
     this.cachedProdutos = produtos;
-    this.selectedFiles = [];
+    
+    if (!this.selectedFiles || this.selectedFiles.length === 0) {
+      this.restoreDraftLocally();
+    }
+
+    const activeProds = produtos.filter(p => p.ativo !== false);
+    this.activeProds = activeProds;
+    this.currentFilteredProds = activeProds;
+    this.renderLimit = 50;
+    this.renderedCount = 0;
+    let fornecedores = [...new Set(activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))];
+    
+    const PRIORITY = ['IREKS']; // Adicione outras marcas populares aqui se precisar
+    fornecedores.sort((a, b) => {
+      const isA = PRIORITY.some(p => a.toUpperCase().includes(p));
+      const isB = PRIORITY.some(p => b.toUpperCase().includes(p));
+      if (isA && !isB) return -1;
+      if (!isA && isB) return 1;
+      return a.localeCompare(b);
+    });
 
     c.innerHTML = `
-      <div class="pf-step-header">
+      <div class="pf-step-header pf-animate-cascade" style="animation-delay: 0.05s">
         <div class="pf-step-icon pf-icon-green"><i data-lucide="package" style="width:24px;height:24px"></i></div>
         <div>
           <h2 class="pf-step-title">Produção Realizada</h2>
-          <p class="pf-step-sub">Registre os produtos e tire fotos.</p>
+          <p class="pf-step-sub">Selecione os produtos e informe a quantidade.</p>
         </div>
       </div>
 
-      <!-- Produtos Section -->
-      <div class="pf-section">
-        <div class="pf-section-label"><i data-lucide="list" style="width:14px;height:14px"></i> Itens Produzidos</div>
-        <datalist id="produtos-list">
-          ${produtos.filter(p=>p.ativo!==false).map(p=>`<option value="${p.codigo?p.codigo+' - ':''}${p.descricao}">`).join('')}
-        </datalist>
-        <div id="kg-items">
-          <div class="pf-prod-row">
-            <input class="pf-input kg-produto-search" list="produtos-list" placeholder="Buscar produto...">
-            <input class="pf-input pf-input-sm kg-valor" type="number" step="0.1" placeholder="0.0">
-            <select class="pf-input pf-input-unit kg-unidade">
-              <option value="KG">KG</option><option value="L">L</option><option value="UN">UN</option><option value="PCT">PCT</option>
-            </select>
-            <button class="pf-row-btn pf-row-del" onclick="PadeiroFlow.removeKgRow(this)" style="visibility:hidden"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+      <!-- 1. Grid Dashboard (2x2) -->
+      <div class="pf-dashboard-grid pf-animate-cascade" style="animation-delay: 0.10s">
+        <!-- Card 1: KG -->
+        <div class="pf-dash-card">
+          <div class="pf-dash-card-label"><i data-lucide="scale" style="width:14px;height:14px"></i> Peso Total</div>
+          <div class="pf-dash-card-value">
+            <span id="flow-wallet-kg-display">${this.activity.kgTotal || '0.0'}</span>
+            <span class="pf-dash-card-unit">KG</span>
           </div>
         </div>
-        <button class="pf-add-row" onclick="PadeiroFlow.addKgRow()"><i data-lucide="plus" style="width:16px;height:16px"></i> Adicionar produto</button>
+        
+        <!-- Card 2: Litros -->
+        <div class="pf-dash-card">
+          <div class="pf-dash-card-label"><i data-lucide="droplet" style="width:14px;height:14px"></i> Líquidos</div>
+          <div class="pf-dash-card-value">
+            <span id="flow-wallet-l-display">${this.activity.lTotal || '0.0'}</span>
+            <span class="pf-dash-card-unit">L</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Itens -->
+        <div class="pf-dash-card">
+          <div class="pf-dash-card-label"><i data-lucide="package" style="width:14px;height:14px"></i> Produtos</div>
+          <div class="pf-dash-card-value">
+            <span id="flow-wallet-items-display">0</span>
+            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">itens</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Unidades -->
+        <div class="pf-dash-card">
+          <div class="pf-dash-card-label"><i data-lucide="box" style="width:14px;height:14px"></i> Unidades</div>
+          <div class="pf-dash-card-value">
+            <span id="flow-wallet-un-display">0</span>
+            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">un</span>
+          </div>
+        </div>
+      </div>
+      
+      <input type="hidden" id="flow-kg-total" value="${this.activity.kgTotal || ''}">
+      <input type="hidden" id="flow-l-total" value="${this.activity.lTotal || ''}">
+
+      <!-- 2. Produto Selecionado (Banner) -->
+      <div class="pf-wallet-banner pf-animate-cascade" style="animation-delay: 0.15s" onclick="PadeiroFlow.openCartModal()">
+        <div class="pf-wallet-banner-content">
+          <div class="pf-wallet-banner-title">Adicione produtos à sua produção</div>
+          <div id="pf-wallet-avatars" class="pf-wallet-avatars-container" style="display:none;"></div>
+          <span class="pf-wallet-banner-action" id="flow-recent-action">Carrinho vazio</span>
+        </div>
+        <div class="pf-wallet-banner-icon">
+          <i data-lucide="box" style="width:28px;height:28px"></i>
+        </div>
       </div>
 
-      <!-- Totais (KG + Litros) -->
-      <div class="pf-total-section">
-        <label class="pf-label-center">Resumo da Produção</label>
-        <div id="pf-units-summary" class="pf-units-summary">
-          <!-- Dynamically filled -->
-        </div>
-        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-          <div class="pf-total-wrap">
-            <input class="pf-total-input" id="flow-kg-total" type="number" step="0.1" value="${this.activity.kgTotal||''}" placeholder="0.0" readonly style="background-color: #f1f5f9; cursor: not-allowed; color: #475569;">
-            <span class="pf-total-unit">KG Total</span>
-          </div>
-          <div class="pf-total-wrap">
-            <input class="pf-total-input" id="flow-l-total" type="number" step="0.1" value="${this.activity.lTotal||''}" placeholder="0.0" readonly style="border-color:rgba(16,185,129,0.4); background-color: #f1f5f9; cursor: not-allowed; color: #475569;">
-            <span class="pf-total-unit" style="color:#10b981;">L Total</span>
-          </div>
-        </div>
+      <!-- Horizontal Categories Tabs -->
+      <div class="pf-pizza-tabs pf-animate-cascade" style="animation-delay: 0.20s">
+        <div class="pf-pizza-tab active" onclick="PadeiroFlow.filterByTab(this, 'all')">Todos</div>
+        ${fornecedores.map(f => {
+          const isPrio = PRIORITY.some(p => f.toUpperCase().includes(p));
+          const prioClass = isPrio ? 'prio' : '';
+          const icon = isPrio ? '<i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i>' : '';
+          return `<div class="pf-pizza-tab ${prioClass}" onclick="PadeiroFlow.filterByTab(this, '${f.trim().toLowerCase()}')">${icon}${f.trim().split(' ')[0]}</div>`;
+        }).join('')}
       </div>
 
-      <!-- Fotos Section -->
-      <div class="pf-section">
-        <div class="pf-section-label"><i data-lucide="camera" style="width:14px;height:14px"></i> Fotos da Produção</div>
+      <!-- Search Bar -->
+      <div class="pf-search-container pf-animate-cascade" style="animation-delay: 0.25s; margin-bottom: 20px;">
+        <i data-lucide="search" class="pf-search-icon" style="width:18px;height:18px"></i>
+        <input type="text" class="pf-search-input" id="flow-prod-search" placeholder="Pesquisar produto por nome ou código..." oninput="PadeiroFlow.filterProducts(this.value)">
+      </div>
+
+      <!-- Products List (Pizza App Style) -->
+      <div id="kg-items" class="pf-pizza-list">
+        <!-- Itens carregados via Lazy Loading -->
+      </div>
+      <div id="pf-load-more-sentinel" class="pf-skeleton-loader" style="display: none;">
+        <div class="pf-skeleton-row">
+          <div class="pf-skeleton-img"></div>
+          <div class="pf-skeleton-content">
+            <div class="pf-skeleton-line-1"></div>
+            <div class="pf-skeleton-line-2"></div>
+          </div>
+          <div class="pf-skeleton-btn"></div>
+        </div>
+        <div class="pf-skeleton-row">
+          <div class="pf-skeleton-img"></div>
+          <div class="pf-skeleton-content">
+            <div class="pf-skeleton-line-1"></div>
+            <div class="pf-skeleton-line-2"></div>
+          </div>
+          <div class="pf-skeleton-btn"></div>
+        </div>
+        <div class="pf-skeleton-row">
+          <div class="pf-skeleton-img"></div>
+          <div class="pf-skeleton-content">
+            <div class="pf-skeleton-line-1"></div>
+            <div class="pf-skeleton-line-2"></div>
+          </div>
+          <div class="pf-skeleton-btn"></div>
+        </div>
+      </div>`;
+
+    // Setup persistent photos container for the cart modal
+    let fotosContainer = document.getElementById('pf-fotos-persistent-container');
+    if (!fotosContainer) {
+      fotosContainer = document.createElement('div');
+      fotosContainer.id = 'pf-fotos-persistent-container';
+      fotosContainer.className = 'pf-section';
+      fotosContainer.style.marginTop = '16px';
+      fotosContainer.innerHTML = `
+        <div class="pf-section-label" style="font-weight:700; color:#1e293b; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          Fotos da Produção
+        </div>
         <div id="foto-preview-grid">
           <div class="pf-photo-add" onclick="PadeiroFlow.triggerCamera()">
-            <i data-lucide="plus-circle" style="width:24px;height:24px"></i>
-            <span>Adicionar</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            <span style="font-size:12px; margin-top:4px;">Adicionar</span>
           </div>
         </div>
-      </div>
+      `;
+      document.body.appendChild(fotosContainer);
+      fotosContainer.style.display = 'none'; // hidden by default
+    } else {
+      // Container já existe: SEMPRE limpar fotos da atividade anterior
+      const grid = document.getElementById('foto-preview-grid');
+      if (grid) {
+        grid.innerHTML = `
+          <div class="pf-photo-add" onclick="PadeiroFlow.triggerCamera()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            <span style="font-size:12px; margin-top:4px;">Adicionar</span>
+          </div>
+        `;
+      }
+    }
 
-      <button id="pf-btn-producao" class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.saveProducao()">
-        <i data-lucide="arrow-right" style="width:18px;height:18px"></i> Continuar
-      </button>`;
+    // Se há fotos no estado atual (rascunho/retomada legítima), restaurar no grid
+    if (this.selectedFotosBase64 && this.selectedFotosBase64.length > 0) {
+      setTimeout(() => {
+        this.selectedFotosBase64.forEach(b64 => {
+          PadeiroFlow.renderPhotoPreviewBase64(b64.data, b64.name);
+        });
+      }, 50);
+    }
 
     const staticInput = document.getElementById('camera-input-static');
     
@@ -492,10 +640,18 @@ const PadeiroFlow = {
         })
       );
       
+      this.selectedFiles = this.selectedFiles || [];
+      this.selectedFotosBase64 = this.selectedFotosBase64 || [];
       compressedFiles.forEach(f => {
         this.selectedFiles.push(f);
-        const dataUrl = URL.createObjectURL(f);
-        PadeiroFlow.renderPhotoPreviewBase64(dataUrl, f.name);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const b64 = ev.target.result;
+          PadeiroFlow.renderPhotoPreviewBase64(b64, f.name);
+          this.selectedFotosBase64.push({ name: f.name, data: b64, type: f.type });
+          PadeiroFlow.saveDraftLocally();
+        };
+        reader.readAsDataURL(f);
       });
       
       e.target.value = '';
@@ -526,84 +682,706 @@ const PadeiroFlow = {
       })();
     }
 
-    // Event delegation for real-time calculation
-    const itemsContainer = document.getElementById('kg-items');
-    itemsContainer.addEventListener('input', () => this.calculateTotals());
-    itemsContainer.addEventListener('change', () => this.calculateTotals());
-    
     this.restoreDraftLocally();
     this.calculateTotals(); // Initial calc
+    this.renderProductBatch(true); // First batch
+    this.setupLongPress(); // Multi-select via long-press
+    this.setupLazyLoading();
     Components.renderIcons();
+
+    // Launch onboarding tutorial (only once)
+    setTimeout(() => this.startTutorial(), 800);
   },
+
+  filterProducts(query) {
+    const q = query.toLowerCase();
+    
+    // Clear active tab if searching
+    if (q.length > 0) {
+      document.querySelectorAll('.pf-pizza-tab').forEach(el => el.classList.remove('active'));
+    }
+
+    this.currentFilteredProds = this.activeProds.filter(p => {
+       const desc = (p.descricao || '').toLowerCase();
+       const code = (p.codigo || '').toLowerCase();
+       return desc.includes(q) || code.includes(q);
+    });
+    
+    this.renderProductBatch(true);
+  },
+
+  filterByTab(element, fornecedor) {
+    // Clear search when clicking a tab
+    const searchInput = document.getElementById('flow-prod-search');
+    if (searchInput) searchInput.value = '';
+
+    document.querySelectorAll('.pf-pizza-tab').forEach(el => el.classList.remove('active'));
+    if (element) element.classList.add('active');
+
+    if (fornecedor === 'all') {
+      this.currentFilteredProds = this.activeProds;
+    } else {
+      this.currentFilteredProds = this.activeProds.filter(p => {
+        const rowFornecedor = (p.fornecedor || 'sem fornecedor').trim().toLowerCase();
+        return rowFornecedor === fornecedor;
+      });
+    }
+    
+    this.renderProductBatch(true);
+  },
+
+  renderProductBatch(reset = false) {
+    const container = document.getElementById('kg-items');
+    if (!container) return;
+    
+    if (reset) {
+      this.renderedCount = 0;
+      this.renderLimit = 50;
+      container.innerHTML = '';
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    const itemsToRender = this.currentFilteredProds.slice(this.renderedCount, this.renderLimit);
+    if (itemsToRender.length === 0 && this.renderedCount > 0) return;
+
+    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='85' height='85' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 5h18M3 19h18M3 12h18'/></svg>";
+
+    const html = itemsToRender.map((p, idx) => {
+      const safeDesc = p.descricao.replace(/'/g, "\\'");
+      const safeCode = (p.codigo || '').replace(/'/g, "\\'");
+      const imgSrc = p.temFoto && p.codigo ? `/api/foto-produto/${p.codigo}` : fallbackSvg;
+      const animDelay = idx < 15 && reset ? 0.05 + idx * 0.02 : 0;
+      
+      return `
+      <div class="pf-pizza-row fade-in" style="animation-delay: ${animDelay}s" data-id="${p.id}" data-fornecedor="${(p.fornecedor || 'sem fornecedor').trim().toLowerCase()}" data-descricao="${(p.descricao||'').toLowerCase()}" data-codigo="${(p.codigo || '').toLowerCase()}" data-orig-desc="${safeDesc}" data-orig-code="${safeCode}">
+        <div class="pf-multiselect-checkbox"></div>
+        <div class="pf-pizza-img-wrap">
+          <img src="${imgSrc}" onerror="this.src='${fallbackSvg}'" alt="${p.descricao}" loading="lazy">
+        </div>
+        
+        <div class="pf-pizza-content">
+          <h3 class="pf-pizza-title">${p.descricao}</h3>
+          <span class="pf-pizza-desc">Cód: ${p.codigo || 'Sem código'}</span>
+        </div>
+
+        <div id="cart-item-display-${p.id}">
+          <!-- Renderizado via calculateTotals -->
+        </div>
+      </div>
+    `}).join('');
+
+    container.insertAdjacentHTML('beforeend', html);
+    this.renderedCount += itemsToRender.length;
+
+    // Atualiza os carrinhos/inputs recém renderizados
+    this.calculateTotals();
+
+    // Gerencia o sentinel
+    const sentinel = document.getElementById('pf-load-more-sentinel');
+    if (sentinel) {
+      if (this.renderedCount >= this.currentFilteredProds.length) {
+        sentinel.style.display = 'none';
+      } else {
+        sentinel.style.display = 'flex';
+      }
+    }
+  },
+
+  setupLazyLoading() {
+    const sentinel = document.getElementById('pf-load-more-sentinel');
+    if (!sentinel) return;
+
+    if (this._intersectionObserver) {
+      this._intersectionObserver.disconnect();
+    }
+
+    this._intersectionObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        // Mostrar mais
+        if (this.renderedCount < this.currentFilteredProds.length) {
+          // Pequeno delay para exibir o skeleton visualmente
+          setTimeout(() => {
+            this.renderLimit += 50;
+            this.renderProductBatch();
+          }, 300);
+        }
+      }
+    }, {
+      rootMargin: '200px' // Começa a carregar 200px antes de chegar no fim
+    });
+
+    this._intersectionObserver.observe(sentinel);
+  },
+
+  // ==========================================
+  // MULTI-SELECT (Long-Press)
+  // ==========================================
+
+  setupLongPress() {
+    const container = document.getElementById('kg-items');
+    if (!container) return;
+
+    // Delegated touch events
+    container.addEventListener('touchstart', (e) => {
+      const row = e.target.closest('.pf-pizza-row');
+      if (!row) return;
+      
+      const touch = e.touches[0];
+      this._touchStartX = touch.clientX;
+      this._touchStartY = touch.clientY;
+      
+      this._longPressMoved = false;
+      this._longPressTriggered = false;
+      this._longPressTimer = setTimeout(() => {
+        if (!this._longPressMoved) {
+          this._longPressTriggered = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+          row.classList.add('pf-longpress-active');
+          setTimeout(() => row.classList.remove('pf-longpress-active'), 500);
+          this.enterMultiSelectMode(row.dataset.id);
+        }
+      }, 220); // Reduzido de 350ms para 220ms
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+      if (!this._longPressTimer) return;
+      const touch = e.touches[0];
+      const deltaX = Math.abs(touch.clientX - this._touchStartX);
+      const deltaY = Math.abs(touch.clientY - this._touchStartY);
+      
+      // Cancela apenas se mover mais de 10px (evita cancelar com micro-movimentos do dedo)
+      if (deltaX > 10 || deltaY > 10) {
+        this._longPressMoved = true;
+        clearTimeout(this._longPressTimer);
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      clearTimeout(this._longPressTimer);
+      if (this._longPressTriggered) {
+        e.preventDefault();
+        // Atrasamos a limpeza para que o evento 'click' simulado pelo mobile seja engolido no manipulador de clique
+        setTimeout(() => {
+          this._longPressTriggered = false;
+        }, 300);
+      }
+    });
+
+    // Delegated mouse events
+    container.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // only left click
+      const row = e.target.closest('.pf-pizza-row');
+      if (!row) return;
+      this._longPressMoved = false;
+      this._longPressTriggered = false;
+      this._longPressTimer = setTimeout(() => {
+        if (!this._longPressMoved) {
+          this._longPressTriggered = true;
+          row.classList.add('pf-longpress-active');
+          setTimeout(() => row.classList.remove('pf-longpress-active'), 500);
+          this.enterMultiSelectMode(row.dataset.id);
+        }
+      }, 220); // Reduzido de 350ms para 220ms
+    });
+
+    container.addEventListener('mousemove', () => {
+      this._longPressMoved = true;
+      clearTimeout(this._longPressTimer);
+    });
+
+    container.addEventListener('mouseup', () => {
+      clearTimeout(this._longPressTimer);
+    });
+
+    // Click handler: toggle selection
+    container.addEventListener('click', (e) => {
+      const row = e.target.closest('.pf-pizza-row');
+      if (!row) return;
+
+      if (this._longPressTriggered) {
+        e.preventDefault();
+        e.stopPropagation();
+        this._longPressTriggered = false;
+        return;
+      }
+      if (!this.multiSelectMode) return;
+      if (e.target.closest('.pf-pizza-add-btn') || e.target.closest('.pf-pizza-tag')) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleMultiSelect(row.dataset.id);
+    });
+
+    container.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.pf-pizza-row')) {
+        e.preventDefault();
+      }
+    });
+  },
+
+  enterMultiSelectMode(firstId) {
+    if (this.multiSelectMode) return;
+    this.multiSelectMode = true;
+    this.multiSelectedIds = new Set();
+    this.multiSelectedIds.add(firstId);
+    document.body.classList.add('pf-multiselect-mode');
+
+    // Mark first selected row
+    const firstRow = document.querySelector(`.pf-pizza-row[data-id="${firstId}"]`);
+    if (firstRow) {
+      firstRow.classList.add('pf-multi-selected', 'pf-select-pop');
+      setTimeout(() => firstRow.classList.remove('pf-select-pop'), 300);
+    }
+
+    // Create or show the floating toolbar
+    this.renderMultiSelectBar();
+  },
+
+  exitMultiSelectMode() {
+    this.multiSelectMode = false;
+    this.multiSelectedIds = new Set();
+    document.body.classList.remove('pf-multiselect-mode');
+
+    // Remove selection from all rows
+    document.querySelectorAll('.pf-pizza-row.pf-multi-selected').forEach(row => {
+      row.classList.remove('pf-multi-selected');
+    });
+
+    // Hide the toolbar
+    const bar = document.getElementById('pf-multiselect-bar');
+    if (bar) bar.classList.remove('active');
+
+    // Recalculate to restore normal "Adicionar" buttons
+    this.calculateTotals();
+  },
+
+  toggleMultiSelect(id) {
+    if (!this.multiSelectMode) return;
+    const row = document.querySelector(`.pf-pizza-row[data-id="${id}"]`);
+    if (!row) return;
+
+    if (this.multiSelectedIds.has(id)) {
+      this.multiSelectedIds.delete(id);
+      row.classList.remove('pf-multi-selected');
+    } else {
+      this.multiSelectedIds.add(id);
+      row.classList.add('pf-multi-selected', 'pf-select-pop');
+      setTimeout(() => row.classList.remove('pf-select-pop'), 300);
+      // Vibrate on selection
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+
+    // If no items selected, exit mode
+    if (this.multiSelectedIds.size === 0) {
+      this.exitMultiSelectMode();
+      return;
+    }
+
+    this.updateMultiSelectBar();
+  },
+
+  selectAllVisible() {
+    document.querySelectorAll('.pf-pizza-row').forEach(row => {
+      if (row.style.display !== 'none') {
+        const id = row.dataset.id;
+        this.multiSelectedIds.add(id);
+        row.classList.add('pf-multi-selected');
+      }
+    });
+    this.updateMultiSelectBar();
+    if (navigator.vibrate) navigator.vibrate(30);
+  },
+
+  addMultiSelectedToCart() {
+    if (this.multiSelectedIds.size === 0) return;
+    this.cartItems = this.cartItems || {};
+
+    this.multiSelectedIds.forEach(id => {
+      if (!this.cartItems[id]) {
+        this.cartItems[id] = { v: 1, un: 'KG' };
+      }
+    });
+
+    const count = this.multiSelectedIds.size;
+    this.exitMultiSelectMode();
+    this.calculateTotals();
+    this.saveDraftLocally();
+    this.openCartModal();
+    if (typeof Components !== 'undefined' && Components.toast) {
+      Components.toast(`${count} produto(s) adicionado(s) ao carrinho!`, 'success');
+    }
+  },
+
+  renderMultiSelectBar() {
+    let bar = document.getElementById('pf-multiselect-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'pf-multiselect-bar';
+      bar.className = 'pf-multiselect-bar';
+      document.body.appendChild(bar);
+    }
+
+    bar.innerHTML = `
+      <div class="pf-multiselect-bar-left">
+        <div class="pf-multiselect-close-btn" onclick="PadeiroFlow.exitMultiSelectMode()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div class="pf-multiselect-count" id="pf-multi-count">
+          ${this.multiSelectedIds.size} <span>selecionado(s)</span>
+        </div>
+      </div>
+      <div class="pf-multiselect-bar-right">
+        <div class="pf-multiselect-select-all-btn" onclick="PadeiroFlow.selectAllVisible()">Todos</div>
+        <button class="pf-multiselect-add-btn" id="pf-multi-add-btn" onclick="PadeiroFlow.addMultiSelectedToCart()" ${this.multiSelectedIds.size === 0 ? 'disabled' : ''}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+          Adicionar
+        </button>
+      </div>
+    `;
+
+    // Animate in
+    setTimeout(() => bar.classList.add('active'), 20);
+  },
+
+  updateMultiSelectBar() {
+    const countEl = document.getElementById('pf-multi-count');
+    if (countEl) {
+      countEl.innerHTML = `${this.multiSelectedIds.size} <span>selecionado(s)</span>`;
+    }
+    const addBtn = document.getElementById('pf-multi-add-btn');
+    if (addBtn) {
+      addBtn.disabled = this.multiSelectedIds.size === 0;
+    }
+  },
+
+  quickAddToCart(id, name, code) {
+    // Don't process normal clicks while in multi-select mode
+    if (this.multiSelectMode) return;
+    this.cartItems = this.cartItems || {};
+    if (!this.cartItems[id]) {
+      this.cartItems[id] = { v: 1, un: 'KG' };
+    }
+    this.calculateTotals();
+    this.saveDraftLocally();
+    this.openCartModal();
+  },
+
+  changeCartItemUnit(id, un) {
+    this.cartItems = this.cartItems || {};
+    if (this.cartItems[id]) {
+      this.cartItems[id].un = un;
+      this.calculateTotals();
+      this.saveDraftLocally();
+      this.openCartModal();
+    }
+  },
+
+  openCartModal() {
+    let overlay = document.getElementById('pf-cart-modal-overlay');
+    let savedScrollTop = 0;
+    if (overlay) {
+      const contentEl = overlay.querySelector('.pf-modal-ios-content');
+      if (contentEl) {
+        savedScrollTop = contentEl.scrollTop;
+      }
+    }
+
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'pf-cart-modal-overlay';
+      overlay.className = 'pf-modal-overlay';
+      overlay.onclick = (e) => { if (e.target === overlay) PadeiroFlow.closeCartModal() };
+      document.body.appendChild(overlay);
+    }
+    
+    this.cartItems = this.cartItems || {};
+    const itemIds = Object.keys(this.cartItems);
+    
+    let itemsHtml = '';
+    let totalItemsCount = itemIds.length;
+    let totalKg = 0;
+
+    if (itemIds.length === 0) {
+      itemsHtml = '<div style="text-align:center; padding: 32px 0; color: #64748b; font-weight:600;">O carrinho está vazio.</div>';
+    } else {
+      itemsHtml = itemIds.map(id => {
+        const item = this.cartItems[id];
+        if (item.un === 'KG') {
+          totalKg += parseFloat(String(item.v).replace(',', '.')) || 0;
+        }
+        const row = document.querySelector(`.pf-pizza-row[data-id="${id}"]`);
+        const desc = row ? (row.dataset.origDesc || '') : 'Produto';
+        const code = row ? (row.dataset.origCode || '') : '';
+        const prod = this.cachedProdutos ? this.cachedProdutos.find(p => p.id === id) : null;
+        const hasPhoto = prod ? prod.temFoto : false;
+        const imgSrc = hasPhoto && code ? `/api/foto-produto/${code}` : '';
+        return `
+          <div class="pf-ios-card">
+            <div class="pf-ios-card-img">
+               ${imgSrc 
+                 ? `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">` 
+                 : `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block; color:#94a3b8;"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+               }
+            </div>
+            <div class="pf-ios-card-body">
+              <div>
+                <h4 class="pf-ios-card-title">${desc}</h4>
+                <p class="pf-ios-card-desc">Cód: ${code || '---'}</p>
+              </div>
+              <div class="pf-ios-card-controls">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                  <div class="pf-ios-qty-wrap">
+                    <div class="pf-ios-qty-btn" onclick="PadeiroFlow.changeCartItemQty('${id}', -1)" style="cursor: pointer; color: #1f4cff;">-</div>
+                    <input type="text" class="pf-ios-qty-val" value="${item.v}" readonly>
+                    <div class="pf-ios-qty-btn" onclick="PadeiroFlow.changeCartItemQty('${id}', 1)" style="cursor: pointer; color: #1f4cff;">+</div>
+                  </div>
+                  <select class="pf-ios-unit-select" onchange="PadeiroFlow.changeCartItemUnit('${id}', this.value)" style="margin-top: 4px; padding: 2px 6px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 4px; color: #1f4cff; font-weight: 800; background: transparent; outline: none; text-transform: uppercase;">
+                    <option value="KG" ${item.un==='KG'?'selected':''}>KG</option>
+                    <option value="L" ${item.un==='L'?'selected':''}>L</option>
+                    <option value="UN" ${item.un==='UN'?'selected':''}>UN</option>
+                    <option value="PCT" ${item.un==='PCT'?'selected':''}>PCT</option>
+                  </select>
+                </div>
+                <button class="pf-ios-remove" onclick="PadeiroFlow.removeCartItem('${id}')">Remover</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      itemsHtml += `
+        <div class="pf-ios-add-more" onclick="PadeiroFlow.closeCartModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Adicionar mais itens
+        </div>
+      `;
+    }
+
+    let totalKgStr = totalKg > 0 ? `${totalKg.toFixed(2).replace('.', ',')} KG` : '--';
+
+    const fotosContainer = document.getElementById('pf-fotos-persistent-container');
+    if (fotosContainer && overlay.contains(fotosContainer)) {
+      document.body.appendChild(fotosContainer);
+      fotosContainer.style.display = 'none';
+    }
+
+    overlay.innerHTML = `
+      <div class="pf-modal-ios">
+        <div class="pf-modal-ios-header">
+          <button class="pf-modal-ios-back" onclick="PadeiroFlow.closeCartModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <h3 class="pf-modal-ios-title">Resumo</h3>
+          <div class="pf-modal-ios-right">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </div>
+        </div>
+        
+        <div class="pf-modal-ios-content">
+          ${itemsHtml}
+          <div id="pf-modal-fotos-slot"></div>
+        </div>
+        
+        <div class="pf-ios-bottom">
+          <div class="pf-ios-summary-row">
+            <span>Total de Itens</span>
+            <span>${totalItemsCount}</span>
+          </div>
+          <div class="pf-ios-summary-row">
+            <span>Status</span>
+            <span style="color: #10b981;">Em andamento</span>
+          </div>
+          <div class="pf-ios-divider"></div>
+          <div class="pf-ios-total-row">
+            <span>Total Produzido</span>
+            <span>${totalKgStr}</span>
+          </div>
+          <button class="pf-ios-main-btn" onclick="PadeiroFlow.saveProducao()">
+            Avançar Produção
+          </button>
+        </div>
+      </div>
+    `;
+
+    const fc = document.getElementById('pf-fotos-persistent-container');
+    if (fc) {
+      fc.style.display = 'block';
+      document.getElementById('pf-modal-fotos-slot').appendChild(fc);
+    }
+
+    if (savedScrollTop > 0) {
+      const contentEl = overlay.querySelector('.pf-modal-ios-content');
+      if (contentEl) {
+        contentEl.scrollTop = savedScrollTop;
+        requestAnimationFrame(() => {
+          contentEl.scrollTop = savedScrollTop;
+          setTimeout(() => {
+            contentEl.scrollTop = savedScrollTop;
+          }, 20);
+        });
+      }
+    }
+
+    // Trigger animation
+    setTimeout(() => overlay.classList.add('active'), 10);
+  },
+
+  closeCartModal() {
+    const overlay = document.getElementById('pf-cart-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+  },
+
+  removeCartItem(id) {
+    this.cartItems = this.cartItems || {};
+    delete this.cartItems[id];
+    this.calculateTotals();
+    this.saveDraftLocally();
+    this.openCartModal(); // Refresh modal
+  },
+
+  changeCartItemQty(id, delta) {
+    this.cartItems = this.cartItems || {};
+    if (!this.cartItems[id]) return;
+    
+    let val = parseFloat(String(this.cartItems[id].v).replace(',', '.')) || 0;
+    val += delta;
+    if (val <= 0) {
+      this.removeCartItem(id);
+      return;
+    }
+    
+    this.cartItems[id].v = parseFloat(val.toFixed(2));
+    this.calculateTotals();
+    this.saveDraftLocally();
+    this.openCartModal(); // Refresh modal
+  },
+
+
 
   calculateTotals() {
     let totalKg = 0;
     let totalL = 0;
-    const totalsByUnit = {};
+    let totalUn = 0;
+    let selectedCount = 0;
+    this.cartItems = this.cartItems || {};
 
-    document.querySelectorAll('.pf-prod-row').forEach(row => {
-      const val = parseFloat(row.querySelector('.kg-valor').value) || 0;
-      const unit = row.querySelector('.kg-unidade').value;
-
-      if (unit === 'KG') totalKg += val;
-      if (unit === 'L')  totalL  += val;
-
-      if (val > 0) {
-        totalsByUnit[unit] = (totalsByUnit[unit] || 0) + val;
+    // Update row visuals
+    document.querySelectorAll('.pf-pizza-row').forEach(row => {
+      row.classList.remove('selected');
+      const id = row.dataset.id;
+      const displayWrap = document.getElementById(`cart-item-display-${id}`);
+      if (displayWrap) {
+        if (this.cartItems[id]) {
+          const item = this.cartItems[id];
+          row.classList.add('selected');
+          displayWrap.innerHTML = `<div class="pf-pizza-tag">${item.v} ${item.un}</div>`;
+          selectedCount++;
+          const val = parseFloat(String(item.v).replace(',', '.')) || 0;
+          if (item.un === 'KG') totalKg += val;
+          if (item.un === 'L') totalL += val;
+          if (item.un === 'UN' || item.un === 'PCT') totalUn += val;
+        } else {
+          const origDesc = row.dataset.origDesc || '';
+          const origCode = row.dataset.origCode || '';
+          displayWrap.innerHTML = `<button class="pf-pizza-add-btn" onclick="PadeiroFlow.quickAddToCart('${id}', '${origDesc}', '${origCode}')">Adicionar</button>`;
+        }
       }
     });
 
-    // Update KG total input
+    // Update hidden inputs
     const totalKgInput = document.getElementById('flow-kg-total');
-    if (totalKgInput) {
-      totalKgInput.value = totalKg > 0 ? totalKg.toFixed(2) : '';
-    }
+    if (totalKgInput) totalKgInput.value = totalKg > 0 ? totalKg.toFixed(2) : '';
 
-    // Update L total input
     const totalLInput = document.getElementById('flow-l-total');
-    if (totalLInput) {
-      totalLInput.value = totalL > 0 ? totalL.toFixed(2) : '';
-    }
+    if (totalLInput) totalLInput.value = totalL > 0 ? totalL.toFixed(2) : '';
 
-    // Update units summary
-    const summary = document.getElementById('pf-units-summary');
-    if (summary) {
-      const units = Object.entries(totalsByUnit);
-      if (units.length === 0) {
-        summary.innerHTML = '<span class="pf-summary-empty">Nenhum valor inserido</span>';
+    // Update visible Wallet text
+    const displayKg = document.getElementById('flow-wallet-kg-display');
+    if (displayKg) displayKg.innerText = totalKg > 0 ? totalKg.toFixed(2) : '0.0';
+
+    const displayL = document.getElementById('flow-wallet-l-display');
+    if (displayL) displayL.innerText = totalL > 0 ? totalL.toFixed(2) : '0.0';
+
+    const displayUn = document.getElementById('flow-wallet-un-display');
+    if (displayUn) displayUn.innerText = totalUn > 0 ? totalUn : '0';
+
+    const displayItems = document.getElementById('flow-wallet-items-display');
+    if (displayItems) displayItems.innerText = selectedCount;
+
+    const bannerAction = document.getElementById('flow-recent-action');
+    const bannerTitle = document.querySelector('.pf-wallet-banner-title');
+    const avatarsContainer = document.getElementById('pf-wallet-avatars');
+
+    if (bannerAction) {
+      if (selectedCount > 0) {
+        if (bannerTitle) bannerTitle.innerText = 'Sua Produção';
+        bannerAction.innerText = `${selectedCount} item(s) no carrinho`;
+        bannerAction.style.background = 'rgba(16, 185, 129, 0.2)';
+        bannerAction.style.color = '#34d399';
+        bannerAction.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+
+        // Render avatars
+        if (avatarsContainer) {
+          const cartKeys = Object.keys(this.cartItems);
+          const maxAvatars = 5;
+          let avatarsHtml = '';
+          for (let i = 0; i < Math.min(cartKeys.length, maxAvatars); i++) {
+            const key = cartKeys[i];
+            const row = document.querySelector(`.pf-pizza-row[data-id="${key}"]`);
+            const code = row ? (row.dataset.origCode || '') : '';
+            const imgSrc = `/api/foto-produto/${code}`;
+            avatarsHtml += `<div class="pf-wallet-avatar"><img src="${imgSrc}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'85\\' height=\\'85\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23cbd5e1\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'/><circle cx=\\'12\\' cy=\\'12\\' r=\\'3\\'/><path d=\\'M3 5h18M3 19h18M3 12h18\\'/></svg>'" /></div>`;
+          }
+          if (cartKeys.length > maxAvatars) {
+            avatarsHtml += `<div class="pf-wallet-avatar-more">+${cartKeys.length - maxAvatars}</div>`;
+          }
+          avatarsContainer.innerHTML = avatarsHtml;
+          avatarsContainer.style.display = 'flex';
+        }
       } else {
-        summary.innerHTML = units.map(([unit, total]) => `
-          <div class="pf-unit-badge">
-            <span class="pf-unit-name">${unit}:</span>
-            <span class="pf-unit-val">${total.toFixed(1)}</span>
-          </div>
-        `).join('');
+        if (bannerTitle) bannerTitle.innerText = 'Adicione produtos à sua produção';
+        bannerAction.innerText = 'Carrinho vazio';
+        bannerAction.style.background = 'rgba(255, 255, 255, 0.1)';
+        bannerAction.style.color = '#9ca3af';
+        bannerAction.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+        if (avatarsContainer) {
+          avatarsContainer.style.display = 'none';
+          avatarsContainer.innerHTML = '';
+        }
       }
     }
-  },
 
-  addKgRow() {
-    const container = document.getElementById('kg-items');
-    const div = document.createElement('div');
-    div.className = 'pf-prod-row fade-in';
-    div.innerHTML = `
-      <input class="pf-input kg-produto-search" list="produtos-list" placeholder="Buscar produto...">
-      <input class="pf-input pf-input-sm kg-valor" type="number" step="0.1" placeholder="0.0">
-      <select class="pf-input pf-input-unit kg-unidade">
-        <option value="KG">KG</option><option value="L">L</option><option value="UN">UN</option><option value="PCT">PCT</option>
-      </select>
-      <button class="pf-row-btn pf-row-del" onclick="PadeiroFlow.removeKgRow(this)"><i data-lucide="x" style="width:16px;height:16px"></i></button>`;
-    container.appendChild(div);
-    Components.renderIcons();
-  },
-
-  removeKgRow(btn) {
-    const row = btn.closest('.pf-prod-row');
-    if (document.querySelectorAll('.pf-prod-row').length > 1) {
-      row.remove();
-      this.calculateTotals();
+    // Handle FAB (Floating Action Button)
+    let fab = document.getElementById('pf-cart-fab');
+    if (!fab) {
+      fab = document.createElement('div');
+      fab.id = 'pf-cart-fab';
+      fab.className = 'pf-cart-fab';
+      fab.onclick = () => PadeiroFlow.openCartModal();
+      fab.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <div id="pf-cart-badge" class="pf-cart-badge">0</div>
+      `;
+      document.body.appendChild(fab);
     }
+    
+    if (this.currentStep === 1) {
+      fab.classList.add('visible');
+    } else {
+      fab.classList.remove('visible');
+    }
+    
+    const badge = document.getElementById('pf-cart-badge');
+    if (badge) {
+      badge.innerText = selectedCount;
+      badge.style.display = selectedCount > 0 ? 'flex' : 'none';
+    }
+
+    this.saveDraftLocally();
   },
+
+  addKgRow() {},
+  removeKgRow() {},
 
   triggerCamera() {
     this.saveDraftLocally();
@@ -614,15 +1392,20 @@ const PadeiroFlow = {
   saveDraftLocally() {
     const totalKg = document.getElementById('flow-kg-total')?.value || '';
     const totalL  = document.getElementById('flow-l-total')?.value || '';
-    const items = [];
-    document.querySelectorAll('.pf-prod-row').forEach(row => {
-      const sv = row.querySelector('.kg-produto-search')?.value || '';
-      const un = row.querySelector('.kg-unidade')?.value || 'KG';
-      const v = row.querySelector('.kg-valor')?.value || '';
-      items.push({ sv, un, v });
-    });
-    const draft = { totalKg, totalL, items };
-    localStorage.setItem('brago_padeiro_draft', JSON.stringify(draft));
+    this.cartItems = this.cartItems || {};
+    const items = Object.keys(this.cartItems).map(id => ({
+      id,
+      v: this.cartItems[id].v,
+      un: this.cartItems[id].un
+    }));
+    const draft = { totalKg, totalL, items, fotosBase64: this.selectedFotosBase64 || [] };
+    try {
+      localStorage.setItem('brago_padeiro_draft', JSON.stringify(draft));
+    } catch(e) {
+      console.warn("localStorage quota excedida, salvando sem fotos", e);
+      const draftNoFotos = { totalKg, totalL, items, fotosBase64: [] };
+      localStorage.setItem('brago_padeiro_draft', JSON.stringify(draftNoFotos));
+    }
   },
 
   restoreDraftLocally() {
@@ -630,30 +1413,33 @@ const PadeiroFlow = {
     if (!draftStr) return;
     try {
       const draft = JSON.parse(draftStr);
-      if (draft.totalKg) document.getElementById('flow-kg-total').value = draft.totalKg;
-      if (draft.totalL) document.getElementById('flow-l-total').value = draft.totalL;
+      this.cartItems = {};
       
       if (draft.items && draft.items.length > 0) {
-        const container = document.getElementById('kg-items');
-        container.innerHTML = ''; // clear initial row
         draft.items.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'pf-prod-row fade-in';
-          div.innerHTML = `
-            <input class="pf-input kg-produto-search" list="produtos-list" placeholder="Buscar produto..." value="${item.sv}">
-            <input class="pf-input pf-input-sm kg-valor" type="number" step="0.1" placeholder="0.0" value="${item.v}">
-            <select class="pf-input pf-input-unit kg-unidade">
-              <option value="KG" ${item.un === 'KG' ? 'selected' : ''}>KG</option>
-              <option value="L" ${item.un === 'L' ? 'selected' : ''}>L</option>
-              <option value="UN" ${item.un === 'UN' ? 'selected' : ''}>UN</option>
-              <option value="PCT" ${item.un === 'PCT' ? 'selected' : ''}>PCT</option>
-            </select>
-            <button class="pf-row-btn pf-row-del" onclick="PadeiroFlow.removeKgRow(this)" style="${draft.items.length > 1 ? '' : 'visibility:hidden'}"><i data-lucide="x" style="width:16px;height:16px"></i></button>`;
-          container.appendChild(div);
+          this.cartItems[item.id] = { v: item.v, un: item.un };
         });
       }
+      
+      if (draft.fotosBase64 && draft.fotosBase64.length > 0) {
+        this.selectedFotosBase64 = draft.fotosBase64;
+        this.selectedFiles = draft.fotosBase64.map(b64 => this.dataURLtoFile(b64.data, b64.name, b64.type));
+      }
+      
       this.calculateTotals();
     } catch(e) {}
+  },
+
+  dataURLtoFile(dataurl, filename, mimeType) {
+    let arr = dataurl.split(','),
+        mime = mimeType || (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg',
+        bstr = atob(arr[1]), 
+        n = bstr.length, 
+        u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type:mime});
   },
 
   renderPhotoPreviewBase64(dataUrl, fileName) {
@@ -667,10 +1453,12 @@ const PadeiroFlow = {
 
   removePhoto(btn, name) {
     this.selectedFiles = this.selectedFiles.filter(f => f.name !== name);
+    this.selectedFotosBase64 = (this.selectedFotosBase64 || []).filter(f => f.name !== name);
+    this.saveDraftLocally();
     btn.closest('.photo-preview-slot').remove();
   },
 
-  compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+  compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.6) {
     return new Promise((resolve, reject) => {
       // Se não for imagem, retorna o arquivo original
       if (!file.type.startsWith('image/')) {
@@ -732,68 +1520,76 @@ const PadeiroFlow = {
   },
 
   async saveProducao() {
-    const totalKg = document.getElementById('flow-kg-total').value;
-    const totalL  = document.getElementById('flow-l-total').value;
-    if (!totalKg && !totalL) { Components.toast('Informe o total em KG ou Litros.', 'error'); return; }
     const items = [];
-    document.querySelectorAll('.pf-prod-row').forEach(row => {
-      const sv = row.querySelector('.kg-produto-search')?.value;
-      const un = row.querySelector('.kg-unidade')?.value;
-      const v = parseFloat(row.querySelector('.kg-valor')?.value);
-      const prod = this.cachedProdutos.find(p => {
-        const fl = `${p.codigo?p.codigo+' - ':''}${p.descricao}`;
-        return fl === sv;
+    let totalKg = 0;
+    let totalL = 0;
+
+    if (this.cartItems) {
+      Object.keys(this.cartItems).forEach(id => {
+        const item = this.cartItems[id];
+        const row = document.querySelector(`.pf-pizza-row[data-id="${id}"]`);
+        const name = row ? (row.dataset.origDesc || row.dataset.descricao || '') : '';
+        const code = row ? (row.dataset.origCode || row.dataset.codigo || '') : '';
+        const sv = code ? `${code} - ${name}` : name;
+        const v = parseFloat(String(item.v).replace(',', '.'));
+        if (!isNaN(v) && v > 0) {
+           items.push({ produtoId: id, produtoNome: sv, unidade: item.un, quantidade: v });
+           if (item.un === 'KG') totalKg += v;
+           if (item.un === 'L') totalL += v;
+        }
       });
-      if (prod && !isNaN(v)) items.push({ produtoId: prod.id, produtoNome: sv, unidade: un, quantidade: v });
-    });
-    if (items.length === 0) { Components.toast('Adicione pelo menos um produto.', 'error'); return; }
+    }
+
+    if (items.length === 0) { Components.toast('Informe a quantidade de pelo menos um produto.', 'error'); return; }
 
     if (this.selectedFiles.length === 0 && (!this.activity.fotos || this.activity.fotos.length === 0)) {
-      Components.toast('Adicione pelo menos uma foto da produção.', 'warning');
+      Components.showAlert(
+        'Foto Obrigatória', 
+        'Por favor, adicione pelo menos uma foto da produção finalizada para poder avançar para a próxima etapa.'
+      );
       return;
     }
 
-    const btn = document.getElementById('pf-btn-producao');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px; border-top-color: white; border-right-color: white; border-bottom-color: white;"></span> ${this.selectedFiles.length > 0 ? 'Enviando fotos...' : 'Salvando...'}`;
-    }
-
-    this.activity.kgTotal  = parseFloat(totalKg) || 0;
-    this.activity.lTotal   = parseFloat(totalL)  || 0;
-    this.activity.kgItens  = items;
-    this.activity.lastStep = 2;
-
-    // Upload fotos if any (em background)
-    if (this.selectedFiles.length > 0) {
-      Components.toast('Enviando fotos em segundo plano...', 'info');
-      
-      this.backgroundUploadPromise = API.uploadFiles(this.selectedFiles, 'producao')
-        .then(async (result) => {
-          this.activity.fotos = result.files || [];
-          if (this.activity.id || this.activity._id) {
-            await this.updateActivity();
-          }
-          Components.toast('Fotos processadas com sucesso!', 'success');
-        })
-        .catch(e => {
-          console.error('Erro no upload das fotos:', e);
-          Components.toast('Erro no upload das fotos: ' + e.message, 'error');
-        });
+    const iosBtn = document.querySelector('.pf-ios-main-btn');
+    const defaultText = iosBtn ? iosBtn.innerHTML : 'Avançar Produção';
+    if (iosBtn) {
+      iosBtn.disabled = true;
+      iosBtn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px; border-top-color: white; border-right-color: white; border-bottom-color: white; width:16px; height:16px; border-width:2px;"></span> ${this.selectedFiles.length > 0 ? 'Enviando fotos...' : 'Salvando...'}`;
+      iosBtn.style.opacity = '0.7';
     }
 
     try {
+      this.activity.kgTotal  = parseFloat(totalKg) || 0;
+      this.activity.lTotal   = parseFloat(totalL)  || 0;
+      this.activity.kgItens  = items;
+      this.activity.lastStep = 2;
+
+      // Upload fotos aguardando a finalização para não "travar" background
+      if (this.selectedFiles.length > 0) {
+        Components.toast('Enviando fotos, por favor aguarde...', 'info');
+        const result = await API.uploadFiles(this.selectedFiles, 'producao');
+        this.activity.fotos = result.files || [];
+        this.selectedFiles = [];
+        this.selectedFotosBase64 = [];
+        Components.toast('Fotos enviadas com sucesso!', 'success');
+      }
+
       localStorage.removeItem('brago_padeiro_draft');
       await this.captureTimelineEvent('Fim da Produção');
       await this.updateActivity();
+      
+      // Fecha o modal só depois de concluir tudo
+      this.closeCartModal();
+      
       this.currentStep = 2;
       this.renderWizard(document.getElementById('page-container'));
     } catch (err) {
       console.error(err);
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="arrow-right" style="width:18px;height:18px"></i> Continuar`;
-        Components.renderIcons();
+      Components.toast('Erro ao salvar produção: ' + err.message, 'error');
+      if (iosBtn) {
+        iosBtn.disabled = false;
+        iosBtn.style.opacity = '1';
+        iosBtn.innerHTML = defaultText;
       }
     }
   },
@@ -1083,7 +1879,7 @@ const PadeiroFlow = {
     }
     
     // Limpar o rascunho para não carregar de volta no próximo atendimento
-    localStorage.removeItem('pf_draft');
+    localStorage.removeItem('brago_padeiro_draft');
     
     this.renderSuccess();
   },
@@ -1118,5 +1914,372 @@ const PadeiroFlow = {
     const id = this.activity._id || this.activity.id;
     const res = await API.put(`/api/atividades/${id}`, this.activity);
     if (res && !res.offline) this.activity = { ...this.activity, ...res };
+  },
+
+  // ============================================================
+  //  ONBOARDING TUTORIAL SYSTEM
+  // ============================================================
+  tutorialSteps: [
+    {
+      selector: '.pf-search-container',
+      title: '1. Pesquisar Produto',
+      desc: 'Primeiro, vamos pesquisar por um produto. Clique em "Próximo" para simular a pesquisa pelo termo "IREKS".',
+      position: 'bottom',
+      padding: 8
+    },
+    {
+      selector: '.pf-pizza-row:first-child',
+      title: '2. Selecionar Produto Filtrado',
+      desc: 'Veja que a lista filtrou apenas os produtos. Clique em "Próximo" para simular a adição desse produto à sua produção.',
+      position: 'bottom',
+      padding: 8
+    },
+    {
+      selector: '#pf-multiselect-bar',
+      title: '3. Seleção Múltipla (Long-Press)',
+      desc: 'Você pode segurar pressionado um produto para selecionar vários de uma vez! Clique em "Próximo" para adicionar os itens selecionados em lote.',
+      position: 'bottom',
+      padding: 10
+    },
+    {
+      selector: '.pf-ios-qty-wrap',
+      title: '4. Informar Peso / Kilos',
+      desc: 'No resumo que se abriu, podemos ajustar a quantidade de cada produto. Clique em "Próximo" para simular o preenchimento de 10.0 KG.',
+      position: 'bottom',
+      padding: 10
+    },
+    {
+      selector: '#pf-fotos-persistent-container',
+      title: '5. Fotos da Produção',
+      desc: 'Por fim, a área de fotos obrigatórias fica localizada no final deste resumo. Clique em "Começar!" para finalizar a simulação e começar a produzir!',
+      position: 'top',
+      padding: 12,
+      pulse: true
+    }
+  ],
+
+  _tutorialStep: 0,
+
+  startTutorial() {
+    // Only show once (v10 key because of step 2 quickAddToCart modal bypass)
+    const key = 'brago_tutorial_producao_v10';
+    if (localStorage.getItem(key) === '1') return;
+
+    document.body.classList.add('pf-tutorial-active');
+    this._tutorialStep = 0;
+    this._showTutorialStep();
+  },
+
+  async _showTutorialStep() {
+    const steps = this.tutorialSteps;
+    const stepIdx = this._tutorialStep;
+    if (stepIdx >= steps.length) {
+      this._endTutorial();
+      return;
+    }
+
+    // Execute simulation actions based on the step index before fetching targets
+    if (stepIdx === 1) {
+      // Step 1: Simulate searching for "ireks"
+      const searchInput = document.getElementById('flow-prod-search');
+      if (searchInput) {
+        searchInput.value = 'ireks';
+        this.filterProducts('ireks');
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    } else if (stepIdx === 2) {
+      // Step 2: Clear search and add the first product, then enter multi-select mode
+      const searchInput = document.getElementById('flow-prod-search');
+      if (searchInput) {
+        searchInput.value = '';
+        this.filterProducts('');
+      }
+      
+      const rows = Array.from(document.querySelectorAll('.pf-pizza-row'));
+      const visible = rows.filter(r => r.style.display !== 'none');
+      if (visible.length >= 3) {
+        // Add first item to cart normally (without opening the modal)
+        this._simulatedProductId = visible[0].dataset.id;
+        this.cartItems = this.cartItems || {};
+        this.cartItems[this._simulatedProductId] = { v: 1, un: 'KG' };
+        this.calculateTotals();
+        this.saveDraftLocally();
+
+        // Put next 2 items in multi-select mode
+        const id1 = visible[1].dataset.id;
+        const id2 = visible[2].dataset.id;
+        this._simulatedMultiIds = [id1, id2];
+        this.enterMultiSelectMode(id1);
+        this.toggleMultiSelect(id2);
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    } else if (stepIdx === 3) {
+      // Step 3: Add multi-selected items to cart (which automatically opens the cart modal)
+      this.addMultiSelectedToCart();
+      await new Promise(resolve => setTimeout(resolve, 50));
+    } else if (stepIdx === 4) {
+      // Step 4: Set simulated quantity of 10.0 KG
+      const id = this._simulatedProductId;
+      if (id && this.cartItems[id]) {
+        this.cartItems[id].v = "10.0";
+      }
+      if (this._simulatedMultiIds) {
+        this._simulatedMultiIds.forEach(mId => {
+          if (this.cartItems[mId]) this.cartItems[mId].v = "5.0";
+        });
+      }
+      this.calculateTotals();
+      this.openCartModal();
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    const step = steps[stepIdx];
+    let target = null;
+    let rect = null;
+
+    if (step.selector === '.pf-pizza-row:first-child') {
+      const rows = Array.from(document.querySelectorAll('.pf-pizza-row'));
+      target = rows.find(r => r.style.display !== 'none');
+    } else {
+      target = document.querySelector(step.selector);
+    }
+
+    if (!target) {
+      // Skip this step if element not found
+      this._tutorialStep++;
+      this._showTutorialStep();
+      return;
+    }
+    
+    // Scroll the target element to the center of the scroll container instantly FIRST
+    // so we measure its exact post-scroll coordinates.
+    target.scrollIntoView({ behavior: 'auto', block: 'center' });
+    
+    const r = target.getBoundingClientRect();
+    rect = { top: r.top, left: r.left, width: r.width, height: r.height };
+
+    // Remove previous overlay
+    const existing = document.getElementById('pf-tutorial-overlay');
+    if (existing) existing.remove();
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'pf-tutorial-overlay';
+    overlay.className = 'pf-tutorial-overlay';
+
+    const pad = step.padding || 8;
+    const spotTop = rect.top - pad;
+    const spotLeft = rect.left - pad;
+    const spotW = rect.width + pad * 2;
+    const spotH = rect.height + pad * 2;
+
+    // Build dots
+    let dotsHtml = '<div class="pf-tutorial-dots">';
+    for (let i = 0; i < steps.length; i++) {
+      dotsHtml += `<div class="pf-tutorial-dot ${i === stepIdx ? 'active' : ''}"></div>`;
+    }
+    dotsHtml += '</div>';
+
+    // Calculate tooltip position with dynamic safety overrides
+    let tooltipStyle = '';
+    let arrowClass = '';
+    let finalPosition = step.position;
+
+    // If target is too close to top, force bottom placement
+    if (spotTop < 120 && finalPosition === 'top') {
+      finalPosition = 'bottom';
+    }
+    // If target is too close to bottom, force top placement
+    if (spotTop + spotH > window.innerHeight - 150 && finalPosition === 'bottom') {
+      finalPosition = 'top';
+    }
+
+    if (finalPosition === 'bottom') {
+      const tooltipTop = spotTop + spotH + 16;
+      const tooltipLeft = Math.max(16, Math.min(spotLeft, window.innerWidth - 296));
+      tooltipStyle = `top:${tooltipTop}px; left:${tooltipLeft}px;`;
+      arrowClass = 'arrow-top';
+    } else {
+      // position = top
+      const tooltipLeft = Math.max(16, Math.min(spotLeft, window.innerWidth - 296));
+      tooltipStyle = `bottom:${window.innerHeight - spotTop + 16}px; left:${tooltipLeft}px;`;
+      arrowClass = 'arrow-bottom';
+    }
+
+    const isLast = stepIdx === steps.length - 1;
+    const nextLabel = isLast ? 'Começar!' : 'Próximo';
+
+    overlay.innerHTML = `
+      <div class="pf-tutorial-click-catcher" onclick="PadeiroFlow._endTutorial()"></div>
+      <div class="pf-tutorial-spotlight ${step.pulse ? 'pulse' : ''}" style="top:${spotTop}px; left:${spotLeft}px; width:${spotW}px; height:${spotH}px;"></div>
+      <div class="pf-tutorial-tooltip ${arrowClass}" style="${tooltipStyle}">
+        <div class="pf-tutorial-step-badge">Passo ${stepIdx + 1} de ${steps.length}</div>
+        <h4 class="pf-tutorial-title">${step.title}</h4>
+        <p class="pf-tutorial-desc">${step.desc}</p>
+        <div class="pf-tutorial-actions">
+          ${dotsHtml}
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="pf-tutorial-btn pf-tutorial-btn-skip" onclick="PadeiroFlow._endTutorial()">Pular</button>
+            <button class="pf-tutorial-btn pf-tutorial-btn-next" onclick="PadeiroFlow._nextTutorialStep()">${nextLabel}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        overlay.classList.add('active');
+      });
+    });
+  },
+
+  _nextTutorialStep() {
+    this._tutorialStep++;
+    // Small delay for smooth transition between steps
+    const overlay = document.getElementById('pf-tutorial-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        this._showTutorialStep();
+      }, 300);
+    } else {
+      this._showTutorialStep();
+    }
+  },
+
+  _endTutorial() {
+    localStorage.setItem('brago_tutorial_producao_v10', '1');
+    document.body.classList.remove('pf-tutorial-active');
+    
+    // Close the cart modal
+    this.closeCartModal();
+    
+    // Exit multi-select if active
+    this.exitMultiSelectMode();
+    
+    // Clear simulated items so user starts fresh
+    if (this._simulatedProductId) {
+      delete this.cartItems[this._simulatedProductId];
+    }
+    if (this._simulatedMultiIds) {
+      this._simulatedMultiIds.forEach(id => {
+        delete this.cartItems[id];
+      });
+    }
+    this.calculateTotals();
+    
+    this._simulatedProductId = null;
+    this._simulatedMultiIds = null;
+    
+    const overlay = document.getElementById('pf-tutorial-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 350);
+    }
   }
 };
+
+// ============================================================
+// PUSH SERVICE: Inscrição automática de notificações push
+// ============================================================
+const PushService = {
+  async init() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log('[Push] Navegador não suporta Push Notifications');
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        console.log('[Push] Já inscrito.');
+        return;
+      }
+
+      // Buscar chave pública VAPID do servidor
+      const resp = await fetch('/api/push/vapid-public-key');
+      const { publicKey } = await resp.json();
+      if (!publicKey) {
+        console.log('[Push] VAPID key não configurada no servidor.');
+        return;
+      }
+
+      // Solicitar permissão
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.log('[Push] Permissão negada pelo usuário.');
+        return;
+      }
+
+      // Inscrever
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: PushService.urlBase64ToUint8Array(publicKey)
+      });
+
+      // Enviar inscrição para o backend
+      const token = localStorage.getItem('token');
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ subscription: subscription.toJSON() })
+      });
+
+      console.log('[Push] Inscrito com sucesso!');
+    } catch (err) {
+      console.error('[Push] Erro na inscrição:', err);
+    }
+  },
+
+  urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  },
+
+  // Chamada pelo botão do Dashboard do Gestor
+  async notifyAllInactive() {
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await fetch('/api/push/notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await resp.json();
+      if (data.sent > 0) {
+        Components.showToast(`🔔 ${data.sent} notificação(ões) enviada(s)!`, 'success');
+      } else if (data.sent === 0 && data.totalInativos > 0) {
+        Components.showToast('Nenhum padeiro inativo tem push ativado.', 'warning');
+      } else {
+        Components.showToast('Todos os padeiros já registraram atividade hoje!', 'success');
+      }
+    } catch (err) {
+      console.error('[Push] Erro ao notificar:', err);
+      Components.showToast('Erro ao enviar notificações', 'error');
+    }
+  }
+};
+
+// Inicializa push silenciosamente após 3 segundos (não bloqueia carregamento)
+setTimeout(() => {
+  if (localStorage.getItem('token')) {
+    PushService.init();
+  }
+}, 3000);

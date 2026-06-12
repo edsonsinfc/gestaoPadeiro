@@ -1,4 +1,5 @@
 const { Atividade, Padeiro, Cronograma, Avaliacao } = require('../data/db-adapter');
+const { getIo } = require('../sockets/location.socket');
 
 exports.listAtividades = async (req, res) => {
   try {
@@ -112,6 +113,12 @@ exports.createAtividade = async (req, res) => {
     }
 
     const atividade = await Atividade.create(nova);
+    
+    const io = getIo();
+    if (io) {
+      io.emit('activity-updated', atividade);
+    }
+
     res.status(201).json(atividade);
   } catch (error) {
     console.error('Erro ao criar atividade:', error);
@@ -152,6 +159,12 @@ exports.updateAtividade = async (req, res) => {
     );
     
     if (!atividade) return res.status(404).json({ error: 'Atividade não encontrada' });
+
+    const io = getIo();
+    if (io) {
+      io.emit('activity-updated', atividade);
+    }
+
     res.json(atividade);
   } catch (e) {
     console.error("Erro ao atualizar atividade:", e);
