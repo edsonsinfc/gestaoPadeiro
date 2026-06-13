@@ -452,7 +452,7 @@ Object.assign(Cronograma, {
     
     const startStr = startDate.toISOString().split('T')[0];
     const endStr = endDate.toISOString().split('T')[0];
-    const filenameTitle = `Cronograma_Fornada_${startStr}_a_${endStr}`;
+    const filenameTitle = `Cronograma_Brago_${startStr}_a_${endStr}`;
     
     // Iniciar HTML
     let html = `
