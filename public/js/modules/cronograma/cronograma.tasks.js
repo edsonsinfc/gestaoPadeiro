@@ -435,69 +435,201 @@ Object.assign(Cronograma, {
   // ──────────────────────────────────────────────────────────────
   // Exportar para PDF
   // ──────────────────────────────────────────────────────────────
-  async exportToPDF() {
-    const container = document.querySelector('.matrix-container');
-    if (!container) return;
+  exportToPDF() {
+    Components.toast('Preparando documento para impressão...', 'info');
     
-    Components.toast('Gerando PDF, aguarde...', 'info');
-
-    // Pegamos a largura real do scroll
-    const totalWidth = container.scrollWidth;
-
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     `cronograma_brago_${new Date().toISOString().split('T')[0]}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { 
-        scale: 2, 
-        useCORS: true,
-        // windowWidth simula um monitor largo o suficiente para caber toda a tabela sem espremer
-        windowWidth: totalWidth > 1200 ? totalWidth + 40 : 1200,
-        width: totalWidth > 1200 ? totalWidth + 40 : 1200,
-        onclone: (clonedDoc) => {
-          const clonedContainer = clonedDoc.querySelector('.matrix-container');
-          if (!clonedContainer) return;
-
-          // Removemos limites de corte e larguras do container no clone
-          clonedContainer.style.overflow = 'visible';
-          clonedContainer.style.overflowX = 'visible';
-          clonedContainer.style.width = 'max-content';
-
-          // Esconde os botões apenas no clone
-          clonedContainer.querySelectorAll('.matrix-reorder-btns, .matrix-add-btn').forEach(el => {
-            el.style.display = 'none';
-          });
+    // Pegar as datas da semana atual
+    const weekDates = this.getWeekDates();
+    const startDate = new Date(weekDates[0] + 'T12:00:00');
+    const endDate = new Date(weekDates[5] + 'T12:00:00');
+    
+    const formatDate = (date) => date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace(' de ', ' de ').replace('.', '');
+    const dataRangeStr = `${formatDate(startDate)} — ${formatDate(endDate)}`;
+    
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const generatedAt = `${today.toLocaleDateString('pt-BR')} ${today.toLocaleTimeString('pt-BR')}`;
+    const filenameTitle = `Cronograma_Fornada_${weekDates[0]}_a_${weekDates[5]}`;
+    
+    // Iniciar HTML
+    let html = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>${filenameTitle}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+          @page { size: A4 landscape; margin: 10mm 15mm; }
+          body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            color: #111827;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .header-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 25px; }
+          .header-main { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px;}
+          .brand h1 { margin: 0; font-size: 24px; font-weight: 900; color: #111827; letter-spacing: -0.5px; }
+          .brand p { margin: 4px 0 0; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+          .title-area { text-align: right; }
+          .title-area h2 { margin: 0; font-size: 16px; font-weight: 800; color: #111827; }
+          .title-area .date-range { margin: 4px 0 0; font-size: 12px; font-weight: 700; color: #ea580c; }
+          .title-area .generated { margin: 4px 0 0; font-size: 9px; color: #9ca3af; }
           
-          // Se estiver no mobile, força o layout de desktop no clone
-          if (window.innerWidth <= 768) {
-            clonedContainer.querySelectorAll('.desktop-only').forEach(el => {
-              el.style.display = 'table-cell';
-            });
-            clonedContainer.querySelectorAll('.mobile-only').forEach(el => {
-              el.style.display = 'none';
-            });
-            const table = clonedContainer.querySelector('.matrix-table');
-            if (table) table.style.display = 'table';
-          }
-
-          // Desbloqueia o overflow dos pais no clone (evita corte invisível do html2canvas)
-          let parent = clonedContainer.parentElement;
-          while (parent && parent !== clonedDoc.documentElement) {
-            parent.style.overflow = 'visible';
-            parent.style.overflowX = 'visible';
-            parent = parent.parentElement;
-          }
+          table { width: 100%; border-collapse: collapse; border-top: 1px solid #d1d5db; border-bottom: 1px solid #d1d5db; }
+          th, td { border: 1px solid #e5e7eb; padding: 12px 8px; text-align: center; }
+          th { padding-top: 14px; padding-bottom: 14px; border-top: none; }
+          .th-tech { width: 160px; text-align: left; padding-left: 16px; font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; border-left: none; }
+          .th-day { width: 110px; border-top: none; }
+          th:last-child, td:last-child { border-right: none; }
+          td:first-child { border-left: none; }
+          
+          .day-name { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; }
+          .day-number { font-size: 18px; font-weight: 700; color: #9ca3af; }
+          .day-today .day-number { color: #111827; }
+          .day-today .day-name { color: #111827; }
+          .today-badge { font-size: 8px; font-weight: 800; color: #9ca3af; text-transform: uppercase; margin-top: 4px; }
+          
+          .tech-cell { text-align: left; padding-left: 16px; display: flex; align-items: center; gap: 10px; }
+          .tech-avatar { font-size: 12px; font-weight: 800; color: #111827; }
+          .tech-info { display: flex; flex-direction: column; }
+          .tech-name { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 2px;}
+          .tech-cod { font-size: 9px; font-weight: 800; color: #ea580c; }
+          
+          .task-cell { vertical-align: top; padding: 6px; position: relative; }
+          .empty-cell { color: #d1d5db; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 40px;}
+          
+          .task-item { text-align: left; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px; margin-bottom: 4px; border-left: 3px solid #3b82f6; page-break-inside: avoid;}
+          .task-item.status-concluida { border-left-color: #10b981; }
+          .task-item.status-pendente { border-left-color: #f59e0b; }
+          .task-client { font-size: 9px; font-weight: 700; color: #111827; line-height: 1.2; margin-bottom: 2px;}
+          .task-time { font-size: 8px; font-weight: 600; color: #6b7280; display: flex; align-items: center; gap: 3px;}
+        </style>
+      </head>
+      <body>
+        <div class="header-top">
+          <div>Cronograma</div>
+          <div>${todayStr}</div>
+        </div>
+        
+        <div class="header-main">
+          <div class="brand">
+            <h1>FORNADA</h1>
+            <p>SISTEMA DE GESTÃO DE PANIFICAÇÃO</p>
+          </div>
+          <div class="title-area">
+            <h2>Cronograma de Operações</h2>
+            <div class="date-range">${dataRangeStr}</div>
+            <div class="generated">Gerado em: ${generatedAt}</div>
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th class="th-tech">Técnico</th>
+    `;
+    
+    // Colunas dos dias
+    const dayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const todayISO = new Date().toISOString().split('T')[0];
+    
+    weekDates.forEach((dateStr, i) => {
+      const d = new Date(dateStr + 'T12:00:00');
+      const isToday = dateStr === todayISO;
+      html += `
+        <th class="th-day ${isToday ? 'day-today' : ''}">
+          <div class="day-name">${dayNames[i]}</div>
+          <div class="day-number">${d.getDate()}</div>
+          ${isToday ? '<div class="today-badge">HOJE</div>' : ''}
+        </th>
+      `;
+    });
+    
+    html += `
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    // Linhas dos padeiros
+    this.padeiros.forEach(padeiro => {
+      const init = padeiro.nome.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+      html += `
+        <tr>
+          <td>
+            <div class="tech-cell">
+              <div class="tech-avatar">${init}</div>
+              <div class="tech-info">
+                <span class="tech-name">${padeiro.nome}</span>
+                <span class="tech-cod">COD ${padeiro.codTec || '000000'}</span>
+              </div>
+            </div>
+          </td>
+      `;
+      
+      weekDates.forEach(dateStr => {
+        const tasks = this.tarefas
+          .filter(t => t.padeiroId === padeiro.id && t.data === dateStr)
+          .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
+          
+        html += `<td class="task-cell">`;
+        if (tasks.length === 0) {
+          html += `<div class="empty-cell">—</div>`;
+        } else {
+          tasks.forEach(t => {
+            html += `
+              <div class="task-item status-${t.status || 'pendente'}">
+                <div class="task-client">${t.clienteNome || 'Sem Cliente'}</div>
+                <div class="task-time">
+                  ${t.horario || '--:--'}
+                </div>
+              </div>
+            `;
+          });
         }
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-
-    try {
-      await html2pdf().set(opt).from(container).save();
-      Components.toast('PDF exportado com sucesso!', 'success');
-    } catch (e) {
-      Components.toast('Erro ao exportar PDF: ' + e.message, 'error');
+        html += `</td>`;
+      });
+      
+      html += `</tr>`;
+    });
+    
+    html += `
+          </tbody>
+        </table>
+        
+        <script>
+          window.onload = () => {
+            setTimeout(() => {
+              window.print();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    
+    // Create an invisible iframe to print
+    let printFrame = document.getElementById('print-frame');
+    if (printFrame) {
+      printFrame.remove();
     }
+    
+    printFrame = document.createElement('iframe');
+    printFrame.id = 'print-frame';
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+    
+    printFrame.contentWindow.document.open();
+    printFrame.contentWindow.document.write(html);
+    printFrame.contentWindow.document.close();
   },
 
   // ──────────────────────────────────────────────────────────────
