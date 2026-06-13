@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v58';
+const CACHE_NAME = 'brago-padeiro-v59';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
@@ -51,7 +51,7 @@ const LOCAL_ASSETS = [
 
 // ─── INSTALL: Pré-cacheia apenas assets mínimos ─────────
 self.addEventListener('install', (event) => {
-  console.log('[SW v41] Instalando...');
+  console.log('[SW v59] Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       // Cacheia assets locais essenciais (ignora erros de CDN)
@@ -63,7 +63,7 @@ self.addEventListener('install', (event) => {
 
 // ─── ACTIVATE: Remove caches antigos e toma controle de todos os clientes ────
 self.addEventListener('activate', (event) => {
-  console.log('[SW v18] Ativando — limpando caches antigos...');
+  console.log('[SW v59] Ativando — limpando caches antigos...');
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
