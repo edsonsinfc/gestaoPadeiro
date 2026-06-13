@@ -97,6 +97,9 @@ Object.assign(Cronograma, {
           <button class="btn btn-pill" style="background-color: rgba(239, 68, 68, 0.1); color: #EF4444; border: none; font-weight: 600;" onclick="Cronograma.deleteAllTasks()">
             <i data-lucide="trash-2"></i> Limpar
           </button>
+          <button class="btn btn-pill" style="background-color: rgba(255, 149, 0, 0.1); color: #FF9500; border: none; font-weight: 600;" onclick="Cronograma.exportToPDF()">
+            <i data-lucide="file-down"></i> Exportar PDF
+          </button>
         </div>
       </div>
       <div id="cronograma-content"></div>

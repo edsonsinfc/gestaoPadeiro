@@ -433,6 +433,62 @@ Object.assign(Cronograma, {
   },
 
   // ──────────────────────────────────────────────────────────────
+  // Exportar para PDF
+  // ──────────────────────────────────────────────────────────────
+  async exportToPDF() {
+    const element = document.getElementById('cronograma-content');
+    if (!element) return;
+    
+    Components.toast('Gerando PDF, aguarde...', 'info');
+
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     `cronograma_brago_${new Date().toISOString().split('T')[0]}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    const originalWidth = element.style.width;
+    const isMobile = window.innerWidth <= 768;
+    
+    // Força tamanho para o print ficar certinho e visível
+    element.style.width = '1200px'; 
+    element.style.maxWidth = 'none';
+    
+    // Esconde botões que não devem sair no PDF
+    document.querySelectorAll('.matrix-reorder-btns, .matrix-add-btn, .week-nav button').forEach(el => {
+      el.dataset.originalDisplay = el.style.display;
+      el.style.display = 'none';
+    });
+    
+    // Se estiver no mobile, precisa remover classes que escondem colunas
+    if (isMobile) {
+      document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'table-cell');
+      document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'none');
+    }
+
+    try {
+      await html2pdf().set(opt).from(element).save();
+      Components.toast('PDF exportado com sucesso!', 'success');
+    } catch (e) {
+      Components.toast('Erro ao exportar PDF: ' + e.message, 'error');
+    } finally {
+      // Restaura tudo
+      element.style.width = originalWidth;
+      element.style.maxWidth = '';
+      document.querySelectorAll('.matrix-reorder-btns, .matrix-add-btn, .week-nav button').forEach(el => {
+        el.style.display = el.dataset.originalDisplay || '';
+      });
+      
+      if (isMobile) {
+        document.querySelectorAll('.desktop-only').forEach(el => el.style.display = '');
+        document.querySelectorAll('.mobile-only').forEach(el => el.style.display = '');
+      }
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────
   // MODAL: Detalhe da Tarefa (somente leitura)
   // ──────────────────────────────────────────────────────────────
   openTaskDetail(id) {
