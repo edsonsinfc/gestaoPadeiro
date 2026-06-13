@@ -441,19 +441,11 @@ Object.assign(Cronograma, {
     
     Components.toast('Gerando PDF, aguarde...', 'info');
 
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     `cronograma_brago_${new Date().toISOString().split('T')[0]}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, windowWidth: 1600 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-
     const originalWidth = element.style.width;
     const isMobile = window.innerWidth <= 768;
     
     // Força tamanho para o print ficar certinho e visível
-    element.style.width = '1600px'; 
+    element.style.width = 'max-content'; 
     element.style.maxWidth = 'none';
     
     // Esconde botões que não devem sair no PDF
@@ -467,6 +459,19 @@ Object.assign(Cronograma, {
       document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'table-cell');
       document.querySelectorAll('.mobile-only').forEach(el => el.style.display = 'none');
     }
+
+    // Aguarda o navegador aplicar o max-content
+    await new Promise(r => setTimeout(r, 100));
+
+    const scrollWidth = element.scrollWidth;
+
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     `cronograma_brago_${new Date().toISOString().split('T')[0]}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, windowWidth: scrollWidth },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
 
     try {
       await html2pdf().set(opt).from(element).save();
