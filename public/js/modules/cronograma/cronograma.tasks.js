@@ -450,8 +450,15 @@ Object.assign(Cronograma, {
     const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     const generatedAt = `${today.toLocaleDateString('pt-BR')} ${today.toLocaleTimeString('pt-BR')}`;
     
-    const startStr = startDate.toISOString().split('T')[0];
-    const endStr = endDate.toISOString().split('T')[0];
+    const getLocalISO = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+    
+    const startStr = getLocalISO(startDate);
+    const endStr = getLocalISO(endDate);
     const filenameTitle = `Cronograma_Brago_${startStr}_a_${endStr}`;
     
     // Iniciar HTML
@@ -537,10 +544,10 @@ Object.assign(Cronograma, {
     
     // Colunas dos dias
     const dayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const todayISO = new Date().toISOString().split('T')[0];
+    const todayISO = getLocalISO(new Date());
     
     weekDates.forEach((d, i) => {
-      const dStr = d.toISOString().split('T')[0];
+      const dStr = getLocalISO(d);
       const isToday = dStr === todayISO;
       html += `
         <th class="th-day ${isToday ? 'day-today' : ''}">
@@ -574,7 +581,7 @@ Object.assign(Cronograma, {
       `;
       
       weekDates.forEach(d => {
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = getLocalISO(d);
         const tasks = this.tarefas
           .filter(t => t.padeiroId === padeiro.id && t.data === dateStr)
           .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
