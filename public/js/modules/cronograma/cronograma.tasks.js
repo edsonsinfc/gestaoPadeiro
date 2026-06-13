@@ -445,7 +445,7 @@ Object.assign(Cronograma, {
       margin:       [10, 10, 10, 10],
       filename:     `cronograma_brago_${new Date().toISOString().split('T')[0]}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, windowWidth: 1600 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
@@ -453,7 +453,7 @@ Object.assign(Cronograma, {
     const isMobile = window.innerWidth <= 768;
     
     // Força tamanho para o print ficar certinho e visível
-    element.style.width = '1200px'; 
+    element.style.width = '1600px'; 
     element.style.maxWidth = 'none';
     
     // Esconde botões que não devem sair no PDF
