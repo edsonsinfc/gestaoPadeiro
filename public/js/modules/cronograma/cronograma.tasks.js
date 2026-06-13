@@ -516,7 +516,7 @@ Object.assign(Cronograma, {
         
         <div class="header-main">
           <div class="brand">
-            <h1>FORNADA</h1>
+            <img src="/assets/logo.svg" alt="BRAGO" style="height: 36px; margin-bottom: 4px;">
             <p>SISTEMA DE GESTÃO DE PANIFICAÇÃO</p>
           </div>
           <div class="title-area">
