@@ -421,6 +421,10 @@ Object.assign(Cronograma, {
   // Excluir todo o cronograma
   // ──────────────────────────────────────────────────────────────
   async deleteAllTasks() {
+    if (API.getUser().role !== 'admin') {
+      Components.toast('Apenas administradores podem limpar o cronograma.', 'error');
+      return;
+    }
     if (confirm('ATENÇÃO: Você está prestes a excluir TODO o cronograma. Esta ação não pode ser desfeita. Deseja continuar?')) {
       try {
         await API.delete('/api/cronograma/all');
