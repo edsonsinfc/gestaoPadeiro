@@ -603,14 +603,7 @@ Object.assign(Cronograma, {
     html += `
           </tbody>
         </table>
-        
-        <script>
-          window.onload = () => {
-            setTimeout(() => {
-              window.print();
-            }, 500);
-          };
-        </script>
+        </table>
       </body>
       </html>
     `;
@@ -634,6 +627,11 @@ Object.assign(Cronograma, {
     printFrame.contentWindow.document.open();
     printFrame.contentWindow.document.write(html);
     printFrame.contentWindow.document.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    }, 500);
   },
 
   // ──────────────────────────────────────────────────────────────
