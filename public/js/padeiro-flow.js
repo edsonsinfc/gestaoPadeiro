@@ -82,7 +82,7 @@ const PadeiroFlow = {
     };
     
     container.innerHTML = `
-      <div class="pf-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
+      <div class="pf-container pf-resume-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
         <div class="pf-resume-card" style="border: 2px solid #f59e0b; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15); background: var(--surface-bg);">
           <div class="pf-resume-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; width: 72px; height: 72px; border-radius: 50%;">
             <i data-lucide="alert-triangle" style="width:36px;height:36px"></i>
@@ -129,7 +129,7 @@ const PadeiroFlow = {
     const stepMap = {0:0, 1:1, 2:2, 3:3, 4:4};
     const stepLabel = this.steps[stepMap[parseInt(em.lastStep)||0]]?.label || 'Iniciar';
     container.innerHTML = `
-      <div class="pf-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
+      <div class="pf-container pf-resume-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
         <div class="pf-resume-card">
           <div class="pf-resume-icon"><i data-lucide="alert-circle" style="width:36px;height:36px"></i></div>
           <h2 class="pf-resume-title">Atividade em andamento</h2>
