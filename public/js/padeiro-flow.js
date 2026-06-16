@@ -1109,10 +1109,9 @@ const PadeiroFlow = {
         if (item.un === 'KG') {
           totalKg += parseFloat(String(item.v).replace(',', '.')) || 0;
         }
-        const row = document.querySelector(`.pf-pizza-row[data-id="${id}"]`);
-        const desc = row ? (row.dataset.origDesc || '') : 'Produto';
-        const code = row ? (row.dataset.origCode || '') : '';
         const prod = this.cachedProdutos ? this.cachedProdutos.find(p => p.id === id) : null;
+        const desc = prod ? (prod.descricao || 'Produto') : 'Produto';
+        const code = prod ? (prod.codigo || '') : '';
         const hasPhoto = prod ? prod.temFoto : false;
         const imgSrc = hasPhoto && code ? `/api/foto-produto/${code}` : '';
         return `
@@ -1265,7 +1264,17 @@ const PadeiroFlow = {
     let selectedCount = 0;
     this.cartItems = this.cartItems || {};
 
-    // Update row visuals
+    // Calculate totals directly from cartItems (independent of currently rendered DOM rows)
+    Object.keys(this.cartItems).forEach(id => {
+      const item = this.cartItems[id];
+      selectedCount++;
+      const val = parseFloat(String(item.v).replace(',', '.')) || 0;
+      if (item.un === 'KG') totalKg += val;
+      if (item.un === 'L') totalL += val;
+      if (item.un === 'UN' || item.un === 'PCT') totalUn += val;
+    });
+
+    // Update row visuals for currently rendered rows in DOM
     document.querySelectorAll('.pf-pizza-row').forEach(row => {
       row.classList.remove('selected');
       const id = row.dataset.id;
@@ -1275,11 +1284,6 @@ const PadeiroFlow = {
           const item = this.cartItems[id];
           row.classList.add('selected');
           displayWrap.innerHTML = `<div class="pf-pizza-tag">${item.v} ${item.un}</div>`;
-          selectedCount++;
-          const val = parseFloat(String(item.v).replace(',', '.')) || 0;
-          if (item.un === 'KG') totalKg += val;
-          if (item.un === 'L') totalL += val;
-          if (item.un === 'UN' || item.un === 'PCT') totalUn += val;
         } else {
           const origDesc = row.dataset.origDesc || '';
           const origCode = row.dataset.origCode || '';
@@ -1327,9 +1331,10 @@ const PadeiroFlow = {
           let avatarsHtml = '';
           for (let i = 0; i < Math.min(cartKeys.length, maxAvatars); i++) {
             const key = cartKeys[i];
-            const row = document.querySelector(`.pf-pizza-row[data-id="${key}"]`);
-            const code = row ? (row.dataset.origCode || '') : '';
-            const imgSrc = `/api/foto-produto/${code}`;
+            const prod = this.cachedProdutos ? this.cachedProdutos.find(p => p.id === key) : null;
+            const code = prod ? (prod.codigo || '') : '';
+            const hasPhoto = prod ? prod.temFoto : false;
+            const imgSrc = hasPhoto && code ? `/api/foto-produto/${code}` : '';
             avatarsHtml += `<div class="pf-wallet-avatar"><img src="${imgSrc}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'85\\' height=\\'85\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23cbd5e1\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'/><circle cx=\\'12\\' cy=\\'12\\' r=\\'3\\'/><path d=\\'M3 5h18M3 19h18M3 12h18\\'/></svg>'" /></div>`;
           }
           if (cartKeys.length > maxAvatars) {
@@ -1527,9 +1532,9 @@ const PadeiroFlow = {
     if (this.cartItems) {
       Object.keys(this.cartItems).forEach(id => {
         const item = this.cartItems[id];
-        const row = document.querySelector(`.pf-pizza-row[data-id="${id}"]`);
-        const name = row ? (row.dataset.origDesc || row.dataset.descricao || '') : '';
-        const code = row ? (row.dataset.origCode || row.dataset.codigo || '') : '';
+        const prod = this.cachedProdutos ? this.cachedProdutos.find(p => p.id === id) : null;
+        const name = prod ? (prod.descricao || '') : '';
+        const code = prod ? (prod.codigo || '') : '';
         const sv = code ? `${code} - ${name}` : name;
         const v = parseFloat(String(item.v).replace(',', '.'));
         if (!isNaN(v) && v > 0) {

@@ -76,6 +76,9 @@ const App = {
     this.routeData = data;
     localStorage.setItem('currentRoute', route);
     
+    // Auto-collapse mobile drawer/sidebar on navigation
+    this.closeDrawer();
+    
     if (pushToHistory) {
       if (!history.state || history.state.route !== route) {
         history.pushState({ route, data }, '', '');
