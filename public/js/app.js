@@ -815,13 +815,65 @@ const App = {
 
   downloadApkUpdate(url) {
     const absoluteUrl = url.startsWith('http') ? url : `${API_BASE_URL || window.location.origin}${url}`;
-    console.log('[Update Check] Abrindo navegador para baixar APK:', absoluteUrl);
     
-    // Se o plugin Browser do Capacitor estiver disponível, usamos ele para uma melhor UX nativa
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-      window.Capacitor.Plugins.Browser.open({ url: absoluteUrl });
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
+
+    if (isCapacitor && ApkUpdater) {
+      console.log('[Update Check] Iniciando download e instalação direta do APK via plugin nativo:', absoluteUrl);
+      
+      // Mostrar feedback visual de progresso de download
+      const iosBtn = document.querySelector('#apk-update-modal .pf-btn-primary'); // O botão do modal de atualização
+      const defaultText = iosBtn ? iosBtn.innerHTML : 'Atualizar Agora';
+      if (iosBtn) {
+        iosBtn.disabled = true;
+        iosBtn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px; border-top-color: white; border-right-color: white; border-bottom-color: white; width:16px; height:16px; border-width:2px;"></span> Baixando (0%)...`;
+      }
+
+      // Adicionar listener de progresso do download
+      let progressListener = null;
+      if (typeof ApkUpdater.addListener === 'function') {
+        progressListener = ApkUpdater.addListener('downloadProgress', (info) => {
+          if (info && typeof info.progress === 'number' && iosBtn) {
+            const percent = Math.round(info.progress * 100);
+            iosBtn.innerHTML = `<span class="comodato-spinner" style="margin-right:8px; border-top-color: white; border-right-color: white; border-bottom-color: white; width:16px; height:16px; border-width:2px;"></span> Baixando (${percent}%)...`;
+          }
+        });
+      }
+
+      ApkUpdater.downloadAndInstall({ url: absoluteUrl })
+        .then(() => {
+          console.log('[Update Check] Intent de instalação disparado com sucesso!');
+          if (progressListener && typeof progressListener.remove === 'function') {
+            progressListener.remove();
+          }
+          const modal = document.getElementById('apk-update-modal');
+          if (modal) modal.remove();
+        })
+        .catch(err => {
+          console.error('[Update Check] Erro no download/instalação nativa:', err);
+          if (progressListener && typeof progressListener.remove === 'function') {
+            progressListener.remove();
+          }
+          if (iosBtn) {
+            iosBtn.disabled = false;
+            iosBtn.innerHTML = defaultText;
+          }
+          Components.toast('Erro ao baixar atualização. Abrindo navegador...', 'error');
+          // Fallback para navegador
+          if (window.Capacitor?.Plugins?.Browser) {
+            window.Capacitor.Plugins.Browser.open({ url: absoluteUrl });
+          } else {
+            window.open(absoluteUrl, '_system');
+          }
+        });
     } else {
-      window.open(absoluteUrl, '_system');
+      console.log('[Update Check] Abrindo navegador para baixar APK:', absoluteUrl);
+      if (window.Capacitor?.Plugins?.Browser) {
+        window.Capacitor.Plugins.Browser.open({ url: absoluteUrl });
+      } else {
+        window.open(absoluteUrl, '_system');
+      }
     }
   }
 };
