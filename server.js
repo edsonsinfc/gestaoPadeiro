@@ -296,13 +296,53 @@ app.get(['/smartgestor.apk', '/SmartGestor.apk'], async (req, res, next) => {
 // API ROUTES
 // ============================================================
 app.get('/api/ping', (req, res) => res.json({ pong: true }));
-app.get('/api/app-version', (req, res) => {
-  res.json({
-    version: '1.0.1', // Versão do APK atualizada no servidor
-    url: '/smartgestor.apk', // Caminho relativo/absoluto para download
-    mandatory: false, // Define se a atualização é opcional (false) ou obrigatória (true)
+app.get('/api/app-version', async (req, res) => {
+  // Versão padrão estática caso o Drive esteja desativado ou o arquivo não exista
+  let versionInfo = {
+    version: '1.0.1',
+    url: '/smartgestor.apk',
+    mandatory: false,
     notes: 'Melhorias de desempenho na sincronização em tempo real das atividades offline.'
-  });
+  };
+
+  try {
+    if (googleDriveService.isEnabled()) {
+      console.log('[Version Check] Verificando se existe app-version.json no Google Drive...');
+      const fileId = await googleDriveService.findFileByName('app-version.json');
+      if (fileId) {
+        console.log(`[Version Check] Encontrado app-version.json (ID: ${fileId}). Carregando...`);
+        const { stream } = await googleDriveService.getFileStream(fileId);
+        
+        const content = await new Promise((resolve, reject) => {
+          let data = '';
+          stream.on('data', chunk => data += chunk);
+          stream.on('end', () => resolve(data));
+          stream.on('error', err => reject(err));
+        });
+
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed && parsed.version) {
+            versionInfo = {
+              version: parsed.version,
+              url: parsed.url || '/smartgestor.apk',
+              mandatory: !!parsed.mandatory,
+              notes: parsed.notes || 'Nova atualização disponível para o aplicativo.'
+            };
+            console.log(`[Version Check] 📈 Versão carregada do Drive com sucesso: ${versionInfo.version}`);
+          }
+        } catch (jsonErr) {
+          console.error('[Version Check] Erro ao analisar o JSON do app-version.json:', jsonErr.message);
+        }
+      } else {
+        console.log('[Version Check] app-version.json não encontrado no Google Drive. Usando versão padrão.');
+      }
+    }
+  } catch (err) {
+    console.error('[Version Check] Falha ao consultar o Google Drive para obter a versão do app:', err.message);
+  }
+
+  res.json(versionInfo);
 });
 app.use('/api', require('./routes'));
 

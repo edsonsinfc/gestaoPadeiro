@@ -701,8 +701,11 @@ const App = {
     const dismissedTime = localStorage.getItem('apk_install_prompt_dismissed_time');
     if (dismissedTime) {
       const hoursPassed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
-      if (hoursPassed < 4) {
-        return; // Ainda dentro do tempo de espera de 4 horas
+      const dismissType = localStorage.getItem('apk_install_prompt_dismiss_type') || 'dismiss';
+      // Se clicou em instalar (download), espera 2 horas. Se clicou em depois (dismiss), espera apenas 30 minutos
+      const waitHours = dismissType === 'download' ? 2 : 0.5;
+      if (hoursPassed < waitHours) {
+        return; // Ainda dentro do tempo de espera
       }
     }
 
@@ -731,7 +734,7 @@ const App = {
     link.click();
     document.body.removeChild(link);
 
-    // Esconde o banner e silencia por 24 horas (caso o usuário cancele a instalação do APK baixado)
+    // Esconde o banner
     const banner = document.getElementById('apk-install-banner');
     if (banner) {
       banner.classList.remove('active');
@@ -739,7 +742,103 @@ const App = {
         banner.style.display = 'none';
       }, 400);
     }
+    
+    // Salva o estado como download e registra o tempo
     localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
+    localStorage.setItem('apk_install_prompt_dismiss_type', 'download');
+
+    // Abre o modal de instruções passo a passo para o usuário concluir a instalação manual
+    this.showApkInstallInstructionsModal();
+  },
+
+  downloadApkAgain() {
+    const link = document.createElement('a');
+    link.href = '/smartgestor.apk';
+    link.download = 'smartgestor.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof Components !== 'undefined' && Components.toast) {
+      Components.toast('Download iniciado novamente! 📥', 'success');
+    }
+  },
+
+  showApkInstallInstructionsModal() {
+    const old = document.getElementById('apk-install-instructions-modal');
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'apk-install-instructions-modal';
+    modal.className = 'pf-modal-overlay';
+    modal.style.zIndex = '9999999';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = '16px';
+
+    modal.innerHTML = `
+      <div class="pf-modal-ios" style="max-width: 380px; width: 100%; height: auto; max-height: 90vh; margin: auto; border-radius: 24px; padding: 24px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); background: var(--surface-bg); overflow-y: auto; display: block; transform: translateY(0);">
+        <div style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; width: 56px; height: 56px; border-radius: 50%;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-primary); text-align: center; margin-bottom: 6px;">Download Iniciado!</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.45;">
+          Como os navegadores não podem instalar aplicativos sozinhos por segurança, siga estes passos rápidos:
+        </p>
+
+        <!-- Passo a Passo -->
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+          
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #1E4BFF; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; margin-top: 2px;">1</div>
+            <div>
+              <strong style="font-size: 13.5px; color: var(--text-primary); display: block;">Aguarde o download</strong>
+              <span style="font-size: 12px; color: var(--text-secondary); line-height: 1.35; display: block;">Acompanhe o download no topo ou no rodapé da sua tela.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #1E4BFF; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; margin-top: 2px;">2</div>
+            <div>
+              <strong style="font-size: 13.5px; color: var(--text-primary); display: block;">Abra o SmartGestor.apk</strong>
+              <span style="font-size: 12px; color: var(--text-secondary); line-height: 1.35; display: block;">Quando concluir, clique em <strong>"Abrir"</strong> no aviso do navegador ou vá na sua pasta de "Downloads".</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #1E4BFF; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; margin-top: 2px;">3</div>
+            <div>
+              <strong style="font-size: 13.5px; color: var(--text-primary); display: block;">Permita Fontes Desconhecidas</strong>
+              <span style="font-size: 12px; color: var(--text-secondary); line-height: 1.35; display: block;">Se o Android alertar, toque em <strong>"Configurações"</strong> e ative a opção <strong>"Permitir desta fonte"</strong>.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #1E4BFF; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; margin-top: 2px;">4</div>
+            <div>
+              <strong style="font-size: 13.5px; color: var(--text-primary); display: block;">Confirme a Instalação</strong>
+              <span style="font-size: 12px; color: var(--text-secondary); line-height: 1.35; display: block;">Volte para a tela anterior e clique em <strong>"Instalar"</strong>. O app está pronto!</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Ações -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="pf-btn-primary" onclick="document.getElementById('apk-install-instructions-modal').remove()" style="width: 100%; justify-content: center; border-radius: 14px; min-height: 44px;">
+            Entendi, vou instalar!
+          </button>
+          <button class="pf-btn-ghost" onclick="App.downloadApkAgain()" style="width: 100%; margin: 0; justify-content: center; border-radius: 14px; font-size: 12px; border: 1.5px dashed var(--separator); min-height: 44px; margin-top: 6px;">
+            Não iniciou o download? Baixar de novo
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    // Adiciona classe active no overlay para transição suave de opacidade
+    setTimeout(() => {
+      modal.classList.add('active');
+    }, 50);
   },
 
   dismissApkBanner() {
@@ -750,8 +849,9 @@ const App = {
         banner.style.display = 'none';
       }, 400); // Wait for transition out
     }
-    // Dispensa por 4 horas para ser recorrente
+    // Dispensa por tempo menor para ser recorrente até instalar
     localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
+    localStorage.setItem('apk_install_prompt_dismiss_type', 'dismiss');
   },
 
   async checkApkUpdate() {
