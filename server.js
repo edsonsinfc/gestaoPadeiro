@@ -245,21 +245,51 @@ app.get('/api/foto-produto/:codigo', async (req, res) => {
   return res.status(500).json({ error: 'Erro ao baixar foto' });
 });
 
-// Servir o arquivo APK compilado automaticamente da pasta de build
-app.get(['/smartgestor.apk', '/SmartGestor.apk'], (req, res) => {
-  // 1. Tenta buscar na pasta public (onde fica em produção/Hostinger)
-  let apkPath = path.join(__dirname, 'public', 'smartgestor.apk');
-  if (!fs.existsSync(apkPath)) {
+// Servir o arquivo APK compilado automaticamente
+app.get(['/smartgestor.apk', '/SmartGestor.apk'], async (req, res, next) => {
+  try {
+    // 1. Tenta buscar na pasta public (onde fica em produção/Hostinger)
+    let apkPath = path.join(__dirname, 'public', 'smartgestor.apk');
+    if (fs.existsSync(apkPath)) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
+      return res.sendFile(apkPath);
+    }
+
     // 2. Fallback para a pasta de build do Android (desenvolvimento local)
     apkPath = path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk');
-  }
+    if (fs.existsSync(apkPath)) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
+      return res.sendFile(apkPath);
+    }
 
-  if (fs.existsSync(apkPath)) {
-    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-    res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
-    return res.sendFile(apkPath);
+    // 3. Fallback para o Google Drive
+    if (googleDriveService.isEnabled()) {
+      try {
+        console.log('[APK Download] Procurando SmartGestor.apk no Google Drive...');
+        let fileId = await googleDriveService.findFileByName('SmartGestor.apk');
+        if (!fileId) {
+          fileId = await googleDriveService.findFileByName('smartgestor.apk');
+        }
+
+        if (fileId) {
+          console.log(`[APK Download] Servindo SmartGestor.apk do Google Drive (ID: ${fileId})`);
+          const { stream } = await googleDriveService.getFileStream(fileId);
+          
+          res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+          res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
+          return stream.pipe(res);
+        }
+      } catch (err) {
+        console.error('❌ [APK Download] Erro ao buscar APK no Google Drive:', err.message);
+      }
+    }
+
+    res.status(404).send('Arquivo APK não encontrado.');
+  } catch (error) {
+    next(error);
   }
-  res.status(404).send('Arquivo APK não encontrado.');
 });
 
 // ============================================================
