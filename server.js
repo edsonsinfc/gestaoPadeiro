@@ -245,6 +245,16 @@ app.get('/api/foto-produto/:codigo', async (req, res) => {
   return res.status(500).json({ error: 'Erro ao baixar foto' });
 });
 
+// Servir o arquivo APK compilado automaticamente da pasta de build
+app.get(['/smartgestor.apk', '/SmartGestor.apk'], (req, res) => {
+  const apkPath = path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk');
+  if (fs.existsSync(apkPath)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    return res.sendFile(apkPath);
+  }
+  res.status(404).send('Arquivo APK não encontrado.');
+});
+
 // ============================================================
 // API ROUTES
 // ============================================================
