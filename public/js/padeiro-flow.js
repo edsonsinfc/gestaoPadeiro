@@ -171,6 +171,7 @@ const PadeiroFlow = {
     this.backgroundUploadPromise = null;
     this.backgroundSignaturePromise = null;
     this.currentStep = 0;
+    localStorage.removeItem('brago_padeiro_draft');
     await this.fetchTodayClient();
     this.renderWizard(document.getElementById('page-container'));
   },
@@ -189,6 +190,7 @@ const PadeiroFlow = {
   },
 
   renderWizard(container) {
+    if (container) container.scrollTop = 0;
     if (this.timerInterval) clearInterval(this.timerInterval);
     const hoje = new Date();
     const dataStr = hoje.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long'});
@@ -441,7 +443,53 @@ const PadeiroFlow = {
   // STEP 1: PRODUÇÃO (Produtos + Fotos combinados)
   async stepProducao(c) {
     let produtos = [];
-    try { produtos = await API.get('/api/produtos'); } catch(e) {}
+    
+    // 1. Tenta carregar do cache offline instantaneamente para evitar travar a renderização
+    if (typeof OfflineManager !== 'undefined') {
+      try {
+        const cached = await OfflineManager.getCachedData('/api/produtos');
+        if (cached && Array.isArray(cached) && cached.length > 0) {
+          produtos = cached;
+          console.log('[FastLoad] Catálogo carregado do cache local:', produtos.length);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar cache local de produtos:', err);
+      }
+    }
+
+    // 2. Se não houver nada no cache local (ex: primeira execução), busca na rede de forma síncrona
+    if (produtos.length === 0) {
+      try {
+        produtos = await API.get('/api/produtos');
+      } catch(e) {
+        console.error('Erro ao buscar produtos online:', e);
+      }
+    } else {
+      // Busca atualizações na rede em segundo plano de forma assíncrona
+      API.get('/api/produtos')
+        .then(async (freshProds) => {
+          if (freshProds && Array.isArray(freshProds) && freshProds.length > 0) {
+            const hasChanged = freshProds.length !== produtos.length || 
+                              JSON.stringify(freshProds[0]) !== JSON.stringify(produtos[0]);
+            
+            this.cachedProdutos = freshProds;
+            this.activeProds = freshProds.filter(p => p.ativo !== false);
+            
+            if (hasChanged && this.currentStep === 1) {
+              console.log('[FastLoad] Novo catálogo recebido do servidor. Atualizando tela...');
+              
+              if (typeof OfflineManager !== 'undefined') {
+                OfflineManager.loadPhotosToMemoryCache(this.activeProds);
+              }
+              
+              this.currentFilteredProds = this.activeProds;
+              this.renderProductBatch(true);
+            }
+          }
+        })
+        .catch(err => console.warn('Erro ao sincronizar produtos em segundo plano:', err));
+    }
+
     this.cachedProdutos = produtos;
     
     if (!this.selectedFiles || this.selectedFiles.length === 0) {
@@ -449,6 +497,16 @@ const PadeiroFlow = {
     }
 
     const activeProds = produtos.filter(p => p.ativo !== false);
+    
+    // Popula o cache de imagens em memória em background
+    if (typeof OfflineManager !== 'undefined') {
+      try {
+        OfflineManager.loadPhotosToMemoryCache(activeProds);
+      } catch (e) {
+        console.warn('Erro ao carregar cache de fotos:', e);
+      }
+    }
+
     this.activeProds = activeProds;
     this.currentFilteredProds = activeProds;
     this.renderLimit = 50;
@@ -689,6 +747,15 @@ const PadeiroFlow = {
     this.setupLazyLoading();
     Components.renderIcons();
 
+    // Check if there is a pending restored photo from Capacitor's appRestoredResult
+    if (window.lastRestoredPhoto) {
+      const restoredPhoto = window.lastRestoredPhoto;
+      window.lastRestoredPhoto = null; // consume
+      setTimeout(() => {
+        this.handleRestoredPhoto(restoredPhoto);
+      }, 100);
+    }
+
     // Launch onboarding tutorial (only once)
     setTimeout(() => this.startTutorial(), 800);
   },
@@ -749,14 +816,16 @@ const PadeiroFlow = {
     const html = itemsToRender.map((p, idx) => {
       const safeDesc = p.descricao.replace(/'/g, "\\'");
       const safeCode = (p.codigo || '').replace(/'/g, "\\'");
-      const imgSrc = p.temFoto && p.codigo ? `/api/foto-produto/${p.codigo}` : fallbackSvg;
+      const imgSrc = typeof OfflineManager !== 'undefined'
+        ? OfflineManager.getProductPhotoSrc(p.codigo, p.temFoto, fallbackSvg)
+        : (p.temFoto && p.codigo ? `/api/foto-produto/${p.codigo}` : fallbackSvg);
       const animDelay = idx < 15 && reset ? 0.05 + idx * 0.02 : 0;
       
       return `
       <div class="pf-pizza-row fade-in" style="animation-delay: ${animDelay}s" data-id="${p.id}" data-fornecedor="${(p.fornecedor || 'sem fornecedor').trim().toLowerCase()}" data-descricao="${(p.descricao||'').toLowerCase()}" data-codigo="${(p.codigo || '').toLowerCase()}" data-orig-desc="${safeDesc}" data-orig-code="${safeCode}">
         <div class="pf-multiselect-checkbox"></div>
         <div class="pf-pizza-img-wrap">
-          <img src="${imgSrc}" onerror="this.src='${fallbackSvg}'" alt="${p.descricao}" loading="lazy">
+          <img data-product-code="${p.codigo || ''}" src="${imgSrc}" onerror="this.src='${fallbackSvg}'" alt="${p.descricao}" loading="lazy">
         </div>
         
         <div class="pf-pizza-content">
@@ -775,6 +844,9 @@ const PadeiroFlow = {
 
     // Atualiza os carrinhos/inputs recém renderizados
     this.calculateTotals();
+    
+    // Renderiza ícones e carrega imagens em cache local/offline
+    Components.renderIcons();
 
     // Gerencia o sentinel
     const sentinel = document.getElementById('pf-load-more-sentinel');
@@ -1113,7 +1185,9 @@ const PadeiroFlow = {
         const desc = prod ? (prod.descricao || 'Produto') : 'Produto';
         const code = prod ? (prod.codigo || '') : '';
         const hasPhoto = prod ? prod.temFoto : false;
-        const imgSrc = hasPhoto && code ? `/api/foto-produto/${code}` : '';
+        const imgSrc = typeof OfflineManager !== 'undefined'
+          ? OfflineManager.getProductPhotoSrc(code, hasPhoto, '')
+          : (hasPhoto && code ? `/api/foto-produto/${code}` : '');
         return `
           <div class="pf-ios-card">
             <div class="pf-ios-card-img">
@@ -1334,7 +1408,9 @@ const PadeiroFlow = {
             const prod = this.cachedProdutos ? this.cachedProdutos.find(p => p.id === key) : null;
             const code = prod ? (prod.codigo || '') : '';
             const hasPhoto = prod ? prod.temFoto : false;
-            const imgSrc = hasPhoto && code ? `/api/foto-produto/${code}` : '';
+            const imgSrc = typeof OfflineManager !== 'undefined'
+              ? OfflineManager.getProductPhotoSrc(code, hasPhoto, '')
+              : (hasPhoto && code ? `/api/foto-produto/${code}` : '');
             avatarsHtml += `<div class="pf-wallet-avatar"><img src="${imgSrc}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'85\\' height=\\'85\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%23cbd5e1\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'/><circle cx=\\'12\\' cy=\\'12\\' r=\\'3\\'/><path d=\\'M3 5h18M3 19h18M3 12h18\\'/></svg>'" /></div>`;
           }
           if (cartKeys.length > maxAvatars) {
@@ -1388,10 +1464,124 @@ const PadeiroFlow = {
   addKgRow() {},
   removeKgRow() {},
 
-  triggerCamera() {
+  async triggerCamera() {
     this.saveDraftLocally();
+    
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    
+    if (isCapacitor) {
+      const { Camera, CameraResultType, CameraSource } = window.Capacitor.Plugins;
+      if (Camera) {
+        try {
+          const image = await Camera.getPhoto({
+            quality: 60,
+            allowEditing: false,
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            width: 800,
+            height: 800
+          });
+
+          // Baixar o blob local da imagem gerada pelo Capacitor
+          const response = await fetch(image.webPath);
+          const blob = await response.blob();
+          
+          const filename = `foto_${Date.now()}.jpg`;
+          const file = new File([blob], filename, { type: 'image/jpeg' });
+          
+          // Converter para Data URL (Base64) para renderizar a miniatura na hora
+          const dataUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+
+          this.selectedFiles = this.selectedFiles || [];
+          this.selectedFotosBase64 = this.selectedFotosBase64 || [];
+          
+          this.selectedFiles.push(file);
+          this.selectedFotosBase64.push({ name: filename, data: dataUrl, type: 'image/jpeg' });
+          
+          this.renderPhotoPreviewBase64(dataUrl, filename);
+          this.saveDraftLocally();
+          console.log('[Câmera Nativa] Foto tirada e comprimida com sucesso!');
+          return;
+        } catch (err) {
+          if (err.message && (err.message.includes('User cancelled') || err.message.includes('cancelled'))) {
+            console.log('[Câmera Nativa] Seleção cancelada pelo usuário.');
+            return;
+          }
+          console.error('[Câmera Nativa] Erro ao tirar foto nativa:', err);
+        }
+      }
+    }
+
     const staticInput = document.getElementById('camera-input-static');
     if (staticInput) staticInput.click();
+  },
+
+  async handleRestoredPhoto(photoData) {
+    if (!photoData || !photoData.webPath) return;
+    try {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Restaurando foto capturada...', 'info');
+      }
+      
+      const response = await fetch(photoData.webPath);
+      const blob = await response.blob();
+      
+      const filename = `foto_restored_${Date.now()}.jpg`;
+      const file = new File([blob], filename, { type: 'image/jpeg' });
+      
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+
+      // Se o draft ainda não foi restaurado na memória, vamos ler do localStorage primeiro
+      // para não perder os produtos que estavam salvos!
+      const draftStr = localStorage.getItem('brago_padeiro_draft');
+      if (draftStr && (!this.cartItems || Object.keys(this.cartItems).length === 0)) {
+        try {
+          const draft = JSON.parse(draftStr);
+          this.cartItems = {};
+          if (draft.items) {
+            draft.items.forEach(item => {
+              this.cartItems[item.id] = { v: item.v, un: item.un };
+            });
+          }
+          if (draft.fotosBase64) {
+            this.selectedFotosBase64 = draft.fotosBase64;
+            this.selectedFiles = draft.fotosBase64.map(b64 => this.dataURLtoFile(b64.data, b64.name, b64.type));
+          }
+        } catch(e) {
+          console.warn("Erro ao pré-restaurar rascunho em handleRestoredPhoto", e);
+        }
+      }
+
+      this.selectedFiles = this.selectedFiles || [];
+      this.selectedFotosBase64 = this.selectedFotosBase64 || [];
+      
+      // Evitar duplicados
+      if (!this.selectedFotosBase64.some(f => f.data === dataUrl)) {
+        this.selectedFiles.push(file);
+        this.selectedFotosBase64.push({ name: filename, data: dataUrl, type: 'image/jpeg' });
+        
+        // Se estiver no step de produção e o grid de fotos estiver visível no DOM
+        const grid = document.getElementById('foto-preview-grid');
+        if (grid) {
+          this.renderPhotoPreviewBase64(dataUrl, filename);
+        }
+        
+        this.saveDraftLocally();
+        if (typeof Components !== 'undefined' && Components.toast) {
+          Components.toast('Foto restaurada com sucesso!', 'success');
+        }
+      }
+    } catch (err) {
+      console.error('[RestorePhoto] Erro ao processar foto restaurada:', err);
+    }
   },
 
   saveDraftLocally() {
@@ -1552,6 +1742,33 @@ const PadeiroFlow = {
         'Foto Obrigatória', 
         'Por favor, adicione pelo menos uma foto da produção finalizada para poder avançar para a próxima etapa.'
       );
+      
+      // Smooth scroll to the photo section container
+      const fc = document.getElementById('pf-fotos-persistent-container');
+      if (fc) {
+        fc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Temporarily highlight the photo section with a pulse effect/outline
+        const originalTransition = fc.style.transition;
+        const originalOutline = fc.style.outline;
+        const originalOutlineOffset = fc.style.outlineOffset;
+        const originalBorderRadius = fc.style.borderRadius;
+        const originalBgColor = fc.style.backgroundColor;
+
+        fc.style.transition = 'all 0.3s ease';
+        fc.style.outline = '3px solid #f59e0b';
+        fc.style.outlineOffset = '4px';
+        fc.style.borderRadius = '8px';
+        fc.style.backgroundColor = '#fef3c7'; // warm yellow alert background
+        
+        setTimeout(() => {
+          fc.style.outline = originalOutline || 'none';
+          fc.style.outlineOffset = originalOutlineOffset || '';
+          fc.style.borderRadius = originalBorderRadius || '';
+          fc.style.backgroundColor = originalBgColor || 'transparent';
+          fc.style.transition = originalTransition || '';
+        }, 3000);
+      }
       return;
     }
 
@@ -2194,6 +2411,15 @@ const PadeiroFlow = {
 // ============================================================
 const PushService = {
   async init() {
+    // 1. Detectar se estamos em plataforma nativa (Capacitor)
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+
+    if (isCapacitor) {
+      this.initNativePush();
+      return;
+    }
+
+    // 2. Fallback para navegador web clássico (Web Push VAPID)
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       console.log('[Push] Navegador não suporta Push Notifications');
       return;
@@ -2245,6 +2471,83 @@ const PushService = {
     }
   },
 
+  async initNativePush() {
+    const { PushNotifications } = window.Capacitor.Plugins;
+    if (!PushNotifications) {
+      console.error('[Push Nativo] Plugin PushNotifications não encontrado no Capacitor.');
+      return;
+    }
+
+    try {
+      // Solicitar permissão no Android 13+
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      if (permStatus.receive !== 'granted') {
+        console.warn('[Push Nativo] Permissão de notificações negada pelo usuário.');
+        return;
+      }
+
+      // Registrar dispositivo no Firebase Cloud Messaging (FCM)
+      await PushNotifications.register();
+
+      // Listeners do plugin de notificação
+      await PushNotifications.addListener('registration', async (token) => {
+        const fcmToken = token.value;
+        console.log('[Push Nativo] Dispositivo registrado com sucesso. Token FCM:', fcmToken);
+
+        const userToken = localStorage.getItem('token');
+        try {
+          await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            },
+            body: JSON.stringify({
+              subscription: {
+                endpoint: 'native_fcm_' + fcmToken,
+                isNative: true,
+                fcmToken: fcmToken
+              }
+            })
+          });
+          console.log('[Push Nativo] Token FCM registrado com sucesso no servidor.');
+        } catch (err) {
+          console.error('[Push Nativo] Erro ao enviar token para o servidor:', err);
+        }
+      });
+
+      await PushNotifications.addListener('registrationError', (error) => {
+        console.error('[Push Nativo] Erro ao registrar no FCM:', error.error);
+      });
+
+      await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('[Push Nativo] Notificação recebida (Foreground):', notification);
+        if (typeof Components !== 'undefined' && Components.toast) {
+          Components.toast(`🔔 ${notification.title}: ${notification.body}`, 'info', 6000);
+        }
+      });
+
+      await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('[Push Nativo] Ação de push realizada:', action);
+        const data = action.notification.data;
+        if (data && data.url) {
+          console.log('[Push Nativo] Direcionando para URL:', data.url);
+          if (typeof App !== 'undefined' && typeof App.renderPage === 'function') {
+            const route = data.url.replace(/^\//, '');
+            App.renderPage(route || 'padeiro-dashboard');
+          }
+        }
+      });
+
+    } catch (err) {
+      console.error('[Push Nativo] Falha ao configurar FCM:', err);
+    }
+  },
+
   urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -2269,15 +2572,15 @@ const PushService = {
       });
       const data = await resp.json();
       if (data.sent > 0) {
-        Components.showToast(`🔔 ${data.sent} notificação(ões) enviada(s)!`, 'success');
+        Components.toast(`🔔 ${data.sent} notificação(ões) enviada(s)!`, 'success');
       } else if (data.sent === 0 && data.totalInativos > 0) {
-        Components.showToast('Nenhum padeiro inativo tem push ativado.', 'warning');
+        Components.toast('Nenhum padeiro inativo tem push ativado.', 'warning');
       } else {
-        Components.showToast('Todos os padeiros já registraram atividade hoje!', 'success');
+        Components.toast('Todos os padeiros já registraram atividade hoje!', 'success');
       }
     } catch (err) {
       console.error('[Push] Erro ao notificar:', err);
-      Components.showToast('Erro ao enviar notificações', 'error');
+      Components.toast('Erro ao enviar notificações', 'error');
     }
   }
 };

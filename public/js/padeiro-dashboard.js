@@ -388,6 +388,11 @@ const PadeiroDashboard = {
         });
       }, 100);
 
+      // Reschedule access reminder notifications
+      if (typeof NotificationService !== 'undefined') {
+        NotificationService.init().catch(console.warn);
+      }
+
     } catch (e) {
       c.innerHTML = `<div class="toast error" style="position:relative;opacity:1;bottom:0;left:0;transform:none;">Erro: ${e.message}</div>`;
     }

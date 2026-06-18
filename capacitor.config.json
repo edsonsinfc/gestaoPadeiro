@@ -1,0 +1,10 @@
+{
+  "appId": "com.brago.smartgestor",
+  "appName": "Smart Gestor",
+  "webDir": "public",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

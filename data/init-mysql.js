@@ -252,6 +252,19 @@ const TABLES = [
           INDEX (padeiroId),
           INDEX (timestamp)
         )`
+      },
+      {
+        name: 'push_subscriptions',
+        schema: `CREATE TABLE IF NOT EXISTS push_subscriptions (
+          id VARCHAR(255) PRIMARY KEY,
+          padeiroId VARCHAR(255),
+          endpoint TEXT,
+          keys_p256dh TEXT,
+          keys_auth TEXT,
+          isNative BOOLEAN DEFAULT FALSE,
+          fcmToken TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`
       }
 ];
 
@@ -362,6 +375,17 @@ async function initTables() {
     if (!colNames.includes('clienteNome')) await pool.execute("ALTER TABLE timeline_events ADD COLUMN clienteNome VARCHAR(255)");
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (timeline_events):', e.message);
+  }
+
+  // Migrations for 'push_subscriptions' table - add isNative and fcmToken columns
+  try {
+    const [cols] = await pool.query("SHOW COLUMNS FROM push_subscriptions");
+    const colNames = cols.map(c => c.Field);
+    if (!colNames.includes('isNative')) await pool.execute("ALTER TABLE push_subscriptions ADD COLUMN isNative BOOLEAN DEFAULT FALSE");
+    if (!colNames.includes('fcmToken')) await pool.execute("ALTER TABLE push_subscriptions ADD COLUMN fcmToken TEXT");
+    console.log('      ➕ Colunas de push nativo verificadas em push_subscriptions');
+  } catch (e) {
+    console.log('   ⚠️ Migração parcial ou tabela inexistente (push_subscriptions):', e.message);
   }
 
   console.log('   ✅ Tabelas MySQL verificadas/criadas');

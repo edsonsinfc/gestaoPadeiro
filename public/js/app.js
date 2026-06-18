@@ -12,6 +12,28 @@ const App = {
       console.error("Erro ao inicializar OfflineManager:", e);
     }
 
+    // Listen to Capacitor appRestoredResult for camera recovery
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      const { App: CapApp } = window.Capacitor.Plugins;
+      if (CapApp) {
+        CapApp.addListener('appRestoredResult', (result) => {
+          console.log('[Capacitor] appRestoredResult recebido:', result);
+          if (result.pluginId === 'Camera' && result.methodName === 'getPhoto') {
+            if (result.success && result.data) {
+              window.lastRestoredPhoto = result.data;
+              // Apenas processa imediatamente se o PadeiroFlow já estiver na aba de produção (passo 1)
+              // Caso contrário, deixa que o render do passo 1 consuma a imagem após carregar os produtos
+              if (window.PadeiroFlow && window.PadeiroFlow.currentStep === 1 && typeof window.PadeiroFlow.handleRestoredPhoto === 'function') {
+                window.PadeiroFlow.handleRestoredPhoto(result.data);
+              }
+            } else {
+              console.warn('[Capacitor] Restored camera result failed or cancelled:', result.error);
+            }
+          }
+        });
+      }
+    }
+
     // Global click listener for ripple effects on buttons
     document.addEventListener('click', (e) => {
       const target = e.target.closest('.btn, .nav-item, .segmented-item');
@@ -45,7 +67,17 @@ const App = {
     const user = API.getUser();
     const token = API.token;
     if (user && token) {
-      if (user.role === 'padeiro') LocationService.init(user);
+      if (user.role === 'padeiro') {
+        LocationService.init(user);
+        // Pre-carregar produtos e suas fotos locais em background
+        API.get('/api/produtos')
+          .then(prods => {
+            if (prods && Array.isArray(prods)) {
+              OfflineManager.preloadProductPhotos(prods);
+            }
+          })
+          .catch(console.warn);
+      }
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
       const savedRoute = localStorage.getItem('currentRoute');
       const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : 'padeiro-inicio');
@@ -55,6 +87,9 @@ const App = {
       history.replaceState({ route: 'login', data: {} }, '', '');
       this.navigate('login', {}, false);
     }
+
+    // Check if we should display the HIG APK download banner
+    this.checkApkBanner();
   },
 
   navigate(route, data = {}, pushToHistory = true) {
@@ -78,6 +113,11 @@ const App = {
     
     // Auto-collapse mobile drawer/sidebar on navigation
     this.closeDrawer();
+    
+    const pageContainer = document.getElementById('page-container');
+    if (pageContainer) {
+      pageContainer.scrollTop = 0;
+    }
     
     if (pushToHistory) {
       if (!history.state || history.state.route !== route) {
@@ -642,6 +682,59 @@ const App = {
         document.dispatchEvent(searchEvent);
       });
     }
+  },
+
+  checkApkBanner() {
+    // 1. Detect platform
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    if (isCapacitor) return; // Do not show banner inside native app
+
+    // 2. Check if mobile (width <= 768px)
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+
+    // 3. Check local storage dismissal
+    const dismissed = localStorage.getItem('apk_install_prompt_dismissed');
+    if (dismissed) return;
+
+    // 4. Show the banner with a smooth entry delay
+    setTimeout(() => {
+      const banner = document.getElementById('apk-install-banner');
+      if (banner) {
+        banner.style.display = 'flex';
+        // Render Lucide icons inside the banner
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+        // Force reflow and add active class for transition
+        banner.offsetHeight;
+        banner.classList.add('active');
+      }
+    }, 2000);
+  },
+
+  downloadApk() {
+    // Trigger download of the APK from server root
+    const link = document.createElement('a');
+    link.href = '/smartgestor.apk';
+    link.download = 'smartgestor.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Hide and dismiss the banner
+    this.dismissApkBanner();
+  },
+
+  dismissApkBanner() {
+    const banner = document.getElementById('apk-install-banner');
+    if (banner) {
+      banner.classList.remove('active');
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 400); // Wait for transition out
+    }
+    localStorage.setItem('apk_install_prompt_dismissed', 'true');
   }
 };
 

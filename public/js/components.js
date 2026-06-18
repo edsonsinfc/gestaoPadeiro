@@ -213,6 +213,10 @@ const Components = {
         }
       });
     }
+    // Lazy load product images from cache or remote
+    if (typeof OfflineManager !== 'undefined') {
+      OfflineManager.loadLazyImages();
+    }
   },
 
   // Create ripple effect
@@ -238,8 +242,13 @@ const Components = {
 // --- Offline & Sync Manager (IndexedDB) ---
 const OfflineManager = {
   dbName: 'BragoPadeiroDB',
-  dbVersion: 2, // Incremented version for new stores
+  dbVersion: 3, // Incremented version for new stores and photos cache
   db: null,
+  photosMemoryCache: {}, // Cache em memória para renderização instantânea das fotos
+  isSyncing: false,
+  _syncFailCount: 0, // Contador de falhas consecutivas de sincronização
+  _lastSyncToast: 0, // Timestamp do último toast de sincronização
+  MAX_RETRIES: 5, // Máximo de tentativas antes de descartar um request
 
   async init() {
     return new Promise((resolve, reject) => {
@@ -254,6 +263,9 @@ const OfflineManager = {
         }
         if (!db.objectStoreNames.contains('pendingUploads')) {
           db.createObjectStore('pendingUploads', { keyPath: 'id', autoIncrement: true });
+        }
+        if (!db.objectStoreNames.contains('fotosCache')) {
+          db.createObjectStore('fotosCache', { keyPath: 'codigo' });
         }
       };
       request.onsuccess = (e) => {
@@ -291,16 +303,97 @@ const OfflineManager = {
 
   async saveRequest(url, method, body) {
     if (!this.db) await this.init();
+
+    // Deduplicação: Para PUTs à mesma URL, substituir a entrada anterior
+    // Isso garante que só o estado MAIS RECENTE (ex: status 'finalizada') seja sincronizado
+    if (method === 'PUT') {
+      try {
+        const existing = await this.getPendingRequests();
+        const duplicate = existing.find(r => r.url === url && r.method === 'PUT');
+        if (duplicate) {
+          console.log(`[Offline] Deduplicando PUT para ${url} (substituindo id ${duplicate.id})`);
+          await this.deleteRequest(duplicate.id);
+        }
+      } catch (e) {
+        console.warn('[Offline] Erro na deduplicação, salvando normalmente:', e);
+      }
+    }
+
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction(['pendingRequests'], 'readwrite');
       const store = transaction.objectStore('pendingRequests');
-      const request = store.add({ url, method, body, timestamp: Date.now() });
+      const request = store.add({ url, method, body, timestamp: Date.now(), _retryCount: 0 });
       request.onsuccess = () => {
-        Components.toast('Modo Offline: Alteração salva localmente!', 'info');
+        // Suppress toast for background GPS tracking updates to avoid flooding the screen
+        if (typeof Components !== 'undefined' && Components.toast && !url.includes('/api/tracking/update')) {
+          Components.toast('Modo Offline: Alteração salva localmente!', 'info');
+        }
         resolve();
       };
       request.onerror = (e) => reject(e.target.error);
     });
+  },
+
+  async updateLocalCache(url, method, body) {
+    if (!this.db) await this.init();
+    
+    // 1. Atualizar cache de /api/atividades
+    if (url.includes('/api/atividades')) {
+      const cacheUrl = '/api/atividades';
+      let cachedList = await this.getCachedData(cacheUrl) || [];
+      if (!Array.isArray(cachedList)) cachedList = [];
+
+      if (method === 'POST') {
+        const newActivity = { 
+          ...body, 
+          status: body.status || 'em_andamento',
+          timeline: body.timeline || []
+        };
+        const idx = cachedList.findIndex(a => (a.id === newActivity.id || a._id === newActivity.id));
+        if (idx !== -1) {
+          cachedList[idx] = newActivity;
+        } else {
+          cachedList.push(newActivity);
+        }
+      } else if (method === 'PUT') {
+        const parts = url.split('/');
+        const id = parts[parts.length - 1];
+        
+        const idx = cachedList.findIndex(a => (a.id === id || a._id === id || a.id === body.id || a._id === body.id));
+        if (idx !== -1) {
+          cachedList[idx] = { ...cachedList[idx], ...body };
+        } else {
+          cachedList.push({ id, ...body });
+        }
+      } else if (method === 'DELETE') {
+        const parts = url.split('/');
+        const id = parts[parts.length - 1];
+        cachedList = cachedList.filter(a => (a.id !== id && a._id !== id));
+      }
+      
+      await this.cacheData(cacheUrl, cachedList);
+      console.log('[Offline Cache] Cache de /api/atividades atualizado:', cachedList);
+    }
+    
+    // 2. Atualizar cache da agenda /api/cronograma/agenda
+    if (url.includes('/api/cronograma/agenda')) {
+      const cacheUrl = '/api/cronograma/agenda';
+      let cachedAgenda = await this.getCachedData(cacheUrl) || [];
+      if (!Array.isArray(cachedAgenda)) cachedAgenda = [];
+      
+      if (url.includes('/status') && method === 'PATCH') {
+        const parts = url.split('/');
+        const id = parts[parts.length - 2];
+        const status = body ? body.status : null;
+        
+        const idx = cachedAgenda.findIndex(a => (a.id === id || a._id === id));
+        if (idx !== -1) {
+          cachedAgenda[idx] = { ...cachedAgenda[idx], status };
+          await this.cacheData(cacheUrl, cachedAgenda);
+          console.log('[Offline Cache] Cache de agenda atualizado:', cachedAgenda[idx]);
+        }
+      }
+    }
   },
 
   // Suporte para Upload de Arquivos Offline
@@ -319,7 +412,7 @@ const OfflineManager = {
       const request = store.add({ url, fileData, type, timestamp: Date.now() });
       request.onsuccess = () => {
         Components.toast('Modo Offline: Arquivos salvos para envio posterior!', 'info');
-        resolve({ offline: true, files: fileData.map(f => ({ name: f.name, offline: true })) });
+        resolve({ offline: true, files: fileData.map(f => ({ name: f.name, filename: f.name, offline: true, path: 'offline_pending' })) });
       };
       request.onerror = (e) => reject(e.target.error);
     });
@@ -346,56 +439,139 @@ const OfflineManager = {
   },
 
   async deleteRequest(id) {
-    const transaction = this.db.transaction(['pendingRequests'], 'readwrite');
-    const store = transaction.objectStore('pendingRequests');
-    store.delete(id);
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['pendingRequests'], 'readwrite');
+      const store = transaction.objectStore('pendingRequests');
+      store.delete(id);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = (e) => reject(e.target.error);
+    });
   },
 
   async deleteUpload(id) {
-    const transaction = this.db.transaction(['pendingUploads'], 'readwrite');
-    const store = transaction.objectStore('pendingUploads');
-    store.delete(id);
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['pendingUploads'], 'readwrite');
+      const store = transaction.objectStore('pendingUploads');
+      store.delete(id);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = (e) => reject(e.target.error);
+    });
+  },
+
+  // Incrementa o _retryCount de um request pendente no IndexedDB
+  async _incrementRetryCount(id, currentRetryCount) {
+    if (!this.db) await this.init();
+    return new Promise((resolve) => {
+      const transaction = this.db.transaction(['pendingRequests'], 'readwrite');
+      const store = transaction.objectStore('pendingRequests');
+      const getReq = store.get(id);
+      getReq.onsuccess = () => {
+        const record = getReq.result;
+        if (record) {
+          record._retryCount = (currentRetryCount || 0) + 1;
+          store.put(record);
+        }
+        resolve();
+      };
+      getReq.onerror = () => resolve();
+    });
   },
 
   startSyncCheck() {
+    // Reseta o contador de falhas ao voltar online
     window.addEventListener('online', () => {
-      Components.toast('Conexão restabelecida! Sincronizando dados...', 'success');
-      this.syncPending();
+      this._syncFailCount = 0;
+      Components.toast('Conexão restabelecida! Sincronizando dados em instantes...', 'success');
+      setTimeout(() => this.syncPending(), 2000); // Wait 2s for connection stability
     });
-    // Check periodically anyway (every 5 minutes)
-    setInterval(() => {
-      if (navigator.onLine) this.syncPending();
-    }, 300000);
+    
+    // Sincroniza na inicialização se estiver online com pequeno delay
+    if (navigator.onLine) {
+      console.log('[Offline] Online na inicialização, agendando sincronização em segundo plano...');
+      setTimeout(() => this.syncPending(), 2000);
+    }
+
+    // Intervalo adaptativo: começa em 30s, aumenta com backoff em caso de falhas consecutivas
+    // Máximo de 5 minutos entre tentativas
+    this._syncIntervalId = setInterval(async () => {
+      if (!navigator.onLine) return;
+      
+      // Backoff exponencial: 30s, 60s, 120s, 240s, 300s (cap)
+      const baseInterval = 30000;
+      const backoffMs = Math.min(baseInterval * Math.pow(2, this._syncFailCount), 300000);
+      const now = Date.now();
+      if (this._lastSyncAttempt && (now - this._lastSyncAttempt) < backoffMs) {
+        return; // Ainda dentro do período de backoff, pula esta iteração
+      }
+
+      try {
+        const uploads = await this.getPendingUploads();
+        const pending = await this.getPendingRequests();
+        if (uploads.length > 0 || pending.length > 0) {
+          console.log(`[Offline] ${uploads.length + pending.length} itens pendentes. Sincronizando (tentativa após ${Math.round(backoffMs/1000)}s)...`);
+          this.syncPending();
+        }
+      } catch (e) {
+        console.warn('[Offline] Erro ao verificar pendentes:', e);
+      }
+    }, 15000); // Verifica a cada 15s mas o backoff controla se realmente executa
   },
 
   async syncPending() {
-    // Passo 1: Sincronizar Uploads PRIMEIRO
-    const uploads = await this.getPendingUploads();
-    const uploadedPaths = {}; // Mapa para guardar filename -> real path
+    if (this.isSyncing) return;
     
+    const uploads = await this.getPendingUploads();
+    const pending = await this.getPendingRequests();
+    
+    if (uploads.length === 0 && pending.length === 0) return;
+    
+    this.isSyncing = true;
+    this._lastSyncAttempt = Date.now();
+    let successCount = 0;
+    let failCount = 0;
+    let permanentFailCount = 0; // Requests descartados por exceder retries
+    
+    // Throttle de toast: máximo 1 toast de início de sync a cada 60s
+    const now = Date.now();
+    const canShowToast = (now - this._lastSyncToast) > 60000;
+    if (canShowToast) {
+      this._lastSyncToast = now;
+      Components.toast(`Sincronizando ${uploads.length + pending.length} dados salvos offline...`, 'info');
+    }
+
+    try {
+    // Passo 1: Sincronizar Uploads PRIMEIRO
+    const uploadedPaths = {}; // Mapa para guardar filename -> real path
+    const allUploadedFiles = []; // Lista de TODOS os arquivos enviados com sucesso
     for (const up of uploads) {
       try {
         const files = up.fileData.map(f => new File([f.blob], f.name, { type: f.type }));
         const result = await API.uploadFiles(files, up.type, true);
         if (result && result.files) {
           result.files.forEach(f => {
+            // Guarda na lista global de uploads bem-sucedidos
+            allUploadedFiles.push(f);
             // Usa o filename original ou ajustado para mapear
             uploadedPaths[f.filename] = f;
             uploadedPaths[f.filename.replace(/^compress_/, '')] = f; // caso tenha mudado
+            if (f.originalname) {
+              uploadedPaths[f.originalname] = f;
+              uploadedPaths[f.originalname.replace(/^compress_/, '')] = f;
+            }
           });
         }
         await this.deleteUpload(up.id);
+        successCount++;
       } catch (err) {
         console.error(`[Offline] Falha ao sincronizar upload ${up.id}:`, err);
+        failCount++;
       }
     }
 
     // Passo 2: Sincronizar Requisições e Atualizar Placeholders
-    const pending = await this.getPendingRequests();
-    
     // Tratamento especial para assinaturas (base64) enviadas offline
-    // Se houve envio de assinatura, ele foi salvo como pendingRequest também.
-    // Vamos processá-los primeiro para pegar os paths.
     const signatureRequests = pending.filter(req => req.url.includes('/api/upload/base64/assinaturas'));
     let lastSignaturePath = null;
     
@@ -408,33 +584,110 @@ const OfflineManager = {
         });
         if (res && res.path) lastSignaturePath = res.path;
         await this.deleteRequest(req.id);
+        successCount++;
       } catch (err) {
         console.error(`[Offline] Falha ao sincronizar assinatura ${req.id}:`, err);
+        // Verifica se é erro permanente (servidor rejeitou) vs temporário (rede)
+        const handled = await this._handleSyncError(req, err);
+        if (handled === 'discarded') {
+          permanentFailCount++;
+        } else {
+          failCount++;
+        }
       }
     }
 
-    // Agora processa as requisições normais (ex: atualização da atividade)
-    const normalRequests = pending.filter(req => !req.url.includes('/api/upload/base64'));
+    // Agora processa as requisições normais (ex: atualização da atividade, conclusão da agenda)
+    const allNormal = pending.filter(req => !req.url.includes('/api/upload/base64'));
+    
+    // DEDUPLICAÇÃO: Para PUTs à mesma URL, manter apenas o ÚLTIMO (com dados mais completos)
+    // Isso é crucial para atividades: o wizard salva várias vezes, mas só o último PUT
+    // contém status='finalizada' e todos os dados preenchidos
+    const deduplicatedMap = new Map();
+    const nonPutRequests = [];
+    const idsToDelete = [];
+    
+    for (const req of allNormal) {
+      if (req.method === 'PUT') {
+        if (deduplicatedMap.has(req.url)) {
+          // Já existe um PUT para esta URL - remover o antigo, manter o mais recente
+          const older = deduplicatedMap.get(req.url);
+          idsToDelete.push(older.id);
+          console.log(`[Offline] Deduplicando PUT antigo para ${req.url} (id ${older.id})`);
+        }
+        deduplicatedMap.set(req.url, req);
+      } else {
+        nonPutRequests.push(req);
+      }
+    }
+    
+    // Limpar os registros duplicados do IndexedDB
+    for (const id of idsToDelete) {
+      try { await this.deleteRequest(id); successCount++; } catch(e) {}
+    }
+    
+    // Montar lista final contendo todos os PUTs deduplicados e outras requisições
+    const normalRequests = [...deduplicatedMap.values(), ...nonPutRequests];
+    // Ordenar estritamente de forma cronológica pelo timestamp do registro local.
+    // Isso garante a ordem correta: POST (início) -> PUT (atualização/fotos) -> PATCH (finalização da agenda).
+    normalRequests.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     
     for (const req of normalRequests) {
       try {
         // Se for requisição com body JSON, injetar os caminhos reais
         if (req.body) {
-          // Atualiza fotos
+          // Atualiza fotos offline com os caminhos reais dos uploads
           if (Array.isArray(req.body.fotos)) {
-            req.body.fotos = req.body.fotos.map(foto => {
-              if (foto.offline || foto.path === 'offline_pending') {
-                const realUpload = uploadedPaths[foto.filename] || uploadedPaths[foto.name];
-                if (realUpload) {
-                  return {
-                    filename: realUpload.filename,
-                    path: realUpload.path,
-                    size: realUpload.size
-                  };
+            const hasOfflineFotos = req.body.fotos.some(f => f.offline || f.path === 'offline_pending');
+            
+            if (hasOfflineFotos) {
+              // Tenta match individual por nome
+              let allMatched = true;
+              const mappedFotos = req.body.fotos.map(foto => {
+                if (foto.offline || foto.path === 'offline_pending') {
+                  const realUpload = uploadedPaths[foto.filename] || uploadedPaths[foto.name];
+                  if (realUpload) {
+                    return {
+                      filename: realUpload.filename,
+                      path: realUpload.path,
+                      size: realUpload.size
+                    };
+                  }
+                  allMatched = false;
+                  return foto; // não encontrou match
+                }
+                return foto;
+              });
+              
+              if (allMatched) {
+                // Todos os matches individuais funcionaram
+                req.body.fotos = mappedFotos;
+              } else if (allUploadedFiles.length > 0) {
+                // Fallback: match individual falhou, mas temos uploads feitos
+                // Substitui TODAS as fotos offline pelos uploads reais
+                const onlineFotos = req.body.fotos.filter(f => !f.offline && f.path !== 'offline_pending');
+                const uploadedFotos = allUploadedFiles.map(f => ({
+                  filename: f.filename,
+                  path: f.path,
+                  size: f.size
+                }));
+                req.body.fotos = [...onlineFotos, ...uploadedFotos];
+                console.log(`[Offline] Fallback: substituiu fotos offline por ${uploadedFotos.length} uploads disponíveis.`);
+              } else {
+                // Nenhum upload disponível — adia este request para o próximo ciclo
+                console.warn(`[Offline] Fotos offline sem uploads correspondentes. Adiando request ${req.id} para próximo ciclo.`);
+                const currentRetries = req._retryCount || 0;
+                if (currentRetries < this.MAX_RETRIES) {
+                  try { await this._incrementRetryCount(req.id, currentRetries); } catch(e) {}
+                  failCount++;
+                  continue; // Pula para o próximo request
+                } else {
+                  // Excedeu retries — envia mesmo sem fotos para não bloquear para sempre
+                  console.warn(`[Offline] Enviando request ${req.id} sem fotos (excedeu retries).`);
+                  req.body.fotos = req.body.fotos.filter(f => !f.offline && f.path !== 'offline_pending');
                 }
               }
-              return foto;
-            });
+            }
           }
           
           // Se a assinatura faltou por estar offline, injeta a última sincronizada
@@ -449,22 +702,362 @@ const OfflineManager = {
           isSyncing: true 
         });
         await this.deleteRequest(req.id);
+        successCount++;
       } catch (err) {
         console.error(`[Offline] Falha ao sincronizar requisição ${req.id}:`, err);
+        // Verifica se é erro permanente (servidor rejeitou) vs temporário (rede)
+        const handled = await this._handleSyncError(req, err);
+        if (handled === 'discarded') {
+          permanentFailCount++;
+        } else {
+          failCount++;
+        }
       }
     }
 
-    if (pending.length > 0 || uploads.length > 0) {
-      Components.toast('Sincronização concluída!', 'success');
+    // Atualiza o contador de falhas consecutivas para controlar o backoff
+    if (failCount > 0 && successCount === 0) {
+      this._syncFailCount = Math.min(this._syncFailCount + 1, 5);
+    } else if (successCount > 0) {
+      this._syncFailCount = 0; // Reset backoff se algo funcionou
+    }
+
+    // Toast de resultado com contagem real (throttled)
+    if ((successCount > 0 || failCount > 0 || permanentFailCount > 0) && canShowToast) {
+      if (failCount === 0 && permanentFailCount === 0) {
+        Components.toast('Sincronização concluída com sucesso!', 'success');
+      } else if (permanentFailCount > 0 && failCount === 0) {
+        Components.toast(`Sincronização concluída. ${successCount} salvos, ${permanentFailCount} descartados (dados inválidos).`, 'info');
+      } else if (successCount > 0) {
+        Components.toast(`Sincronização parcial. ${successCount} salvos, ${failCount} aguardando conexão.`, 'info');
+      } else {
+        // Só mostra erro se não estiver em backoff pesado (evita spam)
+        if (this._syncFailCount <= 2) {
+          Components.toast('Sincronização aguardando conexão estável. Tentaremos novamente.', 'info');
+        }
+      }
       // Atualiza a tela se não estiver no meio do formulário
-      if (typeof App !== 'undefined' && App.currentRoute && App.currentRoute !== 'padeiro-atividade') {
+      if (successCount > 0 && typeof App !== 'undefined' && App.currentRoute && App.currentRoute !== 'padeiro-atividade') {
         App.renderPage(App.currentRoute);
       }
     }
+
+    } finally {
+      // CRÍTICO: Sempre libera o flag, mesmo em caso de exceção
+      this.isSyncing = false;
+    }
+  },
+
+  /**
+   * Trata erros de sincronização diferenciando erros permanentes (servidor rejeitou)
+   * de erros transientes (rede, timeout).
+   * Retorna 'discarded' se o request foi removido, 'retry' se será tentado novamente.
+   */
+  async _handleSyncError(req, err) {
+    const errMsg = (err.message || '').toLowerCase();
+    
+    // Erros que indicam que o servidor PROCESSOU o request mas rejeitou
+    // (não vale a pena re-tentar - dados inválidos, recurso não existe, etc.)
+    const isPermanentError = 
+      errMsg.includes('não encontrad') ||
+      errMsg.includes('not found') ||
+      errMsg.includes('validat') ||
+      errMsg.includes('inválid') ||
+      errMsg.includes('invalid') ||
+      errMsg.includes('duplicate') ||
+      errMsg.includes('duplicat') ||
+      errMsg.includes('já existe') ||
+      errMsg.includes('already exists') ||
+      errMsg.includes('unauthorized') ||
+      errMsg.includes('forbidden') ||
+      errMsg.includes('sessão expirad');
+    
+    if (isPermanentError) {
+      // Erro permanente: remove da fila pois re-tentar não vai resolver
+      console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - erro permanente: ${errMsg}`);
+      try { await this.deleteRequest(req.id); } catch(e) {}
+      return 'discarded';
+    }
+    
+    // Erro transiente (rede, timeout, etc): incrementa retry count
+    const currentRetries = req._retryCount || 0;
+    if (currentRetries >= this.MAX_RETRIES) {
+      // Excedeu máximo de retries - descarta para não ficar em loop infinito
+      console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - excedeu ${this.MAX_RETRIES} tentativas.`);
+      try { await this.deleteRequest(req.id); } catch(e) {}
+      return 'discarded';
+    }
+    
+    // Incrementa o contador de retries no IndexedDB
+    try { await this._incrementRetryCount(req.id, currentRetries); } catch(e) {}
+    console.log(`[Offline] Request ${req.id} será re-tentado (tentativa ${currentRetries + 1}/${this.MAX_RETRIES}).`);
+    return 'retry';
+  },
+
+  // --- Cache de Fotos de Produtos ---
+  async getProductPhotoCache(codigo) {
+    if (!this.db) await this.init();
+    return new Promise((resolve) => {
+      const transaction = this.db.transaction(['fotosCache'], 'readonly');
+      const store = transaction.objectStore('fotosCache');
+      const request = store.get(codigo);
+      request.onsuccess = () => resolve(request.result ? request.result.dataUrl : null);
+      request.onerror = () => resolve(null);
+    });
+  },
+
+  compressImageBlob(blob, maxDim = 250, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(img.src);
+        reject(err);
+      };
+    });
+  },
+
+  async cacheProductPhoto(codigo, url) {
+    if (!this.db) await this.init();
+    // Evita cachear se já estiver no cache
+    const existing = await this.getProductPhotoCache(codigo);
+    if (existing) return;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return;
+      const blob = await response.blob();
+      
+      // Comprimir imagem para max 250px e 70% de qualidade JPEG
+      const dataUrl = await this.compressImageBlob(blob, 250, 0.7);
+
+      const transaction = this.db.transaction(['fotosCache'], 'readwrite');
+      const store = transaction.objectStore('fotosCache');
+      store.put({ codigo, dataUrl, timestamp: Date.now() });
+      console.log(`📸 Foto do produto ${codigo} salva no cache local de forma otimizada.`);
+    } catch (e) {
+      console.warn(`Erro ao salvar foto ${codigo} no cache:`, e);
+    }
+  },
+
+  loadLazyImages() {
+    document.querySelectorAll('img[src*="/api/foto-produto/"]').forEach(async (img) => {
+      const src = img.src;
+      // Extrair o código do produto da URL (ex: /api/foto-produto/14510)
+      const parts = src.split('/');
+      const codigo = parts[parts.length - 1];
+      if (!codigo || codigo.startsWith('data:')) return;
+
+      try {
+        const cachedDataUrl = await this.getProductPhotoCache(codigo);
+        if (cachedDataUrl) {
+          // Se achou no cache, substitui o src da imagem pela versão local offline
+          if (img.src !== cachedDataUrl) {
+            img.src = cachedDataUrl;
+          }
+        } else {
+          // Se não está no cache, reescreve o src para o servidor absoluto se estiver rodando local no webview
+          if (src.includes('localhost') || !src.startsWith('http')) {
+            const relativePath = src.substring(src.indexOf('/api/'));
+            img.src = `${API_BASE_URL}${relativePath}`;
+          }
+          // Baixa em background para o cache se estiver online
+          if (navigator.onLine) {
+            const absoluteUrl = img.src;
+            this.cacheProductPhoto(codigo, absoluteUrl).catch(console.warn);
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao processar imagem em cache:', err);
+      }
+    });
+  },
+
+  async preloadProductPhotos(produtos) {
+    if (!navigator.onLine || !produtos || produtos.length === 0) return;
+    console.log('[Offline] Iniciando pré-carregamento de fotos de produtos em background...');
+    
+    // Filtra produtos que têm foto cadastrada
+    const prodsComFoto = produtos.filter(p => p.temFoto && p.codigo);
+    
+    // Processa de 2 em 2 com um delay maior para não travar a UI nativa
+    const limit = 2;
+    let index = 0;
+
+    const nextBatch = async () => {
+      if (index >= prodsComFoto.length) {
+        console.log('[Offline] Pré-carregamento de fotos concluído!');
+        return;
+      }
+      const batch = prodsComFoto.slice(index, index + limit);
+      index += limit;
+
+      await Promise.all(batch.map(async (p) => {
+        try {
+          const absoluteUrl = `${API_BASE_URL}/api/foto-produto/${p.codigo}`;
+          await this.cacheProductPhoto(p.codigo, absoluteUrl);
+        } catch (e) {}
+      }));
+
+      // Maior espaçamento entre lotes para suavidade (2000ms)
+      setTimeout(() => {
+        if (typeof requestIdleCallback !== 'undefined') {
+          requestIdleCallback(nextBatch);
+        } else {
+          nextBatch();
+        }
+      }, 2000);
+    };
+
+    // Inicia após 5 segundos para deixar o app renderizar a tela inicial livre de concorrência
+    setTimeout(() => {
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(nextBatch);
+      } else {
+        nextBatch();
+      }
+    }, 5000);
+  },
+
+  // Popula o cache de imagens em memória para renderização síncrona instantânea
+  async loadPhotosToMemoryCache(produtos) {
+    if (!this.db) await this.init();
+    if (!produtos || produtos.length === 0) return;
+
+    return new Promise((resolve) => {
+      const transaction = this.db.transaction(['fotosCache'], 'readonly');
+      const store = transaction.objectStore('fotosCache');
+      
+      const prodsComFoto = produtos.filter(p => p.temFoto && p.codigo);
+      if (prodsComFoto.length === 0) {
+        resolve();
+        return;
+      }
+
+      let loaded = 0;
+      prodsComFoto.forEach(p => {
+        const req = store.get(p.codigo);
+        req.onsuccess = () => {
+          if (req.result && req.result.dataUrl) {
+            this.photosMemoryCache[p.codigo] = req.result.dataUrl;
+            // Atualiza dinamicamente as imagens na tela que possuem esse código
+            const imgs = document.querySelectorAll(`img[data-product-code="${p.codigo}"]`);
+            imgs.forEach(img => {
+              img.src = req.result.dataUrl;
+            });
+          }
+          loaded++;
+          if (loaded === prodsComFoto.length) {
+            resolve();
+          }
+        };
+        req.onerror = () => {
+          loaded++;
+          if (loaded === prodsComFoto.length) {
+            resolve();
+          }
+        };
+      });
+    });
+  },
+
+  // Retorna a URL da imagem (ou o Base64 se estiver no cache)
+  getProductPhotoSrc(codigo, temFoto, fallback) {
+    if (!temFoto || !codigo) return fallback;
+    if (this.photosMemoryCache[codigo]) {
+      return this.photosMemoryCache[codigo];
+    }
+    // Retorna a URL absoluta do servidor central
+    return `${API_BASE_URL}/api/foto-produto/${codigo}`;
   }
 };
 
-// API Helper
+// API Helper — Multi-URL com Fallback Inteligente
+// Primário: Hostinger (produção, sempre online). Fallback: túnel Cloudflare (dev local).
+const API_URLS = {
+  hostinger: 'https://app2.bragodistribuidora.com.br',
+  cloudflare: 'https://pearl-establishing-sat-discover.trycloudflare.com'
+};
+
+// Determina se estamos no APK/WebView ou no browser com servidor local
+const _isNativeOrRemote = !!(window.Capacitor || (window.location.hostname === 'localhost' && !window.location.port));
+
+// URL ativa — começa com Hostinger (produção estável)
+let API_BASE_URL = _isNativeOrRemote ? API_URLS.hostinger : '';
+
+// Health-check rápido na inicialização para escolher a melhor URL
+(async function detectBestApiUrl() {
+  if (!_isNativeOrRemote) return; // No browser local, usa '' (mesmo servidor)
+  
+  // 1. Tenta Hostinger primeiro (produção, sempre estável)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`${API_URLS.hostinger}/api/ping`, { 
+      signal: controller.signal,
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      API_BASE_URL = API_URLS.hostinger;
+      console.log('[API] ✅ Hostinger ativo. Usando:', API_BASE_URL);
+      return;
+    }
+  } catch (e) {
+    console.warn('[API] ⚠️ Hostinger indisponível, tentando Cloudflare tunnel...');
+  }
+  
+  // 2. Hostinger falhou — tenta Cloudflare tunnel (dev local)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`${API_URLS.cloudflare}/api/ping`, { 
+      signal: controller.signal,
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      API_BASE_URL = API_URLS.cloudflare;
+      console.log('[API] ✅ Cloudflare tunnel ativo. Usando:', API_BASE_URL);
+      return;
+    }
+  } catch (e) {
+    console.warn('[API] ⚠️ Cloudflare tunnel também indisponível.');
+  }
+  
+  // Nenhum respondeu — mantém Hostinger como padrão
+  API_BASE_URL = API_URLS.hostinger;
+  console.log('[API] 🔄 Nenhum servidor respondeu. Padrão: Hostinger:', API_BASE_URL);
+})();
+
 const API = {
   token: localStorage.getItem('brago_token'),
 
@@ -489,11 +1082,31 @@ const API = {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
+    // Bypass imediato se estiver offline de verdade
+    if (!navigator.onLine && !options.isSyncing) {
+      if (method === 'GET') {
+        const cached = await OfflineManager.getCachedData(url);
+        if (cached) {
+          console.warn('[Offline] Retornando dados do cache instantaneamente para:', url);
+          return cached;
+        }
+      } else {
+        const parsedBody = options.body ? JSON.parse(options.body) : null;
+        await OfflineManager.saveRequest(url, method, parsedBody);
+        try {
+          await OfflineManager.updateLocalCache(url, method, parsedBody);
+        } catch (cacheErr) {
+          console.warn('[Offline] Erro ao atualizar cache local:', cacheErr);
+        }
+        return { offline: true, message: 'Salvo localmente' };
+      }
+    }
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
     try {
-      const res = await fetch(url, { ...options, headers, signal: controller.signal });
+      const res = await fetch(`${API_BASE_URL}${url}`, { ...options, headers, signal: controller.signal });
       clearTimeout(timeoutId);
       
       const data = await res.json();
@@ -515,8 +1128,55 @@ const API = {
       return data;
     } catch (err) {
       clearTimeout(timeoutId);
+      
+      // FALLBACK: Se falhou com erro de rede e temos URL alternativa, tenta ela
+      const errMsg = (err.message || '').toLowerCase();
+      const isNetworkError = err.name === 'AbortError' || 
+                        errMsg.includes('failed') || 
+                        errMsg.includes('network') || 
+                        errMsg.includes('fetch') || 
+                        errMsg.includes('abort') || 
+                        errMsg.includes('timeout') ||
+                        errMsg.includes('connect');
+      
+      if (isNetworkError && _isNativeOrRemote && !options._fallbackAttempted) {
+        // Descobre a URL alternativa
+        const altUrl = API_BASE_URL === API_URLS.cloudflare ? API_URLS.hostinger : API_URLS.cloudflare;
+        console.warn(`[API] ⚠️ Servidor ${API_BASE_URL} falhou. Tentando fallback: ${altUrl}...`);
+        
+        try {
+          const fallbackController = new AbortController();
+          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 8000); // 8s para fallback
+          const fallbackRes = await fetch(`${altUrl}${url}`, { ...options, headers, signal: fallbackController.signal });
+          clearTimeout(fallbackTimeout);
+          
+          const data = await fallbackRes.json();
+          if (fallbackRes.ok) {
+            // Fallback funcionou! Atualiza a URL ativa para futuras requisições
+            API_BASE_URL = altUrl;
+            console.log(`[API] ✅ Fallback bem-sucedido! API_BASE_URL alterada para: ${altUrl}`);
+            
+            if (method === 'GET') {
+              OfflineManager.cacheData(url, data);
+            }
+            return data;
+          }
+          
+          if (fallbackRes.status === 401) {
+            this.setToken(null);
+            this.setUser(null);
+            Components.toast('Sessão expirada ou dados inválidos.', 'error');
+            App.navigate('login');
+          }
+          throw new Error(data.error || data.message || 'Erro na requisição');
+        } catch (fallbackErr) {
+          console.warn('[API] ⚠️ Fallback também falhou:', fallbackErr.message);
+          // Continua para a lógica offline abaixo
+        }
+      }
+
       // HANDLE OFFLINE
-      const isOffline = !navigator.onLine || err.name === 'AbortError' || err.message.includes('Failed to fetch') || err.message.includes('Network error');
+      const isOffline = !navigator.onLine || isNetworkError;
       
       if (isOffline) {
         if (method === 'GET') {
@@ -527,7 +1187,13 @@ const API = {
           }
         } else if (!options.isSyncing) {
           // POST/PUT/PATCH/DELETE
-          await OfflineManager.saveRequest(url, method, options.body ? JSON.parse(options.body) : null);
+          const parsedBody = options.body ? JSON.parse(options.body) : null;
+          await OfflineManager.saveRequest(url, method, parsedBody);
+          try {
+            await OfflineManager.updateLocalCache(url, method, parsedBody);
+          } catch (cacheErr) {
+            console.warn('[Offline] Erro ao atualizar cache local:', cacheErr);
+          }
           return { offline: true, message: 'Salvo localmente' };
         }
       }
@@ -553,7 +1219,7 @@ const API = {
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for uploads
 
     try {
-      const res = await fetch(`/api/upload/${type}`, {
+      const res = await fetch(`${API_BASE_URL}/api/upload/${type}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${this.token}` },
         body: formData,
@@ -572,7 +1238,44 @@ const API = {
       }
       return data;
     } catch (err) {
-      if (!navigator.onLine && !isSyncing) {
+      clearTimeout(timeoutId);
+      const errMsg = (err.message || '').toLowerCase();
+      const isNetworkError = err.name === 'AbortError' || 
+                        errMsg.includes('failed') || 
+                        errMsg.includes('network') || 
+                        errMsg.includes('fetch') || 
+                        errMsg.includes('abort') || 
+                        errMsg.includes('timeout') ||
+                        errMsg.includes('connect');
+
+      // FALLBACK: Tenta URL alternativa antes de salvar offline
+      if (isNetworkError && _isNativeOrRemote) {
+        const altUrl = API_BASE_URL === API_URLS.cloudflare ? API_URLS.hostinger : API_URLS.cloudflare;
+        console.warn(`[API Upload] ⚠️ Tentando fallback upload: ${altUrl}...`);
+        try {
+          const altFormData = new FormData();
+          Array.from(files).forEach(f => altFormData.append('files', f));
+          const fallbackController = new AbortController();
+          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 60000);
+          const altRes = await fetch(`${altUrl}/api/upload/${type}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${this.token}` },
+            body: altFormData,
+            signal: fallbackController.signal
+          });
+          clearTimeout(fallbackTimeout);
+          const altData = await altRes.json();
+          if (altRes.ok) {
+            API_BASE_URL = altUrl;
+            console.log(`[API Upload] ✅ Fallback upload bem-sucedido! URL alterada para: ${altUrl}`);
+            return altData;
+          }
+        } catch (fallbackErr) {
+          console.warn('[API Upload] ⚠️ Fallback upload também falhou:', fallbackErr.message);
+        }
+      }
+
+      if ((isNetworkError || !navigator.onLine) && !isSyncing) {
         return OfflineManager.saveUpload(`/api/upload/${type}`, files, type);
       }
       console.error("Upload error:", err);

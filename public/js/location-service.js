@@ -23,11 +23,55 @@ const LocationService = {
     console.log('📡 Inicializando rastreamento GPS para:', user.nome);
     this.requestWakeLock();
 
-    // Connect to socket
-    this.socket = io({ transports: ['websocket', 'polling'] });
+    // Connect to socket if defined, otherwise gracefully fallback to HTTP
+    if (typeof io === 'undefined') {
+      console.warn('⚠️ Socket.io (io) não está definido. Utilizando HTTP fallback para envio de localização.');
+      this.socket = null;
+    } else {
+      this.socket = io(API_BASE_URL, { transports: ['websocket', 'polling'] });
+    }
 
-    // Check if we are in a secure context (HTTPS or localhost)
-    if (window.isSecureContext) {
+    if (this.socket) {
+      // Escutar atualizações de cronograma em tempo real
+      this.socket.on('agenda-updated', (data) => {
+      console.log('📅 Agenda atualizada recebida via Socket:', data);
+      const user = API.getUser();
+      if (!user) return;
+
+      // Verifica se a atualização afeta o padeiro logado
+      const isMyTask = data && data.tarefa && data.tarefa.padeiroId === user.id;
+      const isGeneralUpdate = data && (data.action === 'delete_all' || data.action === 'load_template');
+
+      if (isMyTask || isGeneralUpdate) {
+        // Se estiver na tela de agenda, atualiza a exibição em tempo real
+        if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
+          console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
+          if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+            PadeiroAgenda.render();
+          }
+        }
+
+        // Mostrar um feedback visual (toast)
+        if (typeof Components !== 'undefined' && typeof Components.toast === 'function') {
+          let msg = 'Sua agenda de tarefas foi atualizada!';
+          if (data.action === 'create') {
+            msg = `Nova tarefa: ${data.tarefa.clienteNome || 'Cliente'}`;
+          } else if (data.action === 'delete') {
+            msg = `Tarefa removida: ${data.tarefa.clienteNome || 'Cliente'}`;
+          } else if (data.action === 'load_template') {
+            msg = 'Novo cronograma de tarefas carregado!';
+          }
+          Components.toast(msg, 'info', 5000);
+        }
+      }
+    });
+  }
+
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+
+    if (isCapacitor) {
+      this._startNativeGPSTracking(user);
+    } else if (window.isSecureContext) {
       this._startGPSTracking(user);
     } else {
       console.warn('⚠️ Contexto não-seguro detectado (HTTP em rede local). GPS nativo indisponível.');
@@ -38,6 +82,49 @@ const LocationService = {
       }
       // Use IP-based geolocation as fallback
       this._startIPFallback(user);
+    }
+  },
+
+  /** Native Background GPS tracking under Capacitor APK */
+  async _startNativeGPSTracking(user) {
+    const BackgroundGeolocation = window.Capacitor?.Plugins?.BackgroundGeolocation;
+    if (!BackgroundGeolocation) {
+      console.error('❌ Plugin BackgroundGeolocation não encontrado no Capacitor. Usando fallback clássico.');
+      this._startGPSTracking(user);
+      return;
+    }
+
+    try {
+      console.log('📡 Inicializando Background Geolocation Nativo...');
+      
+      this.watchId = await BackgroundGeolocation.addWatcher(
+        {
+          backgroundMessage: "Acompanhando trajeto de entrega do padeiro.",
+          backgroundTitle: "Smart Gestor está ativo",
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 15 // Envia atualizações a cada 15 metros
+        },
+        (location, error) => {
+          if (error) {
+            console.error("❌ Erro no watcher de Background Geolocation:", error);
+            if (error.code === "NOT_AUTHORIZED") {
+              if (window.confirm("Este app requer permissão de localização. Deseja abrir as configurações?")) {
+                BackgroundGeolocation.openSettings();
+              }
+            }
+            return;
+          }
+          if (location) {
+            this.handlePosition(location, user, true);
+          }
+        }
+      );
+      
+      console.log('📡 Background Geolocation Nativo iniciado com ID:', this.watchId);
+    } catch (err) {
+      console.error('❌ Falha ao inicializar Background Geolocation Nativo:', err);
+      this._startGPSTracking(user);
     }
   },
 
@@ -52,7 +139,7 @@ const LocationService = {
     }
 
     this.watchId = navigator.geolocation.watchPosition(
-      (pos) => this.handlePosition(pos, user),
+      (pos) => this.handlePosition(pos, user, false),
       (err) => {
         switch (err.code) {
           case 1: // PERMISSION_DENIED
@@ -118,31 +205,61 @@ const LocationService = {
     this.ipFallbackInterval = setInterval(fetchIPLocation, Math.max(this.updateInterval, 30000));
   },
 
-  handlePosition(position, user) {
+  handlePosition(position, user, isNative = false) {
     const now = Date.now();
     if (now - this.lastSent < this.updateInterval) return;
+
+    let lat, lng, accuracy;
+    if (isNative) {
+      lat = position.latitude;
+      lng = position.longitude;
+      accuracy = position.accuracy;
+    } else {
+      lat = position.coords.latitude;
+      lng = position.coords.longitude;
+      accuracy = position.coords.accuracy;
+    }
 
     const data = {
       userId: user.id,
       userName: user.nome,
       filial: user.filial,
       coords: {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy
+        lat: lat,
+        lng: lng,
+        accuracy: accuracy
       },
-      source: 'gps'
+      source: isNative ? 'background-gps' : 'gps'
     };
 
     if (this.socket && this.socket.connected) {
       this.socket.emit('update-location', data);
       this.lastSent = now;
-      console.log('📍 Localização (GPS) enviada:', data.coords.lat, data.coords.lng);
+      console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via Socket:`, data.coords.lat, data.coords.lng);
+    } else {
+      console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via HTTP fallback:`, data.coords.lat, data.coords.lng);
+      API.post('/api/tracking/update', { coords: data.coords, source: data.source })
+        .then(() => {
+          this.lastSent = now;
+        })
+        .catch(err => {
+          console.error('❌ Falha no envio HTTP da localização:', err);
+        });
     }
   },
 
   stop() {
-    if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
+    if (this.watchId) {
+      const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+      if (isCapacitor && window.Capacitor.Plugins.BackgroundGeolocation) {
+        window.Capacitor.Plugins.BackgroundGeolocation.removeWatcher({ id: this.watchId })
+          .then(() => console.log('📡 Watcher de Background Geolocation removido.'))
+          .catch(err => console.error('❌ Erro ao remover watcher de Background Geolocation:', err));
+      } else {
+        navigator.geolocation.clearWatch(this.watchId);
+      }
+      this.watchId = null;
+    }
     if (this.ipFallbackInterval) clearInterval(this.ipFallbackInterval);
     if (this.socket) this.socket.disconnect();
     this.releaseWakeLock();
@@ -233,14 +350,7 @@ const LocationService = {
       // Isso evita perda silenciosa de eventos
       console.warn('⚠️ Socket não conectado, enviando timeline-event via HTTP fallback');
       try {
-        await fetch('/api/timeline-events', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API.token}`
-          },
-          body: JSON.stringify(eventData)
-        });
+        await API.post('/api/timeline-events', eventData);
       } catch (httpErr) {
         console.error('❌ Falha no fallback HTTP para timeline-event:', httpErr);
       }

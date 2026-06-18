@@ -1,4 +1,5 @@
 const { Cronograma, Padeiro, Atividade, Avaliacao } = require('../data/db-adapter');
+const { getIo } = require('../sockets/location.socket');
 
 exports.listCronograma = async (req, res) => {
   const query = {};
@@ -81,6 +82,21 @@ exports.createTarefa = async (req, res) => {
     nova.criadoEm = new Date().toISOString();
 
     const tarefa = await Cronograma.create(nova);
+    
+    const io = getIo();
+    if (io) {
+      io.emit('agenda-updated', { action: 'create', tarefa });
+    }
+
+    // Enviar notificação push nativa/web para o padeiro em background
+    const pushService = require('../data/pushService');
+    pushService.sendPushToUser(
+      tarefa.padeiroId,
+      '🍞 Nova Tarefa Agendada!',
+      `Você foi escalado para o cliente "${tarefa.clienteNome || 'Cliente'}" às ${tarefa.horario || '00:00'}.`,
+      '/padeiro-agenda'
+    ).catch(err => console.error('Erro ao enviar push de nova tarefa:', err.message));
+
     res.status(201).json(tarefa);
   } catch (e) {
     console.error('Erro ao criar tarefa no cronograma:', e);
@@ -93,6 +109,12 @@ exports.updateTarefa = async (req, res) => {
     const { _id, id, ...updateData } = req.body;
     const tarefa = await Cronograma.findByIdAndUpdate(req.params.id, { ...updateData, atualizadoEm: new Date().toISOString() }, { new: true });
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
+
+    const io = getIo();
+    if (io) {
+      io.emit('agenda-updated', { action: 'update', tarefa });
+    }
+
     res.json(tarefa);
   } catch (e) {
     console.error("Erro ao atualizar cronograma:", e);
@@ -112,6 +134,11 @@ exports.deleteAllTarefas = async (req, res) => {
       await Avaliacao.deleteMany({ atividadeId: { $in: activityIds } });
     }
 
+    const io = getIo();
+    if (io) {
+      io.emit('agenda-updated', { action: 'delete_all' });
+    }
+
     res.json({ success: true, message: 'Todo o cronograma foi excluído.' });
   } catch (e) {
     res.status(500).json({ error: 'Erro ao excluir cronograma' });
@@ -121,6 +148,7 @@ exports.deleteAllTarefas = async (req, res) => {
 exports.deleteTarefa = async (req, res) => {
   try {
     const id = req.params.id;
+    const tarefa = await Cronograma.findById(id);
     const activitiesToDelete = await Atividade.find({ cronogramaId: id });
     const activityIds = activitiesToDelete.map(a => a.id);
 
@@ -129,6 +157,13 @@ exports.deleteTarefa = async (req, res) => {
 
     if (activityIds.length > 0) {
       await Avaliacao.deleteMany({ atividadeId: { $in: activityIds } });
+    }
+
+    if (tarefa) {
+      const io = getIo();
+      if (io) {
+        io.emit('agenda-updated', { action: 'delete', tarefa });
+      }
     }
 
     res.json({ success: true });
@@ -160,6 +195,12 @@ exports.updateTarefaStatus = async (req, res) => {
       { new: true }
     );
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
+
+    const io = getIo();
+    if (io) {
+      io.emit('agenda-updated', { action: 'status_update', tarefa });
+    }
+
     res.json(tarefa);
   } catch (e) {
     res.status(400).json({ error: 'ID inválido' });

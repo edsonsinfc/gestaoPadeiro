@@ -62,6 +62,26 @@
 </head>
 <body>
   <div id="app"></div>
+
+  <!-- Apple HIG Style Floating APK Install Banner -->
+  <div id="apk-install-banner" class="apk-install-banner" style="display: none;">
+    <div class="apk-banner-header">
+      <div class="apk-banner-icon">
+        <i data-lucide="download" style="width:20px; height:20px;"></i>
+      </div>
+      <div class="apk-banner-info">
+        <h3 class="apk-banner-title">Smart Gestor 🥖</h3>
+        <p class="apk-banner-desc">Instale o aplicativo oficial para melhor desempenho e rastreamento de GPS.</p>
+      </div>
+    </div>
+    <div class="apk-banner-actions">
+      <button class="apk-banner-btn-dismiss" onclick="App.dismissApkBanner()">Depois</button>
+      <button class="apk-banner-btn-download" onclick="App.downloadApk()">
+        <i data-lucide="download" style="width:16px; height:16px;"></i> Instalar App
+      </button>
+    </div>
+  </div>
+
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Leaflet Map -->
@@ -69,13 +89,19 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
   <!-- Real-time Tracking -->
+  <script src="/js/components.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script>
+    if (typeof io === 'undefined') {
+      console.log('⚠️ Local socket.io.js failed to load. Falling back to CDN...');
+      document.write('<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"><\/script>');
+    }
+  </script>
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script src="/js/location-service.js?v=1.0"></script>
   <script src="/js/rastreamento.js?v=2.4"></script>
   <script src="/js/timeline.js?v=1.0"></script>
 
-  <script src="/js/components.js"></script>
   <script src="/js/auth.js?v=1.5"></script>
   <script src="/js/admin-dashboard.js?v=1.1"></script>
   <script src="/js/gestao.js?v=2.3"></script>
@@ -102,6 +128,7 @@
   <script src="/js/tutorial.js?v=1.0"></script>
   <script src="/js/padeiro-tutorial.js?v=1.0"></script>
   <script src="/js/master-gestor.js"></script>
+  <script src="/js/notification-service.js?v=1.0"></script>
   <script src="/js/app.js?v=2.7"></script>
   <!-- Update Banner (hidden by default) -->
   <div id="pwa-update-banner" style="

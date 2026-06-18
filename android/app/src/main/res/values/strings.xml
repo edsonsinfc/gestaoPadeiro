@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Smart Gestor</string>
+    <string name="title_activity_main">Smart Gestor</string>
+    <string name="package_name">com.brago.smartgestor</string>
+    <string name="custom_url_scheme">com.brago.smartgestor</string>
+</resources>

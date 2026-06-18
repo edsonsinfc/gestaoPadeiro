@@ -135,6 +135,15 @@ const Auth = {
         // Pequeno delay para garantir conexão do socket
         await new Promise(r => setTimeout(r, 500));
         await LocationService.captureAction('Login no Aplicativo');
+
+        // Pre-carregar produtos e suas fotos locais em background após o login
+        API.get('/api/produtos')
+          .then(prods => {
+            if (prods && Array.isArray(prods)) {
+              OfflineManager.preloadProductPhotos(prods);
+            }
+          })
+          .catch(console.warn);
       }
 
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);

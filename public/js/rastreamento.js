@@ -787,7 +787,12 @@ window.Rastreamento = {
   initSocket() {
     if (this.socket) this.socket.disconnect();
     
-    this.socket = io({ transports: ['websocket', 'polling'] });
+    if (typeof io === 'undefined') {
+      console.warn('⚠️ Socket.io (io) não está definido no painel de rastreamento.');
+      return;
+    }
+    
+    this.socket = io(API_BASE_URL, { transports: ['websocket', 'polling'] });
 
     this.socket.on('connect', () => {
       const statusEl = document.getElementById('tracking-status');

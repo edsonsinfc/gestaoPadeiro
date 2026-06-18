@@ -154,6 +154,40 @@ const TrackingController = {
       console.error('Error resetting user tracking:', error);
       res.status(500).json({ error: 'Erro ao resetar histórico de rastreamento do padeiro' });
     }
+  },
+
+  /**
+   * Update location from HTTP request (used primarily as background fallback)
+   * POST /api/tracking/update
+   */
+  async updateLocation(req, res) {
+    try {
+      const { coords, source } = req.body;
+      const user = req.user; // populated by authMiddleware
+
+      if (!coords || typeof coords.lat === 'undefined' || typeof coords.lng === 'undefined') {
+        return res.status(400).json({ error: 'coords.lat e coords.lng são obrigatórios' });
+      }
+
+      const { updateActiveLocation } = require('../sockets/location.socket');
+      
+      await updateActiveLocation({
+        userId: user.id,
+        userName: user.nome,
+        filial: user.filial,
+        coords: {
+          lat: Number(coords.lat),
+          lng: Number(coords.lng),
+          accuracy: typeof coords.accuracy !== 'undefined' ? Number(coords.accuracy) : null
+        },
+        source: source || 'http-fallback'
+      });
+
+      res.json({ success: true, message: 'Localização atualizada com sucesso' });
+    } catch (error) {
+      console.error('Error updating location via HTTP:', error);
+      res.status(500).json({ error: 'Erro ao atualizar localização' });
+    }
   }
 };
 

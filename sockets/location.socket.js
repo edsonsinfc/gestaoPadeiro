@@ -102,4 +102,49 @@ function clearActiveLocations() {
   }
 }
 
-module.exports = { initLocationSocket, clearActiveLocations, getIo: () => ioInstance };
+async function updateActiveLocation(data) {
+  if (!data.userId) return;
+
+  const locationData = {
+    ...data,
+    lastUpdate: new Date().toISOString()
+  };
+
+  activeLocations.set(data.userId, locationData);
+
+  try {
+    await Localizacao.findByIdAndUpdate(data.userId, {
+      id: data.userId,
+      userId: data.userId,
+      userName: data.userName,
+      filial: data.filial,
+      lat: data.coords.lat,
+      lng: data.coords.lng,
+      accuracy: data.coords.accuracy,
+      lastUpdate: locationData.lastUpdate
+    }, { upsert: true });
+
+    // Persist in history
+    await HistoricoLocalizacao.create({
+      userId: data.userId,
+      userName: data.userName,
+      lat: data.coords.lat,
+      lng: data.coords.lng,
+      accuracy: data.coords.accuracy,
+      timestamp: locationData.lastUpdate
+    });
+  } catch (e) {
+    console.error("Erro ao salvar localização via HTTP no banco:", e);
+  }
+
+  if (ioInstance) {
+    ioInstance.emit('location-broadcast', Array.from(activeLocations.values()));
+  }
+}
+
+module.exports = { 
+  initLocationSocket, 
+  clearActiveLocations, 
+  updateActiveLocation, 
+  getIo: () => ioInstance 
+};

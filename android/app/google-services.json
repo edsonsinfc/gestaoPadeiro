@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "39182514815",
+    "project_id": "smartgestor-4eb83",
+    "storage_bucket": "smartgestor-4eb83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39182514815:android:8310dd19b605f4245add4a",
+        "android_client_info": {
+          "package_name": "com.brago.smartgestor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhc-X_nvqhvbI1Ww-FQu7W9St6McRyc4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

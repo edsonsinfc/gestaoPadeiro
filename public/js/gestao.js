@@ -981,7 +981,7 @@ const Gestao = {
       </div>
     `).join('') || '<div class="text-tertiary">Nenhum produto detalhado.</div>';
 
-    const fotosHtml = (a.fotos || []).map(f => `
+    const fotosHtml = (a.fotos || []).filter(f => f.path && f.path !== 'offline_pending' && !f.offline).map(f => `
       <div style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1px solid var(--separator);">
         <img src="${(f.path || '').replace('/uploads/', '/storage/')}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${(f.path || '').replace('/uploads/', '/storage/')}', '_blank')">
       </div>

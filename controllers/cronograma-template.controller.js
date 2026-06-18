@@ -1,5 +1,6 @@
 const { CronogramaTemplate, Cronograma } = require('../data/db-adapter');
 const crypto = require('crypto');
+const { getIo } = require('../sockets/location.socket');
 
 exports.listTemplates = async (req, res) => {
   try {
@@ -131,6 +132,12 @@ exports.loadTemplate = async (req, res) => {
     });
 
     const result = await Cronograma.insertMany(novasTarefas);
+    
+    const io = getIo();
+    if (io) {
+      io.emit('agenda-updated', { action: 'load_template' });
+    }
+
     res.json({ success: true, count: result.length });
   } catch (error) {
     console.error('Error loading template:', error);

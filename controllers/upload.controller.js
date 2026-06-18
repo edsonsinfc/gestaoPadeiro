@@ -18,7 +18,8 @@ exports.uploadFiles = async (req, res) => {
       return {
         filename: f.filename,
         path: `/storage/${type}/${f.filename}`,
-        size: f.size
+        size: f.size,
+        originalname: f.originalname
       };
     });
 

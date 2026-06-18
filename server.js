@@ -83,7 +83,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // FTP PRODUCT IMAGE PROXY (read-only, optimized)
 // ============================================================
 const ftp = require('basic-ftp');
-const PRODUTO_IMG_CACHE = path.join(__dirname, 'public', 'img', 'produtos');
+const PRODUTO_IMG_CACHE = path.join(__dirname, 'data', 'produtos_cache');
 if (!fs.existsSync(PRODUTO_IMG_CACHE)) {
   fs.mkdirSync(PRODUTO_IMG_CACHE, { recursive: true });
 }
@@ -268,7 +268,7 @@ app.get('/api/push/vapid-public-key', (req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
 });
 
-// Rota: inscrever dispositivo para push
+// Rota: inscrever dispositivo para push (suporta web e nativo)
 app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
   try {
     const { PushSubscription } = require('./data/db-adapter');
@@ -287,11 +287,13 @@ app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
       id,
       padeiroId,
       endpoint: subscription.endpoint,
-      keys_p256dh: subscription.keys.p256dh,
-      keys_auth: subscription.keys.auth
+      keys_p256dh: subscription.keys ? subscription.keys.p256dh : '',
+      keys_auth: subscription.keys ? subscription.keys.auth : '',
+      isNative: subscription.isNative ? 1 : 0,
+      fcmToken: subscription.fcmToken || ''
     });
     
-    console.log(`🔔 Push inscrito: padeiro ${padeiroId}`);
+    console.log(`🔔 Push inscrito: padeiro ${padeiroId} (${subscription.isNative ? 'Nativo' : 'Web'})`);
     res.json({ success: true });
   } catch (err) {
     console.error('❌ Erro ao inscrever push:', err);
@@ -303,6 +305,7 @@ app.post('/api/push/subscribe', authMiddleware, async (req, res) => {
 app.post('/api/push/notify', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { PushSubscription, Padeiro, Atividade } = require('./data/db-adapter');
+    const pushService = require('./data/pushService');
     
     // Buscar padeiros inativos hoje
     const hoje = new Date().toISOString().split('T')[0];
@@ -320,29 +323,18 @@ app.post('/api/push/notify', authMiddleware, adminOnly, async (req, res) => {
     const allSubs = await PushSubscription.find();
     const subsInativos = allSubs.filter(s => inativosIds.includes(s.padeiroId));
     
-    const payload = JSON.stringify({
-      title: '🍞 Brago - Lembrete de Produção',
-      body: 'Você ainda não registrou suas produções de hoje. Acesse o sistema agora!',
-      icon: '/img/icon-192.png',
-      badge: '/img/icon-192.png',
-      url: '/'
-    });
+    const title = '🍞 Brago - Lembrete de Produção';
+    const body = 'Você ainda não registrou suas produções de hoje. Acesse o sistema agora!';
+    const url = '/';
     
     let sent = 0;
     let failed = 0;
     for (const sub of subsInativos) {
-      try {
-        await webpush.sendNotification({
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth }
-        }, payload);
+      const success = await pushService.sendPushToSubscription(sub, title, body, url);
+      if (success) {
         sent++;
-      } catch (err) {
+      } else {
         failed++;
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          // Inscrição expirou, remover
-          await PushSubscription.deleteMany({ endpoint: sub.endpoint });
-        }
       }
     }
     
@@ -360,6 +352,8 @@ app.post('/api/push/notify', authMiddleware, adminOnly, async (req, res) => {
 async function checkAndAlertInactiveBakers() {
   try {
     const { PushSubscription, Cronograma, Atividade } = require('./data/db-adapter');
+    const pushService = require('./data/pushService');
+    
     // Pegar data local considerando timezone BR (-3)
     const agora = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
     const hoje = agora.toISOString().split('T')[0];
@@ -389,25 +383,12 @@ async function checkAndAlertInactiveBakers() {
     
     if (subsInativos.length === 0) return;
 
-    const payload = JSON.stringify({
-      title: '🍞 Lembrete Brago',
-      body: 'Você tem produções agendadas para hoje. Acesse o sistema agora para dar andamento!',
-      icon: '/img/icon-192.png',
-      badge: '/img/icon-192.png',
-      url: '/'
-    });
+    const title = '🍞 Lembrete Brago';
+    const body = 'Você tem produções agendadas para hoje. Acesse o sistema agora para dar andamento!';
+    const url = '/';
     
     for (const sub of subsInativos) {
-      try {
-        await webpush.sendNotification({
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth }
-        }, payload);
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await PushSubscription.deleteMany({ endpoint: sub.endpoint });
-        }
-      }
+      await pushService.sendPushToSubscription(sub, title, body, url);
     }
     console.log(`⏰ [CRON] Alerta de ociosidade enviado para ${subsInativos.length} dispositivos.`);
   } catch (error) {
