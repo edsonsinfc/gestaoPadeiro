@@ -11,6 +11,7 @@ router.use(authMiddleware);
 
 // Baker / User self location update route (does not require adminOnly)
 router.post('/update', TrackingController.updateLocation);
+router.post('/sync', TrackingController.syncTracking);
 
 // Admin/manager only routes
 router.use(adminOnly);

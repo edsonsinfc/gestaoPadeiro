@@ -10,6 +10,7 @@ const LocationService = {
   wakeLock: null,
   updateInterval: 10000, // 10 seconds
   lastSent: 0,
+  isSyncingLocations: false,
 
   async init(user) {
     if (!user || user.role !== 'padeiro') return;
@@ -32,40 +33,57 @@ const LocationService = {
     }
 
     if (this.socket) {
+      // Sincronizar pontos acumulados assim que conectar o socket
+      this.socket.on('connect', () => {
+        console.log('📡 Socket conectado, sincronizando pontos offline...');
+        this.syncPendingLocations(user);
+      });
+
       // Escutar atualizações de cronograma em tempo real
       this.socket.on('agenda-updated', (data) => {
-      console.log('📅 Agenda atualizada recebida via Socket:', data);
-      const user = API.getUser();
-      if (!user) return;
+        console.log('📅 Agenda atualizada recebida via Socket:', data);
+        const user = API.getUser();
+        if (!user) return;
 
-      // Verifica se a atualização afeta o padeiro logado
-      const isMyTask = data && data.tarefa && data.tarefa.padeiroId === user.id;
-      const isGeneralUpdate = data && (data.action === 'delete_all' || data.action === 'load_template');
+        // Verifica se a atualização afeta o padeiro logado
+        const isMyTask = data && data.tarefa && data.tarefa.padeiroId === user.id;
+        const isGeneralUpdate = data && (data.action === 'delete_all' || data.action === 'load_template');
 
-      if (isMyTask || isGeneralUpdate) {
-        // Se estiver na tela de agenda, atualiza a exibição em tempo real
-        if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
-          console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
-          if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
-            PadeiroAgenda.render();
+        if (isMyTask || isGeneralUpdate) {
+          // Se estiver na tela de agenda, atualiza a exibição em tempo real
+          if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
+            console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
+            if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+              PadeiroAgenda.render();
+            }
+          }
+
+          // Mostrar um feedback visual (toast)
+          if (typeof Components !== 'undefined' && typeof Components.toast === 'function') {
+            let msg = 'Sua agenda de tarefas foi atualizada!';
+            if (data.action === 'create') {
+              msg = `Nova tarefa: ${data.tarefa.clienteNome || 'Cliente'}`;
+            } else if (data.action === 'delete') {
+              msg = `Tarefa removida: ${data.tarefa.clienteNome || 'Cliente'}`;
+            } else if (data.action === 'load_template') {
+              msg = 'Novo cronograma de tarefas carregado!';
+            }
+            Components.toast(msg, 'info', 5000);
           }
         }
+      });
+    }
 
-        // Mostrar um feedback visual (toast)
-        if (typeof Components !== 'undefined' && typeof Components.toast === 'function') {
-          let msg = 'Sua agenda de tarefas foi atualizada!';
-          if (data.action === 'create') {
-            msg = `Nova tarefa: ${data.tarefa.clienteNome || 'Cliente'}`;
-          } else if (data.action === 'delete') {
-            msg = `Tarefa removida: ${data.tarefa.clienteNome || 'Cliente'}`;
-          } else if (data.action === 'load_template') {
-            msg = 'Novo cronograma de tarefas carregado!';
-          }
-          Components.toast(msg, 'info', 5000);
-        }
-      }
+    // Tenta sincronizar pontos offline na inicialização se estiver online
+    if (navigator.onLine) {
+      this.syncPendingLocations(user);
+    }
+
+    // Escuta evento de reconexão de rede
+    window.addEventListener('online', () => {
+      console.log('📡 Rede online detectada, sincronizando localizações offline...');
+      this.syncPendingLocations(user);
     });
-  }
 
     const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
 
@@ -220,31 +238,108 @@ const LocationService = {
       accuracy = position.coords.accuracy;
     }
 
+    const point = {
+      lat: Number(lat),
+      lng: Number(lng),
+      accuracy: typeof accuracy !== 'undefined' ? Number(accuracy) : null,
+      timestamp: new Date().toISOString()
+    };
+
     const data = {
       userId: user.id,
       userName: user.nome,
       filial: user.filial,
       coords: {
-        lat: lat,
-        lng: lng,
-        accuracy: accuracy
+        lat: point.lat,
+        lng: point.lng,
+        accuracy: point.accuracy
       },
       source: isNative ? 'background-gps' : 'gps'
     };
 
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('update-location', data);
-      this.lastSent = now;
-      console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via Socket:`, data.coords.lat, data.coords.lng);
-    } else {
-      console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via HTTP fallback:`, data.coords.lat, data.coords.lng);
-      API.post('/api/tracking/update', { coords: data.coords, source: data.source })
+    if (navigator.onLine) {
+      // Sync accumulated offline points first
+      this.syncPendingLocations(user);
+
+      if (this.socket && this.socket.connected) {
+        this.socket.emit('update-location', data);
+        this.lastSent = now;
+        console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via Socket:`, data.coords.lat, data.coords.lng);
+      } else {
+        console.log(`📍 Localização (${isNative ? 'Background GPS' : 'GPS'}) enviada via HTTP fallback:`, data.coords.lat, data.coords.lng);
+        API.request('/api/tracking/update', {
+          method: 'POST',
+          body: JSON.stringify({ coords: data.coords, source: data.source }),
+          isSyncing: true
+        })
         .then(() => {
           this.lastSent = now;
         })
         .catch(err => {
-          console.error('❌ Falha no envio HTTP da localização:', err);
+          console.error('❌ Falha no envio HTTP da localização, acumulando localmente:', err.message);
+          this.queueOfflineLocation(point);
         });
+      }
+    } else {
+      // Device is offline -> Queue locally
+      this.queueOfflineLocation(point);
+    }
+  },
+
+  // Queue a location point locally when offline
+  queueOfflineLocation(point) {
+    try {
+      const stored = localStorage.getItem('pending_locations');
+      const points = stored ? JSON.parse(stored) : [];
+      points.push(point);
+      localStorage.setItem('pending_locations', JSON.stringify(points));
+      console.log(`📡 [Tracking Offline] Ponto acumulado localmente. Total pendente: ${points.length}`);
+    } catch (e) {
+      console.error('Erro ao salvar localização offline no LocalStorage:', e);
+    }
+  },
+
+  // Get all pending points
+  getPendingLocations() {
+    try {
+      const stored = localStorage.getItem('pending_locations');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error('Erro ao ler localizações do LocalStorage:', e);
+      return [];
+    }
+  },
+
+  // Clear pending points
+  clearPendingLocations() {
+    localStorage.removeItem('pending_locations');
+  },
+
+  // Sync pending locations in a single batch request
+  async syncPendingLocations(user) {
+    if (this.isSyncingLocations) return;
+    const points = this.getPendingLocations();
+    if (points.length === 0) return;
+
+    this.isSyncingLocations = true;
+    console.log(`🔄 [Tracking Sync] Tentando sincronizar ${points.length} pontos offline...`);
+    
+    try {
+      await API.request('/api/tracking/sync', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: user.id,
+          points: points
+        }),
+        isSyncing: true
+      });
+
+      console.log('✅ [Tracking Sync] Sincronização em lote concluída com sucesso!');
+      this.clearPendingLocations();
+    } catch (err) {
+      console.warn('⚠️ [Tracking Sync] Falha ao sincronizar pontos offline:', err.message);
+    } finally {
+      this.isSyncingLocations = false;
     }
   },
 

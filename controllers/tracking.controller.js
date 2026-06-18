@@ -188,6 +188,77 @@ const TrackingController = {
       console.error('Error updating location via HTTP:', error);
       res.status(500).json({ error: 'Erro ao atualizar localização' });
     }
+  },
+
+  /**
+   * Sync offline batch tracking points
+   * POST /api/tracking/sync
+   */
+  async syncTracking(req, res) {
+    try {
+      const { userId, points } = req.body;
+      const user = req.user; // populated by authMiddleware
+
+      if (!userId || !Array.isArray(points) || points.length === 0) {
+        return res.status(400).json({ error: 'userId e points[] são obrigatórios' });
+      }
+
+      if (user.role !== 'admin' && user.role !== 'gestor' && user.id !== userId) {
+        return res.status(403).json({ error: 'Acesso negado. Não é possível sincronizar a localização de outro usuário.' });
+      }
+
+      let userName = user.nome;
+      let filial = user.filial;
+      if (user.id !== userId) {
+        const { Padeiro } = require('../data/db-adapter');
+        const baker = await Padeiro.findById(userId);
+        if (baker) {
+          userName = baker.nome;
+          filial = baker.filial;
+        }
+      }
+
+      const values = points.map(p => ({
+        userId,
+        userName,
+        lat: Number(p.lat),
+        lng: Number(p.lng),
+        accuracy: typeof p.accuracy !== 'undefined' ? Number(p.accuracy) : null,
+        timestamp: p.timestamp
+      }));
+
+      // Insert all points into history
+      await HistoricoLocalizacao.insertMany(values);
+
+      // Update current last location with the latest point
+      const latest = points[points.length - 1];
+      const latestTimestamp = latest.timestamp;
+
+      await Localizacao.findByIdAndUpdate(userId, {
+        id: userId,
+        userId,
+        userName,
+        filial,
+        lat: Number(latest.lat),
+        lng: Number(latest.lng),
+        accuracy: typeof latest.accuracy !== 'undefined' ? Number(latest.accuracy) : null,
+        lastUpdate: latestTimestamp
+      }, { upsert: true });
+
+      // Socket broadcast via syncActiveLocation
+      const { syncActiveLocation } = require('../sockets/location.socket');
+      await syncActiveLocation({
+        userId,
+        userName,
+        filial,
+        points: values
+      });
+
+      res.json({ success: true, message: 'Localizações sincronizadas com sucesso', saved: points.length });
+    } catch (error) {
+      console.error('Error syncing tracking points via HTTP:', error);
+      res.status(500).json({ error: 'Erro ao sincronizar localizações' });
+    }
   }
 };
 

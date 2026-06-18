@@ -399,22 +399,35 @@ const OfflineManager = {
   // Suporte para Upload de Arquivos Offline
   async saveUpload(url, files, type) {
     if (!this.db) await this.init();
-    // Convert files to Array of objects with Blobs
-    const fileData = await Promise.all(Array.from(files).map(async f => ({
-      name: f.name,
-      type: f.type,
-      blob: f
-    })));
+    
+    // Convert files to Array of objects with Base64 strings to prevent Android WebView Structured Clone serialization bugs/hangs
+    const fileData = await Promise.all(Array.from(files).map(async f => {
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(f);
+      });
+      return {
+        name: f.name,
+        type: f.type,
+        base64: base64Data
+      };
+    }));
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction(['pendingUploads'], 'readwrite');
-      const store = transaction.objectStore('pendingUploads');
-      const request = store.add({ url, fileData, type, timestamp: Date.now() });
-      request.onsuccess = () => {
-        Components.toast('Modo Offline: Arquivos salvos para envio posterior!', 'info');
-        resolve({ offline: true, files: fileData.map(f => ({ name: f.name, filename: f.name, offline: true, path: 'offline_pending' })) });
-      };
-      request.onerror = (e) => reject(e.target.error);
+      try {
+        const transaction = this.db.transaction(['pendingUploads'], 'readwrite');
+        const store = transaction.objectStore('pendingUploads');
+        const request = store.add({ url, fileData, type, timestamp: Date.now() });
+        request.onsuccess = () => {
+          Components.toast('Modo Offline: Arquivos salvos para envio posterior!', 'info');
+          resolve({ offline: true, files: fileData.map(f => ({ name: f.name, filename: f.name, offline: true, path: 'offline_pending' })) });
+        };
+        request.onerror = (e) => reject(e.target.error);
+      } catch (err) {
+        reject(err);
+      }
     });
   },
 
@@ -547,7 +560,22 @@ const OfflineManager = {
     const allUploadedFiles = []; // Lista de TODOS os arquivos enviados com sucesso
     for (const up of uploads) {
       try {
-        const files = up.fileData.map(f => new File([f.blob], f.name, { type: f.type }));
+        const files = up.fileData.map(f => {
+          if (f.base64) {
+            // Reconstruct File from base64 string
+            const arr = f.base64.split(',');
+            const mime = f.type || (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+              u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], f.name, { type: mime });
+          } else {
+            return new File([f.blob], f.name, { type: f.type });
+          }
+        });
         const result = await API.uploadFiles(files, up.type, true);
         if (result && result.files) {
           result.files.forEach(f => {

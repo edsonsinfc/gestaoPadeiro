@@ -9,6 +9,8 @@ window.Rastreamento = {
   selectedUserId: null,
   socket: null,
   allPadeiros: [],
+  liveTrailPoints: {},
+  _livePolyline: null,
 
   async render() {
     if (this.bcpInterval) clearInterval(this.bcpInterval);
@@ -823,6 +825,21 @@ window.Rastreamento = {
       this.updateList(filtered);
     });
 
+    // Event with batch of points (emitted during offline sync or real-time batch)
+    this.socket.on('location-broadcast-single', (data) => {
+      const user = API.getUser();
+      if (user.role === 'gestor' && user.filial && data.filial !== user.filial) return;
+
+      // Update the user's marker and sidebar status
+      this.updateMarkers([data]);
+      this.updateList([data]);
+
+      // If this user is selected to view trail -> accumulate points and redraw live trail
+      if (this.selectedUserId === data.userId && data.newPoints && data.newPoints.length > 0) {
+        this._appendLiveTrailPoints(data.userId, data.newPoints);
+      }
+    });
+
     this.socket.on('activity-updated', (atividade) => {
       const dateInput = document.getElementById('trail-date');
       const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
@@ -834,6 +851,36 @@ window.Rastreamento = {
         }
       }
     });
+  },
+
+  // Accumulate new points into the live trail drawn on the map
+  _appendLiveTrailPoints(userId, newPoints) {
+    if (!this.liveTrailPoints[userId]) {
+      this.liveTrailPoints[userId] = [];
+    }
+    
+    // Add new points
+    this.liveTrailPoints[userId].push(...newPoints);
+    
+    // Sort by timestamp to guarantee chronological order
+    this.liveTrailPoints[userId].sort((a, b) => 
+      new Date(a.timestamp || a.recorded_at) - new Date(b.timestamp || b.recorded_at)
+    );
+
+    const latlngs = this.liveTrailPoints[userId].map(p => [p.lat, p.lng]);
+
+    // If we already have a livePolyline for this user, update it
+    if (this._livePolyline) {
+      this._livePolyline.setLatLngs(latlngs);
+    } else {
+      // Create a solid blue line for live tracking trail
+      this._livePolyline = L.polyline(latlngs, {
+        color: '#007AFF',
+        weight: 3,
+        opacity: 0.8,
+        dashArray: null
+      }).addTo(this.map);
+    }
   },
 
   updateMarkers(locations) {
@@ -1310,6 +1357,13 @@ window.Rastreamento = {
       Components.toast('Selecione um padeiro para carregar o trajeto', 'info');
       return;
     }
+
+    // Limpa o rastro vivo ao entrar em modo histórico
+    if (this._livePolyline) {
+      this._livePolyline.remove();
+      this._livePolyline = null;
+    }
+    delete this.liveTrailPoints[this.selectedUserId];
     const dateInput = document.getElementById('trail-date');
     const date = dateInput ? dateInput.value : '';
     if (!date) {
@@ -1560,6 +1614,13 @@ window.Rastreamento = {
 
   clearTrail() {
     this.trailLayers.clearLayers();
+    
+    if (this._livePolyline) {
+      this._livePolyline.remove();
+      this._livePolyline = null;
+    }
+    this.liveTrailPoints = {};
+    
     const infoEl = document.getElementById('trail-info');
     if (infoEl) infoEl.innerHTML = '';
     if (this.bcpInterval) clearInterval(this.bcpInterval);

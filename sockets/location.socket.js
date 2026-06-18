@@ -142,9 +142,41 @@ async function updateActiveLocation(data) {
   }
 }
 
+async function syncActiveLocation(data) {
+  if (!data.userId || !data.points || data.points.length === 0) return;
+
+  const latest = data.points[data.points.length - 1];
+  const locationData = {
+    userId: data.userId,
+    userName: data.userName,
+    filial: data.filial,
+    coords: {
+      lat: Number(latest.lat),
+      lng: Number(latest.lng),
+      accuracy: typeof latest.accuracy !== 'undefined' ? Number(latest.accuracy) : null
+    },
+    lastUpdate: latest.timestamp
+  };
+
+  activeLocations.set(data.userId, locationData);
+
+  if (ioInstance) {
+    ioInstance.emit('location-broadcast', Array.from(activeLocations.values()));
+    ioInstance.emit('location-broadcast-single', {
+      userId: data.userId,
+      userName: data.userName,
+      filial: data.filial,
+      coords: locationData.coords,
+      lastUpdate: locationData.lastUpdate,
+      newPoints: data.points
+    });
+  }
+}
+
 module.exports = { 
   initLocationSocket, 
   clearActiveLocations, 
   updateActiveLocation, 
+  syncActiveLocation,
   getIo: () => ioInstance 
 };
