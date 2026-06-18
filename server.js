@@ -247,9 +247,16 @@ app.get('/api/foto-produto/:codigo', async (req, res) => {
 
 // Servir o arquivo APK compilado automaticamente da pasta de build
 app.get(['/smartgestor.apk', '/SmartGestor.apk'], (req, res) => {
-  const apkPath = path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk');
+  // 1. Tenta buscar na pasta public (onde fica em produção/Hostinger)
+  let apkPath = path.join(__dirname, 'public', 'smartgestor.apk');
+  if (!fs.existsSync(apkPath)) {
+    // 2. Fallback para a pasta de build do Android (desenvolvimento local)
+    apkPath = path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk');
+  }
+
   if (fs.existsSync(apkPath)) {
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
     return res.sendFile(apkPath);
   }
   res.status(404).send('Arquivo APK não encontrado.');
