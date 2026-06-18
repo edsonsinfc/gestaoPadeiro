@@ -697,9 +697,14 @@ const App = {
     const isMobile = window.innerWidth <= 768;
     if (!isMobile) return;
 
-    // 3. Check local storage dismissal
-    const dismissed = localStorage.getItem('apk_install_prompt_dismissed');
-    if (dismissed) return;
+    // 3. Check local storage dismissal (recorre de tempos em tempos)
+    const dismissedTime = localStorage.getItem('apk_install_prompt_dismissed_time');
+    if (dismissedTime) {
+      const hoursPassed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
+      if (hoursPassed < 4) {
+        return; // Ainda dentro do tempo de espera de 4 horas
+      }
+    }
 
     // 4. Show the banner with a smooth entry delay
     setTimeout(() => {
@@ -726,8 +731,15 @@ const App = {
     link.click();
     document.body.removeChild(link);
 
-    // Hide and dismiss the banner
-    this.dismissApkBanner();
+    // Esconde o banner e silencia por 24 horas (caso o usuário cancele a instalação do APK baixado)
+    const banner = document.getElementById('apk-install-banner');
+    if (banner) {
+      banner.classList.remove('active');
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 400);
+    }
+    localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
   },
 
   dismissApkBanner() {
@@ -738,7 +750,8 @@ const App = {
         banner.style.display = 'none';
       }, 400); // Wait for transition out
     }
-    localStorage.setItem('apk_install_prompt_dismissed', 'true');
+    // Dispensa por 4 horas para ser recorrente
+    localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
   },
 
   async checkApkUpdate() {
