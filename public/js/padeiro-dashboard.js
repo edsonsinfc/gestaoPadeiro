@@ -8,11 +8,12 @@ const PadeiroDashboard = {
     c.innerHTML = Components.loading();
     const user = API.getUser();
     try {
-      const [metas, atividades, avaliacoes, stats] = await Promise.all([
+      const [metas, atividades, avaliacoes, stats, agenda] = await Promise.all([
         API.get('/api/metas'),
         API.get('/api/atividades'),
         API.get('/api/avaliacoes'),
-        API.get('/api/stats')
+        API.get('/api/stats'),
+        API.get('/api/cronograma/agenda')
       ]);
 
       const destaque = (stats && stats.top10Pads && stats.top10Pads.length > 0) ? stats.top10Pads[0] : null;

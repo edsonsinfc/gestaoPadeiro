@@ -50,12 +50,29 @@ const LocationService = {
         const isGeneralUpdate = data && (data.action === 'delete_all' || data.action === 'load_template');
 
         if (isMyTask || isGeneralUpdate) {
-          // Se estiver na tela de agenda, atualiza a exibição em tempo real
-          if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
-            console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
-            if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
-              PadeiroAgenda.render();
-            }
+          // Atualiza o cache local da agenda em background enquanto está online
+          if (typeof API !== 'undefined' && typeof API.get === 'function') {
+            API.get('/api/cronograma/agenda')
+              .then(() => {
+                // Se estiver na tela de agenda, atualiza a exibição em tempo real
+                if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
+                  console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
+                  if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+                    PadeiroAgenda.render();
+                  }
+                }
+
+                // Se estiver na tela de registro de atividade (passo 0), atualiza a exibição do select de tarefas
+                if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-atividade') {
+                  if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+                    console.log('🔄 Recarregando o seletor de tarefas (passo 0) na tela de atividades...');
+                    PadeiroFlow.renderStep();
+                  }
+                }
+              })
+              .catch((err) => {
+                console.error('Erro ao atualizar cache de agenda:', err);
+              });
           }
 
           // Mostrar um feedback visual (toast)
@@ -63,6 +80,9 @@ const LocationService = {
             let msg = 'Sua agenda de tarefas foi atualizada!';
             if (data.action === 'create') {
               msg = `Nova tarefa: ${data.tarefa.clienteNome || 'Cliente'}`;
+              if (typeof NotificationService !== 'undefined' && typeof NotificationService.triggerLocalNotification === 'function') {
+                NotificationService.triggerLocalNotification('Nova Tarefa Adicionada 🥖', msg);
+              }
             } else if (data.action === 'delete') {
               msg = `Tarefa removida: ${data.tarefa.clienteNome || 'Cliente'}`;
             } else if (data.action === 'load_template') {

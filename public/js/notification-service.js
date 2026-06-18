@@ -2,6 +2,60 @@
  * Notification Service for Baker app reminders
  */
 const NotificationService = {
+  lastNotificationText: '',
+  lastNotificationTime: 0,
+
+  async triggerLocalNotification(title, body) {
+    const now = Date.now();
+    if (this.lastNotificationText === body && (now - this.lastNotificationTime) < 5000) {
+      console.log('[NotificationService] Duplicate local notification ignored:', { title, body });
+      return;
+    }
+    this.lastNotificationText = body;
+    this.lastNotificationTime = now;
+
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    if (!isCapacitor) {
+      console.log('[NotificationService] Not on a native platform, skipping local notification:', { title, body });
+      return;
+    }
+
+    const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications;
+    if (!LocalNotifications) {
+      console.warn('[NotificationService] LocalNotifications plugin not found.');
+      return;
+    }
+
+    try {
+      const perm = await LocalNotifications.checkPermissions();
+      if (perm.display !== 'granted') {
+        const req = await LocalNotifications.requestPermissions();
+        if (req.display !== 'granted') {
+          console.warn('[NotificationService] Notification permission denied.');
+          return;
+        }
+      }
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: Math.floor(Math.random() * 1000000) + 1,
+            title: title,
+            body: body,
+            schedule: { at: new Date(Date.now() + 50) },
+            sound: null,
+            attachments: null,
+            actionTypeId: "",
+            extra: null
+          }
+        ]
+      });
+      console.log('[NotificationService] Native local notification sent:', { title, body });
+    } catch (err) {
+      console.error('[NotificationService] Error triggering local notification:', err);
+    }
+  },
+
   async init() {
     const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
     if (!isCapacitor) {
@@ -36,35 +90,27 @@ const NotificationService = {
       }
 
       // 3. Schedule access reminders
-      // Reminder 1: 18 hours from now
-      // Reminder 2: 36 hours from now
-      // Reminder 3: 60 hours from now
       const reminders = [
         {
           id: 1001,
           title: 'Smart Gestor 🥖',
-          body: 'Olá! Notamos que você não abriu o app hoje. Que tal registrar sua produção?',
-          delayMs: 18 * 60 * 60 * 1000 // 18 hours
+          body: 'Você não está usando o app, clique para entrar.',
+          delayMs: 5 * 60 * 60 * 1000 // 5 hours
         },
         {
           id: 1002,
           title: 'Smart Gestor 🥖',
-          body: 'Ainda sem novidades? Não se esqueça de entrar no app e atualizar seu status.',
-          delayMs: 36 * 60 * 60 * 1000 // 36 hours
+          body: 'Você não está usando o app, clique para entrar.',
+          delayMs: 8 * 60 * 60 * 1000 // 8 hours
         },
         {
           id: 1003,
           title: 'Smart Gestor 🥖',
-          body: 'Você está fora há mais de 2 dias! Por favor, abra o aplicativo para sincronizar seus dados.',
-          delayMs: 60 * 60 * 60 * 1000 // 60 hours
+          body: 'Você não está usando o app, clique para entrar.',
+          delayMs: 10 * 60 * 60 * 1000 // 10 hours
         }
       ];
 
-      // Wait, 18 hours is 18 * 60 * 60 * 1000 ms = 64,800,000 ms
-      // 36 hours is 36 * 60 * 60 * 1000 ms = 129,600,000 ms
-      // 60 hours is 60 * 60 * 60 * 1000 ms = 216,000,000 ms (wait, 60 * 60 * 60 * 1000 is actually 60 * 60 * 1000 * 60? No, 60 * 60 * 1000 is 1 hour, so 60 hours is 60 * (60 * 60 * 1000) = 60 * 3,600,000 = 216,000,000 ms. So delayMs should be 60 * 60 * 60 * 1000!)
-      // Yes! Let's write it mathematically: 60 * 60 * 1000 * 60 is 216,000,000.
-      
       const notifications = reminders.map(r => ({
         id: r.id,
         title: r.title,

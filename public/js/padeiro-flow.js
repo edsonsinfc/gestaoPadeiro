@@ -17,8 +17,6 @@ const PadeiroFlow = {
   multiSelectMode: false,
   multiSelectedIds: new Set(),
   _longPressTimer: null,
-  _longPressMoved: false,
-
   getTodayLocal() {
     const n = new Date();
     return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
@@ -309,6 +307,20 @@ const PadeiroFlow = {
       agendaHoje = agenda.filter(a => a.data === today && (!a.status || a.status === 'pendente' || a.status === 'em_andamento'));
     } catch(e) {}
     
+    // Garantir que a tarefa preenchida via prefill (vindo da agenda semanal) seja inclusa e exibida
+    if (this.activity.clienteId) {
+      const exists = agendaHoje.some(a => a.clienteId === this.activity.clienteId);
+      if (!exists) {
+        agendaHoje.unshift({
+          id: this.activity.cronogramaId,
+          _id: this.activity.cronogramaId,
+          clienteId: this.activity.clienteId,
+          clienteNome: this.activity.clienteNome,
+          horario: 'Especial'
+        });
+      }
+    }
+
     // Garantir que a tarefa atualizada do servidor (novo ID caso recriada) seja usada
     if (agendaHoje.length > 0) {
       if (!this.activity.clienteId) {
@@ -2096,6 +2108,10 @@ const PadeiroFlow = {
     await this.updateActivity();
     try {
       if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'concluida' });
+      if (typeof NotificationService !== 'undefined' && typeof NotificationService.triggerLocalNotification === 'function') {
+        const clienteNome = this.activity.clienteNome || 'Cliente';
+        NotificationService.triggerLocalNotification('Tarefa Concluída 🥖', `A tarefa para ${clienteNome} foi concluída com sucesso!`);
+      }
     } catch (err) {
       console.warn('Aviso: Erro ao concluir tarefa na agenda (pode ter sido excluida).', err);
     }
@@ -2526,6 +2542,37 @@ const PushService = {
 
       await PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('[Push Nativo] Notificação recebida (Foreground):', notification);
+        const isTaskAdded = notification.title && (
+          notification.title.includes('Nova Tarefa') || 
+          notification.title.includes('Tarefa Agendada') || 
+          notification.title.includes('escala') || 
+          notification.title.includes('Escala')
+        );
+        if (isTaskAdded) {
+          // Atualiza a agenda local ao receber a notificação
+          if (typeof API !== 'undefined' && typeof API.get === 'function') {
+            API.get('/api/cronograma/agenda')
+              .then(() => {
+                if (typeof App !== 'undefined') {
+                  if (App.currentRoute === 'padeiro-agenda') {
+                    if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+                      PadeiroAgenda.render();
+                    }
+                  } else if (App.currentRoute === 'padeiro-atividade') {
+                    if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+                      console.log('🔄 Recarregando o seletor de tarefas (passo 0) após receber push nativo...');
+                      PadeiroFlow.renderStep();
+                    }
+                  }
+                }
+              })
+              .catch(() => {});
+          }
+          if (typeof NotificationService !== 'undefined' && typeof NotificationService.triggerLocalNotification === 'function') {
+            NotificationService.triggerLocalNotification(notification.title, notification.body);
+            return;
+          }
+        }
         if (typeof Components !== 'undefined' && Components.toast) {
           Components.toast(`🔔 ${notification.title}: ${notification.body}`, 'info', 6000);
         }

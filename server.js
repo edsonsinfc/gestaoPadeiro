@@ -249,6 +249,14 @@ app.get('/api/foto-produto/:codigo', async (req, res) => {
 // API ROUTES
 // ============================================================
 app.get('/api/ping', (req, res) => res.json({ pong: true }));
+app.get('/api/app-version', (req, res) => {
+  res.json({
+    version: '1.0.1', // Versão do APK atualizada no servidor
+    url: '/smartgestor.apk', // Caminho relativo/absoluto para download
+    mandatory: false, // Define se a atualização é opcional (false) ou obrigatória (true)
+    notes: 'Melhorias de desempenho na sincronização em tempo real das atividades offline.'
+  });
+});
 app.use('/api', require('./routes'));
 
 // ============================================================

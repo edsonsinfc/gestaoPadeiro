@@ -296,7 +296,58 @@ const OfflineManager = {
       const transaction = this.db.transaction(['dataCache'], 'readonly');
       const store = transaction.objectStore('dataCache');
       const request = store.get(url);
-      request.onsuccess = () => resolve(request.result ? request.result.data : null);
+      request.onsuccess = async () => {
+        if (request.result) {
+          resolve(request.result.data);
+        } else {
+          // Fallback se for a agenda do padeiro e estiver offline/sem cache direto
+          if (url === '/api/cronograma/agenda') {
+            const fallbackData = await this.getAgendaFromWeeklyCacheFallback();
+            if (fallbackData) {
+              console.log('[Offline Cache] Usando fallback da agenda semanal para /api/cronograma/agenda');
+              resolve(fallbackData);
+              return;
+            }
+          }
+          resolve(null);
+        }
+      };
+      request.onerror = () => resolve(null);
+    });
+  },
+
+  async getAgendaFromWeeklyCacheFallback() {
+    return new Promise((resolve) => {
+      const userData = localStorage.getItem('brago_user');
+      const user = userData ? JSON.parse(userData) : null;
+      if (!user) {
+        resolve(null);
+        return;
+      }
+      
+      const transaction = this.db.transaction(['dataCache'], 'readonly');
+      const store = transaction.objectStore('dataCache');
+      const request = store.openCursor();
+      let foundAgenda = null;
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          const key = cursor.key;
+          if (key.includes('/api/admin/agenda-semanal')) {
+            const cacheItem = cursor.value;
+            if (cacheItem && cacheItem.data && Array.isArray(cacheItem.data.agenda)) {
+              const myTasks = cacheItem.data.agenda.filter(t => t && (t.padeiroId === user.id || t.codTec === user.codTec));
+              if (myTasks.length > 0) {
+                foundAgenda = myTasks;
+              }
+            }
+          }
+          cursor.continue();
+        } else {
+          resolve(foundAgenda);
+        }
+      };
       request.onerror = () => resolve(null);
     });
   },
@@ -324,10 +375,6 @@ const OfflineManager = {
       const store = transaction.objectStore('pendingRequests');
       const request = store.add({ url, method, body, timestamp: Date.now(), _retryCount: 0 });
       request.onsuccess = () => {
-        // Suppress toast for background GPS tracking updates to avoid flooding the screen
-        if (typeof Components !== 'undefined' && Components.toast && !url.includes('/api/tracking/update')) {
-          Components.toast('Modo Offline: Alteração salva localmente!', 'info');
-        }
         resolve();
       };
       request.onerror = (e) => reject(e.target.error);
@@ -392,8 +439,49 @@ const OfflineManager = {
           await this.cacheData(cacheUrl, cachedAgenda);
           console.log('[Offline Cache] Cache de agenda atualizado:', cachedAgenda[idx]);
         }
+
+        // Também atualizar nos caches de /api/admin/agenda-semanal se existirem
+        await this.updateWeeklyAgendaCacheStatus(id, status);
       }
     }
+  },
+
+  async updateWeeklyAgendaCacheStatus(id, status) {
+    if (!this.db) await this.init();
+    return new Promise((resolve) => {
+      const transaction = this.db.transaction(['dataCache'], 'readwrite');
+      const store = transaction.objectStore('dataCache');
+      const request = store.openCursor();
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          const key = cursor.key;
+          if (key.includes('/api/admin/agenda-semanal')) {
+            const cacheItem = cursor.value;
+            if (cacheItem && cacheItem.data && Array.isArray(cacheItem.data.agenda)) {
+              let changed = false;
+              cacheItem.data.agenda = cacheItem.data.agenda.map(t => {
+                if (t && (t.id === id || t._id === id)) {
+                  changed = true;
+                  return { ...t, status };
+                }
+                return t;
+              });
+              if (changed) {
+                cursor.update(cacheItem);
+                console.log('[Offline Cache] Status atualizado no cache da agenda semanal:', id, status);
+              }
+            }
+          }
+          cursor.continue();
+        } else {
+          resolve();
+        }
+      };
+      
+      request.onerror = () => resolve();
+    });
   },
 
   // Suporte para Upload de Arquivos Offline
@@ -498,6 +586,26 @@ const OfflineManager = {
       this._syncFailCount = 0;
       Components.toast('Conexão restabelecida! Sincronizando dados em instantes...', 'success');
       setTimeout(() => this.syncPending(), 2000); // Wait 2s for connection stability
+      
+      // Atualizar a agenda local ao voltar a ficar online
+      if (typeof API !== 'undefined' && typeof API.get === 'function') {
+        API.get('/api/cronograma/agenda')
+          .then(() => {
+            if (typeof App !== 'undefined') {
+              if (App.currentRoute === 'padeiro-agenda') {
+                if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+                  PadeiroAgenda.render();
+                }
+              } else if (App.currentRoute === 'padeiro-atividade') {
+                if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+                  console.log('🔄 Recarregando o seletor de tarefas (passo 0) após restabelecer conexão online...');
+                  PadeiroFlow.renderStep();
+                }
+              }
+            }
+          })
+          .catch(() => {});
+      }
     });
     
     // Sincroniza na inicialização se estiver online com pequeno delay
@@ -669,52 +777,24 @@ const OfflineManager = {
             const hasOfflineFotos = req.body.fotos.some(f => f.offline || f.path === 'offline_pending');
             
             if (hasOfflineFotos) {
-              // Tenta match individual por nome
-              let allMatched = true;
-              const mappedFotos = req.body.fotos.map(foto => {
+              const validMappedFotos = [];
+              req.body.fotos.forEach(foto => {
                 if (foto.offline || foto.path === 'offline_pending') {
                   const realUpload = uploadedPaths[foto.filename] || uploadedPaths[foto.name];
                   if (realUpload) {
-                    return {
+                    validMappedFotos.push({
                       filename: realUpload.filename,
                       path: realUpload.path,
                       size: realUpload.size
-                    };
+                    });
+                  } else {
+                    console.warn(`[Offline] Desconsiderando foto offline sem correspondência (falha no upload): ${foto.name || foto.filename}`);
                   }
-                  allMatched = false;
-                  return foto; // não encontrou match
-                }
-                return foto;
-              });
-              
-              if (allMatched) {
-                // Todos os matches individuais funcionaram
-                req.body.fotos = mappedFotos;
-              } else if (allUploadedFiles.length > 0) {
-                // Fallback: match individual falhou, mas temos uploads feitos
-                // Substitui TODAS as fotos offline pelos uploads reais
-                const onlineFotos = req.body.fotos.filter(f => !f.offline && f.path !== 'offline_pending');
-                const uploadedFotos = allUploadedFiles.map(f => ({
-                  filename: f.filename,
-                  path: f.path,
-                  size: f.size
-                }));
-                req.body.fotos = [...onlineFotos, ...uploadedFotos];
-                console.log(`[Offline] Fallback: substituiu fotos offline por ${uploadedFotos.length} uploads disponíveis.`);
-              } else {
-                // Nenhum upload disponível — adia este request para o próximo ciclo
-                console.warn(`[Offline] Fotos offline sem uploads correspondentes. Adiando request ${req.id} para próximo ciclo.`);
-                const currentRetries = req._retryCount || 0;
-                if (currentRetries < this.MAX_RETRIES) {
-                  try { await this._incrementRetryCount(req.id, currentRetries); } catch(e) {}
-                  failCount++;
-                  continue; // Pula para o próximo request
                 } else {
-                  // Excedeu retries — envia mesmo sem fotos para não bloquear para sempre
-                  console.warn(`[Offline] Enviando request ${req.id} sem fotos (excedeu retries).`);
-                  req.body.fotos = req.body.fotos.filter(f => !f.offline && f.path !== 'offline_pending');
+                  validMappedFotos.push(foto);
                 }
-              }
+              });
+              req.body.fotos = validMappedFotos;
             }
           }
           
@@ -765,8 +845,13 @@ const OfflineManager = {
         }
       }
       // Atualiza a tela se não estiver no meio do formulário
-      if (successCount > 0 && typeof App !== 'undefined' && App.currentRoute && App.currentRoute !== 'padeiro-atividade') {
-        App.renderPage(App.currentRoute);
+      if (successCount > 0 && typeof App !== 'undefined' && App.currentRoute) {
+        if (App.currentRoute !== 'padeiro-atividade') {
+          App.renderPage(App.currentRoute);
+        } else if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+          console.log('🔄 Recarregando o seletor de tarefas (passo 0) após sincronização offline...');
+          PadeiroFlow.renderStep();
+        }
       }
     }
 
@@ -782,10 +867,34 @@ const OfflineManager = {
    * Retorna 'discarded' se o request foi removido, 'retry' se será tentado novamente.
    */
   async _handleSyncError(req, err) {
+    if (err && err.status !== undefined) {
+      const status = err.status;
+      if (status >= 400 && status < 500) {
+        if (status === 401 || status === 403) {
+          console.warn(`[Offline] Request ${req.id} falhou com status ${status}. Mantendo na fila para quando o usuário logar/atualizar permissões.`);
+          return 'retry';
+        }
+        console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - erro permanente do cliente (Status ${status}): ${err.message}`);
+        try { await this.deleteRequest(req.id); } catch(e) {}
+        return 'discarded';
+      } else {
+        console.log(`[Offline] Falha temporária do servidor (Status ${status}) para request ${req.id}. Mantendo na fila.`);
+        return 'retry';
+      }
+    }
+
     const errMsg = (err.message || '').toLowerCase();
-    
-    // Erros que indicam que o servidor PROCESSOU o request mas rejeitou
-    // (não vale a pena re-tentar - dados inválidos, recurso não existe, etc.)
+    const isNetworkError = 
+      errMsg.includes('failed to fetch') || 
+      errMsg.includes('network error') || 
+      errMsg.includes('timeout') || 
+      errMsg.includes('abort') ||
+      errMsg.includes('connecting');
+      
+    if (isNetworkError) {
+      return 'retry';
+    }
+
     const isPermanentError = 
       errMsg.includes('não encontrad') ||
       errMsg.includes('not found') ||
@@ -795,28 +904,21 @@ const OfflineManager = {
       errMsg.includes('duplicate') ||
       errMsg.includes('duplicat') ||
       errMsg.includes('já existe') ||
-      errMsg.includes('already exists') ||
-      errMsg.includes('unauthorized') ||
-      errMsg.includes('forbidden') ||
-      errMsg.includes('sessão expirad');
+      errMsg.includes('already exists');
     
     if (isPermanentError) {
-      // Erro permanente: remove da fila pois re-tentar não vai resolver
-      console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - erro permanente: ${errMsg}`);
+      console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - erro de string permanente: ${errMsg}`);
       try { await this.deleteRequest(req.id); } catch(e) {}
       return 'discarded';
     }
     
-    // Erro transiente (rede, timeout, etc): incrementa retry count
     const currentRetries = req._retryCount || 0;
     if (currentRetries >= this.MAX_RETRIES) {
-      // Excedeu máximo de retries - descarta para não ficar em loop infinito
       console.warn(`[Offline] Descartando request ${req.id} (${req.method} ${req.url}) - excedeu ${this.MAX_RETRIES} tentativas.`);
       try { await this.deleteRequest(req.id); } catch(e) {}
       return 'discarded';
     }
     
-    // Incrementa o contador de retries no IndexedDB
     try { await this._incrementRetryCount(req.id, currentRetries); } catch(e) {}
     console.log(`[Offline] Request ${req.id} será re-tentado (tentativa ${currentRetries + 1}/${this.MAX_RETRIES}).`);
     return 'retry';
@@ -1086,6 +1188,14 @@ let API_BASE_URL = _isNativeOrRemote ? API_URLS.hostinger : '';
   console.log('[API] 🔄 Nenhum servidor respondeu. Padrão: Hostinger:', API_BASE_URL);
 })();
 
+class APIError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+    this.name = 'APIError';
+  }
+}
+
 const API = {
   token: localStorage.getItem('brago_token'),
 
@@ -1145,12 +1255,20 @@ const API = {
           Components.toast('Sessão expirada ou dados inválidos.', 'error');
           App.navigate('login');
         }
-        throw new Error(data.error || data.message || data.details || 'Erro na requisição. Verifique seus dados.');
+        throw new APIError(data.error || data.message || data.details || 'Erro na requisição. Verifique seus dados.', res.status);
       }
 
       // Cache successful GET requests
       if (method === 'GET') {
         OfflineManager.cacheData(url, data);
+      } else {
+        // Para POST/PUT/PATCH/DELETE bem-sucedidos online, atualizar o cache local também!
+        try {
+          const parsedBody = options.body && typeof options.body === 'string' ? JSON.parse(options.body) : null;
+          await OfflineManager.updateLocalCache(url, method, parsedBody || data);
+        } catch (cacheErr) {
+          console.warn('[Offline] Erro ao atualizar cache local (online):', cacheErr);
+        }
       }
 
       return data;
@@ -1196,7 +1314,7 @@ const API = {
             Components.toast('Sessão expirada ou dados inválidos.', 'error');
             App.navigate('login');
           }
-          throw new Error(data.error || data.message || 'Erro na requisição');
+          throw new APIError(data.error || data.message || 'Erro na requisição', fallbackRes.status);
         } catch (fallbackErr) {
           console.warn('[API] ⚠️ Fallback também falhou:', fallbackErr.message);
           // Continua para a lógica offline abaixo

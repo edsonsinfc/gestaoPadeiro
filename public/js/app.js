@@ -3,6 +3,7 @@
  * BRAGO Sistema Padeiro
  */
 const App = {
+  APP_VERSION: '1.0.0',
   currentRoute: 'login',
   async init() {
     // Initialize Offline Manager (IndexedDB)
@@ -90,6 +91,9 @@ const App = {
 
     // Check if we should display the HIG APK download banner
     this.checkApkBanner();
+
+    // Check for APK updates (for native Capacitor app)
+    this.checkApkUpdate();
   },
 
   navigate(route, data = {}, pushToHistory = true) {
@@ -735,6 +739,90 @@ const App = {
       }, 400); // Wait for transition out
     }
     localStorage.setItem('apk_install_prompt_dismissed', 'true');
+  },
+
+  async checkApkUpdate() {
+    // Apenas verifica atualização de APK nativo se estiver rodando no Capacitor
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    if (!isCapacitor) return;
+    if (!navigator.onLine) return; // Se estiver offline, não tenta verificar
+
+    try {
+      const info = await API.get('/api/app-version');
+      if (info && info.version) {
+        if (this.isVersionNewer(this.APP_VERSION, info.version)) {
+          this.showUpdateModal(info);
+        }
+      }
+    } catch (err) {
+      console.warn('[Update Check] Falha ao verificar versão do app:', err.message);
+    }
+  },
+
+  isVersionNewer(current, latest) {
+    const partsCurrent = current.split('.').map(Number);
+    const partsLatest = latest.split('.').map(Number);
+    for (let i = 0; i < Math.max(partsCurrent.length, partsLatest.length); i++) {
+      const c = partsCurrent[i] || 0;
+      const l = partsLatest[i] || 0;
+      if (l > c) return true;
+      if (c > l) return false;
+    }
+    return false;
+  },
+
+  showUpdateModal(info) {
+    // Remove modal anterior se houver
+    const old = document.getElementById('apk-update-modal');
+    if (old) old.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'apk-update-modal';
+    modal.className = 'pf-modal-overlay';
+    modal.style.zIndex = '99999';
+
+    modal.innerHTML = `
+      <div class="pf-modal-ios" style="max-width:340px; margin:auto; border-radius:24px; padding:24px; text-align:center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); background: var(--surface-bg);">
+        <div class="pf-resume-icon" style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; width: 64px; height: 64px; border-radius: 50%;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Nova Versão Disponível!</h3>
+        <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px;">
+          Uma nova versão (${info.version}) está disponível. Recomenda-se atualizar para obter novos recursos e correções de bugs.
+        </p>
+        ${info.notes ? `
+          <div style="background: var(--surface-bg-alt, #fafbfc); border: 1px solid #f1f5f9; border-radius:12px; padding:12px; margin-bottom:20px; text-align:left;">
+            <strong style="font-size:12px; color:var(--text-primary); display:block; margin-bottom:4px;">Novidades:</strong>
+            <span style="font-size:12px; color:var(--text-secondary); line-height:1.4; display:block;">${info.notes}</span>
+          </div>
+        ` : ''}
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="pf-btn-primary" onclick="App.downloadApkUpdate('${info.url}')" style="width:100%; justify-content:center;">
+            Atualizar Agora
+          </button>
+          ${!info.mandatory ? `
+            <button class="pf-btn-ghost" onclick="document.getElementById('apk-update-modal').remove()" style="width:100%; margin:0; justify-content:center;">
+              Mais Tarde
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 50);
+  },
+
+  downloadApkUpdate(url) {
+    const absoluteUrl = url.startsWith('http') ? url : `${API_BASE_URL || window.location.origin}${url}`;
+    console.log('[Update Check] Abrindo navegador para baixar APK:', absoluteUrl);
+    
+    // Se o plugin Browser do Capacitor estiver disponível, usamos ele para uma melhor UX nativa
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+      window.Capacitor.Plugins.Browser.open({ url: absoluteUrl });
+    } else {
+      window.open(absoluteUrl, '_system');
+    }
   }
 };
 
