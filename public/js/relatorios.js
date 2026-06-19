@@ -66,7 +66,7 @@ window.Relatorios = {
           <div class="segmented-item ${this.currentFilter==='30d'?'active':''}" onclick="Relatorios.setFilter('30d')">30 Dias</div>
           <div class="segmented-item ${this.currentFilter==='custom'?'active':''}" onclick="Relatorios.setFilter('custom')">Total</div>
         </div>
-        <button class="btn btn-primary desktop-only" onclick="window.print()">
+        <button class="btn btn-primary desktop-only" onclick="Relatorios.imprimirRelatorio()">
           <i data-lucide="printer"></i> Imprimir Relatório
         </button>
       </div>
@@ -231,7 +231,7 @@ window.Relatorios = {
     `;
   },
 
-  renderRankingTable() {
+  getRankingData() {
     const data = this.getFilteredData();
     const stats = {};
 
@@ -257,13 +257,16 @@ window.Relatorios = {
       if (stats[m.padeiroId] && (m.produzido || 0) >= (m.quantidade || 0)) stats[m.padeiroId].metas++;
     });
 
-    const ranking = Object.values(stats).map(s => {
+    return Object.values(stats).map(s => {
       const avg = s.notas.length > 0 ? s.notas.reduce((a,b)=>a+b,0) / s.notas.length : 0;
       // Score calculation: (kg/10) + (avg*2) + (metas*5)
       const score = (s.kg / 10) + (avg * 2) + (s.metas * 5);
       return { ...s, avg, score };
     }).sort((a,b) => b.score - a.score);
+  },
 
+  renderRankingTable() {
+    const ranking = this.getRankingData();
     return ranking.map(r => `
       <tr>
         <td style="font-weight: 600;">${r.nome}</td>
@@ -410,5 +413,210 @@ window.Relatorios = {
         scales: { y: { min: 0, max: 5, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
       }
     });
+  },
+
+  async ensureLibraries() {
+    if (window.jspdf) return;
+    await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.autotable.min.js');
+  },
+
+  loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.getAttribute('data-loaded') === 'true') {
+          resolve();
+        } else {
+          existing.addEventListener('load', resolve);
+          existing.addEventListener('error', reject);
+        }
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => {
+        script.setAttribute('data-loaded', 'true');
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  },
+
+  async imprimirRelatorio() {
+    try {
+      const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+      if (isCapacitor) {
+        window.print();
+        return;
+      }
+
+      Components.toast('Gerando PDF...', 'info');
+      await this.ensureLibraries();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const ano = new Date().getFullYear();
+
+      // Read current date and period
+      const dataAtualObj = new Date();
+      const dataAtualStr = dataAtualObj.toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const horaAtual = dataAtualObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const dataAtualFormat = dataAtualObj.toLocaleDateString('pt-BR');
+      
+      const filter = this.currentFilter;
+      const periodLabel = filter === '7d' ? '7 Dias' : filter === '30d' ? '30 Dias' : 'Total';
+
+      // helper to draw header
+      const drawHeader = () => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(28, 126, 242); // Primary blue
+        doc.text('SmartGestor', 15, 16);
+
+        doc.setFontSize(18);
+        doc.setTextColor(28, 28, 30); // Dark text
+        doc.text('Relatório Administrativo', 148.5, 16, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(142, 142, 147); // Secondary text
+        doc.text(`Período: ${periodLabel}`, 282, 12, { align: 'right' });
+        doc.text(`Gerado em: ${dataAtualFormat} às ${horaAtual}`, 282, 17, { align: 'right' });
+
+        // Line under header
+        doc.setDrawColor(230, 230, 235);
+        doc.setLineWidth(0.5);
+        doc.line(15, 22, 282, 22);
+      };
+
+      // helper to draw footer
+      const drawFooter = (pageNum) => {
+        doc.setDrawColor(230, 230, 235);
+        doc.setLineWidth(0.5);
+        doc.line(15, 195, 282, 195);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(142, 142, 147);
+        doc.text(`SmartGestor © ${ano} — Documento gerado automaticamente`, 15, 202);
+        doc.text(`Página ${pageNum} de 2`, 282, 202, { align: 'right' });
+      };
+
+      // helper to get canvas image with white background
+      const getCanvasImageWithWhiteBg = (canvas) => {
+        if (!canvas) return null;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = '#FFFFFF';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+        return tempCanvas.toDataURL('image/png');
+      };
+
+      // --- FOLHA 1 ---
+      drawHeader();
+
+      // Read KPIs from DOM
+      const cards = document.querySelectorAll('.summary-card');
+      const producaoVal = cards[0]?.querySelector('.summary-value')?.textContent?.trim() || '0.0 kg / 0.0 L';
+      const mediaVal = cards[1]?.querySelector('.summary-value')?.textContent?.trim() || '0.0 / 5';
+      const metasVal = cards[2]?.querySelector('.summary-value')?.textContent?.trim() || '0 metas';
+      const visitasVal = cards[3]?.querySelector('.summary-value')?.textContent?.trim() || '0 locais';
+
+      const kpis = [
+        { label: 'PRODUÇÃO TOTAL', val: producaoVal },
+        { label: 'MÉDIA AVALIAÇÕES', val: mediaVal },
+        { label: 'METAS ATINGIDAS', val: metasVal },
+        { label: 'TOTAL VISITAS', val: visitasVal }
+      ];
+
+      // Draw KPI Cards
+      const cardW = 63;
+      const cardH = 20;
+      const cardY = 28;
+      const gap = 5;
+
+      kpis.forEach((kpi, idx) => {
+        const cardX = 15 + idx * (cardW + gap);
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(220, 220, 225);
+        doc.roundedRect(cardX, cardY, cardW, cardH, 3, 3, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(142, 142, 147);
+        doc.text(kpi.label, cardX + 5, cardY + 6);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(28, 28, 30);
+        doc.text(kpi.val, cardX + 5, cardY + 14);
+      });
+
+      // Capturar canvas do gráfico de barras
+      const canvasProducao = document.querySelector('#chart-producao');
+      if (canvasProducao) {
+        const imgProducao = getCanvasImageWithWhiteBg(canvasProducao);
+        if (imgProducao) {
+          doc.addImage(imgProducao, 'PNG', 15, 54, 267, 134);
+        }
+      }
+      
+      drawFooter(1);
+
+      // --- FOLHA 2 ---
+      doc.addPage();
+      drawHeader();
+
+      // Capturar canvas do gráfico de linha
+      const canvasNotas = document.querySelector('#chart-notas');
+      if (canvasNotas) {
+        const imgNotas = getCanvasImageWithWhiteBg(canvasNotas);
+        if (imgNotas) {
+          doc.addImage(imgNotas, 'PNG', 15, 26, 267, 60);
+        }
+      }
+
+      // Ranking table data
+      const rankingData = this.getRankingData();
+
+      // Render autoTable starting at y = 92
+      doc.autoTable({
+        startY: 92,
+        head: [['#', 'Padeiro', 'Produção Total', 'Média Nota', 'Metas Atingidas', 'Score Geral']],
+        body: rankingData.map((r, i) => [
+          i + 1,
+          r.nome,
+          `${r.kg.toFixed(1)} kg / ${r.litros.toFixed(1)} L`,
+          '★'.repeat(Math.round(r.avg)) + '☆'.repeat(5 - Math.round(r.avg)) + ` ${r.avg.toFixed(1)}`,
+          `${r.metas} atingidas`,
+          `${r.score.toFixed(0)} pts`
+        ]),
+        styles: { fontSize: 8.5, cellPadding: 2.5, font: 'helvetica' },
+        headStyles: { fillColor: [28, 126, 242], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        columnStyles: { 
+          0: { cellWidth: 12 }, 
+          1: { cellWidth: 70 }, 
+          2: { cellWidth: 50 },
+          3: { cellWidth: 45 },
+          4: { cellWidth: 40 },
+          5: { cellWidth: 35, halign: 'right' }
+        }
+      });
+
+      drawFooter(2);
+
+      // Save PDF
+      doc.save(`relatorio-${filter}-${dataAtualStr}.pdf`);
+      Components.toast('✓ PDF gerado com sucesso!', 'success');
+    } catch(err) {
+      console.error('Erro ao gerar PDF:', err);
+      Components.toast('Erro ao gerar relatório: ' + err.message, 'error');
+    }
   }
 };
