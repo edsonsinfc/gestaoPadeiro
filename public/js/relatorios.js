@@ -422,7 +422,81 @@ window.Relatorios = {
   },
 
   async gerarPDF() {
+    // 1. Abrir janela em branco imediatamente no clique para contornar bloqueador de pop-ups
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Preparando Impressão...</title>
+            <style>
+              body {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: #f4f4f7;
+                color: #333;
+              }
+              .loader {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #1C7EF2;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              p {
+                font-size: 16px;
+                font-weight: 500;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="loader"></div>
+            <p>Gerando relatório de desempenho...</p>
+          </body>
+        </html>
+      `);
+    }
+
     try {
+      // 2. Carregar a logo da Brago de forma assíncrona
+      const loadLogo = () => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = '/assets/logo.svg';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              // viewBox da logo: 465.12 x 142.58. Multiplicamos por 2 para boa resolução.
+              canvas.width = 930;
+              canvas.height = 285;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, 930, 285);
+              resolve(canvas.toDataURL('image/png'));
+            } catch (e) {
+              console.error('Erro ao processar logo no canvas:', e);
+              resolve(null);
+            }
+          };
+          img.onerror = () => {
+            console.warn('Erro ao carregar o logo da Brago.');
+            resolve(null);
+          };
+        });
+      };
+
+      const logoPngData = await loadLogo();
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageW = 210, pageH = 297, margin = 14;
@@ -438,6 +512,7 @@ window.Relatorios = {
       
       if (!canvasBarras || !canvasLinha) {
         Components.toast('Erro ao capturar os gráficos da tela.', 'error');
+        if (printWindow) printWindow.close();
         return;
       }
       
@@ -458,10 +533,15 @@ window.Relatorios = {
       // --- HELPERS DE RENDERIZAÇÃO ---
       
       const renderHeader = (pNum) => {
-        doc.setFont('Helvetica', 'bold');
-        doc.setFontSize(18);
-        doc.setTextColor(17, 24, 39); // #111827
-        doc.text('Fornada', margin, 18);
+        if (logoPngData) {
+          // A logo tem proporção ~3.26:1. Se altura for 10mm, a largura é 32.6mm
+          doc.addImage(logoPngData, 'PNG', margin, 8, 32.6, 10);
+        } else {
+          doc.setFont('Helvetica', 'bold');
+          doc.setFontSize(18);
+          doc.setTextColor(17, 24, 39); // #111827
+          doc.text('Brago', margin, 18);
+        }
         
         doc.setFontSize(14);
         doc.setFont('Helvetica', 'bold');
@@ -487,12 +567,11 @@ window.Relatorios = {
         doc.setFont('Helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(107, 114, 128); // #6B7280
-        doc.text(`Fornada © ${anoAtual} — Gerado em ${dataHoraGeracao}`, margin, pageH - 12);
+        doc.text(`Brago Distribuidora © ${anoAtual} — Gerado em ${dataHoraGeracao}`, margin, pageH - 12);
         doc.text(`Página ${pNum} de ${totalP}`, pageW - margin, pageH - 12, { align: 'right' });
       };
 
       // --- PÁGINA 1 ---
-      renderHeader(1);
       
       // GRID DE MÉTRICAS (2 colunas x 2 linhas)
       const cardW = (pageW - margin * 2 - 8) / 2; // ~87mm
@@ -617,11 +696,8 @@ window.Relatorios = {
       
       doc.addImage(imgBarras, 'PNG', margin + 4, chart1Y + 8, pageW - margin * 2 - 8, 120);
 
-      renderFooter(1, 2);
-
       // --- PÁGINA 2 ---
       doc.addPage();
-      renderHeader(2);
 
       // TÍTULO GRÁFICO DE LINHA — "Evolução de Avaliações"
       const chart2Y = 28;
@@ -695,7 +771,7 @@ window.Relatorios = {
 
       doc.autoTable({
         startY: tableY + 4,
-        margin: { left: margin, right: margin },
+        margin: { left: margin, right: margin, top: 25, bottom: 20 },
         head: [['POS.', 'PADEIRO', 'PRODUÇÃO (KG / L)', 'MÉDIA NOTA', 'METAS', 'SCORE']],
         body: tableRows,
         theme: 'plain',
@@ -770,13 +846,27 @@ window.Relatorios = {
         }
       });
 
-      renderFooter(2, 2);
+      // Renderizar cabeçalhos e rodapés em todas as páginas no final de forma dinâmica
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        renderHeader(i);
+        renderFooter(i, totalPages);
+      }
 
-      // Salvar PDF
-      doc.save(`relatorio-fornada-${Date.now()}.pdf`);
-      Components.toast('✓ PDF gerado com sucesso!', 'success');
+      // Auto-print and display PDF in the pre-opened window
+      doc.autoPrint();
+      const blobUrl = doc.output('bloburl');
+      if (printWindow) {
+        printWindow.location.href = blobUrl;
+      } else {
+        // Se a janela foi bloqueada por algum motivo, baixa o arquivo
+        doc.save(`relatorio-brago-${Date.now()}.pdf`);
+      }
+      Components.toast('✓ Relatório gerado para impressão!', 'success');
     } catch(e) {
       console.error("Erro ao gerar PDF:", e);
+      if (printWindow) printWindow.close();
       Components.toast('Erro ao gerar PDF: ' + e.message, 'error');
     }
   }
