@@ -58,7 +58,7 @@ Object.assign(Cronograma, {
         </td>`;
       }).join('');
       return `<tr>
-        <td class="col-padeiro">${p.nome.toUpperCase()}</td>
+        <td class="col-padeiro">${p.nome.trim().split(/\s+/)[0].toUpperCase()}</td>
         ${cells}
       </tr>`;
     }).join('');
@@ -371,7 +371,7 @@ Object.assign(Cronograma, {
               ${this.padeiros.filter(p => p.ativo).slice(0, 3).map(p => `
                 <div class="tf-check-item checked">
                   <div class="tf-check-circle"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
-                  <span>${p.nome.split(' ').slice(0, 2).join(' ')} (${p.filial || 'Sem Filial'})</span>
+                  <span>${p.nome.trim().split(/\s+/)[0]} (${p.filial || 'Sem Filial'})</span>
                 </div>
               `).join('') || `
                 <div style="font-size: 12px; color: #94A3B8; padding: 4px 0;">Nenhum padeiro ativo</div>

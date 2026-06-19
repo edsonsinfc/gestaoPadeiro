@@ -495,7 +495,7 @@ const AdminDashboard = {
                   <div style="width: 80px; height: 80px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #1E4BFF; margin-bottom: 12px; border: 4px solid rgba(255,255,255,0.3); box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1;">
                     ${stats.top10Pads[0].nome.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase()}
                   </div>
-                  <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #fff; z-index: 1;">${stats.top10Pads[0].nome}</h1>
+                  <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #fff; z-index: 1;">${stats.top10Pads[0].nome.trim().split(/\s+/)[0]}</h1>
                   <h2 style="font-size: 14px; font-weight: 500; margin: 0 0 20px 0; color: rgba(255,255,255,0.8); z-index: 1;">${stats.top10Pads[0].cargo || 'Padeiro'}</h2>
                   
                   <div style="display: flex; gap: 16px; width: 100%; justify-content: center; z-index: 1;">
@@ -821,7 +821,7 @@ const AdminDashboard = {
                     <div class="ranking-info-v2">
                       ${Components.avatar(p.nome, 'avatar-sm')}
                       <div>
-                        <div class="ranking-name-v2">${p.nome}</div>
+                        <div class="ranking-name-v2">${p.nome.trim().split(/\s+/)[0]}</div>
                         <div class="ranking-role-v2">${p.cargo} • ${p.totalAtividades} ativ.</div>
                       </div>
                     </div>
@@ -862,7 +862,7 @@ const AdminDashboard = {
                     <div class="ranking-info-v2">
                       ${Components.avatar(p.nome, 'avatar-sm')}
                       <div>
-                        <div class="ranking-name-v2">${p.nome}</div>
+                        <div class="ranking-name-v2">${p.nome.trim().split(/\s+/)[0]}</div>
                         <div class="ranking-role-v2">${p.cargo} • ${p.totalAvals} aval.</div>
                       </div>
                     </div>
@@ -980,7 +980,7 @@ const AdminDashboard = {
       // Draw Charts using Chart.js
       setTimeout(() => {
         const prodData = stats.rankingProducao || [];
-        const prodLabels = prodData.map(p => (p && p.nome) ? p.nome.split(' ').slice(0, 2).join(' ') : '—');
+        const prodLabels = prodData.map(p => (p && p.nome) ? p.nome.trim().split(/\s+/)[0] : '—');
         const prodKgVals = prodData.map(p => p ? p.totalKg : 0);
         const prodLVals = prodData.map(p => p ? p.totalLiters : 0);
         
@@ -1230,11 +1230,13 @@ const AdminDashboard = {
         },
         scales: {
           y: {
+            stacked: true,
             beginAtZero: true,
             grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false },
             ticks: { font: { family: 'Inter', size: 12 }, color: '#AEAEB2' }
           },
           x: {
+            stacked: true,
             grid: { display: false, drawBorder: false },
             ticks: { font: { family: 'Inter', size: 11 }, color: '#6E6E73' }
           }

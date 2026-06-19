@@ -294,7 +294,7 @@ const PadeiroAgenda = {
 
             ${filteredPadeiros.map(p => `
               <div class="matrix-padeiro-cell">
-                <div class="matrix-padeiro-name">${p.nome.split(' ').slice(0, 2).join(' ')}</div>
+                <div class="matrix-padeiro-name">${p.nome.trim().split(/\s+/)[0]}</div>
                 <div class="matrix-padeiro-cod">COD ${p.codTec || '------'}</div>
               </div>
               ${weekDates.slice(0,6).map(date => {

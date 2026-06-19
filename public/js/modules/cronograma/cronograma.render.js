@@ -288,7 +288,7 @@ Object.assign(Cronograma, {
                       <div style="display:flex; align-items:center; gap:12px;">
                         <div class="avatar" style="width:32px; height:32px; font-size:11px;">${bakerInitial}</div>
                         <div>
-                          <div style="font-weight:700; font-size:14px; color:var(--text-primary);">${p.nome.split(' ').slice(0, 2).join(' ')}</div>
+                          <div style="font-weight:700; font-size:14px; color:var(--text-primary);">${p.nome.trim().split(/\s+/)[0]}</div>
                           <div class="text-tertiary" style="font-size:10px; font-family:monospace;">COD ${p.codTec}</div>
                         </div>
                       </div>
@@ -324,7 +324,7 @@ Object.assign(Cronograma, {
 
                   <!-- Desktop Column -->
                   <td class="matrix-sticky-col desktop-only">
-                    <div style="font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 2px;">${p.nome.split(' ').slice(0, 2).join(' ')}</div>
+                    <div style="font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 2px;">${p.nome.trim().split(/\s+/)[0]}</div>
                     <div class="text-tertiary" style="font-family: monospace; font-size: 11px;">COD ${p.codTec}</div>
                   </td>
 

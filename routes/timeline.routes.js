@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/timeline.controller');
-const { authMiddleware, adminOnly } = require('../middleware/auth');
+const { authMiddleware, adminOrSelf } = require('../middleware/auth');
 
-router.get('/:padeiroId', authMiddleware, adminOnly, ctrl.getTimelineEvents);
+router.get('/:padeiroId', authMiddleware, adminOrSelf, ctrl.getTimelineEvents);
 router.post('/', authMiddleware, ctrl.createTimelineEvent);
 
 module.exports = router;

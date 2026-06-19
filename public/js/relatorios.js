@@ -266,7 +266,7 @@ window.Relatorios = {
 
     return ranking.map(r => `
       <tr>
-        <td style="font-weight: 600;">${r.nome}</td>
+        <td style="font-weight: 600;">${r.nome.trim().split(/\s+/)[0]}</td>
         <td>
           <div style="color:#1C7EF2; font-size:13px; font-weight:700;">${r.kg.toFixed(1)} kg</div>
           <div style="color:#AF52DE; font-size:11px; font-weight:600; margin-top:2px;">${r.litros.toFixed(1)} L</div>
@@ -332,7 +332,10 @@ window.Relatorios = {
     const prodByPadeiroKg = {};
     const prodByPadeiroL = {};
     data.atividades.forEach(a => {
-      const name = a.padeiroNome || 'Outros';
+      let name = a.padeiroNome || 'Outros';
+      if (name !== 'Outros') {
+        name = name.trim().split(/\s+/)[0];
+      }
       prodByPadeiroKg[name] = (prodByPadeiroKg[name] || 0) + (parseFloat(a.kgTotal) || 0);
       prodByPadeiroL[name] = (prodByPadeiroL[name] || 0) + (parseFloat(a.lTotal) || 0);
     });
@@ -373,12 +376,13 @@ window.Relatorios = {
         maintainAspectRatio: false,
         plugins: { legend: { display: true } },
         scales: {
-          y: { beginAtZero: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, grid: { display: false } },
           x: {
+            stacked: true,
             grid: { display: false },
             ticks: {
-              maxRotation: 45,
-              minRotation: 45
+              maxRotation: 0,
+              minRotation: 0
             }
           }
         }

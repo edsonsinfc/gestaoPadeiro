@@ -299,7 +299,7 @@ const Timeline = {
           <button class="tl-baker-selector" onclick="Timeline.openBakerSelector()">
             <div class="tl-baker-avatar">${this.selectedBaker.iniciais}</div>
             <div class="tl-baker-info">
-              <span class="tl-baker-name">${this.selectedBaker ? this.selectedBaker.nome : 'Nenhum padeiro'}</span>
+              <span class="tl-baker-name">${this.selectedBaker ? this.selectedBaker.nome.trim().split(/\s+/)[0] : 'Nenhum padeiro'}</span>
               <span class="tl-baker-date">${dateDisplay}</span>
             </div>
             <i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--text-tertiary)"></i>
@@ -438,7 +438,7 @@ const Timeline = {
     const optionsHtml = this.allBakers.map(p => `
       <button class="tl-sheet-option" onclick="Timeline.selectBaker('${p.id}')">
         <div class="tl-baker-avatar" style="width: 32px; height: 32px; font-size: 14px;">${this.getInitials(p.nome)}</div>
-        <span>${p.nome}</span>
+        <span>${p.nome.trim().split(/\s+/)[0]}</span>
         ${this.selectedBaker && this.selectedBaker.id === p.id ? '<i data-lucide="check" style="color: var(--primary);"></i>' : ''}
       </button>
     `).join('');

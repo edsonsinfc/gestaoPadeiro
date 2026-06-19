@@ -382,7 +382,7 @@ const App = {
         <div class="sidebar-user">
           <div class="avatar">${initials}</div>
           <div class="user-info-text">
-            <div class="user-name">${user.nome.split(' ').slice(0, 2).join(' ')}</div>
+            <div class="user-name">${user.nome.trim().split(/\s+/)[0]}</div>
             <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</div>
           </div>
         </div>
@@ -394,7 +394,7 @@ const App = {
       <div class="hig-sidebar-footer hig-desktop-only">
         <div class="hig-sidebar-avatar">${initials}</div>
         <div class="hig-sidebar-user-info">
-          <span class="hig-sidebar-user-name">${user.nome.split(' ').slice(0, 2).join(' ')}</span>
+          <span class="hig-sidebar-user-name">${user.nome.trim().split(/\s+/)[0]}</span>
           <span class="hig-sidebar-user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</span>
         </div>
         <button class="hig-sidebar-logout-btn" onclick="Auth.logout()" aria-label="Sair do sistema">

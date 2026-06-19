@@ -1213,8 +1213,21 @@ function formatBakerNames(data) {
       return val.map(processVal);
     }
 
-    // Se for um objeto de padeiro (tem nome e cargo/role/codTec/cpf)
-    if (val.nome && (val.cargo || val.codTec || val.role === 'padeiro' || val.hasOwnProperty('codTec') || val.hasOwnProperty('cargo'))) {
+    // Se for um objeto de padeiro (tem nome e cargo/role/codTec/cpf/indicadores)
+    const isBaker = val.nome && (
+      val.cargo || 
+      val.codTec || 
+      val.role === 'padeiro' || 
+      val.hasOwnProperty('codTec') || 
+      val.hasOwnProperty('cargo') ||
+      val.hasOwnProperty('totalKg') ||
+      val.hasOwnProperty('totalLiters') ||
+      val.hasOwnProperty('notaMedia') ||
+      val.hasOwnProperty('totalAtividades') ||
+      val.hasOwnProperty('media') ||
+      val.hasOwnProperty('totalAvals')
+    );
+    if (isBaker) {
       val.nome = getFirstName(val.nome);
     }
 

@@ -20,4 +20,14 @@ function adminOnly(req, res, next) {
   next();
 }
 
-module.exports = { authMiddleware, adminOnly };
+function adminOrSelf(req, res, next) {
+  const allowed = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'];
+  const targetId = req.params.id || req.params.padeiroId;
+  if (allowed.includes(req.user.role) || (targetId && req.user.id === targetId)) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Acesso negado' });
+}
+
+module.exports = { authMiddleware, adminOnly, adminOrSelf };
+
