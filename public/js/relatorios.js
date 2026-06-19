@@ -690,7 +690,9 @@ window.Relatorios = {
 
       // Helper function to scale charts preserving aspect ratio
       const fitImage = (canvas, maxW, maxH) => {
-        const aspect = canvas.width / canvas.height;
+        const width = canvas.clientWidth || canvas.width;
+        const height = canvas.clientHeight || canvas.height;
+        const aspect = width / height;
         let w = maxW;
         let h = w / aspect;
         if (h > maxH) {
