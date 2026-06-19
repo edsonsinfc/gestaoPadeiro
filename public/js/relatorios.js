@@ -66,7 +66,7 @@ window.Relatorios = {
           <div class="segmented-item ${this.currentFilter==='30d'?'active':''}" onclick="Relatorios.setFilter('30d')">30 Dias</div>
           <div class="segmented-item ${this.currentFilter==='custom'?'active':''}" onclick="Relatorios.setFilter('custom')">Total</div>
         </div>
-        <button class="btn btn-primary desktop-only" onclick="Relatorios.imprimirRelatorio()">
+        <button class="btn btn-primary desktop-only" onclick="Relatorios.gerarPDF()">
           <i data-lucide="printer"></i> Imprimir Relatório
         </button>
       </div>
@@ -231,7 +231,7 @@ window.Relatorios = {
     `;
   },
 
-  getRankingData() {
+  renderRankingTable() {
     const data = this.getFilteredData();
     const stats = {};
 
@@ -257,16 +257,13 @@ window.Relatorios = {
       if (stats[m.padeiroId] && (m.produzido || 0) >= (m.quantidade || 0)) stats[m.padeiroId].metas++;
     });
 
-    return Object.values(stats).map(s => {
+    const ranking = Object.values(stats).map(s => {
       const avg = s.notas.length > 0 ? s.notas.reduce((a,b)=>a+b,0) / s.notas.length : 0;
       // Score calculation: (kg/10) + (avg*2) + (metas*5)
       const score = (s.kg / 10) + (avg * 2) + (s.metas * 5);
       return { ...s, avg, score };
     }).sort((a,b) => b.score - a.score);
-  },
 
-  renderRankingTable() {
-    const ranking = this.getRankingData();
     return ranking.map(r => `
       <tr>
         <td style="font-weight: 600;">${r.nome}</td>
@@ -375,7 +372,16 @@ window.Relatorios = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: true } },
-        scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        scales: {
+          y: { beginAtZero: true, grid: { display: false } },
+          x: {
+            grid: { display: false },
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        }
       }
     });
 
@@ -415,211 +421,363 @@ window.Relatorios = {
     });
   },
 
-  async ensureLibraries() {
-    if (window.jspdf) return;
-    await this.loadScript('/js/jspdf.umd.min.js');
-    if (window.jspdf && window.jspdf.jsPDF) {
-      window.jsPDF = window.jspdf.jsPDF;
-    }
-    await this.loadScript('/js/jspdf.plugin.autotable.min.js');
-  },
-
-  loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[src="${src}"]`);
-      if (existing) {
-        if (existing.getAttribute('data-loaded') === 'true') {
-          resolve();
-        } else {
-          existing.addEventListener('load', resolve);
-          existing.addEventListener('error', reject);
-        }
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = () => {
-        script.setAttribute('data-loaded', 'true');
-        resolve();
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  },
-
-  async imprimirRelatorio() {
+  async gerarPDF() {
     try {
-      const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
-      if (isCapacitor) {
-        window.print();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = 210, pageH = 297, margin = 14;
+      
+      const filtroLabel = this.currentFilter === '7d' ? 'Últimos 7 dias' : this.currentFilter === '30d' ? 'Últimos 30 dias' : 'Período Total';
+      const dataGeracao = new Date().toLocaleDateString('pt-BR');
+      const dataHoraGeracao = new Date().toLocaleString('pt-BR');
+      const anoAtual = new Date().getFullYear();
+
+      // 1. Capturar gráficos como imagem ANTES de gerar o doc
+      const canvasBarras = document.getElementById('chart-producao');
+      const canvasLinha = document.getElementById('chart-notas');
+      
+      if (!canvasBarras || !canvasLinha) {
+        Components.toast('Erro ao capturar os gráficos da tela.', 'error');
         return;
       }
-
-      Components.toast('Gerando PDF...', 'info');
-      await this.ensureLibraries();
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const ano = new Date().getFullYear();
-
-      // Read current date and period
-      const dataAtualObj = new Date();
-      const dataAtualStr = dataAtualObj.toLocaleDateString('pt-BR').replace(/\//g, '-');
-      const horaAtual = dataAtualObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      const dataAtualFormat = dataAtualObj.toLocaleDateString('pt-BR');
       
-      const filter = this.currentFilter;
-      const periodLabel = filter === '7d' ? '7 Dias' : filter === '30d' ? '30 Dias' : 'Total';
+      const imgBarras = canvasBarras.toDataURL('image/png');
+      const imgLinha = canvasLinha.toDataURL('image/png');
 
-      // helper to draw header
-      const drawHeader = () => {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(28, 126, 242); // Primary blue
-        doc.text('SmartGestor', 15, 16);
+      // Calcular métricas
+      const data = this.getFilteredData();
+      const totalKg = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.kgTotal) || 0), 0);
+      const totalLitros = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.lTotal) || 0), 0);
+      const validAvaliacoes = data.avaliacoes.filter(a => !isNaN(parseFloat(a.nota)) && parseFloat(a.nota) <= 5);
+      const avgNota = validAvaliacoes.length > 0 
+        ? validAvaliacoes.reduce((acc, curr) => acc + parseFloat(curr.nota), 0) / validAvaliacoes.length 
+        : 0;
+      const visitasCount = data.atividades.length;
+      const metasAtingidas = data.metas.filter(m => (m.produzido || 0) >= (m.quantidade || 0)).length;
 
+      // --- HELPERS DE RENDERIZAÇÃO ---
+      
+      const renderHeader = (pNum) => {
+        doc.setFont('Helvetica', 'bold');
         doc.setFontSize(18);
-        doc.setTextColor(28, 28, 30); // Dark text
-        doc.text('Relatório Administrativo', 148.5, 16, { align: 'center' });
-
-        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(17, 24, 39); // #111827
+        doc.text('Fornada', margin, 18);
+        
+        doc.setFontSize(14);
+        doc.setFont('Helvetica', 'bold');
+        doc.text('Relatório Administrativo', pageW / 2, 18, { align: 'center' });
+        
         doc.setFontSize(9);
-        doc.setTextColor(142, 142, 147); // Secondary text
-        doc.text(`Período: ${periodLabel}`, 282, 12, { align: 'right' });
-        doc.text(`Gerado em: ${dataAtualFormat} às ${horaAtual}`, 282, 17, { align: 'right' });
-
-        // Line under header
-        doc.setDrawColor(230, 230, 235);
+        doc.setFont('Helvetica', 'normal');
+        doc.setTextColor(107, 114, 128); // #6B7280
+        doc.text(`${filtroLabel}  |  Gerado em ${dataGeracao}`, pageW - margin, 18, { align: 'right' });
+        
+        // Linha separadora sutil
+        doc.setDrawColor(229, 231, 235); // #E5E7EB
         doc.setLineWidth(0.5);
-        doc.line(15, 22, 282, 22);
+        doc.line(margin, 22, pageW - margin, 22);
       };
 
-      // helper to draw footer
-      const drawFooter = (pageNum) => {
-        doc.setDrawColor(230, 230, 235);
+      const renderFooter = (pNum, totalP) => {
+        // Linha separadora
+        doc.setDrawColor(229, 231, 235); // #E5E7EB
         doc.setLineWidth(0.5);
-        doc.line(15, 195, 282, 195);
+        doc.line(margin, pageH - 18, pageW - margin, pageH - 18);
 
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('Helvetica', 'normal');
         doc.setFontSize(8);
-        doc.setTextColor(142, 142, 147);
-        doc.text(`SmartGestor © ${ano} — Documento gerado automaticamente`, 15, 202);
-        doc.text(`Página ${pageNum} de 2`, 282, 202, { align: 'right' });
+        doc.setTextColor(107, 114, 128); // #6B7280
+        doc.text(`Fornada © ${anoAtual} — Gerado em ${dataHoraGeracao}`, margin, pageH - 12);
+        doc.text(`Página ${pNum} de ${totalP}`, pageW - margin, pageH - 12, { align: 'right' });
       };
 
-      // helper to get canvas image with white background
-      const getCanvasImageWithWhiteBg = (canvas) => {
-        if (!canvas) return null;
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.fillStyle = '#FFFFFF';
-        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tempCtx.drawImage(canvas, 0, 0);
-        return tempCanvas.toDataURL('image/png');
-      };
-
-      // --- FOLHA 1 ---
-      drawHeader();
-
-      // Read KPIs from DOM
-      const cards = document.querySelectorAll('.summary-card');
-      const producaoVal = cards[0]?.querySelector('.summary-value')?.textContent?.trim() || '0.0 kg / 0.0 L';
-      const mediaVal = cards[1]?.querySelector('.summary-value')?.textContent?.trim() || '0.0 / 5';
-      const metasVal = cards[2]?.querySelector('.summary-value')?.textContent?.trim() || '0 metas';
-      const visitasVal = cards[3]?.querySelector('.summary-value')?.textContent?.trim() || '0 locais';
-
-      const kpis = [
-        { label: 'PRODUÇÃO TOTAL', val: producaoVal },
-        { label: 'MÉDIA AVALIAÇÕES', val: mediaVal },
-        { label: 'METAS ATINGIDAS', val: metasVal },
-        { label: 'TOTAL VISITAS', val: visitasVal }
+      // --- PÁGINA 1 ---
+      renderHeader(1);
+      
+      // GRID DE MÉTRICAS (2 colunas x 2 linhas)
+      const cardW = (pageW - margin * 2 - 8) / 2; // ~87mm
+      const cardH = 26;
+      const startX = margin;
+      const startY = 28;
+      
+      const metrics = [
+        {
+          label: 'PRODUÇÃO TOTAL',
+          value: `${totalKg.toFixed(1)}`,
+          unit: 'kg',
+          value2: `${totalLitros.toFixed(1)}`,
+          unit2: 'L',
+          iconColor: [37, 99, 235]
+        },
+        {
+          label: 'MÉDIA AVALIAÇÕES',
+          value: `${avgNota.toFixed(1)}`,
+          unit: '/ 5.0',
+          iconColor: [245, 158, 11]
+        },
+        {
+          label: 'METAS ATINGIDAS',
+          value: `${metasAtingidas}`,
+          unit: 'metas',
+          iconColor: [16, 185, 129]
+        },
+        {
+          label: 'TOTAL VISITAS',
+          value: `${visitasCount}`,
+          unit: 'locais',
+          iconColor: [175, 82, 222]
+        }
       ];
 
-      // Draw KPI Cards
-      const cardW = 63;
-      const cardH = 20;
-      const cardY = 28;
-      const gap = 5;
-
-      kpis.forEach((kpi, idx) => {
-        const cardX = 15 + idx * (cardW + gap);
+      metrics.forEach((m, idx) => {
+        const col = idx % 2;
+        const row = Math.floor(idx / 2);
+        const x = startX + col * (cardW + 8);
+        const y = startY + row * (cardH + 6);
+        
+        // Fundo do card
         doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(220, 220, 225);
-        doc.roundedRect(cardX, cardY, cardW, cardH, 3, 3, 'FD');
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(x, y, cardW, cardH, 2, 2, 'FD');
+        
+        // Ícone decorativo lateral
+        doc.setFillColor(m.iconColor[0], m.iconColor[1], m.iconColor[2]);
+        doc.roundedRect(x + cardW - 12, y + 6, 6, 14, 1, 1, 'F');
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.setTextColor(142, 142, 147);
-        doc.text(kpi.label, cardX + 5, cardY + 6);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(28, 28, 30);
-        doc.text(kpi.val, cardX + 5, cardY + 14);
+        // Texto
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(107, 114, 128);
+        doc.text(m.label, x + 6, y + 8);
+        
+        doc.setFontSize(18);
+        doc.setTextColor(17, 24, 39);
+        
+        if (m.label === 'PRODUÇÃO TOTAL') {
+          doc.setFontSize(14);
+          doc.setTextColor(37, 99, 235);
+          doc.text(m.value, x + 6, y + 18);
+          let offset = doc.getTextWidth(m.value) + 1;
+          doc.setFontSize(9);
+          doc.setFont('Helvetica', 'normal');
+          doc.text(m.unit, x + 6 + offset, y + 18);
+          offset += doc.getTextWidth(m.unit) + 2;
+          
+          doc.setFontSize(12);
+          doc.setTextColor(107, 114, 128);
+          doc.text('/', x + 6 + offset, y + 18);
+          offset += 3;
+          
+          doc.setFontSize(14);
+          doc.setTextColor(175, 82, 222);
+          doc.setFont('Helvetica', 'bold');
+          doc.text(m.value2, x + 6 + offset, y + 18);
+          offset += doc.getTextWidth(m.value2) + 1;
+          doc.setFontSize(9);
+          doc.setFont('Helvetica', 'normal');
+          doc.text(m.unit2, x + 6 + offset, y + 18);
+        } else {
+          doc.text(m.value, x + 6, y + 18);
+          const offset = doc.getTextWidth(m.value) + 2;
+          doc.setFontSize(10);
+          doc.setFont('Helvetica', 'normal');
+          doc.setTextColor(107, 114, 128);
+          doc.text(m.unit, x + 6 + offset, y + 18);
+        }
       });
 
-      // Capturar canvas do gráfico de barras
-      const canvasProducao = document.querySelector('#chart-producao');
-      if (canvasProducao) {
-        const imgProducao = getCanvasImageWithWhiteBg(canvasProducao);
-        if (imgProducao) {
-          doc.addImage(imgProducao, 'PNG', 15, 54, 267, 134);
-        }
-      }
+      // TÍTULO GRÁFICO DE BARRAS — "Produção por Padeiro"
+      const chart1Y = startY + cardH * 2 + 15;
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(17, 24, 39);
+      doc.setFillColor(37, 99, 235);
+      doc.rect(margin, chart1Y - 4, 3, 5, 'F');
+      doc.text('Produção por Padeiro', margin + 6, chart1Y);
+
+      // Legenda (kg / L) acima do gráfico
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(107, 114, 128);
+      // kg box
+      doc.setFillColor(28, 126, 242);
+      doc.rect(pageW - margin - 50, chart1Y - 3.5, 3, 3, 'F');
+      doc.text('Produção (kg)', pageW - margin - 45, chart1Y - 1);
+      // L box
+      doc.setFillColor(175, 82, 222);
+      doc.rect(pageW - margin - 22, chart1Y - 3.5, 3, 3, 'F');
+      doc.text('Produção (L)', pageW - margin - 17, chart1Y - 1);
+
+      // Imagem do Gráfico de Barras com borda sutil
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.3);
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(margin, chart1Y + 4, pageW - margin * 2, 130, 2, 2, 'FD');
       
-      drawFooter(1);
+      doc.addImage(imgBarras, 'PNG', margin + 4, chart1Y + 8, pageW - margin * 2 - 8, 120);
 
-      // --- FOLHA 2 ---
+      renderFooter(1, 2);
+
+      // --- PÁGINA 2 ---
       doc.addPage();
-      drawHeader();
+      renderHeader(2);
 
-      // Capturar canvas do gráfico de linha
-      const canvasNotas = document.querySelector('#chart-notas');
-      if (canvasNotas) {
-        const imgNotas = getCanvasImageWithWhiteBg(canvasNotas);
-        if (imgNotas) {
-          doc.addImage(imgNotas, 'PNG', 15, 26, 267, 60);
+      // TÍTULO GRÁFICO DE LINHA — "Evolução de Avaliações"
+      const chart2Y = 28;
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(17, 24, 39);
+      doc.setFillColor(245, 158, 11);
+      doc.rect(margin, chart2Y - 4, 3, 5, 'F');
+      doc.text('Evolução de Avaliações', margin + 6, chart2Y);
+
+      // Imagem do Gráfico de Linhas com fundo bege suave #FFF7ED
+      doc.setDrawColor(254, 215, 170);
+      doc.setLineWidth(0.3);
+      doc.setFillColor(255, 247, 237);
+      doc.roundedRect(margin, chart2Y + 4, pageW - margin * 2, 65, 2, 2, 'FD');
+      
+      doc.addImage(imgLinha, 'PNG', margin + 4, chart2Y + 8, pageW - margin * 2 - 8, 57);
+
+      // TÍTULO TABELA DE RANKING
+      const tableY = chart2Y + 77;
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(17, 24, 39);
+      doc.setFillColor(37, 99, 235);
+      doc.rect(margin, tableY - 4, 3, 5, 'F');
+      doc.text('Ranking de Desempenho', margin + 6, tableY);
+
+      // Processar ranking de padeiros
+      const stats = {};
+      data.padeiros.forEach(p => {
+        stats[p.id] = { nome: p.nome, kg: 0, litros: 0, notas: [], metas: 0 };
+      });
+      data.atividades.forEach(a => {
+        if (stats[a.padeiroId]) {
+          stats[a.padeiroId].kg += parseFloat(a.kgTotal) || 0;
+          stats[a.padeiroId].litros += parseFloat(a.lTotal) || 0;
         }
-      }
+      });
+      data.avaliacoes.forEach(a => {
+        const nota = parseFloat(a.nota);
+        if (stats[a.padeiroId] && !isNaN(nota) && nota <= 5) {
+          stats[a.padeiroId].notesSum = (stats[a.padeiroId].notesSum || 0) + nota;
+          stats[a.padeiroId].notesCount = (stats[a.padeiroId].notesCount || 0) + 1;
+        }
+      });
+      data.metas.forEach(m => {
+        if (stats[m.padeiroId] && (m.produzido || 0) >= (m.quantidade || 0)) stats[m.padeiroId].metas++;
+      });
+      
+      const ranking = Object.values(stats).map(s => {
+        const avg = s.notesCount && s.notesCount > 0 ? s.notesSum / s.notesCount : 0;
+        const score = (s.kg / 10) + (avg * 2) + (s.metas * 5);
+        return { ...s, avg, score };
+      }).sort((a,b) => b.score - a.score);
 
-      // Ranking table data
-      const rankingData = this.getRankingData();
-
-      // Render autoTable starting at y = 92
-      doc.autoTable({
-        startY: 92,
-        head: [['#', 'Padeiro', 'Produção Total', 'Média Nota', 'Metas Atingidas', 'Score Geral']],
-        body: rankingData.map((r, i) => [
-          i + 1,
-          r.nome,
+      // Renderizar Tabela de Ranking via jsPDF-AutoTable
+      const tableRows = ranking.map((r, idx) => {
+        const posStr = `${idx + 1}°`;
+        const roundedAvg = Math.round(r.avg);
+        const starsStr = '★'.repeat(roundedAvg) + '☆'.repeat(5 - roundedAvg);
+        const nameShort = r.nome.length > 20 ? r.nome.substring(0, 18) + '...' : r.nome;
+        return [
+          posStr,
+          nameShort,
           `${r.kg.toFixed(1)} kg / ${r.litros.toFixed(1)} L`,
-          '★'.repeat(Math.round(r.avg)) + '☆'.repeat(5 - Math.round(r.avg)) + ` ${r.avg.toFixed(1)}`,
+          `${r.avg.toFixed(1)} ${starsStr}`,
           `${r.metas} atingidas`,
           `${r.score.toFixed(0)} pts`
-        ]),
-        styles: { fontSize: 8.5, cellPadding: 2.5, font: 'helvetica' },
-        headStyles: { fillColor: [28, 126, 242], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-        columnStyles: { 
-          0: { cellWidth: 12 }, 
-          1: { cellWidth: 70 }, 
-          2: { cellWidth: 50 },
-          3: { cellWidth: 45 },
-          4: { cellWidth: 40 },
-          5: { cellWidth: 35, halign: 'right' }
+        ];
+      });
+
+      doc.autoTable({
+        startY: tableY + 4,
+        margin: { left: margin, right: margin },
+        head: [['POS.', 'PADEIRO', 'PRODUÇÃO (KG / L)', 'MÉDIA NOTA', 'METAS', 'SCORE']],
+        body: tableRows,
+        theme: 'plain',
+        headStyles: {
+          fillColor: [243, 244, 246], // #F3F4F6
+          textColor: [17, 24, 39],
+          fontStyle: 'bold',
+          fontSize: 9,
+          halign: 'left',
+          valign: 'middle'
+        },
+        bodyStyles: {
+          textColor: [55, 65, 81],
+          fontSize: 8.5,
+          valign: 'middle'
+        },
+        columnStyles: {
+          0: { cellWidth: 12, fontStyle: 'bold', halign: 'center' },
+          1: { cellWidth: 42, fontStyle: 'bold' },
+          2: { cellWidth: 42 },
+          3: { cellWidth: 32 },
+          4: { cellWidth: 28 },
+          5: { cellWidth: 26, fontStyle: 'bold', halign: 'right', textColor: [37, 99, 235] }
+        },
+        didParseCell: function (data) {
+          if (data.section === 'body') {
+            // Alternate rows color
+            if (data.row.index % 2 === 1) {
+              data.cell.styles.fillColor = [249, 250, 251]; // #F9FAFB
+            }
+            
+            // Format position column
+            if (data.column.index === 0) {
+              const pos = data.row.index + 1;
+              if (pos === 1) {
+                data.cell.styles.fillColor = [254, 243, 199];
+                data.cell.styles.textColor = [180, 83, 9];
+              } else if (pos === 2) {
+                data.cell.styles.fillColor = [243, 244, 246];
+                data.cell.styles.textColor = [75, 85, 99];
+              } else if (pos === 3) {
+                data.cell.styles.fillColor = [255, 237, 213];
+                data.cell.styles.textColor = [194, 65, 12];
+              } else {
+                data.cell.styles.textColor = [107, 114, 128];
+              }
+            }
+            
+            // Format stars in Media Nota column
+            if (data.column.index === 3) {
+              data.cell.styles.textColor = [245, 158, 11];
+            }
+            
+            // Format Metas column (like a pill badge)
+            if (data.column.index === 4) {
+              const textVal = data.cell.raw;
+              const hasMetas = parseInt(textVal) > 0;
+              if (hasMetas) {
+                data.cell.styles.textColor = [6, 95, 70];
+                data.cell.styles.fillColor = [209, 250, 229];
+              } else {
+                data.cell.styles.textColor = [107, 114, 128];
+                data.cell.styles.fillColor = [243, 244, 246];
+              }
+            }
+          }
+        },
+        styles: {
+          cellPadding: 3.5,
+          lineColor: [229, 231, 235],
+          lineWidth: 0.1
         }
       });
 
-      drawFooter(2);
+      renderFooter(2, 2);
 
-      // Save PDF
-      doc.save(`relatorio-${filter}-${dataAtualStr}.pdf`);
+      // Salvar PDF
+      doc.save(`relatorio-fornada-${Date.now()}.pdf`);
       Components.toast('✓ PDF gerado com sucesso!', 'success');
-    } catch(err) {
-      console.error('Erro ao gerar PDF:', err);
-      Components.toast('Erro ao gerar relatório: ' + (err.message || err), 'error');
+    } catch(e) {
+      console.error("Erro ao gerar PDF:", e);
+      Components.toast('Erro ao gerar PDF: ' + e.message, 'error');
     }
   }
 };
