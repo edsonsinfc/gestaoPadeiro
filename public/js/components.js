@@ -1196,6 +1196,50 @@ class APIError extends Error {
   }
 }
 
+function formatBakerNames(data) {
+  if (!data) return data;
+  const isGestao = typeof App !== 'undefined' && App.currentRoute === 'gestao';
+  if (isGestao) return data;
+
+  const getFirstName = (fullName) => {
+    if (!fullName || typeof fullName !== 'string') return fullName;
+    return fullName.trim().split(/\s+/)[0];
+  };
+
+  const processVal = (val) => {
+    if (!val || typeof val !== 'object') return val;
+
+    if (Array.isArray(val)) {
+      return val.map(processVal);
+    }
+
+    // Se for um objeto de padeiro (tem nome e cargo/role/codTec/cpf)
+    if (val.nome && (val.cargo || val.codTec || val.role === 'padeiro' || val.hasOwnProperty('codTec') || val.hasOwnProperty('cargo'))) {
+      val.nome = getFirstName(val.nome);
+    }
+
+    // Se tiver a chave padeiroNome
+    if (val.padeiroNome) {
+      val.padeiroNome = getFirstName(val.padeiroNome);
+    }
+
+    // Percorre todas as propriedades
+    for (const key in val) {
+      if (val.hasOwnProperty(key)) {
+        val[key] = processVal(val[key]);
+      }
+    }
+
+    return val;
+  };
+
+  try {
+    return processVal(JSON.parse(JSON.stringify(data)));
+  } catch (e) {
+    return data;
+  }
+}
+
 const API = {
   token: localStorage.getItem('brago_token'),
 
@@ -1207,7 +1251,17 @@ const API = {
 
   getUser() {
     const data = localStorage.getItem('brago_user');
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+    try {
+      const user = JSON.parse(data);
+      const isGestao = typeof App !== 'undefined' && App.currentRoute === 'gestao';
+      if (user && user.role === 'padeiro' && !isGestao) {
+        user.nome = user.nome.trim().split(/\s+/)[0];
+      }
+      return user;
+    } catch(e) {
+      return null;
+    }
   },
 
   setUser(user) {
@@ -1226,7 +1280,7 @@ const API = {
         const cached = await OfflineManager.getCachedData(url);
         if (cached) {
           console.warn('[Offline] Retornando dados do cache instantaneamente para:', url);
-          return cached;
+          return formatBakerNames(cached);
         }
       } else {
         const parsedBody = options.body ? JSON.parse(options.body) : null;
@@ -1271,7 +1325,7 @@ const API = {
         }
       }
 
-      return data;
+      return formatBakerNames(data);
     } catch (err) {
       clearTimeout(timeoutId);
       
@@ -1305,7 +1359,7 @@ const API = {
             if (method === 'GET') {
               OfflineManager.cacheData(url, data);
             }
-            return data;
+            return formatBakerNames(data);
           }
           
           if (fallbackRes.status === 401) {
@@ -1329,7 +1383,7 @@ const API = {
           const cached = await OfflineManager.getCachedData(url);
           if (cached) {
             console.warn('[Offline] Retornando dados do cache para:', url);
-            return cached;
+            return formatBakerNames(cached);
           }
         } else if (!options.isSyncing) {
           // POST/PUT/PATCH/DELETE
