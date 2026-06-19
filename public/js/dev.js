@@ -978,7 +978,10 @@ const Dev = {
             </span>
           </td>
           <td><span class="dev-badge ${badgeCls}">${badgeText}</span></td>
-          <td style="text-align:right;">
+          <td style="text-align:right; white-space:nowrap;">
+            <button class="dev-badge dev-badge-success" style="border:none; cursor:pointer; padding: 6px 12px; font-weight:700; transition:var(--transition); margin-right: 6px;" onclick="Dev.finalizeActivity('${a.id}')">
+              <i data-lucide="check" style="width:12px;height:12px;"></i> Finalizar
+            </button>
             <button class="dev-badge dev-badge-info" style="border:none; cursor:pointer; padding: 6px 12px; font-weight:700; transition:var(--transition);" onclick="Dev.showTimelineModal('${a.id}')">
               <i data-lucide="eye" style="width:12px;height:12px;"></i> Timeline
             </button>
@@ -1071,6 +1074,47 @@ const Dev = {
 
     Components.showModal('Auditoria do Trajeto (Timeline)', modalContent, modalFooter, 'dev-timeline-modal');
     Components.renderIcons();
+  },
+
+  async finalizeActivity(activityId) {
+    if (!confirm('Deseja realmente finalizar esta atividade automaticamente? Isso marcará o atendimento como concluído no sistema.')) return;
+    
+    try {
+      const a = this._activities.find(x => x.id === activityId);
+      if (!a) {
+        Components.toast('Atendimento não encontrado localmente.', 'error');
+        return;
+      }
+      
+      const nowStr = new Date().toISOString();
+      const updatedActivity = {
+        status: 'finalizada',
+        fimEm: nowStr,
+        lastStep: 5,
+        timeline: Array.isArray(a.timeline) ? [
+          ...a.timeline,
+          { step: 'Finalizado Forçadamente pelo Administrador', timestamp: nowStr }
+        ] : [{ step: 'Finalizado Forçadamente pelo Administrador', timestamp: nowStr }]
+      };
+      
+      // Enviar requisição para atualizar o status no banco de dados
+      await API.put(`/api/atividades/${activityId}`, updatedActivity);
+      
+      // Se houver vinculo com cronograma, concluir na agenda também
+      if (a.cronogramaId) {
+        try {
+          await API.patch(`/api/cronograma/agenda/${a.cronogramaId}/status`, { status: 'concluida' });
+        } catch(e) {
+          console.warn("Aviso ao atualizar cronograma:", e);
+        }
+      }
+      
+      Components.toast('✓ Atendimento finalizado com sucesso!', 'success');
+      await this.loadStats(); // Recarrega KPIs e a tabela
+    } catch (e) {
+      console.error("Erro ao finalizar atividade:", e);
+      Components.toast('Erro ao finalizar atividade: ' + e.message, 'error');
+    }
   },
 
   renderHeatmap(activities, bakers) {
