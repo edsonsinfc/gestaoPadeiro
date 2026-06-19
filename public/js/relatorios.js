@@ -418,6 +418,9 @@ window.Relatorios = {
   async ensureLibraries() {
     if (window.jspdf) return;
     await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if (window.jspdf && window.jspdf.jsPDF) {
+      window.jsPDF = window.jspdf.jsPDF;
+    }
     await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.autotable.min.js');
   },
 
@@ -616,7 +619,7 @@ window.Relatorios = {
       Components.toast('✓ PDF gerado com sucesso!', 'success');
     } catch(err) {
       console.error('Erro ao gerar PDF:', err);
-      Components.toast('Erro ao gerar relatório: ' + err.message, 'error');
+      Components.toast('Erro ao gerar relatório: ' + (err.message || err), 'error');
     }
   }
 };
