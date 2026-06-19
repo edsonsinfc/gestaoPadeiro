@@ -417,11 +417,11 @@ window.Relatorios = {
 
   async ensureLibraries() {
     if (window.jspdf) return;
-    await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await this.loadScript('/js/jspdf.umd.min.js');
     if (window.jspdf && window.jspdf.jsPDF) {
       window.jsPDF = window.jspdf.jsPDF;
     }
-    await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.autotable.min.js');
+    await this.loadScript('/js/jspdf.plugin.autotable.min.js');
   },
 
   loadScript(src) {
