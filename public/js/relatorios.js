@@ -688,13 +688,28 @@ window.Relatorios = {
       doc.rect(pageW - margin - 22, chart1Y - 3.5, 3, 3, 'F');
       doc.text('Produção (L)', pageW - margin - 17, chart1Y - 1);
 
-      // Imagem do Gráfico de Barras com borda sutil
+      // Helper function to scale charts preserving aspect ratio
+      const fitImage = (canvas, maxW, maxH) => {
+        const aspect = canvas.width / canvas.height;
+        let w = maxW;
+        let h = w / aspect;
+        if (h > maxH) {
+          h = maxH;
+          w = h * aspect;
+        }
+        return { w, h };
+      };
+
+      // Imagem do Gráfico de Barras com borda sutil e aspect ratio preservado
+      const sizeBarras = fitImage(canvasBarras, pageW - margin * 2 - 8, 110);
+      const xBarras = margin + 4 + (pageW - margin * 2 - 8 - sizeBarras.w) / 2;
+
       doc.setDrawColor(229, 231, 235);
       doc.setLineWidth(0.3);
       doc.setFillColor(255, 255, 255);
-      doc.roundedRect(margin, chart1Y + 4, pageW - margin * 2, 130, 2, 2, 'FD');
+      doc.roundedRect(margin, chart1Y + 4, pageW - margin * 2, sizeBarras.h + 8, 2, 2, 'FD');
       
-      doc.addImage(imgBarras, 'PNG', margin + 4, chart1Y + 8, pageW - margin * 2 - 8, 120);
+      doc.addImage(imgBarras, 'PNG', xBarras, chart1Y + 8, sizeBarras.w, sizeBarras.h);
 
       // --- PÁGINA 2 ---
       doc.addPage();
@@ -708,16 +723,19 @@ window.Relatorios = {
       doc.rect(margin, chart2Y - 4, 3, 5, 'F');
       doc.text('Evolução de Avaliações', margin + 6, chart2Y);
 
-      // Imagem do Gráfico de Linhas com fundo bege suave #FFF7ED
+      // Imagem do Gráfico de Linhas com fundo bege suave #FFF7ED e aspect ratio preservado
+      const sizeLinha = fitImage(canvasLinha, pageW - margin * 2 - 8, 65);
+      const xLinha = margin + 4 + (pageW - margin * 2 - 8 - sizeLinha.w) / 2;
+
       doc.setDrawColor(254, 215, 170);
       doc.setLineWidth(0.3);
       doc.setFillColor(255, 247, 237);
-      doc.roundedRect(margin, chart2Y + 4, pageW - margin * 2, 65, 2, 2, 'FD');
+      doc.roundedRect(margin, chart2Y + 4, pageW - margin * 2, sizeLinha.h + 8, 2, 2, 'FD');
       
-      doc.addImage(imgLinha, 'PNG', margin + 4, chart2Y + 8, pageW - margin * 2 - 8, 57);
+      doc.addImage(imgLinha, 'PNG', xLinha, chart2Y + 8, sizeLinha.w, sizeLinha.h);
 
-      // TÍTULO TABELA DE RANKING
-      const tableY = chart2Y + 77;
+      // TÍTULO TABELA DE RANKING (calculado dinamicamente com base no tamanho do gráfico)
+      const tableY = chart2Y + 4 + sizeLinha.h + 8 + 12;
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(17, 24, 39);
