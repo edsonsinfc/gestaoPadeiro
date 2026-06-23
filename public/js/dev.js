@@ -7,6 +7,7 @@ const Dev = {
   _activities: [],
   _bakers: [],
   _currentTab: 'telemetria',
+  _heatmapPeriod: 'semana',
 
   async render() {
     const user = API.getUser();
@@ -260,6 +261,8 @@ const Dev = {
         .dev-danger-grid { grid-template-columns: 1fr; }
         .dev-page { padding-bottom: 96px; }
       }
+      .dev-hm-filter-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
+      .dev-hm-filter-btn.active { background: var(--primary) !important; color: #fff !important; }
     </style>
 
     <div class="dev-page fade-in">
@@ -391,9 +394,17 @@ const Dev = {
       <!-- ── TAB: MAPA DE CALOR ── -->
       <div class="dev-panel" id="panel-mapacalor">
         <div>
-          <div class="dev-section-header">
-            <h3 class="dev-section-title">Frequência Semanal de Atividades</h3>
-            <p class="dev-section-subtitle">Visualização de intensidade de atendimentos e visitas por padeiro e por dia da semana</p>
+          <div class="dev-section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h3 class="dev-section-title">Frequência Semanal de Atividades</h3>
+              <p class="dev-section-subtitle">Visualização de intensidade de atendimentos e visitas por padeiro e por dia da semana</p>
+            </div>
+            <!-- Período Selector -->
+            <div class="dev-heatmap-filter-group" style="display:flex; background:var(--bg-input); padding:4px; border-radius:8px; border:1px solid var(--glass-border); gap:4px;">
+              <button class="dev-hm-filter-btn active" id="btn-hm-semana" onclick="Dev.changeHeatmapPeriod('semana')" style="background:transparent; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer; transition:var(--transition);">Semana</button>
+              <button class="dev-hm-filter-btn" id="btn-hm-mensal" onclick="Dev.changeHeatmapPeriod('mensal')" style="background:transparent; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer; transition:var(--transition);">Mensal</button>
+              <button class="dev-hm-filter-btn" id="btn-hm-anual" onclick="Dev.changeHeatmapPeriod('anual')" style="background:transparent; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer; transition:var(--transition);">Anual</button>
+            </div>
           </div>
         </div>
 
@@ -1137,11 +1148,47 @@ const Dev = {
       return e;
     };
 
+    const getStartOfMonth = (d) => {
+      const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+      return start;
+    };
+    const getEndOfMonth = (som) => {
+      const e = new Date(som.getFullYear(), som.getMonth() + 1, 0, 23, 59, 59, 999);
+      return e;
+    };
+
+    const getStartOfYear = (d) => {
+      const start = new Date(d.getFullYear(), 0, 1, 0, 0, 0, 0);
+      return start;
+    };
+    const getEndOfYear = (soy) => {
+      const e = new Date(soy.getFullYear(), 11, 31, 23, 59, 59, 999);
+      return e;
+    };
+
     const now = new Date();
-    const sowCur = getStartOfWeek(now);
-    const eowCur = getEndOfWeek(sowCur);
-    const sowPrev = new Date(sowCur); sowPrev.setDate(sowPrev.getDate() - 7);
-    const eowPrev = getEndOfWeek(sowPrev);
+    let sowCur, eowCur, sowPrev, eowPrev;
+    const period = this._heatmapPeriod || 'semana';
+
+    if (period === 'mensal') {
+      sowCur = getStartOfMonth(now);
+      eowCur = getEndOfMonth(sowCur);
+      sowPrev = new Date(sowCur);
+      sowPrev.setMonth(sowPrev.getMonth() - 1);
+      eowPrev = getEndOfMonth(sowPrev);
+    } else if (period === 'anual') {
+      sowCur = getStartOfYear(now);
+      eowCur = getEndOfYear(sowCur);
+      sowPrev = new Date(sowCur);
+      sowPrev.setFullYear(sowPrev.getFullYear() - 1);
+      eowPrev = getEndOfYear(sowPrev);
+    } else {
+      sowCur = getStartOfWeek(now);
+      eowCur = getEndOfWeek(sowCur);
+      sowPrev = new Date(sowCur);
+      sowPrev.setDate(sowPrev.getDate() - 7);
+      eowPrev = getEndOfWeek(sowPrev);
+    }
 
     // Hours 06 → 22  (17 columns)
     const HOUR_START = 6, HOUR_END = 22;
@@ -1197,6 +1244,38 @@ const Dev = {
     } else { pct = curWeekCount > 0 ? 100 : 0; positive = true; }
     const trendClass = positive ? 'positive' : 'negative';
     const trendLabel = prevWeekCount > 0 ? `${pct}% ${positive ? '↗' : '↘'}` : (curWeekCount > 0 ? '100% ↗' : '—');
+
+    let periodTitleGeneral = '';
+    let periodTitleBaker = '';
+    let periodLegendLabel = '';
+    let periodDesc = '';
+    let trendPeriodLabel = '';
+    
+    if (period === 'mensal') {
+      const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const monthName = monthNames[sowCur.getMonth()];
+      const yearVal = sowCur.getFullYear();
+      periodTitleGeneral = `Frequência de Atendimentos — Mês Atual (${monthName})`;
+      periodTitleBaker = `Distribuição por Padeiro e Horário — Mensal`;
+      periodLegendLabel = `Cada padeiro, atividades por faixa de hora — mensal`;
+      periodDesc = `Mês de <strong>${monthName}/${yearVal}</strong> · vs mês anterior`;
+      trendPeriodLabel = 'mês anterior';
+    } else if (period === 'anual') {
+      const yearVal = sowCur.getFullYear();
+      periodTitleGeneral = `Frequência de Atendimentos — Ano Atual (${yearVal})`;
+      periodTitleBaker = `Distribuição por Padeiro e Horário — Anual`;
+      periodLegendLabel = `Cada padeiro, atividades por faixa de hora — anual`;
+      periodDesc = `Ano de <strong>${yearVal}</strong> · vs ano anterior`;
+      trendPeriodLabel = 'ano anterior';
+    } else {
+      const startStr = sowCur.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      const endStr   = eowCur.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      periodTitleGeneral = `Frequência de Atendimentos — Semana Atual`;
+      periodTitleBaker = `Distribuição por Padeiro e Horário`;
+      periodLegendLabel = `Cada padeiro, atividades por faixa de hora — semana atual`;
+      periodDesc = `Semana <strong>${startStr}</strong> a <strong>${endStr}</strong> · vs semana anterior`;
+      trendPeriodLabel = 'semana anterior';
+    }
 
     // ── color scales ─────────────────────────────────────────
     let maxGlobal = 1;
@@ -1329,12 +1408,12 @@ const Dev = {
         <div class="dev-hm-card">
           <div class="dev-hm-hdr">
             <div>
-              <div class="dev-hm-title">Frequência de Atendimentos — Semana Atual</div>
+              <div class="dev-hm-title">${periodTitleGeneral}</div>
               <div class="dev-hm-stat">
                 ${curWeekCount} Atividades
                 <span class="dev-heatmap-trend ${trendClass}" style="font-size:13px;">${trendLabel}</span>
               </div>
-              <div class="dev-hm-period">Semana <strong>${startStr}</strong> a <strong>${endStr}</strong> · vs semana anterior</div>
+              <div class="dev-hm-period">${periodDesc}</div>
             </div>
             <div class="dev-hm-legend">
               <span>Menos</span>
@@ -1358,8 +1437,8 @@ const Dev = {
         <div class="dev-hm-card">
           <div class="dev-hm-hdr">
             <div>
-              <div class="dev-hm-section-h">Distribuição por Padeiro e Horário</div>
-              <div class="dev-hm-section-sub">Cada padeiro, atividades por faixa de hora — semana atual</div>
+              <div class="dev-hm-section-h">${periodTitleBaker}</div>
+              <div class="dev-hm-section-sub">${periodLegendLabel}</div>
             </div>
             <div class="dev-hm-legend">
               <span>Menos</span>
@@ -1464,5 +1543,16 @@ const Dev = {
     } finally {
       this._setBtnLoading('btn-reset-rastreamento', false);
     }
+  },
+
+  changeHeatmapPeriod(period) {
+    this._heatmapPeriod = period;
+    
+    // Toggle active state on filter buttons
+    document.querySelectorAll('.dev-hm-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.id === `btn-hm-${period}`);
+    });
+    
+    this.renderHeatmap(this._activities, this._bakers);
   }
 };
