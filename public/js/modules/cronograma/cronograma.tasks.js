@@ -425,10 +425,21 @@ Object.assign(Cronograma, {
       Components.toast('Apenas administradores podem limpar o cronograma.', 'error');
       return;
     }
-    if (confirm('ATENÇÃO: Você está prestes a excluir TODO o cronograma. Esta ação não pode ser desfeita. Deseja continuar?')) {
+    const dates = this.getWeekDates();
+    if (!dates || dates.length === 0) {
+      Components.toast('Não foi possível determinar a semana atual.', 'error');
+      return;
+    }
+    const startStr = dates[0].toISOString().split('T')[0];
+    const endStr = dates[dates.length - 1].toISOString().split('T')[0];
+    
+    const formattedStart = dates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const formattedEnd = dates[dates.length - 1].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+    if (confirm(`ATENÇÃO: Você está prestes a limpar o cronograma da semana de ${formattedStart} a ${formattedEnd}.\n\nEsta ação excluirá apenas a escala de tarefas planejadas para este período. NENHUM registro de atendimento realizado (atividade) será apagado.\n\nDeseja continuar?`)) {
       try {
-        await API.delete('/api/cronograma/all');
-        Components.toast('Cronograma totalmente limpo!', 'success');
+        await API.delete(`/api/cronograma/all?start=${startStr}&end=${endStr}`);
+        Components.toast('Cronograma da semana limpo!', 'success');
         await this.render();
       } catch (e) {
         Components.toast('Erro ao limpar cronograma: ' + e.message, 'error');

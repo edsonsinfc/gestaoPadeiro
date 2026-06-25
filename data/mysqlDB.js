@@ -198,6 +198,20 @@ class SqlCollection {
     return { deletedCount: result.affectedRows };
   }
 
+  async updateMany(query = {}, update = {}) {
+    const cols = await this.getColumns();
+    const keys = Object.keys(update).filter(k => typeof update[k] !== 'function' && (!cols || cols.includes(k)));
+    const values = keys.map(k => (typeof update[k] === 'object' && update[k] !== null) ? JSON.stringify(update[k]) : update[k]);
+    const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
+    
+    if (keys.length === 0) return { modifiedCount: 0 };
+    
+    const where = this.buildWhere(query);
+    const sql = `UPDATE \`${this.tableName}\` SET ${setClause}${where.sql}`;
+    const [result] = await pool.query(sql, [...values, ...where.values]);
+    return { modifiedCount: result.affectedRows };
+  }
+
   async countDocuments(query = {}) {
     const where = this.buildWhere(query);
     const sql = `SELECT COUNT(*) as count FROM \`${this.tableName}\`${where.sql}`;
@@ -284,5 +298,6 @@ module.exports = {
   HistoricoLocalizacao: createProxy(new SqlCollection('HistoricoLocalizacao', 'historico_localizacoes')),
   CronogramaTemplate: createProxy(new SqlCollection('CronogramaTemplate', 'cronograma_templates')),
   TimelineEvent: createProxy(new SqlCollection('TimelineEvent', 'timeline_events')),
-  PushSubscription: createProxy(new SqlCollection('PushSubscription', 'push_subscriptions'))
+  PushSubscription: createProxy(new SqlCollection('PushSubscription', 'push_subscriptions')),
+  AuditLog: createProxy(new SqlCollection('AuditLog', 'audit_logs'))
 };

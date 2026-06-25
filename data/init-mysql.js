@@ -265,6 +265,24 @@ const TABLES = [
           fcmToken TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`
+      },
+      {
+        name: 'audit_logs',
+        schema: `CREATE TABLE IF NOT EXISTS audit_logs (
+          id VARCHAR(50) PRIMARY KEY,
+          userId VARCHAR(50),
+          userName VARCHAR(255),
+          userRole VARCHAR(50),
+          action VARCHAR(50),
+          ip VARCHAR(100),
+          userAgent TEXT,
+          platform VARCHAR(50),
+          filial VARCHAR(255),
+          timestamp VARCHAR(100),
+          INDEX (userId),
+          INDEX (timestamp),
+          INDEX (action)
+        )`
       }
 ];
 

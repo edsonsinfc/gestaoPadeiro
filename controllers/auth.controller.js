@@ -3,8 +3,29 @@ const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const { JWT_SECRET, BASE_URL, GOOGLE_CLIENT_ID } = require('../config');
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
-const { Admin, Padeiro } = require('../data/db-adapter');
+const { Admin, Padeiro, AuditLog } = require('../data/db-adapter');
 const emailService = require('../data/emailService');
+
+// Helper: log audit event (fire-and-forget)
+function logAudit(req, user, action) {
+  const ua = req.headers['user-agent'] || '';
+  let platform = 'web';
+  if (ua.includes('SmartGestor') || ua.includes('Capacitor')) platform = 'android';
+  else if (/iPhone|iPad/.test(ua)) platform = 'ios';
+
+  AuditLog.create({
+    id: 'aud_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+    userId: user.id || '',
+    userName: user.nome || user.email || '',
+    userRole: user.role || '',
+    action,
+    ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
+    userAgent: ua.substring(0, 500),
+    platform,
+    filial: user.filial || '',
+    timestamp: new Date().toISOString()
+  }).catch(err => console.error('[AUDIT] Erro ao salvar log:', err.message));
+}
 
 exports.login = async (req, res) => {
   const { email, senha } = req.body;
@@ -20,7 +41,10 @@ exports.login = async (req, res) => {
     }
     if (admin) {
       const valid = await bcrypt.compare(senha, admin.passwordHash);
-      if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+      if (!valid) {
+        logAudit(req, { id: admin.id, nome: admin.nome, role: admin.role || 'admin', filial: admin.filial }, 'login_failed');
+        return res.status(401).json({ error: 'Senha incorreta' });
+      }
       if (admin.deletado) return res.status(403).json({ error: 'Usuário inexistente' });
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       
@@ -33,6 +57,7 @@ exports.login = async (req, res) => {
         filial: admin.filial || null 
       }, JWT_SECRET, { expiresIn: '5d' });
       
+      logAudit(req, { id: admin.id, nome: admin.nome, role, filial: admin.filial }, 'login');
       return res.json({ 
         token, 
         user: { 
@@ -55,9 +80,13 @@ exports.login = async (req, res) => {
     if (!padeiro.passwordHash) return res.status(403).json({ error: 'first_access', message: 'Primeiro acesso. Verifique seu e-mail para definir sua senha.' });
 
     const valid = await bcrypt.compare(senha, padeiro.passwordHash);
-    if (!valid) return res.status(401).json({ error: 'Senha incorreta' });
+    if (!valid) {
+      logAudit(req, { id: padeiro.id, nome: padeiro.nome, role: padeiro.role, filial: padeiro.filial }, 'login_failed');
+      return res.status(401).json({ error: 'Senha incorreta' });
+    }
 
     const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
+    logAudit(req, { id: padeiro.id, nome: padeiro.nome, role: padeiro.role, filial: padeiro.filial }, 'login');
     return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
   } catch (error) {
     console.error("Login error:", error);
@@ -83,6 +112,7 @@ exports.googleLogin = async (req, res) => {
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       const role = admin.role || 'admin';
       const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '5d' });
+      logAudit(req, { id: admin.id, nome: admin.nome, role, filial: admin.filial }, 'login_google');
       return res.json({ token, user: { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null } });
     }
 
@@ -91,6 +121,7 @@ exports.googleLogin = async (req, res) => {
     if (!padeiro.ativo) return res.status(403).json({ error: 'Usuário desativado' });
 
     const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
+    logAudit(req, { id: padeiro.id, nome: padeiro.nome, role: padeiro.role, filial: padeiro.filial }, 'login_google');
     return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
   } catch (error) {
     console.error("Google Login error:", error);

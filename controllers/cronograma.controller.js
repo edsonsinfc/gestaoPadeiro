@@ -124,14 +124,22 @@ exports.updateTarefa = async (req, res) => {
 
 exports.deleteAllTarefas = async (req, res) => {
   try {
-    const activitiesToDelete = await Atividade.find({ cronogramaId: { $ne: null } });
-    const activityIds = activitiesToDelete.map(a => a.id);
+    const { start, end } = req.query;
+    const query = {};
+    if (start && end) {
+      query.data = { $gte: start, $lte: end };
+    }
 
-    await Cronograma.deleteMany({});
-    await Atividade.deleteMany({ cronogramaId: { $ne: null } });
+    // Find cronograma entries to be deleted
+    const cronogramasToDelete = await Cronograma.find(query);
+    const cronogramaIds = cronogramasToDelete.map(c => c.id);
 
-    if (activityIds.length > 0) {
-      await Avaliacao.deleteMany({ atividadeId: { $in: activityIds } });
+    // Delete cronograma tasks
+    await Cronograma.deleteMany(query);
+
+    // Disassociate matching activities instead of deleting them
+    if (cronogramaIds.length > 0) {
+      await Atividade.updateMany({ cronogramaId: { $in: cronogramaIds } }, { cronogramaId: null });
     }
 
     const io = getIo();
@@ -139,9 +147,9 @@ exports.deleteAllTarefas = async (req, res) => {
       io.emit('agenda-updated', { action: 'delete_all' });
     }
 
-    res.json({ success: true, message: 'Todo o cronograma foi excluído.' });
+    res.json({ success: true, message: 'O cronograma do período foi limpo. As atividades associadas foram preservadas.' });
   } catch (e) {
-    res.status(500).json({ error: 'Erro ao excluir cronograma' });
+    res.status(500).json({ error: 'Erro ao excluir cronograma: ' + e.message });
   }
 };
 
@@ -149,15 +157,12 @@ exports.deleteTarefa = async (req, res) => {
   try {
     const id = req.params.id;
     const tarefa = await Cronograma.findById(id);
-    const activitiesToDelete = await Atividade.find({ cronogramaId: id });
-    const activityIds = activitiesToDelete.map(a => a.id);
 
+    // Delete the single cronograma task
     await Cronograma.findByIdAndDelete(id);
-    await Atividade.deleteMany({ cronogramaId: id });
-
-    if (activityIds.length > 0) {
-      await Avaliacao.deleteMany({ atividadeId: { $in: activityIds } });
-    }
+    
+    // Disassociate the activity instead of deleting it
+    await Atividade.updateMany({ cronogramaId: id }, { cronogramaId: null });
 
     if (tarefa) {
       const io = getIo();
@@ -168,7 +173,7 @@ exports.deleteTarefa = async (req, res) => {
 
     res.json({ success: true });
   } catch (e) {
-    res.status(400).json({ error: 'ID inválido' });
+    res.status(400).json({ error: 'ID inválido ou erro ao excluir a tarefa' });
   }
 };
 

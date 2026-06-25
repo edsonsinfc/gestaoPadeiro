@@ -173,7 +173,7 @@ const App = {
         return;
       }
     } else {
-      const allowedAdminRoutes = ['admin-dashboard', 'filiais', 'cronograma', 'gestao', 'metas', 'avaliacoes', 'rastreamento', 'timeline', 'relatorios', 'dev'];
+      const allowedAdminRoutes = ['admin-dashboard', 'filiais', 'cronograma', 'gestao', 'metas', 'avaliacoes', 'rastreamento', 'timeline', 'relatorios', 'auditoria', 'dev'];
       if (route.startsWith('padeiro-') && !allowedAdminRoutes.includes(route)) {
         // Just in case an admin clicks a padeiro link or has it in storage
         this.navigate('admin-dashboard');
@@ -294,6 +294,9 @@ const App = {
         <div class="nav-item hig-sidebar-nav-item" data-route="relatorios" onclick="App.navigate('relatorios')">
           <span class="nav-icon"><i data-lucide="bar-chart-2"></i></span><span class="nav-text">Relatórios</span>
         </div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="auditoria" onclick="App.navigate('auditoria')">
+          <span class="nav-icon"><i data-lucide="shield-check"></i></span><span class="nav-text">Auditoria</span>
+        </div>
       `;
     } else {
       adminNav = `
@@ -331,6 +334,9 @@ const App = {
         </div>
         <div class="nav-section-divider hig-mobile-only"></div>
         <div class="nav-section-title hig-sidebar-section-label">Sistema</div>
+        <div class="nav-item hig-sidebar-nav-item" data-route="auditoria" onclick="App.navigate('auditoria')">
+          <span class="nav-icon"><i data-lucide="shield-check"></i></span><span class="nav-text">Auditoria</span>
+        </div>
         ${user.role === 'admin' ? `
         <div class="nav-item hig-sidebar-nav-item" data-route="dev" onclick="App.navigate('dev')">
           <span class="nav-icon"><i data-lucide="terminal"></i></span><span class="nav-text">Desenvolvimento</span>
@@ -589,6 +595,7 @@ const App = {
         case 'padeiro-atividade': await PadeiroFlow.render(this.routeData || {}); break;
         case 'padeiro-agenda': await PadeiroAgenda.render(); break;
         case 'dev': await Dev.render(); break;
+        case 'auditoria': await Auditoria.render(); break;
         default:
           document.getElementById('page-container').innerHTML = Components.empty('search', 'Página não encontrada.');
       }

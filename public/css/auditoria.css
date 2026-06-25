@@ -1,0 +1,580 @@
+/* ============================================================
+   AUDITORIA — Compliance & Audit Dashboard
+   Follows the HIG design system used throughout the app
+   ============================================================ */
+
+/* Container */
+.auditoria-container {
+  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── KPI CARDS ─────────────────────────────── */
+.audit-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.audit-kpi-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border, rgba(0,0,0,0.06));
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.audit-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.audit-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.audit-kpi-card.kpi-system::before { background: linear-gradient(90deg, #34C759, #30D158); }
+.audit-kpi-card.kpi-logins::before { background: linear-gradient(90deg, #007AFF, #5AC8FA); }
+.audit-kpi-card.kpi-inactive::before { background: linear-gradient(90deg, #FF3B30, #FF6961); }
+.audit-kpi-card.kpi-warning::before { background: linear-gradient(90deg, #FF9500, #FFCC00); }
+
+.audit-kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audit-kpi-icon.icon-system { background: rgba(52, 199, 89, 0.12); color: #34C759; }
+.audit-kpi-icon.icon-logins { background: rgba(0, 122, 255, 0.12); color: #007AFF; }
+.audit-kpi-icon.icon-inactive { background: rgba(255, 59, 48, 0.12); color: #FF3B30; }
+.audit-kpi-icon.icon-warning { background: rgba(255, 149, 0, 0.12); color: #FF9500; }
+
+.audit-kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary, #1d1d1f);
+  line-height: 1;
+}
+
+.audit-kpi-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #86868b);
+}
+
+.audit-kpi-sublabel {
+  font-size: 11px;
+  color: var(--text-tertiary, #aeaeb2);
+  margin-top: -4px;
+}
+
+/* ─── SECTION TITLES ────────────────────────── */
+.audit-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #1d1d1f);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-section-title i {
+  color: var(--accent, #007AFF);
+  width: 22px;
+  height: 22px;
+}
+
+/* ─── CHART SECTION ─────────────────────────── */
+.audit-chart-section {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border, rgba(0,0,0,0.06));
+}
+
+.audit-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.audit-chart-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #1d1d1f);
+}
+
+.audit-chart-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary, #86868b);
+}
+
+.audit-chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.audit-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.audit-chart-canvas-wrap {
+  height: 280px;
+  position: relative;
+}
+
+/* ─── FILTERS BAR ───────────────────────────── */
+.audit-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.audit-filter-select,
+.audit-filter-input {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(0,0,0,0.12));
+  background: var(--card-bg, #fff);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary, #1d1d1f);
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 140px;
+}
+
+.audit-filter-select:focus,
+.audit-filter-input:focus {
+  border-color: var(--accent, #007AFF);
+}
+
+.audit-filter-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: var(--accent, #007AFF);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+
+.audit-filter-btn:hover {
+  opacity: 0.85;
+}
+
+/* ─── STATUS TABLE ──────────────────────────── */
+.audit-table-section {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border, rgba(0,0,0,0.06));
+  overflow-x: auto;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.audit-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #86868b);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
+  white-space: nowrap;
+}
+
+.audit-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.04));
+  color: var(--text-primary, #1d1d1f);
+  vertical-align: middle;
+}
+
+.audit-table tr {
+  transition: background-color 0.15s;
+}
+
+.audit-table tbody tr:hover {
+  background-color: rgba(0, 122, 255, 0.04);
+}
+
+.audit-table tbody tr.clickable {
+  cursor: pointer;
+}
+
+/* Status Badges */
+.audit-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.audit-status.status-ativo {
+  background: rgba(52, 199, 89, 0.12);
+  color: #34C759;
+}
+
+.audit-status.status-logou_sem_produzir {
+  background: rgba(255, 149, 0, 0.12);
+  color: #FF9500;
+}
+
+.audit-status.status-inativo {
+  background: rgba(255, 59, 48, 0.12);
+  color: #FF3B30;
+}
+
+/* Usage Bar */
+.audit-usage-bar-wrap {
+  width: 80px;
+  height: 6px;
+  background: var(--border, rgba(0,0,0,0.08));
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.audit-usage-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.audit-usage-bar.usage-high { background: #34C759; }
+.audit-usage-bar.usage-medium { background: #FF9500; }
+.audit-usage-bar.usage-low { background: #FF3B30; }
+
+/* ─── DETAIL MODAL ──────────────────────────── */
+.audit-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: auditFadeIn 0.2s ease;
+}
+
+.audit-detail-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: auditSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audit-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.audit-detail-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #1d1d1f);
+}
+
+.audit-detail-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--border, rgba(0,0,0,0.06));
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #86868b);
+  transition: background 0.2s;
+}
+
+.audit-detail-close:hover {
+  background: rgba(0,0,0,0.12);
+}
+
+.audit-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.audit-detail-stat {
+  text-align: center;
+  padding: 16px 8px;
+  background: var(--bg-secondary, #f5f5f7);
+  border-radius: 12px;
+}
+
+.audit-detail-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #1d1d1f);
+}
+
+.audit-detail-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary, #86868b);
+  margin-top: 4px;
+}
+
+.audit-detail-chart {
+  height: 200px;
+  margin-bottom: 24px;
+}
+
+.audit-detail-timeline {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.audit-detail-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.04));
+  font-size: 13px;
+}
+
+.audit-detail-timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.audit-detail-timeline-dot.dot-login { background: #007AFF; }
+.audit-detail-timeline-dot.dot-atividade { background: #34C759; }
+.audit-detail-timeline-dot.dot-failed { background: #FF3B30; }
+
+.audit-detail-timeline-time {
+  font-size: 12px;
+  color: var(--text-secondary, #86868b);
+  min-width: 140px;
+}
+
+.audit-detail-timeline-text {
+  flex: 1;
+  color: var(--text-primary, #1d1d1f);
+}
+
+/* ─── LOG ACTION BADGES ─────────────────────── */
+.audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.audit-action.action-login { background: rgba(0,122,255,0.1); color: #007AFF; }
+.audit-action.action-login_google { background: rgba(52,199,89,0.1); color: #34C759; }
+.audit-action.action-login_failed { background: rgba(255,59,48,0.1); color: #FF3B30; }
+
+/* ─── PAGINATION ────────────────────────────── */
+.audit-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.audit-page-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(0,0,0,0.12));
+  background: var(--card-bg, #fff);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-primary, #1d1d1f);
+  transition: all 0.2s;
+}
+
+.audit-page-btn:hover { background: rgba(0,122,255,0.08); }
+.audit-page-btn.active { background: var(--accent, #007AFF); color: #fff; border-color: var(--accent, #007AFF); }
+.audit-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.audit-page-info {
+  font-size: 13px;
+  color: var(--text-secondary, #86868b);
+}
+
+/* ─── TABS ──────────────────────────────────── */
+.audit-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary, #f5f5f7);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.audit-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #86868b);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.audit-tab.active {
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #1d1d1f);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ─── ANIMATIONS ────────────────────────────── */
+@keyframes auditFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes auditSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── EMPTY STATE ───────────────────────────── */
+.audit-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary, #86868b);
+}
+
+.audit-empty i {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+/* ─── RESPONSIVE ────────────────────────────── */
+@media (max-width: 768px) {
+  .audit-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .audit-kpi-value {
+    font-size: 24px;
+  }
+
+  .audit-kpi-card {
+    padding: 16px;
+  }
+
+  .audit-detail-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .audit-detail-modal {
+    width: 95%;
+    padding: 20px;
+    max-height: 90vh;
+  }
+
+  .audit-chart-canvas-wrap {
+    height: 220px;
+  }
+
+  .audit-filters {
+    gap: 8px;
+  }
+
+  .audit-filter-select,
+  .audit-filter-input {
+    min-width: 100px;
+    flex: 1;
+  }
+
+  .audit-tabs {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .audit-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .audit-kpi-value {
+    font-size: 22px;
+  }
+
+  .audit-table {
+    font-size: 12px;
+  }
+
+  .audit-table th,
+  .audit-table td {
+    padding: 8px 10px;
+  }
+}
