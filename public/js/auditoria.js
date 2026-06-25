@@ -7,6 +7,7 @@
  */
 const Auditoria = {
   currentTab: 'dashboard',
+  selectedDate: new Date().toISOString().split('T')[0],
   dashboardData: null,
   logsData: null,
   logsPage: 1,
@@ -20,7 +21,7 @@ const Auditoria = {
 
     try {
       // Load dashboard data
-      this.dashboardData = await API.get('/api/auditoria/dashboard?periodo=30');
+      this.dashboardData = await API.get(`/api/auditoria/dashboard?periodo=30&data=${this.selectedDate}`);
       
       // Extract unique filiais
       this.filiais = [...new Set(
@@ -35,6 +36,22 @@ const Auditoria = {
     } catch (error) {
       console.error('[AUDITORIA] Erro ao carregar:', error);
       container.innerHTML = Components.empty('alert-circle', 'Erro ao carregar auditoria. Verifique sua conexão.');
+    }
+  },
+
+  async changeDashboardDate(date) {
+    this.selectedDate = date;
+    const content = document.getElementById('audit-tab-content');
+    if (content) {
+      content.innerHTML = Components.loading();
+    }
+
+    try {
+      this.dashboardData = await API.get(`/api/auditoria/dashboard?periodo=30&data=${this.selectedDate}`);
+      this.renderTab();
+    } catch (error) {
+      console.error('[AUDITORIA] Erro ao atualizar data:', error);
+      Components.toast('Erro ao carregar dados para a data selecionada', 'error');
     }
   },
 
@@ -106,7 +123,19 @@ const Auditoria = {
       ? Math.round((hoje.padeirosComAtividade / hoje.totalPadeiros) * 100) 
       : 0;
 
+    const isHoje = this.selectedDate === new Date().toISOString().split('T')[0];
+    const dataFormatted = this.formatDate(this.selectedDate);
+    const diaTexto = isHoje ? 'Hoje' : `em ${dataFormatted}`;
+
     return `
+    <!-- Date Selector -->
+    <div class="audit-filters" style="margin-bottom: 20px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:13px; font-weight:600; color:var(--text-secondary);">Data de Referência:</span>
+        <input type="date" class="audit-filter-input" id="audit-dashboard-date" value="${this.selectedDate}" max="${new Date().toISOString().split('T')[0]}" onchange="Auditoria.changeDashboardDate(this.value)">
+      </div>
+    </div>
+
     <!-- KPI Cards -->
     <div class="audit-kpi-grid">
       <div class="audit-kpi-card kpi-system">
@@ -123,7 +152,7 @@ const Auditoria = {
           <i data-lucide="log-in" style="width:20px;height:20px;"></i>
         </div>
         <div class="audit-kpi-value">${hoje.loginsHoje}</div>
-        <div class="audit-kpi-label">Logins Hoje</div>
+        <div class="audit-kpi-label">Logins ${isHoje ? 'Hoje' : 'no Dia'}</div>
         <div class="audit-kpi-sublabel">${hoje.padeirosComAtividade} com atividade registrada</div>
       </div>
 
@@ -132,7 +161,7 @@ const Auditoria = {
           <i data-lucide="user-x" style="width:20px;height:20px;"></i>
         </div>
         <div class="audit-kpi-value">${hoje.padeirosInativos}</div>
-        <div class="audit-kpi-label">Não Logaram Hoje</div>
+        <div class="audit-kpi-label">Não Logaram ${isHoje ? 'Hoje' : 'no Dia'}</div>
         <div class="audit-kpi-sublabel">de ${hoje.totalPadeiros} padeiros ativos</div>
       </div>
 
@@ -181,7 +210,7 @@ const Auditoria = {
         </div>
         <div class="audit-kpi-card" style="border:none;background:var(--bg-secondary,#f5f5f7);">
           <div class="audit-kpi-value" style="font-size:24px;">${taxaUso}%</div>
-          <div class="audit-kpi-label">Taxa de Uso Hoje</div>
+          <div class="audit-kpi-label">Taxa de Uso ${isHoje ? 'Hoje' : 'no Dia'}</div>
         </div>
       </div>
 
@@ -289,16 +318,22 @@ const Auditoria = {
     });
   },
 
-  // ─── PADEIROS STATUS TAB ────────────────────────────────────
   renderPadeirosStatus() {
     const d = this.dashboardData;
     if (!d) return '';
 
     const statusPadeiros = d.statusPadeiros || [];
+    const isHoje = this.selectedDate === new Date().toISOString().split('T')[0];
+    const dataFormatted = this.formatDate(this.selectedDate);
+    const diaTexto = isHoje ? 'Hoje' : `em ${dataFormatted}`;
 
     return `
     <!-- Filters -->
     <div class="audit-filters">
+      <div style="display:flex; align-items:center; gap:8px; margin-right:12px;">
+        <span style="font-size:13px; font-weight:600; color:var(--text-secondary);">Data:</span>
+        <input type="date" class="audit-filter-input" id="audit-padeiros-date" value="${this.selectedDate}" max="${new Date().toISOString().split('T')[0]}" onchange="Auditoria.changeDashboardDate(this.value)">
+      </div>
       <select class="audit-filter-select" id="audit-filial-filter" onchange="Auditoria.filterPadeiros()">
         <option value="">Todas as Filiais</option>
         ${this.filiais.map(f => `<option value="${f}">${f}</option>`).join('')}
@@ -320,7 +355,7 @@ const Auditoria = {
             <th>Filial</th>
             <th>Último Login</th>
             <th>Logins (30d)</th>
-            <th>Status Hoje</th>
+            <th>Status ${isHoje ? 'Hoje' : 'no Dia'}</th>
             <th>Detalhes</th>
           </tr>
         </thead>

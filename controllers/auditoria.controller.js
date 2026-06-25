@@ -75,7 +75,7 @@ const AuditoriaController = {
    */
   async getDashboard(req, res) {
     try {
-      const { periodo = 30 } = req.query;
+      const { periodo = 30, data } = req.query;
       const diasAtras = new Date();
       diasAtras.setDate(diasAtras.getDate() - parseInt(periodo));
       const dataInicio = diasAtras.toISOString();
@@ -90,11 +90,13 @@ const AuditoriaController = {
         filialValues.push(...filiaisArray);
       }
 
-      // 1. Logins de hoje
-      const hoje = new Date().toISOString().split('T')[0];
+      // Data de referência (permite consultar dias passados)
+      const dataRef = data || new Date().toISOString().split('T')[0];
+
+      // 1. Logins na data de referência
       const [loginsHojeResult] = await pool.execute(
         `SELECT COUNT(*) as total FROM audit_logs WHERE \`action\` IN ('login', 'login_google') AND \`timestamp\` >= ? AND \`timestamp\` <= ?${filialFilter}`,
-        [`${hoje}T00:00:00.000Z`, `${hoje}T23:59:59.999Z`, ...filialValues]
+        [`${dataRef}T00:00:00.000Z`, `${dataRef}T23:59:59.999Z`, ...filialValues]
       );
       const loginsHoje = loginsHojeResult[0].total;
 
@@ -122,11 +124,6 @@ const AuditoriaController = {
         }
       }
 
-      const atividadeQuery = `SELECT \`data\` as dia, COUNT(*) as total 
-         FROM atividades 
-         WHERE \`status\` = 'finalizada' AND \`data\` >= ?${atividadeFilialFilter}
-         GROUP BY dia ORDER BY dia`;
-      const atividadeValues = [hoje.substring(0, 10).replace(/-/g, '-')];
       // Use the date N days ago
       const dataInicioDate = diasAtras.toISOString().split('T')[0];
       const [atividadesPorDia] = await pool.execute(
@@ -144,27 +141,27 @@ const AuditoriaController = {
       );
       const totalPadeiros = padeirosResult.length;
 
-      // 5. Padeiros que logaram hoje
+      // 5. Padeiros que logaram na data de referência
       const [padeirosLogHoje] = await pool.execute(
         `SELECT DISTINCT userId FROM audit_logs 
          WHERE \`action\` IN ('login', 'login_google') 
          AND \`userRole\` = 'padeiro'
          AND \`timestamp\` >= ? AND \`timestamp\` <= ?${filialFilter}`,
-        [`${hoje}T00:00:00.000Z`, `${hoje}T23:59:59.999Z`, ...filialValues]
+        [`${dataRef}T00:00:00.000Z`, `${dataRef}T23:59:59.999Z`, ...filialValues]
       );
-      const padeirosQueLogaramHoje = new Set(padeirosLogHoje.map(r => r.userId));
+      const padeirosQueLogaramHoje = new Set(padeirosLogHoje.map(r => String(r.userId)));
 
-      // 6. Padeiros que registraram atividade hoje
+      // 6. Padeiros que registraram atividade na data de referência
       const [atividadesHoje] = await pool.execute(
         `SELECT DISTINCT padeiroId FROM atividades WHERE \`data\` = ? AND \`status\` = 'finalizada'`,
-        [hoje]
+        [dataRef]
       );
-      const padeirosComAtividadeHoje = new Set(atividadesHoje.map(r => r.padeiroId));
+      const padeirosComAtividadeHoje = new Set(atividadesHoje.map(r => String(r.padeiroId)));
 
       // 7. Calcular métricas
-      const padeirosInativos = padeirosResult.filter(p => !padeirosQueLogaramHoje.has(p.id));
+      const padeirosInativos = padeirosResult.filter(p => !padeirosQueLogaramHoje.has(String(p.id)));
       const logaramSemProduzir = padeirosResult.filter(p => 
-        padeirosQueLogaramHoje.has(p.id) && !padeirosComAtividadeHoje.has(p.id)
+        padeirosQueLogaramHoje.has(String(p.id)) && !padeirosComAtividadeHoje.has(String(p.id))
       );
 
       // 8. Ranking de logins nos últimos N dias (por padeiro)
@@ -181,14 +178,14 @@ const AuditoriaController = {
       );
 
       // 9. Padeiros sem nenhum login no período
-      const padeirosComLogin = new Set(rankingLogins.map(r => r.userId));
-      const padeirosSemLogin = padeirosResult.filter(p => !padeirosComLogin.has(p.id));
+      const padeirosComLogin = new Set(rankingLogins.map(r => String(r.userId)));
+      const padeirosSemLogin = padeirosResult.filter(p => !padeirosComLogin.has(String(p.id)));
 
       // 10. Status de cada padeiro hoje
       const statusPadeiros = padeirosResult.map(p => {
-        const logou = padeirosQueLogaramHoje.has(p.id);
-        const produziu = padeirosComAtividadeHoje.has(p.id);
-        const rankInfo = rankingLogins.find(r => r.userId === p.id);
+        const logou = padeirosQueLogaramHoje.has(String(p.id));
+        const produziu = padeirosComAtividadeHoje.has(String(p.id));
+        const rankInfo = rankingLogins.find(r => String(r.userId) === String(p.id));
         
         let status = 'inativo'; // 🔴
         if (logou && produziu) status = 'ativo'; // 🟢
@@ -220,6 +217,7 @@ const AuditoriaController = {
       );
 
       res.json({
+        dataRef,
         hoje: {
           loginsHoje,
           totalPadeiros,
