@@ -81,7 +81,7 @@ const App = {
       }
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
       const savedRoute = localStorage.getItem('currentRoute');
-      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-inicio' : 'padeiro-inicio'));
       history.replaceState({ route: initialRoute, data: {} }, '', '');
       this.navigate(initialRoute, {}, false);
     } else {
@@ -166,16 +166,25 @@ const App = {
 
     // Enforce role-based routing
     if (!isManagement) {
-      const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda'];
-      if (!allowedPadeiroRoutes.includes(route)) {
-        console.warn(`Acesso negado para a rota ${route} (Padeiro). Redirecionando...`);
-        this.navigate('padeiro-inicio');
-        return;
+      if (user.role === 'vendedor') {
+        const allowedVendedorRoutes = ['vendedor-inicio', 'vendedor-clientes', 'vendedor-agendamentos', 'vendedor-escala', 'vendedor-padeiro-perfil', 'vendedor-agendar-atendimento', 'vendedor-cliente-perfil'];
+        if (!allowedVendedorRoutes.includes(route)) {
+          console.warn(`Acesso negado para a rota ${route} (Vendedor). Redirecionando...`);
+          this.navigate('vendedor-inicio');
+          return;
+        }
+      } else {
+        const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda'];
+        if (!allowedPadeiroRoutes.includes(route)) {
+          console.warn(`Acesso negado para a rota ${route} (Padeiro). Redirecionando...`);
+          this.navigate('padeiro-inicio');
+          return;
+        }
       }
     } else {
       const allowedAdminRoutes = ['admin-dashboard', 'filiais', 'cronograma', 'gestao', 'metas', 'avaliacoes', 'rastreamento', 'timeline', 'relatorios', 'auditoria', 'dev'];
-      if (route.startsWith('padeiro-') && !allowedAdminRoutes.includes(route)) {
-        // Just in case an admin clicks a padeiro link or has it in storage
+      if ((route.startsWith('padeiro-') || route.startsWith('vendedor-')) && !allowedAdminRoutes.includes(route)) {
+        // Just in case an admin clicks a mobile link or has it in storage
         this.navigate('admin-dashboard');
         return;
       }
@@ -446,11 +455,19 @@ const App = {
         }
       }
     } else {
-      items = [
-        { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
-        { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
-        { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' }
-      ];
+      if (user.role === 'vendedor') {
+        items = [
+          { route: 'vendedor-inicio', label: 'Início', icon: 'home' },
+          { route: 'vendedor-clientes', label: 'Clientes', icon: 'users' },
+          { route: 'vendedor-escala', label: 'Escala', icon: 'calendar-days' }
+        ];
+      } else {
+        items = [
+          { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
+          { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
+          { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' }
+        ];
+      }
     }
 
     const htmlItems = items.map(item => `
@@ -483,10 +500,19 @@ const App = {
     'padeiro-inicio':    { title: 'Meu Painel',              showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
     'padeiro-atividade': { title: 'Nova Atividade',          showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
     'padeiro-agenda':    { title: 'Minha Agenda',            showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
+    'vendedor-inicio':       { title: '',                        showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
+    'vendedor-clientes':     { title: 'Meus Clientes',           showSearch: true,  searchPlaceholder: 'Buscar clientes...',        showLargeTitle: true },
+    'vendedor-agendamentos': { title: 'Sugestões de Venda',      showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
+    'vendedor-escala':       { title: 'Escala de Atendimento',   showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
+    'vendedor-agendar-atendimento': { title: 'Agendar Atendimento', showSearch: false, searchPlaceholder: '', showLargeTitle: true },
+    'vendedor-cliente-perfil': { title: 'Perfil do Cliente', showSearch: false, searchPlaceholder: '', showLargeTitle: false },
+    'vendedor-padeiro-perfil': { title: 'Perfil',                showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
     'dev':               { title: 'Desenvolvimento',         showSearch: false, searchPlaceholder: '',                        showLargeTitle: true }
   },
 
   renderHeader(route) {
+    // Abas com header próprio embutido na página
+    if (route === 'vendedor-agendar-atendimento' || route === 'vendedor-cliente-perfil') return '';
     const cfg = this.headerConfig[route] || { title: 'Sistema Padeiro', showSearch: false, searchPlaceholder: '', showLargeTitle: true };
     const user = API.getUser();
     const initials = user ? user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'US';
@@ -594,6 +620,13 @@ const App = {
         case 'padeiro-inicio': await PadeiroDashboard.render(); break;
         case 'padeiro-atividade': await PadeiroFlow.render(this.routeData || {}); break;
         case 'padeiro-agenda': await PadeiroAgenda.render(); break;
+        case 'vendedor-inicio': await VendedorDashboard.render(); break;
+        case 'vendedor-clientes': await VendedorClientes.render(); break;
+        case 'vendedor-agendamentos': await VendedorAgendamentos.render(); break;
+        case 'vendedor-escala': await EscalaMain.init(); break;
+        case 'vendedor-agendar-atendimento': EscalaMain.renderAgendarVazio(); break;
+        case 'vendedor-padeiro-perfil': await VendedorPadeiroPerfil.render(this.routeData || {}); break;
+        case 'vendedor-cliente-perfil': await VendedorDashboard.renderClientePerfil(this.routeData || {}); break;
         case 'dev': await Dev.render(); break;
         case 'auditoria': await Auditoria.render(); break;
         default:

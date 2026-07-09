@@ -17,10 +17,18 @@ exports.listPadeiros = async (req, res) => {
 
 exports.getPadeiro = async (req, res) => {
   try {
-    const p = await Padeiro.findById(req.params.id).select('-passwordHash -firstAccessToken');
+    const p = await Padeiro.findById(req.params.id);
     if (!p) return res.status(404).json({ error: 'Padeiro não encontrado' });
+    
+    // Remove os campos sensíveis manualmente já que findById retorna uma Promise resolvida no mysqlDB
+    if (typeof p === 'object') {
+      delete p.passwordHash;
+      delete p.firstAccessToken;
+    }
+    
     res.json(p);
   } catch (e) {
+    console.error('Erro em getPadeiro:', e);
     res.status(400).json({ error: 'ID inválido' });
   }
 };

@@ -1,0 +1,465 @@
+/* ============================================ */
+/* cliente-perfil.css — v2                      */
+/* Design: Dark Fintech Wallet                  */
+/* ============================================ */
+
+.cperfil-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #f2f2f7;
+  padding-bottom: 90px;
+  margin-left: -24px;
+  margin-right: -24px;
+  width: calc(100% + 48px);
+}
+
+/* ============================================ */
+/* HERO — fundo azul degradê padrão             */
+/* ============================================ */
+.cperfil-hero {
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  padding: 20px 20px 24px;
+  position: relative;
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 4px 20px rgba(30, 75, 255, 0.15);
+}
+
+/* Nav topo */
+.cperfil-hero-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.cperfil-back-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+}
+.cperfil-back-btn i { width: 18px; height: 18px; }
+
+.cperfil-nav-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+}
+
+.cperfil-hero-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Caixa de saudação — branca arredondada */
+.cperfil-greeting-card {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cperfil-greeting-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--primary, #1E4BFF);
+}
+
+.cperfil-greeting-text {
+  flex: 1;
+}
+
+.cperfil-greeting-hi {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.cperfil-greeting-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+/* Label "Total Produzido" */
+/* Progressão circular de estoque e produção */
+.cperfil-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.cperfil-progress-circle-wrapper {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cperfil-progress-circle-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+.cperfil-progress-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cperfil-progress-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cperfil-progress-value-row {
+  display: flex;
+  align-items: baseline;
+  color: #ffffff;
+}
+
+.cperfil-progress-val-main {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.cperfil-progress-val-unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin-left: 3px;
+}
+
+.cperfil-progress-stock-row {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cperfil-progress-stock-lbl {
+  font-weight: 500;
+}
+
+.cperfil-progress-stock-val {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.cperfil-total-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+/* Caixa do valor — mantida para compatibilidade se necessário, mas oculta ou adaptada */
+.cperfil-total-box {
+  display: none;
+}
+
+.cperfil-total-currency {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  align-self: center;
+  margin-right: 4px;
+}
+
+.cperfil-total-integer {
+  font-size: 44px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.cperfil-total-decimal {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  align-self: flex-end;
+  padding-bottom: 3px;
+}
+
+/* Badge percentual */
+.cperfil-badge-row {
+  margin-bottom: 20px;
+}
+
+.cperfil-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cperfil-badge--up {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.cperfil-badge i { width: 12px; height: 12px; }
+
+/* ============================================ */
+/* BOTÕES Send / central / Request              */
+/* ============================================ */
+.cperfil-actions {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.cperfil-action-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 11px 16px;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+
+.cperfil-action-side:active { opacity: 0.7; }
+.cperfil-action-side i { width: 17px; height: 17px; color: #ffffff; }
+
+.cperfil-action-center {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+}
+.cperfil-action-center i { width: 20px; height: 20px; }
+
+/* ============================================ */
+/* DOIS CARDS LADO A LADO                       */
+/* ============================================ */
+.cperfil-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 16px 0;
+  background: #f2f2f7;
+}
+
+/* Card base */
+.cperfil-mini-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+
+/* Card esquerdo — Padeiros recentes */
+.cperfil-bakers-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8e8e93;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.cperfil-bakers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cperfil-baker-bubble {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  overflow: hidden;
+}
+
+.cperfil-baker-bubble img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Card direito — Grafico */
+.cperfil-chart-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8e8e93;
+  margin-bottom: 6px;
+}
+
+.cperfil-chart-area {
+  width: 100%;
+  height: 64px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.cperfil-chart-area svg {
+  width: 100%;
+  height: 100%;
+}
+
+.cperfil-chart-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1c1c1e;
+  margin-bottom: 3px;
+}
+
+.cperfil-chart-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(34,197,94,0.14);
+  color: #22C55E;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 8px;
+}
+
+/* ============================================ */
+/* LISTA ULTIMOS ATENDIMENTOS                   */
+/* ============================================ */
+.cperfil-list-section {
+  padding: 16px 16px 0;
+  background: #f2f2f7;
+}
+
+.cperfil-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cperfil-list-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1e;
+}
+
+.cperfil-list-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary, #1E4BFF);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cperfil-list-card {
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+
+.cperfil-order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.cperfil-order-item:last-child { border-bottom: none; }
+
+.cperfil-order-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.cperfil-order-info { flex: 1; min-width: 0; }
+
+.cperfil-order-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1e;
+}
+
+.cperfil-order-date {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 1px;
+}
+
+.cperfil-order-kg {
+  font-size: 15px;
+  font-weight: 700;
+  color: #22C55E;
+}

@@ -35,7 +35,7 @@ exports.createUser = async (req, res) => {
   const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
-    const { nome, email, senha, role, filial } = req.body;
+    const { nome, email, senha, role, filial, clienteIds } = req.body;
     
     if (!nome || !email || !senha) return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
 
@@ -64,6 +64,7 @@ exports.createUser = async (req, res) => {
         passwordHash,
         role: role || 'gestor_regional',
         filial: role !== 'admin' ? (filial || null) : null,
+        clienteIds: role === 'vendedor' ? (clienteIds || null) : null,
         ativo: req.body.ativo !== undefined ? (req.body.ativo === 'true' || req.body.ativo === true) : true,
         criadoEm: new Date().toISOString()
       });
@@ -115,7 +116,7 @@ exports.updateUser = async (req, res) => {
   const allowed = ['admin', 'gestor_geral', 'master_gestor'];
   if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
   try {
-    const { nome, email, senha, role, filial, ativo } = req.body;
+    const { nome, email, senha, role, filial, ativo, clienteIds } = req.body;
     const updateData = { nome, email, role };
     
     if (ativo !== undefined) {
@@ -126,6 +127,12 @@ exports.updateUser = async (req, res) => {
       updateData.filial = filial || null;
     } else {
       updateData.filial = null;
+    }
+
+    if (role === 'vendedor') {
+      updateData.clienteIds = clienteIds || null;
+    } else {
+      updateData.clienteIds = null;
     }
 
     if (senha) {
@@ -167,6 +174,7 @@ exports.updateUser = async (req, res) => {
           passwordHash: updateData.passwordHash || currentPadeiro.passwordHash,
           role: role || 'gestor_regional',
           filial: updateData.filial !== undefined ? updateData.filial : currentPadeiro.filial,
+          clienteIds: role === 'vendedor' ? (clienteIds || null) : null,
           ativo: updateData.ativo !== undefined ? updateData.ativo : currentPadeiro.ativo,
           criadoEm: currentPadeiro.criadoEm || new Date().toISOString()
         });

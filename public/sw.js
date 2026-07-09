@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v63';
+const CACHE_NAME = 'brago-padeiro-v115';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
@@ -21,6 +21,7 @@ const LOCAL_ASSETS = [
   '/css/styles.css',
   '/css/modal-move.css',
   '/css/padeiro-flow.css',
+  '/css/Designabainicio vendedor.css',
   '/js/app.js',
   '/js/auth.js',
   '/js/components.js',
@@ -33,6 +34,7 @@ const LOCAL_ASSETS = [
   '/js/padeiro-flow.js',
   '/js/padeiro-agenda.js',
   '/js/padeiro-dashboard.js',
+  '/js/vendedor.js',
   '/js/relatorios.js',
   '/js/jspdf.umd.min.js',
   '/js/jspdf.plugin.autotable.min.js',

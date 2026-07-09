@@ -49,24 +49,20 @@ exports.login = async (req, res) => {
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       
       const role = admin.role || 'admin';
-      const token = jwt.sign({ 
+      const userPayload = { 
         id: admin.id, 
         email: admin.email, 
         role: role, 
         nome: admin.nome,
-        filial: admin.filial || null 
-      }, JWT_SECRET, { expiresIn: '5d' });
+        filial: admin.filial || null,
+        clienteIds: admin.clienteIds || null
+      };
+      const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '5d' });
       
       logAudit(req, { id: admin.id, nome: admin.nome, role, filial: admin.filial }, 'login');
       return res.json({ 
         token, 
-        user: { 
-          id: admin.id, 
-          nome: admin.nome, 
-          email: admin.email, 
-          role: role,
-          filial: admin.filial || null
-        } 
+        user: userPayload
       });
     }
 
@@ -111,9 +107,17 @@ exports.googleLogin = async (req, res) => {
       if (admin.deletado) return res.status(403).json({ error: 'Usuário inexistente' });
       if (!admin.ativo) return res.status(403).json({ error: 'Usuário desativado' });
       const role = admin.role || 'admin';
-      const token = jwt.sign({ id: admin.id, email: admin.email, role: role, nome: admin.nome, filial: admin.filial || null }, JWT_SECRET, { expiresIn: '5d' });
+      const userPayload = {
+        id: admin.id,
+        email: admin.email,
+        role: role,
+        nome: admin.nome,
+        filial: admin.filial || null,
+        clienteIds: admin.clienteIds || null
+      };
+      const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '5d' });
       logAudit(req, { id: admin.id, nome: admin.nome, role, filial: admin.filial }, 'login_google');
-      return res.json({ token, user: { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null } });
+      return res.json({ token, user: userPayload });
     }
 
     let padeiro = await Padeiro.findOne({ email: new RegExp(`^${email}$`, 'i') });
@@ -152,7 +156,14 @@ exports.googleLoginRedirect = async (req, res) => {
     if (admin && !admin.deletado) {
       if (admin.ativo) {
         role = admin.role || 'admin';
-        user = { id: admin.id, nome: admin.nome, email: admin.email, role: role, filial: admin.filial || null };
+        user = { 
+          id: admin.id, 
+          nome: admin.nome, 
+          email: admin.email, 
+          role: role, 
+          filial: admin.filial || null,
+          clienteIds: admin.clienteIds || null
+        };
       }
     } else {
       // Check padeiro

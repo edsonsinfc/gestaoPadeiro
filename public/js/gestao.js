@@ -1069,8 +1069,9 @@ const Gestao = {
                   u.role === 'admin' ? 'Administrador' : 
                   u.role === 'gestor_geral' ? 'Gestor Geral' : 
                   u.role === 'gestor_regional' ? 'Gestor Regional' : 
+                  u.role === 'vendedor' ? 'Vendedor' :
                   u.role === 'padeiro' ? 'Padeiro' : 'Gestor', 
-                  u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : u.role === 'padeiro' ? 'green' : 'amber'
+                  u.role === 'admin' ? 'blue' : u.role === 'gestor_geral' ? 'purple' : u.role === 'padeiro' ? 'green' : u.role === 'vendedor' ? 'info' : 'amber'
                 )}</td>
                 <td>${(u.filial && u.filial !== 'null') ? (Array.isArray(u.filial) ? u.filial.join(', ') : u.filial) : 'Todas'}</td>
                 <td>${u.ativo ? '<span class="text-green font-bold">Ativo</span>' : '<span class="text-danger font-bold">Inativo</span>'}</td>
@@ -1097,7 +1098,7 @@ const Gestao = {
             <div class="apple-card-info" onclick="Gestao.openUsuarioForm('${u.id}')">
               <div class="apple-card-name">${u.nome} ${!u.ativo ? '<span style="font-size:10px; color:var(--apple-red);">(Inativo)</span>' : ''}</div>
               <div class="apple-list-subtitle" style="font-size: 13px; color: var(--apple-gray);">
-                ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : u.role === 'padeiro' ? 'Padeiro' : 'Gestor'} • 
+                ${u.role === 'admin' ? 'Admin' : u.role === 'gestor_geral' ? 'Geral' : u.role === 'gestor_regional' ? 'Regional' : u.role === 'vendedor' ? 'Vendedor' : u.role === 'padeiro' ? 'Padeiro' : 'Gestor'} • 
                 ${(u.filial && u.filial !== 'null') ? (Array.isArray(u.filial) ? u.filial.join(', ') : u.filial) : 'Todas'}
               </div>
             </div>
@@ -1114,8 +1115,17 @@ const Gestao = {
     </div>`;
   },
 
-  openUsuarioForm(id = null) {
+  async openUsuarioForm(id = null) {
     const u = id ? this.allData.usuarios.find(x => x.id === id) : {};
+    
+    // Garantir que clientes estão carregados
+    if (!this.allData.clientes || this.allData.clientes.length === 0) {
+      try {
+        this.allData.clientes = await API.get('/api/clientes');
+      } catch (e) {
+        console.error('Erro ao carregar clientes para o seletor:', e);
+      }
+    }
     
     const html = `
       <form id="form-usuario" class="flex flex-col gap-4">
@@ -1136,8 +1146,11 @@ const Gestao = {
           <select name="role" class="input-control" onchange="
             const fs = document.getElementById('filial-selector');
             fs.style.display = (this.value === 'admin') ? 'none' : 'block';
+            const cs = document.getElementById('clientes-selector');
+            cs.style.display = (this.value === 'vendedor') ? 'block' : 'none';
           ">
             <option value="padeiro" ${u.role === 'padeiro' ? 'selected' : ''}>Padeiro (Acesso ao App do Padeiro)</option>
+            <option value="vendedor" ${u.role === 'vendedor' ? 'selected' : ''}>Vendedor (Acesso ao App do Vendedor)</option>
             <option value="gestor_regional" ${u.role === 'gestor_regional' || u.role === 'gestor' ? 'selected' : ''}>Gestor Regional (Acesso a uma filial)</option>
             <option value="gestor_geral" ${u.role === 'gestor_geral' ? 'selected' : ''}>Gestor Geral (Acesso total)</option>
             <option value="master_gestor" ${u.role === 'master_gestor' ? 'selected' : ''}>Master Gestor (Acesso Executivo / Dashboard de Metas)</option>
@@ -1155,6 +1168,34 @@ const Gestao = {
             }).join('')}
           </div>
         </div>
+        
+        <div class="input-group" id="clientes-selector" style="display: ${u.role === 'vendedor' ? 'block' : 'none'}">
+          <label class="label">Clientes Atribuídos (Apenas Vendedor)</label>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 8px 0;">Selecione os clientes atribuídos a este vendedor. Se nenhum for marcado, ele verá todos.</p>
+          <input type="text" id="busca-clientes-usuario" class="input-control" placeholder="Buscar e filtrar clientes..." style="margin-bottom: 8px;" oninput="
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.cliente-checkbox-label').forEach(lbl => {
+              const txt = lbl.textContent.toLowerCase();
+              lbl.style.display = txt.includes(q) ? 'flex' : 'none';
+            });
+          ">
+          <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; background: var(--system-bg);">
+            ${(this.allData.clientes || []).sort((a,b) => (a.nomeFantasia || a.nome || '').localeCompare(b.nomeFantasia || b.nome || '')).map(c => {
+              let uClientes = [];
+              if (u.clienteIds) {
+                try {
+                  uClientes = Array.isArray(u.clienteIds) ? u.clienteIds : JSON.parse(u.clienteIds);
+                } catch(err) {
+                  uClientes = typeof u.clienteIds === 'string' ? u.clienteIds.split(',') : [];
+                }
+              }
+              const checked = uClientes.includes(c.id) ? 'checked' : '';
+              const nome = c.nomeFantasia || c.nome || 'Sem nome';
+              return `<label class="cliente-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-main);"><input type="checkbox" name="clienteId" value="${c.id}" ${checked}> ${nome}</label>`;
+            }).join('')}
+          </div>
+        </div>
+
         <div class="input-group">
           <label class="label">Status do Acesso</label>
           <select name="ativo" class="input-control">
@@ -1197,6 +1238,14 @@ const Gestao = {
       data.filial = filiais;
     } else {
       data.filial = null;
+    }
+
+    // Pegar todos os clientes selecionados como array
+    const clienteIds = formData.getAll('clienteId');
+    if (clienteIds.length > 0) {
+      data.clienteIds = clienteIds;
+    } else {
+      data.clienteIds = null;
     }
 
     try {
