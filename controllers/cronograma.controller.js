@@ -20,12 +20,39 @@ exports.listCronograma = async (req, res) => {
   
   let tarefas = await Cronograma.find(query);
 
-  // Filter by branch if user is a Regional Manager
+  // Filter by branch if user has branch restrictions (e.g. Regional Managers)
   if (req.user.role !== 'admin' && req.user.filial && req.user.filial !== 'null') {
-    const filiais = Array.isArray(req.user.filial) ? req.user.filial : [req.user.filial];
-    const padeirosDaFilial = await Padeiro.find({ filial: { $in: filiais } });
-    const ids = padeirosDaFilial.map(p => p.id);
-    tarefas = tarefas.filter(t => ids.includes(t.padeiroId));
+    let filiais = [];
+    if (typeof req.user.filial === 'string') {
+      try {
+        filiais = JSON.parse(req.user.filial);
+        if (!Array.isArray(filiais)) filiais = [filiais];
+      } catch (e) {
+        filiais = [req.user.filial];
+      }
+    } else if (Array.isArray(req.user.filial)) {
+      filiais = req.user.filial;
+    } else {
+      filiais = [req.user.filial];
+    }
+
+    const { Cliente } = require('../data/db-adapter');
+    const [padeirosDaFilial, clientesDaFilial] = await Promise.all([
+      Padeiro.find({ filial: { $in: filiais }, deletado: { $ne: true } }),
+      Cliente.find()
+    ]);
+
+    const padeiroIds = new Set(padeirosDaFilial.map(p => p.id));
+    const clienteIds = new Set(clientesDaFilial.map(c => c.id));
+
+    tarefas = tarefas.filter(t => {
+      // Se tem padeiro atribuído, filtra pela filial do padeiro
+      if (t.padeiroId) {
+        return padeiroIds.has(t.padeiroId);
+      }
+      // Se não tem padeiro atribuído (solicitação pendente), filtra pela filial do cliente
+      return clienteIds.has(t.clienteId);
+    });
   }
 
   res.json(tarefas);
@@ -52,8 +79,9 @@ exports.getWeeklyAgenda = async (req, res) => {
     const padeiroIds = padeiros.map(p => p.id);
     const agenda = await Cronograma.find({
       padeiroId: { $in: padeiroIds },
-      data: { $gte: monStr, $lte: satStr }
-    }).sort({ data: 1 }); // Simplificando sort para evitar ambiguidade no mock
+      data: { $gte: monStr, $lte: satStr },
+      status: { $ne: 'solicitado' } // Ignora solicitações pendentes de aprovação!
+    }).sort({ data: 1 });
 
     res.json({ padeiros, agenda });
   } catch (error) {
@@ -78,6 +106,11 @@ exports.createTarefa = async (req, res) => {
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) nova[key] = req.body[key];
     }
+    // Se o criador for vendedor, força status = 'solicitado'
+    if (req.user.role === 'vendedor') {
+      nova.status = 'solicitado';
+    }
+
     nova.criadoPor = req.user.id;
     nova.criadoEm = new Date().toISOString();
 
@@ -88,14 +121,16 @@ exports.createTarefa = async (req, res) => {
       io.emit('agenda-updated', { action: 'create', tarefa });
     }
 
-    // Enviar notificação push nativa/web para o padeiro em background
-    const pushService = require('../data/pushService');
-    pushService.sendPushToUser(
-      tarefa.padeiroId,
-      '🍞 Nova Tarefa Agendada!',
-      `Você foi escalado para o cliente "${tarefa.clienteNome || 'Cliente'}" às ${tarefa.horario || '00:00'}.`,
-      '/padeiro-agenda'
-    ).catch(err => console.error('Erro ao enviar push de nova tarefa:', err.message));
+    // Só envia notificação push para o padeiro se a tarefa já estiver ativa/aprovada
+    if (tarefa.status !== 'solicitado' && tarefa.padeiroId) {
+      const pushService = require('../data/pushService');
+      pushService.sendPushToUser(
+        tarefa.padeiroId,
+        '🍞 Nova Tarefa Agendada!',
+        `Você foi escalado para o cliente "${tarefa.clienteNome || 'Cliente'}" às ${tarefa.horario || '00:00'}.`,
+        '/padeiro-agenda'
+      ).catch(err => console.error('Erro ao enviar push de nova tarefa:', err.message));
+    }
 
     res.status(201).json(tarefa);
   } catch (e) {

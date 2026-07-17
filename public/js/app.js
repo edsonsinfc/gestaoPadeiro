@@ -6,33 +6,50 @@ const App = {
   APP_VERSION: '1.0.0',
   currentRoute: 'login',
   async init() {
-    // Initialize Offline Manager (IndexedDB)
-    try {
-      await OfflineManager.init();
-    } catch (e) {
-      console.error("Erro ao inicializar OfflineManager:", e);
+    // === PRIORITY 1: Renderizar a tela IMEDIATAMENTE ===
+    // Navegação primeiro, IndexedDB e listeners depois
+    const user = API.getUser();
+    const token = API.token;
+
+    if (user && token) {
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
+      const savedRoute = safeGetLocalStorage('currentRoute');
+      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
+      history.replaceState({ route: initialRoute, data: {} }, '', '');
+      this.navigate(initialRoute, {}, false);
+    } else {
+      history.replaceState({ route: 'login', data: {} }, '', '');
+      this.navigate('login', {}, false);
     }
 
-    // Listen to Capacitor appRestoredResult for camera recovery
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      const { App: CapApp } = window.Capacitor.Plugins;
-      if (CapApp) {
-        CapApp.addListener('appRestoredResult', (result) => {
-          console.log('[Capacitor] appRestoredResult recebido:', result);
-          if (result.pluginId === 'Camera' && result.methodName === 'getPhoto') {
-            if (result.success && result.data) {
-              window.lastRestoredPhoto = result.data;
-              // Apenas processa imediatamente se o PadeiroFlow já estiver na aba de produção (passo 1)
-              // Caso contrário, deixa que o render do passo 1 consuma a imagem após carregar os produtos
-              if (window.PadeiroFlow && window.PadeiroFlow.currentStep === 1 && typeof window.PadeiroFlow.handleRestoredPhoto === 'function') {
-                window.PadeiroFlow.handleRestoredPhoto(result.data);
+    // === PRIORITY 2: Inicializações em background (não bloqueia a UI) ===
+
+    // IndexedDB — roda em background, não bloqueia mais a renderização
+    OfflineManager.init().catch(e => console.error("Erro ao inicializar OfflineManager:", e));
+
+    // Capacitor appRestoredResult listener
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        const plugins = window.Capacitor.Plugins || {};
+        const CapApp = plugins.App;
+        if (CapApp && CapApp.addListener) {
+          CapApp.addListener('appRestoredResult', (result) => {
+            console.log('[Capacitor] appRestoredResult recebido:', result);
+            if (result.pluginId === 'Camera' && result.methodName === 'getPhoto') {
+              if (result.success && result.data) {
+                window.lastRestoredPhoto = result.data;
+                if (window.PadeiroFlow && window.PadeiroFlow.currentStep === 1 && typeof window.PadeiroFlow.handleRestoredPhoto === 'function') {
+                  window.PadeiroFlow.handleRestoredPhoto(result.data);
+                }
+              } else {
+                console.warn('[Capacitor] Restored camera result failed or cancelled:', result.error);
               }
-            } else {
-              console.warn('[Capacitor] Restored camera result failed or cancelled:', result.error);
             }
-          }
-        });
+          });
+        }
       }
+    } catch (capErr) {
+      console.warn('[Capacitor] Erro ao registrar listener de appRestoredResult:', capErr);
     }
 
     // Global click listener for ripple effects on buttons
@@ -65,28 +82,16 @@ const App = {
       }
     });
 
-    const user = API.getUser();
-    const token = API.token;
-    if (user && token) {
-      if (user.role === 'padeiro') {
-        LocationService.init(user);
-        // Pre-carregar produtos e suas fotos locais em background
-        API.get('/api/produtos')
-          .then(prods => {
-            if (prods && Array.isArray(prods)) {
-              OfflineManager.preloadProductPhotos(prods);
-            }
-          })
-          .catch(console.warn);
-      }
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-      const savedRoute = localStorage.getItem('currentRoute');
-      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-inicio' : 'padeiro-inicio'));
-      history.replaceState({ route: initialRoute, data: {} }, '', '');
-      this.navigate(initialRoute, {}, false);
-    } else {
-      history.replaceState({ route: 'login', data: {} }, '', '');
-      this.navigate('login', {}, false);
+    // Pre-carregar dados do padeiro em background (sem bloquear)
+    if (user && token && user.role === 'padeiro') {
+      LocationService.init(user);
+      API.get('/api/produtos')
+        .then(prods => {
+          if (prods && Array.isArray(prods)) {
+            OfflineManager.preloadProductPhotos(prods);
+          }
+        })
+        .catch(console.warn);
     }
 
     // Check if we should display the HIG APK download banner
@@ -113,7 +118,7 @@ const App = {
   executeNavigation(route, data = {}, pushToHistory = true) {
     this.currentRoute = route;
     this.routeData = data;
-    localStorage.setItem('currentRoute', route);
+    safeSetLocalStorage('currentRoute', route);
     
     // Auto-collapse mobile drawer/sidebar on navigation
     this.closeDrawer();
@@ -167,14 +172,14 @@ const App = {
     // Enforce role-based routing
     if (!isManagement) {
       if (user.role === 'vendedor') {
-        const allowedVendedorRoutes = ['vendedor-inicio', 'vendedor-clientes', 'vendedor-agendamentos', 'vendedor-escala', 'vendedor-padeiro-perfil', 'vendedor-agendar-atendimento', 'vendedor-cliente-perfil'];
+        const allowedVendedorRoutes = ['vendedor-inicio', 'vendedor-clientes', 'vendedor-agendamentos', 'vendedor-escala', 'vendedor-padeiro-perfil', 'vendedor-agendar-atendimento', 'vendedor-cliente-perfil', 'vendedor-sugestoes', 'vendedor-estoque'];
         if (!allowedVendedorRoutes.includes(route)) {
           console.warn(`Acesso negado para a rota ${route} (Vendedor). Redirecionando...`);
-          this.navigate('vendedor-inicio');
+          this.navigate('vendedor-clientes');
           return;
         }
       } else {
-        const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda'];
+        const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda', 'padeiro-estoque'];
         if (!allowedPadeiroRoutes.includes(route)) {
           console.warn(`Acesso negado para a rota ${route} (Padeiro). Redirecionando...`);
           this.navigate('padeiro-inicio');
@@ -259,7 +264,7 @@ const App = {
     });
 
     // Restore sidebar collapsed state on desktop
-    const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    const isSidebarCollapsed = safeGetLocalStorage('sidebarCollapsed') === 'true';
     const sidebarEl = document.getElementById('sidebar');
     if (sidebarEl && isSidebarCollapsed && window.innerWidth >= 1024) {
       sidebarEl.classList.add('collapsed');
@@ -271,7 +276,7 @@ const App = {
 
   renderSidebar(user) {
     const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-    const initials = user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const initials = (user && user.nome) ? user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'US';
     
     let adminNav = '';
     if (user.role === 'master_gestor') {
@@ -397,7 +402,7 @@ const App = {
         <div class="sidebar-user">
           <div class="avatar">${initials}</div>
           <div class="user-info-text">
-            <div class="user-name">${user.nome.trim().split(/\s+/)[0]}</div>
+            <div class="user-name">${(user && user.nome) ? user.nome.trim().split(/\s+/)[0] : 'Usuário'}</div>
             <div class="user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</div>
           </div>
         </div>
@@ -409,7 +414,7 @@ const App = {
       <div class="hig-sidebar-footer hig-desktop-only">
         <div class="hig-sidebar-avatar">${initials}</div>
         <div class="hig-sidebar-user-info">
-          <span class="hig-sidebar-user-name">${user.nome.trim().split(/\s+/)[0]}</span>
+          <span class="hig-sidebar-user-name">${(user && user.nome) ? user.nome.trim().split(/\s+/)[0] : 'Usuário'}</span>
           <span class="hig-sidebar-user-role">${user.role === 'admin' ? 'Administrador' : user.role === 'gestor_geral' ? 'Gestor Geral' : user.role === 'gestor_regional' ? 'Gestor Regional' : user.role === 'master_gestor' ? 'Master Gestor' : user.cargo || 'Padeiro'}</span>
         </div>
         <button class="hig-sidebar-logout-btn" onclick="Auth.logout()" aria-label="Sair do sistema">
@@ -457,15 +462,16 @@ const App = {
     } else {
       if (user.role === 'vendedor') {
         items = [
-          { route: 'vendedor-inicio', label: 'Início', icon: 'home' },
           { route: 'vendedor-clientes', label: 'Clientes', icon: 'users' },
+          { route: 'vendedor-inicio', label: 'Feed', icon: 'newspaper' },
           { route: 'vendedor-escala', label: 'Escala', icon: 'calendar-days' }
         ];
       } else {
         items = [
           { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
           { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
-          { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' }
+          { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' },
+          { route: 'padeiro-estoque', label: 'Estoque', icon: 'package' }
         ];
       }
     }
@@ -500,6 +506,7 @@ const App = {
     'padeiro-inicio':    { title: 'Meu Painel',              showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
     'padeiro-atividade': { title: 'Nova Atividade',          showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
     'padeiro-agenda':    { title: 'Minha Agenda',            showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
+    'padeiro-estoque':   { title: 'Estoque',                 showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
     'vendedor-inicio':       { title: '',                        showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
     'vendedor-clientes':     { title: 'Meus Clientes',           showSearch: true,  searchPlaceholder: 'Buscar clientes...',        showLargeTitle: true },
     'vendedor-agendamentos': { title: 'Sugestões de Venda',      showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
@@ -512,10 +519,10 @@ const App = {
 
   renderHeader(route) {
     // Abas com header próprio embutido na página
-    if (route === 'vendedor-agendar-atendimento' || route === 'vendedor-cliente-perfil') return '';
+    if (route === 'vendedor-agendar-atendimento' || route === 'vendedor-cliente-perfil' || route === 'vendedor-clientes' || route === 'vendedor-sugestoes' || route === 'vendedor-estoque') return '';
     const cfg = this.headerConfig[route] || { title: 'Sistema Padeiro', showSearch: false, searchPlaceholder: '', showLargeTitle: true };
     const user = API.getUser();
-    const initials = user ? user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'US';
+    const initials = (user && user.nome) ? user.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'US';
 
     return `
     <!-- iOS-style Mobile Header (visible only on mobile) -->
@@ -578,8 +585,26 @@ const App = {
       pageContainer.classList.remove('tf-page-active');
       pageContainer.classList.remove('metas-view');
       pageContainer.classList.remove('page-exit-active');
+      pageContainer.classList.remove('cperfil-active');
     }
     document.body.classList.remove('tf-page-active');
+
+    // Cancelar requisições de imagens pendentes para liberar a thread de rede no APK
+    if (typeof ImageLoader !== 'undefined' && typeof ImageLoader.cancelPending === 'function') {
+      ImageLoader.cancelPending();
+    }
+
+    // Limpar elementos flutuantes do vendedor estoque (FAB e modal overlay)
+    // que ficam no document.body e podem bloquear outras telas no APK
+    const fab = document.getElementById('pf-cart-fab');
+    if (fab) fab.remove();
+    const cartOverlay = document.getElementById('pf-cart-modal-overlay');
+    if (cartOverlay) cartOverlay.remove();
+    // Resetar estado do helper ao sair da rota de estoque
+    if (typeof VendedorSugestoesHelper !== 'undefined') {
+      VendedorSugestoesHelper.selectedClienteId = null;
+    }
+
     const user = API.getUser();
     try {
       switch (route) {
@@ -620,6 +645,7 @@ const App = {
         case 'padeiro-inicio': await PadeiroDashboard.render(); break;
         case 'padeiro-atividade': await PadeiroFlow.render(this.routeData || {}); break;
         case 'padeiro-agenda': await PadeiroAgenda.render(); break;
+        case 'padeiro-estoque': await PadeiroEstoque.render(); break;
         case 'vendedor-inicio': await VendedorDashboard.render(); break;
         case 'vendedor-clientes': await VendedorClientes.render(); break;
         case 'vendedor-agendamentos': await VendedorAgendamentos.render(); break;
@@ -627,6 +653,8 @@ const App = {
         case 'vendedor-agendar-atendimento': EscalaMain.renderAgendarVazio(); break;
         case 'vendedor-padeiro-perfil': await VendedorPadeiroPerfil.render(this.routeData || {}); break;
         case 'vendedor-cliente-perfil': await VendedorDashboard.renderClientePerfil(this.routeData || {}); break;
+        case 'vendedor-sugestoes': await VendedorSugestoes.render(); break;
+        case 'vendedor-estoque': await VendedorEstoque.render(); break;
         case 'dev': await Dev.render(); break;
         case 'auditoria': await Auditoria.render(); break;
         default:
@@ -649,7 +677,7 @@ const App = {
     
     if (window.innerWidth >= 1024) {
       sidebar.classList.toggle('collapsed');
-      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+      safeSetLocalStorage('sidebarCollapsed', sidebar.classList.contains('collapsed'));
       
       // Auto-refresh Leaflet map layout on the tracking page during transition
       if (this.currentRoute === 'rastreamento' && window.Rastreamento && window.Rastreamento.map) {
@@ -738,10 +766,10 @@ const App = {
     if (!isMobile) return;
 
     // 3. Check local storage dismissal (recorre de tempos em tempos)
-    const dismissedTime = localStorage.getItem('apk_install_prompt_dismissed_time');
+    const dismissedTime = safeGetLocalStorage('apk_install_prompt_dismissed_time');
     if (dismissedTime) {
       const hoursPassed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
-      const dismissType = localStorage.getItem('apk_install_prompt_dismiss_type') || 'dismiss';
+      const dismissType = safeGetLocalStorage('apk_install_prompt_dismiss_type') || 'dismiss';
       // Se clicou em instalar (download), espera 2 horas. Se clicou em depois (dismiss), espera apenas 30 minutos
       const waitHours = dismissType === 'download' ? 2 : 0.5;
       if (hoursPassed < waitHours) {
@@ -784,8 +812,8 @@ const App = {
     }
     
     // Salva o estado como download e registra o tempo
-    localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
-    localStorage.setItem('apk_install_prompt_dismiss_type', 'download');
+    safeSetLocalStorage('apk_install_prompt_dismissed_time', Date.now().toString());
+    safeSetLocalStorage('apk_install_prompt_dismiss_type', 'download');
 
     // Abre o modal de instruções passo a passo para o usuário concluir a instalação manual
     this.showApkInstallInstructionsModal();
@@ -890,8 +918,8 @@ const App = {
       }, 400); // Wait for transition out
     }
     // Dispensa por tempo menor para ser recorrente até instalar
-    localStorage.setItem('apk_install_prompt_dismissed_time', Date.now().toString());
-    localStorage.setItem('apk_install_prompt_dismiss_type', 'dismiss');
+    safeSetLocalStorage('apk_install_prompt_dismissed_time', Date.now().toString());
+    safeSetLocalStorage('apk_install_prompt_dismiss_type', 'dismiss');
   },
 
   async checkApkUpdate() {
@@ -1030,6 +1058,27 @@ const App = {
     }
   }
 };
+// Initialize on DOM ready — envolvido em try-catch global para nunca deixar tela branca
+function safeAppInit() {
+  try {
+    App.init();
+  } catch (fatalErr) {
+    console.error('❌ [FATAL] Erro na inicialização do App:', fatalErr);
+    // Garante que pelo menos a tela de login apareça
+    try {
+      const appDiv = document.getElementById('app');
+      if (appDiv && typeof Auth !== 'undefined') {
+        appDiv.innerHTML = Auth.renderLogin();
+        if (typeof Components !== 'undefined') Components.renderIcons();
+      }
+    } catch (renderErr) {
+      console.error('❌ [FATAL] Falha ao renderizar login de emergência:', renderErr);
+    }
+  }
+}
 
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => App.init());
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  safeAppInit();
+} else {
+  document.addEventListener('DOMContentLoaded', () => safeAppInit());
+}

@@ -13,7 +13,18 @@ router.delete('/templates/:id', authMiddleware, adminOnly, templateCtrl.deleteTe
 // Rotas do Cronograma
 router.get('/', authMiddleware, ctrl.listCronograma);
 router.get('/weekly-agenda', authMiddleware, ctrl.getWeeklyAgenda);
-router.post('/', authMiddleware, adminOnly, ctrl.createTarefa);
+const canCreate = (req, res, next) => {
+  console.log("📍 Entering canCreate middleware. User role:", req.user ? req.user.role : 'null');
+  const allowed = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor', 'vendedor'];
+  if (!allowed.includes(req.user.role)) {
+    console.log("❌ canCreate: role not allowed, returning 403");
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  console.log("✅ canCreate: role allowed, proceeding");
+  next();
+};
+
+router.post('/', authMiddleware, canCreate, ctrl.createTarefa);
 router.put('/:id', authMiddleware, adminOnly, ctrl.updateTarefa);
 router.delete('/all', authMiddleware, adminOnly, ctrl.deleteAllTarefas);
 router.delete('/:id', authMiddleware, adminOnly, ctrl.deleteTarefa);

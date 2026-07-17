@@ -72,6 +72,7 @@ const TABLES = [
           horarioFechamento VARCHAR(20),
           diasFuncionamento TEXT,
           ativo BOOLEAN DEFAULT TRUE,
+          estoqueAlvo DOUBLE DEFAULT 200,
           criadoEm VARCHAR(100)
         )`
       },
@@ -239,6 +240,20 @@ const TABLES = [
         )`
       },
       {
+        name: 'estoques_faltantes',
+        schema: `CREATE TABLE IF NOT EXISTS estoques_faltantes (
+          id VARCHAR(50) PRIMARY KEY,
+          padeiroId VARCHAR(50),
+          padeiroNome VARCHAR(255),
+          clienteId VARCHAR(50),
+          clienteNome VARCHAR(255),
+          itensFaltantes TEXT,
+          dataRegistro VARCHAR(100),
+          criadoEm VARCHAR(100),
+          atualizadoEm VARCHAR(100)
+        )`
+      },
+      {
         name: 'timeline_events',
         schema: `CREATE TABLE IF NOT EXISTS timeline_events (
           id VARCHAR(50) PRIMARY KEY,
@@ -383,6 +398,7 @@ async function initTables() {
     if (!colNames.includes('codigo')) await pool.execute("ALTER TABLE clientes ADD COLUMN codigo VARCHAR(50)");
     if (!colNames.includes('nomeFantasia')) await pool.execute("ALTER TABLE clientes ADD COLUMN nomeFantasia VARCHAR(255)");
     if (!colNames.includes('bairro')) await pool.execute("ALTER TABLE clientes ADD COLUMN bairro VARCHAR(255)");
+    if (!colNames.includes('estoqueAlvo')) await pool.execute("ALTER TABLE clientes ADD COLUMN estoqueAlvo DOUBLE DEFAULT 200");
   } catch (e) {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (clientes):', e.message);
   }

@@ -981,11 +981,14 @@ const Gestao = {
       </div>
     `).join('') || '<div class="text-tertiary">Nenhum produto detalhado.</div>';
 
-    const fotosHtml = (a.fotos || []).filter(f => f.path && f.path !== 'offline_pending' && !f.offline).map(f => `
-      <div style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1px solid var(--separator);">
-        <img src="${(f.path || '').replace('/uploads/', '/storage/')}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${(f.path || '').replace('/uploads/', '/storage/')}', '_blank')">
-      </div>
-    `).join('');
+    const fotosHtml = (a.fotos || []).filter(f => f.path && f.path !== 'offline_pending' && !f.offline).map(f => {
+      const fullPath = f.path.startsWith('http') ? f.path : `${API_BASE_URL}${f.path.replace('/uploads/', '/storage/')}`;
+      return `
+        <div style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1px solid var(--separator);">
+          <img src="" data-src="${fullPath}" class="lazy-load-image" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${fullPath}', '_blank')">
+        </div>
+      `;
+    }).join('');
 
     Components.showModal('Detalhes da Atividade', `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -1010,7 +1013,7 @@ const Gestao = {
       ${a.assinatura && a.assinatura !== 'null' ? `
         <h4 style="margin-bottom:12px; font-size:14px; border-bottom:2px solid var(--primary); display:inline-block; padding-bottom:4px;">Assinatura do Cliente</h4>
         <div style="background:white; border:1px solid var(--separator); border-radius:8px; padding:8px;">
-          <img src="${a.assinatura.replace('/uploads/', '/storage/')}" style="width:100%; max-height:150px; object-fit:contain;">
+          <img src="" data-src="${a.assinatura.startsWith('http') ? a.assinatura : `${API_BASE_URL}${a.assinatura.replace('/uploads/', '/storage/')}`}" class="lazy-load-image" style="width:100%; max-height:150px; object-fit:contain;">
         </div>
       ` : ''}
 
@@ -1018,6 +1021,11 @@ const Gestao = {
       ${a.comentario ? `<div style="margin-top:10px; padding:12px; background:var(--system-bg); border-radius:8px; font-size:13px;"><strong>Obs Cliente:</strong> ${a.comentario}</div>` : ''}
       ${a.observacao ? `<div style="margin-top:10px; padding:12px; background:var(--system-bg); border-radius:8px; font-size:13px;"><strong>Obs Geral:</strong> ${a.observacao}</div>` : ''}
     `, `<button class="btn btn-primary" onclick="Components.closeModal()">Fechar</button>`, 'modal-lg');
+
+    // Carrega imagens via fetch para contornar ngrok bypass
+    document.querySelectorAll('.lazy-load-image').forEach(img => {
+      ImageLoader.load(img, img.dataset.src);
+    });
 
     Components.renderIcons();
   },

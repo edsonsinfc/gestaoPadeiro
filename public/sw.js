@@ -1,12 +1,8 @@
-const CACHE_NAME = 'brago-padeiro-v115';
+const CACHE_NAME = 'brago-padeiro-v181';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-  'https://unpkg.com/@turf/turf@6/turf.min.js'
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
 // Assets locais que devem ser pré-cacheados (fallback offline imediato)
@@ -21,7 +17,10 @@ const LOCAL_ASSETS = [
   '/css/styles.css',
   '/css/modal-move.css',
   '/css/padeiro-flow.css',
+  '/css/padeiro-estoque.css',
   '/css/Designabainicio vendedor.css',
+  '/css/flatpickr.min.css',
+  '/css/leaflet.css',
   '/js/app.js',
   '/js/auth.js',
   '/js/components.js',
@@ -33,6 +32,7 @@ const LOCAL_ASSETS = [
   '/js/cronograma.js',
   '/js/padeiro-flow.js',
   '/js/padeiro-agenda.js',
+  '/js/padeiro-estoque.js',
   '/js/padeiro-dashboard.js',
   '/js/vendedor.js',
   '/js/relatorios.js',
@@ -42,6 +42,15 @@ const LOCAL_ASSETS = [
   '/js/rastreamento.js',
   '/js/timeline.js',
   '/js/dev.js',
+  '/js/flatpickr.min.js',
+  '/js/flatpickr.pt.js',
+  '/js/chart.umd.js',
+  '/js/signature_pad.umd.min.js',
+  '/js/html2pdf.bundle.min.js',
+  '/js/html2canvas.min.js',
+  '/js/leaflet.js',
+  '/js/turf.min.js',
+  '/js/socket.io.min.js',
   '/js/modules/cronograma/cronograma.styles.js',
   '/js/modules/cronograma/cronograma.render.js',
   '/js/modules/cronograma/cronograma.drag.js',
@@ -59,7 +68,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       // Cacheia assets locais essenciais (ignora erros de CDN)
-      return cache.addAll(LOCAL_ASSETS).catch(() => {});
+      return cache.addAll(LOCAL_ASSETS).catch(() => { });
     })
   );
   // Forçando a atualização imediata para garantir que os clientes peguem as mudanças de design

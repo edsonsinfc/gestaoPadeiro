@@ -833,4 +833,103 @@ Object.assign(Cronograma, {
       Components.toast('Erro ao duplicar tarefa: ' + e.message, 'error');
     }
   },
+
+  openAprovarSolicitacao(id) {
+    const s = this.tarefas.find(x => x.id === id);
+    if (!s) return Components.toast('Solicitação não encontrada.', 'error');
+
+    const padeirosAtivos = this.padeiros.filter(p => p.ativo);
+    const defaultDate = s.data || new Date().toISOString().split('T')[0];
+
+    const contentHtml = `
+      <form id="aprovar-solicitacao-form" style="display:flex; flex-direction:column; gap:16px; padding: 8px 0;">
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.4; background: rgba(0, 122, 255, 0.05); padding: 12px; border-radius:10px; border-left: 3px solid #007AFF;">
+          Aprovando atendimento solicitado para o cliente: <strong style="color:var(--text-primary);">${s.clienteNome}</strong>
+        </div>
+        
+        <div class="form-group">
+          <label style="font-weight:600; margin-bottom:6px; display:block; font-size:13px;">Selecione o Padeiro *</label>
+          <select id="aprov-padeiro" class="input-control" required style="width:100%; padding-left:16px;">
+            <option value="">Selecione o padeiro...</option>
+            ${padeirosAtivos.map(p => {
+              const isSelected = s.padeiroId === p.id ? 'selected' : '';
+              return `<option value="${p.id}" data-nome="${p.nome}" data-cod="${p.codTec}" ${isSelected}>${p.nome} — COD ${p.codTec}</option>`;
+            }).join('')}
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label style="font-weight:600; margin-bottom:6px; display:block; font-size:13px;">Confirmar Data *</label>
+            <input type="date" id="aprov-data" class="input-control" value="${defaultDate}" required style="width:100%; padding-left:16px;">
+          </div>
+          <div class="form-group">
+            <label style="font-weight:600; margin-bottom:6px; display:block; font-size:13px;">Horário de Início</label>
+            <input type="time" id="aprov-horario" class="input-control" value="${s.horario || ''}" style="width:100%; padding-left:16px;">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label style="font-weight:600; margin-bottom:6px; display:block; font-size:13px;">Observações</label>
+          <textarea id="aprov-obs" class="input-control" rows="2" style="width:100%; padding:12px; font-size:12px;" placeholder="Adicione notas adicionais se necessário...">${s.observacao || ''}</textarea>
+        </div>
+      </form>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="Components.closeModal()" style="border-radius:10px; font-weight:600;">Cancelar</button>
+      <button class="btn btn-primary" onclick="Cronograma.salvarAprovacao('${id}')" style="border-radius:10px; font-weight:600;">Aprovar e Agendar</button>
+    `;
+
+    Components.showModal('Aprovar Pedido de Atendimento', contentHtml, footerHtml);
+  },
+
+  async salvarAprovacao(id) {
+    const padSel = document.getElementById('aprov-padeiro');
+    const dataVal = document.getElementById('aprov-data')?.value;
+    const horVal = document.getElementById('aprov-horario')?.value || '';
+    const obsVal = document.getElementById('aprov-obs')?.value || '';
+
+    if (!padSel || !padSel.value) {
+      Components.toast('Selecione um padeiro para realizar o atendimento.', 'error');
+      padSel?.classList.add('input-error');
+      return;
+    }
+    if (!dataVal) {
+      Components.toast('Selecione a data de atendimento.', 'error');
+      return;
+    }
+
+    const opt = padSel.options[padSel.selectedIndex];
+    const updateData = {
+      padeiroId: padSel.value,
+      padeiroNome: opt.dataset.nome,
+      codTec: opt.dataset.cod,
+      data: dataVal,
+      horario: horVal,
+      observacao: obsVal,
+      status: 'pendente', // Aprovado
+      atualizadoEm: new Date().toISOString()
+    };
+
+    try {
+      Components.closeModal();
+      const atualizada = await API.put(`/api/cronograma/${id}`, updateData);
+      
+      const index = this.tarefas.findIndex(t => t.id === id);
+      if (index !== -1) {
+        this.tarefas[index] = atualizada;
+      }
+      
+      Components.toast('Solicitação aprovada e inserida na escala!', 'success');
+      
+      if (this.currentView === 'solicitacoes') {
+        this.renderSolicitacoes();
+      } else {
+        this.renderSemanal();
+      }
+    } catch (e) {
+      Components.toast('Erro ao aprovar solicitação: ' + e.message, 'error');
+    }
+  },
 });

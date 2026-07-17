@@ -3,6 +3,40 @@
  * BRAGO Sistema Padeiro
  */
 
+// Wrappers seguros de localStorage para mitigar SecurityError em WebViews do Capacitor
+function safeGetLocalStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn(`[Storage] Não foi possível ler a chave ${key} do localStorage:`, e);
+    return null;
+  }
+}
+
+function safeSetLocalStorage(key, val) {
+  try {
+    if (val === null || val === undefined) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, val);
+    }
+  } catch (e) {
+    console.warn(`[Storage] Não foi possível salvar a chave ${key} no localStorage:`, e);
+  }
+}
+
+// Polyfill seguro de AbortController para WebViews antigas no APK
+if (typeof window.AbortController === 'undefined') {
+  window.AbortController = class AbortController {
+    constructor() {
+      this.signal = { aborted: false, addEventListener: () => {}, removeEventListener: () => {} };
+    }
+    abort() {
+      this.signal.aborted = true;
+    }
+  };
+}
+
 const Components = {
   // Toast notifications
   toast(message, type = 'info', duration = 4000) {
@@ -318,7 +352,7 @@ const OfflineManager = {
 
   async getAgendaFromWeeklyCacheFallback() {
     return new Promise((resolve) => {
-      const userData = localStorage.getItem('brago_user');
+      const userData = safeGetLocalStorage('brago_user');
       const user = userData ? JSON.parse(userData) : null;
       if (!user) {
         resolve(null);
@@ -442,6 +476,21 @@ const OfflineManager = {
 
         // Também atualizar nos caches de /api/admin/agenda-semanal se existirem
         await this.updateWeeklyAgendaCacheStatus(id, status);
+      }
+    }
+    
+    // 3. Atualizar cache de estoque /api/estoque
+    if (url.includes('/api/estoque')) {
+      const cacheUrl = '/api/estoque';
+      let cachedEstoque = await this.getCachedData(cacheUrl) || [];
+      if (!Array.isArray(cachedEstoque)) cachedEstoque = [];
+      
+      if (method === 'DELETE' && url.includes('/cliente/')) {
+        const parts = url.split('/');
+        const clienteId = parts[parts.length - 1];
+        cachedEstoque = cachedEstoque.filter(r => r.clienteId !== clienteId);
+        await this.cacheData(cacheUrl, cachedEstoque);
+        console.log(`[Offline Cache] Cache de /api/estoque limpo para cliente ${clienteId}`);
       }
     }
   },
@@ -978,9 +1027,10 @@ const OfflineManager = {
     // Evita cachear se já estiver no cache
     const existing = await this.getProductPhotoCache(codigo);
     if (existing) return;
-
     try {
-      const response = await fetch(url);
+      const headers = { 'ngrok-skip-browser-warning': 'true' };
+      if (typeof API !== 'undefined' && API.token) headers['Authorization'] = `Bearer ${API.token}`;
+      const response = await fetch(url, { headers });
       if (!response.ok) return;
       const blob = await response.blob();
       
@@ -1128,65 +1178,27 @@ const OfflineManager = {
   }
 };
 
-// API Helper — Multi-URL com Fallback Inteligente
-// Primário: Hostinger (produção, sempre online). Fallback: túnel Cloudflare (dev local).
+// ==========================================
+// CONFIGURAÇÃO DOS SERVIDORES (API URLS)
+// ==========================================
+const API_ENVIRONMENTS = {
+  dev_ngrok: 'https://erupt-stony-briskly.ngrok-free.dev',       // Servidor temporário de desenvolvimento
+  producao_hostinger: 'https://app2.bragodistribuidora.com.br'  // Servidor oficial de produção
+};
+
+// ALTERE AQUI PARA MUDAR O SERVIDOR ATIVO (dev_ngrok OU producao_hostinger)
+const ACTIVE_ENV = 'dev_ngrok'; 
+
 const API_URLS = {
-  hostinger: 'https://app2.bragodistribuidora.com.br',
-  cloudflare: 'https://pearl-establishing-sat-discover.trycloudflare.com'
+  hostinger: API_ENVIRONMENTS[ACTIVE_ENV]
 };
 
 // Determina se estamos no APK/WebView ou no browser com servidor local
 const _isNativeOrRemote = !!(window.Capacitor || (window.location.hostname === 'localhost' && !window.location.port));
 
-// URL ativa — começa com Hostinger (produção estável)
-let API_BASE_URL = _isNativeOrRemote ? API_URLS.hostinger : '';
-
-// Health-check rápido na inicialização para escolher a melhor URL
-(async function detectBestApiUrl() {
-  if (!_isNativeOrRemote) return; // No browser local, usa '' (mesmo servidor)
-  
-  // 1. Tenta Hostinger primeiro (produção, sempre estável)
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`${API_URLS.hostinger}/api/ping`, { 
-      signal: controller.signal,
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-    clearTimeout(timeout);
-    if (res.ok) {
-      API_BASE_URL = API_URLS.hostinger;
-      console.log('[API] ✅ Hostinger ativo. Usando:', API_BASE_URL);
-      return;
-    }
-  } catch (e) {
-    console.warn('[API] ⚠️ Hostinger indisponível, tentando Cloudflare tunnel...');
-  }
-  
-  // 2. Hostinger falhou — tenta Cloudflare tunnel (dev local)
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${API_URLS.cloudflare}/api/ping`, { 
-      signal: controller.signal,
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-    clearTimeout(timeout);
-    if (res.ok) {
-      API_BASE_URL = API_URLS.cloudflare;
-      console.log('[API] ✅ Cloudflare tunnel ativo. Usando:', API_BASE_URL);
-      return;
-    }
-  } catch (e) {
-    console.warn('[API] ⚠️ Cloudflare tunnel também indisponível.');
-  }
-  
-  // Nenhum respondeu — mantém Hostinger como padrão
-  API_BASE_URL = API_URLS.hostinger;
-  console.log('[API] 🔄 Nenhum servidor respondeu. Padrão: Hostinger:', API_BASE_URL);
-})();
+// URL ativa — definida pelo ACTIVE_ENV acima (ou URL customizada salva)
+let API_BASE_URL = safeGetLocalStorage('custom_api_url') || (_isNativeOrRemote ? API_URLS.hostinger : '');
+// ==========================================
 
 class APIError extends Error {
   constructor(message, status) {
@@ -1253,17 +1265,107 @@ function formatBakerNames(data) {
   }
 }
 
+const ImageLoader = {
+  cache: {},
+  controllers: new Set(),
+  queue: [],
+  activeConnections: 0,
+  MAX_CONCURRENT: 2,
+
+  load(imgElement, url) {
+    if (!url) return;
+    if (url.startsWith('data:') || url.startsWith('blob:')) {
+      imgElement.src = url;
+      return;
+    }
+    if (this.cache[url]) {
+      imgElement.src = this.cache[url];
+      return;
+    }
+
+    return new Promise((resolve) => {
+      this.queue.push({ imgElement, url, resolve });
+      this.processQueue();
+    });
+  },
+
+  async processQueue() {
+    if (this.activeConnections >= this.MAX_CONCURRENT || this.queue.length === 0) {
+      return;
+    }
+
+    const task = this.queue.shift();
+    this.activeConnections++;
+
+    try {
+      await this.fetchAndRender(task.imgElement, task.url);
+    } catch (err) {
+      // Ignora erro
+    } finally {
+      this.activeConnections--;
+      task.resolve();
+      this.processQueue();
+    }
+  },
+
+  async fetchAndRender(imgElement, url) {
+    // Se o elemento foi removido do DOM durante o tempo de espera na fila, aborta a requisição
+    if (!imgElement || !document.body.contains(imgElement)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    this.controllers.add(controller);
+
+    try {
+      const headers = { 'ngrok-skip-browser-warning': 'true' };
+      if (typeof API !== 'undefined' && API.token) headers['Authorization'] = `Bearer ${API.token}`;
+      
+      const res = await fetch(url, { 
+        headers,
+        signal: controller.signal
+      });
+      if (!res.ok) throw new Error('Status: ' + res.status);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      this.cache[url] = objectUrl;
+      imgElement.src = objectUrl;
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        console.warn('[ImageLoader] Erro ao carregar via fetch:', e);
+        imgElement.src = url;
+      }
+    } finally {
+      this.controllers.delete(controller);
+    }
+  },
+
+  cancelPending() {
+    // Aborta conexões ativas
+    this.controllers.forEach(c => {
+      try {
+        c.abort();
+      } catch (err) {}
+    });
+    this.controllers.clear();
+    
+    // Esvazia a fila
+    this.queue = [];
+    this.activeConnections = 0;
+    console.log('🛑 [ImageLoader] Fila de imagens e conexões ativas canceladas.');
+  }
+};
+
 const API = {
-  token: localStorage.getItem('brago_token'),
+  token: safeGetLocalStorage('brago_token'),
 
   setToken(token) {
     this.token = token;
-    if (token) localStorage.setItem('brago_token', token);
-    else localStorage.removeItem('brago_token');
+    safeSetLocalStorage('brago_token', token);
   },
 
   getUser() {
-    const data = localStorage.getItem('brago_user');
+    const data = safeGetLocalStorage('brago_user');
     if (!data) return null;
     try {
       const user = JSON.parse(data);
@@ -1278,13 +1380,13 @@ const API = {
   },
 
   setUser(user) {
-    if (user) localStorage.setItem('brago_user', JSON.stringify(user));
-    else localStorage.removeItem('brago_user');
+    if (user) safeSetLocalStorage('brago_user', JSON.stringify(user));
+    else safeSetLocalStorage('brago_user', null);
   },
 
   async request(url, options = {}) {
     const method = options.method || 'GET';
-    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    const headers = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', ...options.headers };
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
     // Bypass imediato se estiver offline de verdade
@@ -1308,7 +1410,9 @@ const API = {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    // Timeout flexível: se especificado nas options, ou 30s para POST/PUT/etc, ou 15s para GET
+    const timeoutMs = options.timeout || (method === 'GET' ? 15000 : 30000);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const res = await fetch(`${API_BASE_URL}${url}`, { ...options, headers, signal: controller.signal });
@@ -1342,7 +1446,6 @@ const API = {
     } catch (err) {
       clearTimeout(timeoutId);
       
-      // FALLBACK: Se falhou com erro de rede e temos URL alternativa, tenta ela
       const errMsg = (err.message || '').toLowerCase();
       const isNetworkError = err.name === 'AbortError' || 
                         errMsg.includes('failed') || 
@@ -1351,47 +1454,12 @@ const API = {
                         errMsg.includes('abort') || 
                         errMsg.includes('timeout') ||
                         errMsg.includes('connect');
-      
-      if (isNetworkError && _isNativeOrRemote && !options._fallbackAttempted) {
-        // Descobre a URL alternativa
-        const altUrl = API_BASE_URL === API_URLS.cloudflare ? API_URLS.hostinger : API_URLS.cloudflare;
-        console.warn(`[API] ⚠️ Servidor ${API_BASE_URL} falhou. Tentando fallback: ${altUrl}...`);
-        
-        try {
-          const fallbackController = new AbortController();
-          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 8000); // 8s para fallback
-          const fallbackRes = await fetch(`${altUrl}${url}`, { ...options, headers, signal: fallbackController.signal });
-          clearTimeout(fallbackTimeout);
-          
-          const data = await fallbackRes.json();
-          if (fallbackRes.ok) {
-            // Fallback funcionou! Atualiza a URL ativa para futuras requisições
-            API_BASE_URL = altUrl;
-            console.log(`[API] ✅ Fallback bem-sucedido! API_BASE_URL alterada para: ${altUrl}`);
-            
-            if (method === 'GET') {
-              OfflineManager.cacheData(url, data);
-            }
-            return formatBakerNames(data);
-          }
-          
-          if (fallbackRes.status === 401) {
-            this.setToken(null);
-            this.setUser(null);
-            Components.toast('Sessão expirada ou dados inválidos.', 'error');
-            App.navigate('login');
-          }
-          throw new APIError(data.error || data.message || 'Erro na requisição', fallbackRes.status);
-        } catch (fallbackErr) {
-          console.warn('[API] ⚠️ Fallback também falhou:', fallbackErr.message);
-          // Continua para a lógica offline abaixo
-        }
-      }
 
       // HANDLE OFFLINE
       const isOffline = !navigator.onLine || isNetworkError;
+      const isAuthRoute = url.includes('/api/auth/');
       
-      if (isOffline) {
+      if (isOffline && !isAuthRoute) {
         if (method === 'GET') {
           const cached = await OfflineManager.getCachedData(url);
           if (cached) {

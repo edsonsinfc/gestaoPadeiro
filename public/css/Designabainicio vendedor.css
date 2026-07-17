@@ -1592,3 +1592,208 @@
     padding-bottom: calc(28px + env(safe-area-inset-bottom));
   }
 }
+
+/* ============================================= */
+/* Wallet Clara — Nova Home do Vendedor          */
+/* ============================================= */
+
+.vwallet-screen {
+  background: #f8f9fc;
+  min-height: 100vh;
+  padding-bottom: 96px;
+}
+
+.vwallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 10px 24px;
+}
+
+.vwallet-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.vwallet-greeting {
+  font-size: 14px;
+  font-weight: 500;
+  color: #8e8e93;
+}
+
+.vwallet-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1c1c1e;
+  margin-top: 2px;
+}
+
+.vwallet-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(30, 75, 255, 0.15);
+}
+
+.vwallet-balance-card {
+  padding: 10px 24px 20px 24px;
+}
+
+.vwallet-balance-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vwallet-balance-row {
+  display: flex;
+  align-items: baseline;
+  margin-top: 6px;
+}
+
+.vwallet-balance-currency {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1c1c1e;
+  margin-right: 4px;
+}
+
+.vwallet-balance-value {
+  font-size: 40px;
+  font-weight: 900;
+  color: #1c1c1e;
+  letter-spacing: -1px;
+}
+
+.vwallet-balance-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #34c759;
+  margin-top: 8px;
+}
+
+.vwallet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 24px;
+  margin-bottom: 24px;
+}
+
+.vwallet-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c1c1e;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.vwallet-action-btn:active {
+  transform: scale(0.97);
+  background: #f2f2f7;
+}
+
+.vwallet-action-btn i {
+  color: #1E4BFF;
+  width: 18px;
+  height: 18px;
+}
+
+/* Card Destaque - substitui Invite a Friend */
+.vwallet-highlight-card {
+  margin: 0 24px 24px 24px;
+  padding: 20px 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.vwallet-highlight-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30, 75, 255, 0.2) 0%, transparent 70%);
+}
+
+.vwallet-highlight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 30px;
+  background: rgba(30, 75, 255, 0.25);
+  border: 1px solid rgba(30, 75, 255, 0.35);
+  color: #5e82ff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.vwallet-highlight-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.vwallet-highlight-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 16px;
+}
+
+.vwallet-highlight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1c1c1e;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.vwallet-highlight-btn:active {
+  opacity: 0.9;
+}
+
+.vwallet-section-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1c1c1e;
+  padding: 0 24px 8px 24px;
+}

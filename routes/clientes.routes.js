@@ -7,5 +7,6 @@ router.get('/', authMiddleware, ctrl.listClientes);
 router.post('/', authMiddleware, adminOnly, ctrl.createCliente);
 router.put('/:id', authMiddleware, adminOnly, ctrl.updateCliente);
 router.delete('/:id', authMiddleware, adminOnly, ctrl.deleteCliente);
+router.patch('/:id/estoque-alvo', authMiddleware, ctrl.updateEstoqueAlvo);
 
 module.exports = router;

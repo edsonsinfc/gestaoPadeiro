@@ -17,7 +17,7 @@ const Auth = {
       <!-- Right Form Area -->
       <div class="login-right-area">
         <div class="brago-login-card">
-          <img src="/assets/logo.svg" alt="Brago App System" class="card-logo-img">
+          <img src="/assets/logo.svg" alt="Brago App System" class="card-logo-img" onclick="Auth.handleLogoClick()" style="cursor:pointer">
           
           <div id="login-content" class="comodato-form">
             ${this.loginForm()}
@@ -124,14 +124,15 @@ const Auth = {
 
     try {
       const data = await API.post('/api/auth/login', { email, senha });
+      const user = data.user || {};
       API.setToken(data.token);
-      API.setUser(data.user);
-      Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
+      API.setUser(user);
+      Components.toast(`Bem-vindo, ${user.nome || 'Usuário'}!`, 'success');
       
-      if (data.user.role === 'padeiro' && typeof LocationService !== 'undefined') {
+      if (user.role === 'padeiro' && typeof LocationService !== 'undefined') {
         // Inicializa o LocationService ANTES de capturar o login
         // para garantir que o socket esteja conectado
-        await LocationService.init(data.user);
+        await LocationService.init(user);
         // Pequeno delay para garantir conexão do socket
         await new Promise(r => setTimeout(r, 500));
         await LocationService.captureAction('Login no Aplicativo');
@@ -146,8 +147,8 @@ const Auth = {
           .catch(console.warn);
       }
 
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);
-      App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
+      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
     } catch (err) {
       errorEl.classList.add('active');
       errorEl.textContent = err.message;
@@ -306,17 +307,17 @@ const Auth = {
   },
 
   initGoogleLogin() {
-    if (typeof google === 'undefined') {
-      setTimeout(() => this.initGoogleLogin(), 500);
-      return;
-    }
-
-    google.accounts.id.initialize({
-      client_id: '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com',
-      callback: (response) => this.handleGoogleLogin(response)
-    });
-
     try {
+      if (typeof google === 'undefined') {
+        setTimeout(() => this.initGoogleLogin(), 500);
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com',
+        callback: (response) => this.handleGoogleLogin(response)
+      });
+
       const parent = document.getElementById('google-login-btn');
       if (parent) {
         google.accounts.id.renderButton(parent, {
@@ -329,9 +330,13 @@ const Auth = {
         });
       }
     } catch (err) {
-      console.error('❌ Erro ao renderizar botão do Google:', err);
-      // Tenta novamente em 1 segundo se falhar
-      setTimeout(() => this.initGoogleLogin(), 1000);
+      console.error('❌ Erro ao inicializar/renderizar botão do Google:', err);
+      // Se for erro da API do Google no ambiente local/nativo, desiste para evitar loop infinito
+      if (err.message && (err.message.includes('initialize') || err.message.includes('accounts') || err.message.includes('google'))) {
+        console.warn('⚠️ Google Sign-In indisponível neste ambiente (provavelmente APK ou domínio local).');
+      } else {
+        setTimeout(() => this.initGoogleLogin(), 2000);
+      }
     }
   },
 
@@ -339,19 +344,20 @@ const Auth = {
     const errorEl = document.getElementById('login-error');
     try {
       const data = await API.post('/api/auth/google-login', { credential: response.credential });
+      const user = data.user || {};
       API.setToken(data.token);
-      API.setUser(data.user);
-      Components.toast(`Bem-vindo, ${data.user.nome}!`, 'success');
+      API.setUser(user);
+      Components.toast(`Bem-vindo, ${user.nome || 'Usuário'}!`, 'success');
       
-      if (data.user.role === 'padeiro' && typeof LocationService !== 'undefined') {
+      if (user.role === 'padeiro' && typeof LocationService !== 'undefined') {
         // Inicializa o LocationService ANTES de capturar o login
-        await LocationService.init(data.user);
+        await LocationService.init(user);
         await new Promise(r => setTimeout(r, 500));
         await LocationService.captureAction('Login no Aplicativo');
       }
 
-      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(data.user.role);
-      App.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+      const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
+      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
     } catch (err) {
       if (errorEl) {
         errorEl.classList.add('active');
@@ -360,5 +366,42 @@ const Auth = {
         Components.toast(err.message || 'Falha no login com Google', 'error');
       }
     }
+  },
+
+  logoClickCount: 0,
+  logoClickTimer: null,
+  handleLogoClick() {
+    this.logoClickCount++;
+    clearTimeout(this.logoClickTimer);
+    this.logoClickTimer = setTimeout(() => {
+      this.logoClickCount = 0;
+    }, 2000);
+    
+    if (this.logoClickCount >= 5) {
+      this.logoClickCount = 0;
+      this.configureApiUrl();
+    }
+  },
+
+  configureApiUrl() {
+    const current = localStorage.getItem('custom_api_url') || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '') || 'https://app2.bragodistribuidora.com.br';
+    const newUrl = prompt('Configurar URL da API (deixe em branco para o padrão):', current);
+    if (newUrl === null) return; // cancelado
+    
+    if (newUrl.trim() === '') {
+      localStorage.removeItem('custom_api_url');
+      alert('URL redefinida para o padrão.');
+    } else {
+      let formattedUrl = newUrl.trim();
+      if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+        formattedUrl = 'http://' + formattedUrl;
+      }
+      if (formattedUrl.endsWith('/')) {
+        formattedUrl = formattedUrl.slice(0, -1);
+      }
+      localStorage.setItem('custom_api_url', formattedUrl);
+      alert('URL configurada para: ' + formattedUrl);
+    }
+    window.location.reload();
   }
 };

@@ -14,7 +14,7 @@ Object.assign(Cronograma, {
     const totalKg = atividadesMes.reduce((s, a) => s + (parseFloat(a.kgTotal) || 0), 0);
     const totalAtividades = atividadesMes.length;
 
-    const tarefasMes = this.tarefas.filter(t => t.data && t.data.startsWith(monthStr));
+    const tarefasMes = this.tarefas.filter(t => t.data && t.data.startsWith(monthStr) && t.status !== 'solicitado');
     const tarefasConcluidas = tarefasMes.filter(t => t.status === 'concluida').length;
     const tarefasPendentes = tarefasMes.filter(t => t.status === 'pendente').length;
     
@@ -30,7 +30,7 @@ Object.assign(Cronograma, {
     const padeirosAtivos = this.padeiros.filter(p => p.ativo);
     
     // Gather all task dates in this month
-    const tarefasMes = this.tarefas.filter(t => t.data && t.data.startsWith(monthStr));
+    const tarefasMes = this.tarefas.filter(t => t.data && t.data.startsWith(monthStr) && t.status !== 'solicitado');
     
     // Build all workdays of the month (Mon-Sat)
     const dias = [];
@@ -232,7 +232,7 @@ Object.assign(Cronograma, {
 
     // Get tasks for selected date
     const selectedDateStr = `${activeYear}-${String(activeMonthIdx + 1).padStart(2, '0')}-${String(activeDate.getDate()).padStart(2, '0')}`;
-    const selectedTasks = this.tarefas.filter(t => t.data === selectedDateStr);
+    const selectedTasks = this.tarefas.filter(t => t.data === selectedDateStr && t.status !== 'solicitado');
 
     const dayCellsHtml = gridDays.map(day => {
       if (day === null) {
@@ -244,7 +244,7 @@ Object.assign(Cronograma, {
       
       // Calculate tasks on this specific day for colored dots
       const dateStr = `${activeYear}-${String(activeMonthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const tasksOnDay = this.tarefas.filter(t => t.data === dateStr);
+      const tasksOnDay = this.tarefas.filter(t => t.data === dateStr && t.status !== 'solicitado');
       
       let dotsHtml = '';
       if (tasksOnDay.length > 0) {

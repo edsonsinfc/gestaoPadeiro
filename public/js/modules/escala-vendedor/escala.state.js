@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ARQUIVO: escala.state.js
  * MÓDULO: Escala de Atendimento — Vendedor
  * RESPONSABILIDADE: Estado global e dados do módulo
@@ -12,6 +12,7 @@ const EscalaState = {
   activities: [],
   padeiros: [],
   avaliacoes: [],
+  cronogramas: [],
 
   // Clientes filtrados pelo JWT do vendedor
   filteredClients: [],
@@ -27,6 +28,7 @@ const EscalaState = {
     this.activities = [];
     this.padeiros = [];
     this.avaliacoes = [];
+    this.cronogramas = [];
     this.filteredClients = [];
     this._loaded = false;
   },
@@ -40,7 +42,7 @@ const EscalaState = {
    * - padeirosList   — lista de padeiros únicos que atenderam o cliente
    */
   getClientStats(clientId) {
-    const clientActivities = this.activities.filter(a => a.clienteId === clientId);
+    const clientActivities = this.activities.filter(a => a.clienteId === clientId && a.status === 'finalizada');
 
     // Kg total produzido
     const totalKg = clientActivities.reduce((sum, a) => sum + (parseFloat(a.kgTotal) || 0), 0);
@@ -57,15 +59,19 @@ const EscalaState = {
       ? clientEvals.reduce((sum, e) => sum + (parseFloat(e.nota || e.estrelas || 0)), 0) / clientEvals.length
       : null;
 
-    // Últimas fotos (máx 5), das atividades mais recentes
+    // Últimas fotos (máx 5), das atividades mais recentes — filtra offline
     const ultimasFotos = [];
     const sortedActs = [...clientActivities].sort((a, b) =>
       new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
     );
     for (const act of sortedActs) {
       if (act.fotos && Array.isArray(act.fotos)) {
-        for (const foto of act.fotos) {
-          if (ultimasFotos.length < 5) ultimasFotos.push(foto);
+        const validFotos = act.fotos.filter(f => f.path && f.path !== 'offline_pending' && !f.offline);
+        for (const foto of validFotos) {
+          if (ultimasFotos.length < 5) {
+            const absUrl = foto.path.startsWith('http') ? foto.path : `${API_BASE_URL}${foto.path.replace('/uploads/', '/storage/')}`;
+            ultimasFotos.push(absUrl);
+          }
         }
       }
       if (ultimasFotos.length >= 5) break;

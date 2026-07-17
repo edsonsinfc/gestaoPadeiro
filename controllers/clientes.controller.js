@@ -64,3 +64,18 @@ exports.deleteCliente = async (req, res) => {
     res.status(400).json({ error: 'ID inválido' });
   }
 };
+
+exports.updateEstoqueAlvo = async (req, res) => {
+  try {
+    const { estoqueAlvo } = req.body;
+    if (estoqueAlvo === undefined || isNaN(parseFloat(estoqueAlvo))) {
+      return res.status(400).json({ error: 'Estoque alvo inválido' });
+    }
+    const cliente = await Cliente.findByIdAndUpdate(req.params.id, { estoqueAlvo: parseFloat(estoqueAlvo) }, { new: true });
+    if (!cliente) return res.status(404).json({ error: 'Cliente não encontrado' });
+    res.json(cliente);
+  } catch (error) {
+    console.error('Erro ao atualizar estoque alvo:', error);
+    res.status(500).json({ error: 'Erro ao atualizar estoque alvo' });
+  }
+};

@@ -314,3 +314,34 @@
   color: #1E4BFF;
   opacity: 0.25;
 }
+
+/* Botão Flutuante de Calendário */
+.escala-floating-calendar {
+  position: fixed;
+  bottom: 100px; /* Acima da bottom-navbar */
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  border: none;
+  box-shadow: 0 4px 16px rgba(30, 75, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: #ffffff;
+}
+
+.escala-floating-calendar:active {
+  transform: scale(0.92);
+  box-shadow: 0 2px 8px rgba(30, 75, 255, 0.3);
+}
+
+.escala-floating-calendar i {
+  width: 24px;
+  height: 24px;
+  color: #ffffff;
+}

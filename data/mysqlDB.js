@@ -299,5 +299,6 @@ module.exports = {
   CronogramaTemplate: createProxy(new SqlCollection('CronogramaTemplate', 'cronograma_templates')),
   TimelineEvent: createProxy(new SqlCollection('TimelineEvent', 'timeline_events')),
   PushSubscription: createProxy(new SqlCollection('PushSubscription', 'push_subscriptions')),
-  AuditLog: createProxy(new SqlCollection('AuditLog', 'audit_logs'))
+  AuditLog: createProxy(new SqlCollection('AuditLog', 'audit_logs')),
+  EstoqueFaltante: createProxy(new SqlCollection('EstoqueFaltante', 'estoques_faltantes'))
 };

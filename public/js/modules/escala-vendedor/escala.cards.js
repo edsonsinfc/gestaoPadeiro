@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ARQUIVO: escala.cards.js — v2
  * MÓDULO: Escala de Atendimento — Vendedor
  * RESPONSABILIDADE: Renderizar os cards de clientes no design "Social Profile Card"
@@ -39,9 +39,10 @@ const EscalaCards = {
       const foto = fotos[i];
       if (foto) {
         const url = typeof foto === 'string' ? foto : (foto.url || foto.path || '');
+        // Usa data-src + ImageLoader para funcionar com ngrok no APK
         cells.push(`
           <div class="escala-grid-cell">
-            <img class="escala-grid-photo" src="${url}" alt="Foto ${i + 1}" loading="lazy"
+            <img class="escala-grid-photo lazy-img" data-src="${url}" alt="Foto ${i + 1}"
               onerror="this.parentElement.innerHTML='<div class=\\'escala-grid-cell--empty\\'><i data-lucide=\\'image-off\\'></i></div>'">
           </div>`);
       } else {
@@ -202,7 +203,10 @@ const EscalaCards = {
           <i data-lucide="calendar-days"></i>
           <span class="escala-empty-title">Nenhum cliente na escala</span>
           <span class="escala-empty-sub">Os clientes atribuídos ao seu perfil aparecerão aqui.</span>
-        </div>`;
+        </div>
+        <button class="escala-floating-calendar" onclick="App.navigate('vendedor-agendar-atendimento')" title="Ver Calendário de Agendamentos">
+          <i data-lucide="calendar"></i>
+        </button>`;
       if (typeof Components !== 'undefined') Components.renderIcons();
       return;
     }
@@ -212,9 +216,20 @@ const EscalaCards = {
       return this.renderCard(c, stats, i);
     }).join('');
 
-    container.innerHTML = `<div class="escala-list">${cardsHtml}</div>`;
+    container.innerHTML = `
+      <div class="escala-list">${cardsHtml}</div>
+      <button class="escala-floating-calendar" onclick="App.navigate('vendedor-agendar-atendimento')" title="Ver Calendário de Agendamentos">
+        <i data-lucide="calendar"></i>
+      </button>
+    `;
 
     if (typeof Components !== 'undefined') Components.renderIcons();
+    // Carrega as fotos com ImageLoader (header ngrok-skip-browser-warning)
+    if (typeof ImageLoader !== 'undefined') {
+      container.querySelectorAll('img.lazy-img[data-src]').forEach(img => {
+        ImageLoader.load(img, img.dataset.src);
+      });
+    }
   }
 };
 

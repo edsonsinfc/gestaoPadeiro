@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Flatpickr for HIG-style Date/Time inputs -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="/css/flatpickr.min.css">
 
   <!-- Lucide Icons -->
   <script src="/js/lucide.min.js"></script>
@@ -27,21 +27,21 @@
     });
   </script>
   
-  <!-- Chart.js for graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js for graphs (defer — só usado nos dashboards, não no login) -->
+  <script src="/js/chart.umd.js" defer></script>
 
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- Signature Pad for client signatures -->
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <!-- Signature Pad for client signatures (defer — só usado no fluxo do padeiro) -->
+  <script src="/js/signature_pad.umd.min.js" defer></script>
 
-  <!-- HTML2PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- HTML2PDF (defer — só usado em relatórios) -->
+  <script src="/js/html2pdf.bundle.min.js" defer></script>
   <!-- jsPDF & html2canvas -->
-  <script src="/js/jspdf.umd.min.js"></script>
-  <script src="/js/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/js/jspdf.umd.min.js" defer></script>
+  <script src="/js/jspdf.plugin.autotable.min.js" defer></script>
+  <script src="/js/html2canvas.min.js" defer></script>
 
   <link rel="stylesheet" href="/css/variables.css">
   <link rel="stylesheet" href="/css/reset.css">
@@ -55,6 +55,7 @@
   <link rel="stylesheet" href="/css/master-gestor.css">
   <link rel="stylesheet" href="/css/hig-desktop.css">
   <link rel="stylesheet" href="/css/auditoria.css">
+  <link rel="stylesheet" href="/css/padeiro-estoque.css?v=1.0">
   <link rel="stylesheet" href="/css/Designabainicio vendedor.css?v=1.0">
   <link rel="stylesheet" href="/css/escala-vendedor.css?v=1.0">
   <link rel="stylesheet" href="/css/agendar-atendimento.css?v=1.0">
@@ -70,6 +71,41 @@
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 </head>
 <body>
+  <!-- Global Error Handler — evita tela branca no APK -->
+  <script>
+    window.__smartgestor_errors = [];
+    window.onerror = function(msg, src, line, col, err) {
+      console.error('❌ [GLOBAL ERROR]', msg, src, line, col, err);
+      window.__smartgestor_errors.push({msg, src, line, col, stack: err && err.stack});
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('❌ [UNHANDLED PROMISE]', e.reason);
+      window.__smartgestor_errors.push({msg: 'UnhandledRejection', stack: e.reason && e.reason.stack});
+    });
+    // Timeout de emergência — se depois de 8s o #app estiver vazio, mostra diagnóstico
+    setTimeout(function() {
+      var app = document.getElementById('app');
+      if (app && (!app.innerHTML || app.innerHTML.trim().length < 10)) {
+        var errs = window.__smartgestor_errors;
+        var html = '<div style="padding:24px;font-family:sans-serif;max-width:500px;margin:40px auto;">';
+        html += '<h2 style="color:#E53E3E;">⚠️ Erro na inicialização</h2>';
+        html += '<p style="color:#555;">O app não conseguiu inicializar. Erros detectados:</p>';
+        if (errs.length > 0) {
+          html += '<pre style="background:#F7FAFC;padding:12px;border-radius:8px;overflow:auto;font-size:12px;max-height:300px;">';
+          errs.forEach(function(e) {
+            html += (e.msg || 'Unknown') + '\n' + (e.src || '') + ':' + (e.line || '') + '\n' + (e.stack || '') + '\n---\n';
+          });
+          html += '</pre>';
+        } else {
+          html += '<p style="color:#888;">Nenhum erro JS capturado. Possível timeout de rede nos CDNs.</p>';
+        }
+        html += '<button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:#1E4BFF;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Tentar novamente</button>';
+        html += '</div>';
+        app.innerHTML = html;
+      }
+    }, 8000);
+  </script>
   <div id="app"></div>
 
   <!-- Apple HIG Style Floating APK Install Banner -->
@@ -94,19 +130,19 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Leaflet Map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="/css/leaflet.css" />
+  <script src="/js/leaflet.js"></script>
   
   <!-- Real-time Tracking -->
   <script src="/js/components.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     if (typeof io === 'undefined') {
-      console.log('⚠️ Local socket.io.js failed to load. Falling back to CDN...');
-      document.write('<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"><\/script>');
+      console.log('⚠️ Local socket.io.js failed to load. Falling back to Local File...');
+      document.write('<script src="/js/socket.io.min.js"><\/script>');
     }
   </script>
-  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <script src="/js/turf.min.js"></script>
   <script src="/js/location-service.js?v=1.0"></script>
   <script src="/js/rastreamento.js?v=2.4"></script>
   <script src="/js/timeline.js?v=1.0"></script>
@@ -123,8 +159,8 @@
   <script src="/js/modules/cronograma/cronograma.render.js"></script>
   <script src="/js/modules/cronograma/cronograma.drag.js"></script>
   <script src="/js/modules/cronograma/cronograma.tasks.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+  <script src="/js/flatpickr.min.js"></script>
+  <script src="/js/flatpickr.pt.js"></script>
   <script src="/js/modules/cronograma/hig-popovers.js"></script>
   <script src="/js/modules/cronograma/cronograma.mensal.js"></script>
   <script src="/js/modules/cronograma/cronograma.smart.js"></script>
@@ -132,6 +168,7 @@
   <script src="/js/padeiro-flow.js?v=1.3"></script>
   <script src="/js/padeiro-agenda.js?v=1.1"></script>
   <script src="/js/padeiro-dashboard.js?v=1.1"></script>
+  <script src="/js/padeiro-estoque.js?v=1.0"></script>
   <script src="/js/vendedor.js?v=1.0"></script>
   <script src="/js/modules/escala-vendedor/escala.state.js"></script>
   <script src="/js/modules/escala-vendedor/escala.cards.js"></script>

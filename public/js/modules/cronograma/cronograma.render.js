@@ -76,10 +76,11 @@ Object.assign(Cronograma, {
     </style>
     <div class="fade-in">
       <div class="flex justify-between items-center mb-6 cronograma-header" style="flex-wrap:wrap; gap:16px;">
-        <div class="segmented-control" onclick="Components.createRipple(event, this)">
-          <div class="segmented-slider" style="width: 50%; transform: translateX(${this.currentView === 'mensal' ? '100%' : '0'})"></div>
+        <div class="segmented-control" style="max-width: 380px;" onclick="Components.createRipple(event, this)">
+          <div class="segmented-slider" style="width: 33.33%; transform: translateX(${this.currentView === 'semanal' ? '0' : this.currentView === 'mensal' ? '100%' : '200%'})"></div>
           <div class="segmented-item ${this.currentView === 'semanal' ? 'active' : ''}" onclick="Cronograma.setView('semanal')">Semanal</div>
           <div class="segmented-item ${this.currentView === 'mensal' ? 'active' : ''}" onclick="Cronograma.setView('mensal')">Mensal</div>
+          <div class="segmented-item ${this.currentView === 'solicitacoes' ? 'active' : ''}" onclick="Cronograma.setView('solicitacoes')">Solicitações</div>
         </div>
         <div class="flex items-center gap-3 cronograma-actions">
           <button class="btn btn-primary btn-pill" onclick="Cronograma.openTaskForm()">
@@ -108,7 +109,7 @@ Object.assign(Cronograma, {
     </div>`;
     const actions = c.querySelector('.cronograma-actions');
     if (actions) {
-      if (this.currentView === 'mensal') {
+      if (this.currentView === 'mensal' || this.currentView === 'solicitacoes') {
         actions.style.setProperty('display', 'none', 'important');
       } else {
         actions.style.removeProperty('display');
@@ -118,10 +119,14 @@ Object.assign(Cronograma, {
       c.classList.remove('tf-page-active');
       document.body.classList.remove('tf-page-active');
       this.renderSemanal();
-    } else {
+    } else if (this.currentView === 'mensal') {
       c.classList.add('tf-page-active');
       document.body.classList.add('tf-page-active');
       this.renderMensal();
+    } else {
+      c.classList.remove('tf-page-active');
+      document.body.classList.remove('tf-page-active');
+      this.renderSolicitacoes();
     }
     Components.renderIcons();
   },
@@ -130,12 +135,14 @@ Object.assign(Cronograma, {
     this.currentView = view;
     // Update active state and slider without full re-render
     document.querySelectorAll('.segmented-control .segmented-item').forEach(item => {
-      item.classList.toggle('active', item.innerText.toLowerCase() === view);
+      const text = item.innerText.toLowerCase();
+      const isActive = text === view || (text === 'solicitações' && view === 'solicitacoes');
+      item.classList.toggle('active', isActive);
     });
     const slider = document.querySelector('.segmented-control .segmented-slider');
     if (slider) {
-      slider.style.width = '50%';
-      slider.style.transform = `translateX(${view === 'mensal' ? '100%' : '0'})`;
+      slider.style.width = '33.33%';
+      slider.style.transform = `translateX(${view === 'semanal' ? '0' : view === 'mensal' ? '100%' : '200%'})`;
     }
     
     const pageContainer = document.getElementById('page-container');
@@ -151,7 +158,7 @@ Object.assign(Cronograma, {
 
     const actions = document.querySelector('.cronograma-actions');
     if (actions) {
-      if (view === 'mensal') {
+      if (view === 'mensal' || view === 'solicitacoes') {
         actions.style.setProperty('display', 'none', 'important');
       } else {
         actions.style.removeProperty('display');
@@ -160,7 +167,8 @@ Object.assign(Cronograma, {
     
     const cc = document.getElementById('cronograma-content');
     if (view === 'semanal') this.renderSemanal();
-    else this.renderMensal();
+    else if (view === 'mensal') this.renderMensal();
+    else this.renderSolicitacoes();
     Components.renderIcons();
   },
 
@@ -169,7 +177,7 @@ Object.assign(Cronograma, {
     const dayOfWeek = today.getDay(); // 0=dom, 1=seg...
     const monday = new Date(today);
     monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + (this.weekOffset * 7));
-    
+
     const dates = [];
     for (let i = 0; i < 6; i++) { // seg-sab
       const d = new Date(monday);
@@ -224,23 +232,23 @@ Object.assign(Cronograma, {
           <tr>
             <th class="matrix-sticky-col">PADEIROS</th>
             ${dates.map((date, i) => {
-              const dayName = this.diasSemana[i].substring(0, 3);
-              const dayNum = date.getDate();
-              return `<th>${dayName} ${dayNum}</th>`;
-            }).join('')}
+      const dayName = this.diasSemana[i].substring(0, 3);
+      const dayNum = date.getDate();
+      return `<th>${dayName} ${dayNum}</th>`;
+    }).join('')}
           </tr>
         </thead>
         <tbody>
           ${(() => {
-            const grouped = this.padeiros.filter(p => p.ativo).reduce((acc, p) => {
-              const filial = p.filial || 'Sem Filial';
-              if (!acc[filial]) acc[filial] = [];
-              acc[filial].push(p);
-              return acc;
-            }, {});
+        const grouped = this.padeiros.filter(p => p.ativo).reduce((acc, p) => {
+          const filial = p.filial || 'Sem Filial';
+          if (!acc[filial]) acc[filial] = [];
+          acc[filial].push(p);
+          return acc;
+        }, {});
 
-            return Object.keys(grouped).sort().map(filial => {
-              const branchHeader = `
+        return Object.keys(grouped).sort().map(filial => {
+          const branchHeader = `
                 <tr class="branch-pill-row cascade-item" style="--index: 0;">
                   <td colspan="${dates.length + 1}" style="background: transparent !important; border: none !important; padding: 20px 0 0 0 !important;">
                     <div style="display: flex; justify-content: center; width: 100%; position: relative; z-index: 30; margin-bottom: -1px;">
@@ -263,24 +271,24 @@ Object.assign(Cronograma, {
                   <td colspan="6" class="matrix-branch-header" style="padding: 0 !important;">
                     <div class="days-pill-container">
                       ${dates.map((date, i) => {
-                        const dayName = this.diasSemana[i].substring(0, 3);
-                        const dayNum = date.getDate();
-                        const dateStr = date.toISOString().split('T')[0];
-                        const isToday = dateStr === today;
-                        return `
+            const dayName = this.diasSemana[i].substring(0, 3);
+            const dayNum = date.getDate();
+            const dateStr = date.toISOString().split('T')[0];
+            const isToday = dateStr === today;
+            return `
                           <div class="day-pill-item ${isToday ? 'active' : ''}">
                             ${dayName} <span>${dayNum}</span>
                           </div>`;
-                      }).join('')}
+          }).join('')}
                     </div>
                   </td>
                 </tr>`;
 
-              const bakerRows = grouped[filial].map((p, i) => {
-                const isExpanded = this.expandedBakers.has(p.id);
-                const bakerInitial = p.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-                
-                return `
+          const bakerRows = grouped[filial].map((p, i) => {
+            const isExpanded = this.expandedBakers.has(p.id);
+            const bakerInitial = p.nome.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+            return `
                 <tr class="baker-row-mobile ${isExpanded ? 'expanded' : ''} cascade-item" style="--index: ${i + 2};" data-baker-id="${p.id}">
                   <!-- Mobile View Container -->
                   <td colspan="7" class="mobile-only" style="padding:0 !important; border:none !important;">
@@ -297,14 +305,14 @@ Object.assign(Cronograma, {
 
                     <div class="days-scroll-mobile">
                       ${dates.map((date, i) => {
-                        const dateStr = date.toISOString().split('T')[0];
-                        const dayName = this.diasSemana[i];
-                        const dayNum = date.getDate();
-                        const tarefasDaCelula = this.tarefas
-                          .filter(t => t.data === dateStr && t.padeiroId === p.id)
-                          .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
-                        
-                        return `
+              const dateStr = date.toISOString().split('T')[0];
+              const dayName = this.diasSemana[i];
+              const dayNum = date.getDate();
+              const tarefasDaCelula = this.tarefas
+                .filter(t => t.data === dateStr && t.padeiroId === p.id && t.status !== 'solicitado')
+                .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
+
+              return `
                         <div class="day-column-mobile" data-date="${dateStr}" data-padeiro-id="${p.id}" data-padeiro-nome="${p.nome}" data-padeiro-cod="${p.codTec}">
                           <div class="day-label-mobile">
                             <span>${dayName} ${dayNum}</span>
@@ -318,7 +326,7 @@ Object.assign(Cronograma, {
                             <i data-lucide="plus" size="18"></i>
                           </button>
                         </div>`;
-                      }).join('')}
+            }).join('')}
                     </div>
                   </td>
 
@@ -330,11 +338,11 @@ Object.assign(Cronograma, {
 
                   <!-- Desktop Cells -->
                   ${dates.map(date => {
-                    const dateStr = date.toISOString().split('T')[0];
-                    const tarefasDaCelula = this.tarefas
-                      .filter(t => t.data === dateStr && t.padeiroId === p.id)
-                      .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
-                    return `
+              const dateStr = date.toISOString().split('T')[0];
+              const tarefasDaCelula = this.tarefas
+                .filter(t => t.data === dateStr && t.padeiroId === p.id && t.status !== 'solicitado')
+                .sort((a, b) => (a.posicao || 0) - (b.posicao || 0));
+              return `
                     <td class="matrix-cell desktop-only" 
                         data-date="${dateStr}" 
                         data-padeiro-id="${p.id}"
@@ -352,18 +360,18 @@ Object.assign(Cronograma, {
                         <i data-lucide="plus" size="14"></i>
                       </button>
                     </td>`;
-                  }).join('')}
+            }).join('')}
                 </tr>`;
-              }).join('');
+          }).join('');
 
-              return branchHeader + bakerRows;
-            }).join('');
-          })()}
+          return branchHeader + bakerRows;
+        }).join('');
+      })()}
         </tbody>
       </table>
     </div>`;
     Components.renderIcons();
-    
+
     // Restore scroll positions
     Object.keys(tempScrolls).forEach(bakerId => {
       const row = document.querySelector(`.baker-row-mobile[data-baker-id="${bakerId}"]`);
@@ -385,7 +393,7 @@ Object.assign(Cronograma, {
     let statusText = 'Pendente';
     if (status === 'concluida') { statusClass = 'concluida'; statusText = 'Concluída'; }
     if (status === 'em_andamento') { statusClass = 'em_andamento'; statusText = 'Andamento'; }
-    
+
     return `
     <div class="matrix-task-card ${statusClass}" draggable="true"
          data-task-id="${t.id}"
@@ -425,6 +433,184 @@ Object.assign(Cronograma, {
         </span>
       </div>
     </div>`;
+  },
+
+  renderSolicitacoes() {
+    const cc = document.getElementById('cronograma-content');
+    if (!cc) return;
+
+    // Filtrar todos os pedidos com status === 'solicitado' (independentemente da semana)
+    const solicitacoes = (this.tarefas || []).filter(t => t.status === 'solicitado' || !t.padeiroId);
+
+    // Ordenar por data mais antiga primeiro
+    solicitacoes.sort((a, b) => a.data.localeCompare(b.data));
+
+    if (solicitacoes.length === 0) {
+      cc.innerHTML = `
+        <div style="text-align:center; padding: 48px 24px; color: var(--text-tertiary);">
+          <i data-lucide="check-circle" style="width:48px; height:48px; margin-bottom:12px; display:block; margin-left:auto; margin-right:auto; color: #34C759; opacity:0.8;"></i>
+          <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin: 0 0 6px 0;">Tudo em Dia!</h3>
+          <p style="font-size:13px; margin:0;">Nenhum pedido de atendimento pendente enviado por vendedores.</p>
+        </div>`;
+      Components.renderIcons();
+      return;
+    }
+
+    cc.innerHTML = `
+      <div class="solicitacoes-gestao-container fade-in">
+        <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 800; color: var(--text-primary);">Pedidos de Atendimento (Vendedores)</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">Aprove as solicitações de visita enviadas pelos vendedores, definindo o Padeiro e confirmando a data.</p>
+          </div>
+          <span class="solic-badge-count">
+            ${solicitacoes.length} solicitação(ões)
+          </span>
+        </div>
+        
+        <div class="solic-cards-grid">
+          ${solicitacoes.map(s => {
+            const dataObj = new Date(s.data + 'T12:00:00');
+            const dataFormatada = dataObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+            const obsText = s.observacao ? s.observacao.trim() : 'Sem observações adicionais';
+            
+            return `
+              <div class="solic-card" data-id="${s.id}">
+                <div class="solic-card-header">
+                  <div class="solic-client-info">
+                    <i data-lucide="store" class="solic-icon-store"></i>
+                    <span class="solic-client-name" title="${s.clienteNome}">${s.clienteNome}</span>
+                  </div>
+                  <span class="solic-date-pill">${dataFormatada}</span>
+                </div>
+                
+                <div class="solic-card-body">
+                  <div class="solic-row">
+                    <i data-lucide="message-square" size="14"></i>
+                    <span><strong>Observação:</strong> ${obsText}</span>
+                  </div>
+                  ${s.horario ? `
+                  <div class="solic-row">
+                    <i data-lucide="clock" size="14"></i>
+                    <span><strong>Horário Sugerido:</strong> ${s.horario}</span>
+                  </div>` : ''}
+                </div>
+                
+                <div class="solic-card-footer">
+                  <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); Cronograma.deleteTask('${s.id}')" style="display:flex; align-items:center; gap:4px; font-size:11px; padding: 6px 12px; border-radius:8px; border: 1px solid #EF4444; background: transparent; color: #EF4444; cursor: pointer;">
+                    <i data-lucide="trash-2" size="12"></i> Rejeitar
+                  </button>
+                  <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); Cronograma.openAprovarSolicitacao('${s.id}')" style="display:flex; align-items:center; gap:4px; font-size:11px; padding: 6px 12px; border-radius:8px; border:none; cursor:pointer;">
+                    <i data-lucide="check" size="12"></i> Aprovar Pedido
+                  </button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <style>
+        .solic-badge-count {
+          background: rgba(0, 122, 255, 0.1);
+          color: #007AFF;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          white-space: nowrap;
+        }
+        .solic-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 16px;
+        }
+        .solic-card {
+          background: var(--bg-card, #ffffff);
+          border: 1px solid var(--border, #e5e5ea);
+          border-radius: 16px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .solic-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.03);
+        }
+        .solic-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+          border-bottom: 1px solid var(--border, #e5e5ea);
+          padding-bottom: 10px;
+        }
+        .solic-client-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+        .solic-icon-store {
+          color: #007AFF;
+          width: 16px;
+          height: 16px;
+          flex-shrink: 0;
+        }
+        .solic-client-name {
+          font-weight: 700;
+          font-size: 14px;
+          color: var(--text-primary, #1c1c1e);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .solic-date-pill {
+          background: var(--bg-body, #f2f2f7);
+          color: var(--text-secondary, #8e8e93);
+          font-size: 11px;
+          font-weight: 600;
+          padding: 4px 8px;
+          border-radius: 8px;
+          text-transform: capitalize;
+          white-space: nowrap;
+        }
+        .solic-card-body {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex-grow: 1;
+        }
+        .solic-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: 12px;
+          color: var(--text-secondary, #8e8e93);
+          line-height: 1.4;
+        }
+        .solic-row i {
+          margin-top: 2px;
+          color: var(--text-tertiary, #8e8e93);
+          flex-shrink: 0;
+        }
+        .solic-card-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-top: 1px solid var(--border, #e5e5ea);
+          padding-top: 12px;
+          margin-top: 4px;
+        }
+        .btn-outline-danger:hover {
+          background: #EF4444 !important;
+          color: #fff !important;
+        }
+      </style>
+    `;
+
+    Components.renderIcons();
   },
 
   prevWeek() { this.weekOffset--; this.renderSemanal(); },
