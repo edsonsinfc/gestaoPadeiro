@@ -296,14 +296,60 @@ app.get(['/smartgestor.apk', '/SmartGestor.apk'], async (req, res, next) => {
 // API ROUTES
 // ============================================================
 app.get('/api/ping', (req, res) => res.json({ pong: true }));
+// Cache em memória para consulta do GitHub Releases (evita rate limits da API pública)
+let githubReleaseCache = {
+  data: null,
+  timestamp: 0
+};
+
 app.get('/api/app-version', async (req, res) => {
-  // Versão padrão estática caso o Drive esteja desativado ou o arquivo não exista
+  const now = Date.now();
+  if (githubReleaseCache.data && (now - githubReleaseCache.timestamp < 5 * 60 * 1000)) {
+    return res.json(githubReleaseCache.data);
+  }
+
   let versionInfo = {
-    version: '1.0.1',
-    url: '/smartgestor.apk',
+    version: '1.0.0',
+    url: 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk',
     mandatory: false,
-    notes: 'Melhorias de desempenho na sincronização em tempo real das atividades offline.'
+    notes: 'Versão oficial do aplicativo Smart Gestor.',
+    releaseUrl: 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest'
   };
+
+  try {
+    const ghRes = await fetch('https://api.github.com/repos/edsonsinfc/gestaoPadeiro/releases/latest', {
+      headers: {
+        'User-Agent': 'SmartGestor-App',
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (ghRes.ok) {
+      const release = await ghRes.json();
+      const rawTag = release.tag_name || '1.0.0';
+      const cleanVersion = rawTag.replace(/^v/i, '');
+      const apkAsset = release.assets?.find(a => a.name && a.name.toLowerCase().endsWith('.apk'));
+      const downloadUrl = apkAsset?.browser_download_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+
+      versionInfo = {
+        version: cleanVersion,
+        url: downloadUrl,
+        mandatory: false,
+        notes: release.body || 'Nova atualização disponível com melhorias e correções.',
+        releaseUrl: release.html_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest'
+      };
+
+      githubReleaseCache = {
+        data: versionInfo,
+        timestamp: now
+      };
+
+      console.log(`[Version Check] 🚀 GitHub Release encontrada: v${cleanVersion}`);
+      return res.json(versionInfo);
+    }
+  } catch (ghErr) {
+    console.warn('[Version Check] Falha ao consultar GitHub Releases, tentando fallback:', ghErr.message);
+  }
 
   try {
     if (googleDriveService.isEnabled()) {
@@ -325,17 +371,16 @@ app.get('/api/app-version', async (req, res) => {
           if (parsed && parsed.version) {
             versionInfo = {
               version: parsed.version,
-              url: parsed.url || '/smartgestor.apk',
+              url: parsed.url || versionInfo.url,
               mandatory: !!parsed.mandatory,
-              notes: parsed.notes || 'Nova atualização disponível para o aplicativo.'
+              notes: parsed.notes || versionInfo.notes,
+              releaseUrl: versionInfo.releaseUrl
             };
             console.log(`[Version Check] 📈 Versão carregada do Drive com sucesso: ${versionInfo.version}`);
           }
         } catch (jsonErr) {
           console.error('[Version Check] Erro ao analisar o JSON do app-version.json:', jsonErr.message);
         }
-      } else {
-        console.log('[Version Check] app-version.json não encontrado no Google Drive. Usando versão padrão.');
       }
     }
   } catch (err) {

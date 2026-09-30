@@ -794,10 +794,12 @@ const App = {
   },
 
   downloadApk() {
-    // Trigger download of the APK from server root
+    // Trigger download of the APK directly from GitHub Releases latest
+    const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
     const link = document.createElement('a');
-    link.href = '/smartgestor.apk';
-    link.download = 'smartgestor.apk';
+    link.href = downloadUrl;
+    link.download = 'SmartGestor.apk';
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -820,9 +822,11 @@ const App = {
   },
 
   downloadApkAgain() {
+    const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
     const link = document.createElement('a');
-    link.href = '/smartgestor.apk';
-    link.download = 'smartgestor.apk';
+    link.href = downloadUrl;
+    link.download = 'SmartGestor.apk';
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -922,21 +926,55 @@ const App = {
     safeSetLocalStorage('apk_install_prompt_dismiss_type', 'dismiss');
   },
 
-  async checkApkUpdate() {
-    // Apenas verifica atualização de APK nativo se estiver rodando no Capacitor
+  async checkApkUpdate(manual = false) {
     const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    
+    // Se for acionamento manual e estiver no navegador Web
+    if (manual && !isCapacitor) {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Você está no navegador Web. O aplicativo PWA é atualizado automaticamente!', 'info');
+      }
+      return;
+    }
+
     if (!isCapacitor) return;
-    if (!navigator.onLine) return; // Se estiver offline, não tenta verificar
+    if (!navigator.onLine) {
+      if (manual && typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Sem conexão com a internet para verificar atualizações.', 'warning');
+      }
+      return;
+    }
+
+    // Tenta obter a versão atual nativa do APK via Capacitor App Plugin
+    try {
+      if (window.Capacitor?.Plugins?.App?.getInfo) {
+        const appInfo = await window.Capacitor.Plugins.App.getInfo();
+        if (appInfo && appInfo.version) {
+          this.APP_VERSION = appInfo.version;
+        }
+      }
+    } catch (_) {}
 
     try {
+      if (manual && typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Buscando atualizações no GitHub...', 'info');
+      }
+
       const info = await API.get('/api/app-version');
       if (info && info.version) {
         if (this.isVersionNewer(this.APP_VERSION, info.version)) {
           this.showUpdateModal(info);
+        } else if (manual) {
+          if (typeof Components !== 'undefined' && Components.toast) {
+            Components.toast(`Seu Smart Gestor já está na versão mais recente (v${this.APP_VERSION})! ✨`, 'success');
+          }
         }
       }
     } catch (err) {
       console.warn('[Update Check] Falha ao verificar versão do app:', err.message);
+      if (manual && typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Não foi possível verificar atualizações no momento.', 'error');
+      }
     }
   },
 
