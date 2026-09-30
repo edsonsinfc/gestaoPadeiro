@@ -1653,7 +1653,7 @@ const VendedorSugestoesHelper = {
     const pills = padeirosList.slice(0, 2).map((p, i) => {
       const color = ['blue', 'purple', 'green', 'orange'][i % 4];
       const nome = p.nome || 'Padeiro';
-      const display = nome.length > 16 ? nome.split(' ')[0] : nome;
+      const display = Components.getDisplayName(nome);
       return `<span class="escala-pill escala-pill--${color}" title="${nome}">${display}</span>`;
     });
     return `<div class="escala-pills">${pills.join('')}</div>`;
@@ -1908,58 +1908,59 @@ const VendedorSugestoesHelper = {
     const clientCnpj = cliente.cnpj || 'Sem CNPJ';
     const clientInitial = clientName[0].toUpperCase();
 
-    // Get the most recent missing stock record
+    // Get all missing stock records for this client
     const clientRecords = this.estoqueRecords.filter(r => r.clienteId === this.selectedClienteId);
     clientRecords.sort((a, b) => new Date(b.dataRegistro) - new Date(a.dataRegistro));
-    const mostRecent = clientRecords[0];
 
-    let items = [];
-    let dateStr = '---';
-    let padeiroNome = 'Padeiro';
-
-    if (mostRecent) {
-      padeiroNome = mostRecent.padeiroNome || 'Padeiro';
-      if (mostRecent.dataRegistro) {
-        dateStr = new Date(mostRecent.dataRegistro).toLocaleString('pt-BR', {
-          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-      }
-
-      let list = [];
-      if (Array.isArray(mostRecent.itensFaltantes)) {
-        list = mostRecent.itensFaltantes;
-      } else {
-        try {
-          list = JSON.parse(mostRecent.itensFaltantes);
-        } catch (e) {
-          list = [];
-        }
-      }
-      items = list.map(item => this.parseItemFaltante(item)).filter(Boolean);
-    }
-
-    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='85' height='85' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 5h18M3 19h18M3 12h18'/></svg>";
-
-    const productsHtml = items.length === 0
+    const recordsHtml = clientRecords.length === 0
       ? `<div style="text-align:center; padding: 48px 16px; color:#8e8e93; font-weight:600;">Sem registros de estoque faltante.</div>`
-      : items.map(item => {
-          const imgSrc = item.codigo ? `${API_BASE_URL}/api/foto-produto/${item.codigo}` : fallbackSvg;
+      : clientRecords.map(rec => {
+          const pNome = rec.padeiroNome || 'Padeiro';
+          const dateFormatted = rec.dataRegistro
+            ? new Date(rec.dataRegistro).toLocaleString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })
+            : '---';
+
+          let parsedItens = [];
+          if (Array.isArray(rec.itensFaltantes)) {
+            parsedItens = rec.itensFaltantes;
+          } else {
+            try {
+              parsedItens = JSON.parse(rec.itensFaltantes);
+            } catch (e) {
+              parsedItens = [];
+            }
+          }
+          const totalItensCount = parsedItens.length;
+          const recordId = rec.id || rec._id;
 
           return `
-            <div class="pf-pizza-row fade-in" style="margin-bottom: 12px; background: #fff; padding: 12px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between;">
-              <div style="display:flex; align-items:center; gap: 12px;">
-                <div class="pf-pizza-img-wrap" style="width: 50px; height: 50px; border-radius: 10px; overflow:hidden; background: #f2f2f7; display:flex; align-items:center; justify-content:center;">
-                  <img data-product-code="${item.codigo || ''}" class="lazy-img" data-src="${imgSrc}" src="${fallbackSvg}" onerror="this.src='${fallbackSvg}'" style="width:100%; height:100%; object-fit:cover;">
+            <div class="fade-in" style="background: white; border-radius: 18px; padding: 16px; margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <span style="font-size: 11px; color:#8e8e93; font-weight: 600; display:block; text-transform:uppercase; letter-spacing: 0.2px;">Registrado por</span>
+                  <strong style="font-size: 15px; color:#1c1c1e; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="user" style="width: 14px; height: 14px; color: #1E4BFF;"></i>
+                    ${pNome}
+                  </strong>
                 </div>
-                <div class="pf-pizza-content">
-                  <h3 class="pf-pizza-title" style="font-size:14px; font-weight:700; color:#1c1c1e; margin:0;">${item.descricao}</h3>
-                  <span class="pf-pizza-desc" style="font-size:12px; color:#8e8e93;">Cód: ${item.codigo || 'Sem código'}</span>
+                <div style="text-align: right;">
+                  <span style="font-size: 11px; color:#8e8e93; font-weight: 600; display:block; text-transform:uppercase; letter-spacing: 0.2px;">Data da Falta</span>
+                  <strong style="font-size: 13px; color:#1c1c1e; display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                    <i data-lucide="calendar" style="width: 13px; height: 13px; color: #8e8e93;"></i>
+                    ${dateFormatted}
+                  </strong>
                 </div>
               </div>
-              <div>
-                <span class="pf-pizza-tag" style="background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.12); font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 20px; white-space: nowrap;">
-                  Falta: ${item.quantidade} ${item.unidade}
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.06);">
+                <span style="font-size: 13px; font-weight: 600; color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 4px 10px; border-radius: 20px;">
+                  ${totalItensCount} ${totalItensCount === 1 ? 'produto faltante' : 'produtos faltantes'}
                 </span>
+                <button onclick="VendedorSugestoesHelper.openFaltantesModal('${recordId}')" style="background: #1E4BFF; color: white; border: none; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s;">
+                  Ver Produtos <i data-lucide="chevron-right" style="width: 12px; height: 12px;"></i>
+                </button>
               </div>
             </div>
           `;
@@ -2007,22 +2008,10 @@ const VendedorSugestoesHelper = {
         </div>
 
         <div style="padding: 0 16px;">
-          <!-- Meta-information about the stock check -->
-          <div style="background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(0,0,0,0.03);">
-            <div>
-              <span style="font-size: 11px; color:#8e8e93; font-weight: 500; display:block; text-transform:uppercase;">Registrado por</span>
-              <span style="font-size: 14px; font-weight: 700; color:#1c1c1e;">${padeiroNome}</span>
-            </div>
-            <div style="text-align:right;">
-              <span style="font-size: 11px; color:#8e8e93; font-weight: 500; display:block; text-transform:uppercase;">Data de Falta</span>
-              <span style="font-size: 14px; font-weight: 700; color:#1c1c1e;">${dateStr}</span>
-            </div>
-          </div>
-
-          <h3 style="font-size:16px; font-weight:800; color:#1c1c1e; margin-bottom: 12px; padding-left: 4px;">Produtos Faltantes</h3>
+          <h3 style="font-size:16px; font-weight:800; color:#1c1c1e; margin-bottom: 12px; padding-left: 4px;">Histórico de Faltas</h3>
           
           <div class="pf-pizza-list">
-            ${productsHtml}
+            ${recordsHtml}
           </div>
 
           ${actionButtonHtml}
@@ -2037,6 +2026,100 @@ const VendedorSugestoesHelper = {
         ImageLoader.load(img, img.dataset.src);
       });
     }
+  },
+
+  openFaltantesModal(recordId) {
+    const record = this.estoqueRecords.find(r => (r.id || r._id) === recordId);
+    if (!record) return;
+
+    let list = [];
+    if (Array.isArray(record.itensFaltantes)) {
+      list = record.itensFaltantes;
+    } else {
+      try {
+        list = JSON.parse(record.itensFaltantes);
+      } catch (e) {
+        list = [];
+      }
+    }
+    const items = list.map(item => this.parseItemFaltante(item)).filter(Boolean);
+    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='85' height='85' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 5h18M3 19h18M3 12h18'/></svg>";
+
+    const itemsHtml = items.length === 0
+      ? `<div style="text-align:center; padding: 32px 0; color:#8e8e93; font-weight:600;">Nenhum produto faltante.</div>`
+      : items.map(item => {
+          const imgSrc = item.codigo ? `${API_BASE_URL}/api/foto-produto/${item.codigo}` : fallbackSvg;
+          return `
+            <div class="pf-ios-card" style="display:flex; align-items:center; justify-content:space-between; background:#fff; padding:12px; border-radius:16px; margin-bottom:12px; border:1px solid rgba(0,0,0,0.04);">
+              <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                <div style="width:45px; height:45px; border-radius:10px; overflow:hidden; background:#f2f2f7; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <img data-product-code="${item.codigo || ''}" class="lazy-img" data-src="${imgSrc}" src="${fallbackSvg}" onerror="this.src='${fallbackSvg}'" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div style="min-width:0; flex:1;">
+                  <h4 style="font-size:14px; font-weight:700; color:#1c1c1e; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.descricao}</h4>
+                  <p style="font-size:11px; color:#8e8e93; margin:2px 0 0 0;">Cód: ${item.codigo || 'Sem código'}</p>
+                </div>
+              </div>
+              <div style="flex-shrink:0;">
+                <span class="pf-pizza-tag" style="background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.12); font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 20px; white-space: nowrap;">
+                  Falta: ${item.quantidade} ${item.unidade}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    let overlay = document.getElementById('pf-faltantes-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'pf-faltantes-modal-overlay';
+      overlay.className = 'pf-modal-overlay';
+      overlay.onclick = (e) => { if (e.target === overlay) VendedorSugestoesHelper.closeFaltantesModal() };
+      document.body.appendChild(overlay);
+    }
+
+    const dateStr = record.dataRegistro
+      ? new Date(record.dataRegistro).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '---';
+
+    overlay.innerHTML = `
+      <div class="pf-modal-ios" style="position:fixed; bottom:0; left:0; right:0; background:#f2f2f7; border-top-left-radius:24px; border-top-right-radius:24px; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 -8px 30px rgba(0,0,0,0.15); animation: slideUp 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94); z-index: 100000;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(0,0,0,0.05); background:#fff; border-top-left-radius:24px; border-top-right-radius:24px;">
+          <button onclick="VendedorSugestoesHelper.closeFaltantesModal()" style="background:none; border:none; color:#1E4BFF; font-size:14px; font-weight:600; cursor:pointer; padding: 4px 8px;">Voltar</button>
+          <h3 style="font-size:16px; font-weight:800; color:#1c1c1e; margin:0;">Produtos Faltantes</h3>
+          <div style="width:50px;"></div>
+        </div>
+        
+        <div style="flex:1; overflow-y:auto; padding:20px 16px;">
+          <div style="background:#fff; border-radius:12px; padding:12px; margin-bottom:16px; border:1px solid rgba(0,0,0,0.02); font-size:13px; color:#475569;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Registrado por:</span>
+              <strong style="color:#1c1c1e;">${record.padeiroNome || 'Padeiro'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>Data do registro:</span>
+              <strong style="color:#1c1c1e;">${dateStr}</strong>
+            </div>
+          </div>
+          ${itemsHtml}
+        </div>
+      </div>
+    `;
+
+    overlay.classList.add('active');
+    if (window.lucide) lucide.createIcons();
+    if (typeof ImageLoader !== 'undefined') {
+      overlay.querySelectorAll('img.lazy-img[data-src]').forEach(img => {
+        ImageLoader.load(img, img.dataset.src);
+      });
+    }
+  },
+
+  closeFaltantesModal() {
+    const overlay = document.getElementById('pf-faltantes-modal-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    setTimeout(() => overlay.remove(), 400);
   },
 
   renderSalesForm(container, cliente) {
@@ -2511,6 +2594,24 @@ const VendedorSugestoes = {
 const VendedorEstoque = {
   async render() {
     await VendedorSugestoesHelper.renderList('estoque');
+  }
+};
+
+const VendedorCalculadora = {
+  async render() {
+    const container = document.getElementById('page-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="calculator-container" style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: var(--text-secondary); text-align: center;">
+        <div style="background: rgba(0, 113, 227, 0.08); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: var(--primary); transition: transform 0.3s ease;">
+          <i data-lucide="calculator" style="width: 38px; height: 38px;"></i>
+        </div>
+        <h2 style="font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">Calculadora de Gastos</h2>
+        <p style="font-size: 15px; max-width: 320px; line-height: 1.6; margin: 0 auto; color: var(--text-tertiary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">Esta funcionalidade está sendo preparada e estará disponível em breve.</p>
+      </div>
+    `;
+    Components.renderIcons();
   }
 };
 

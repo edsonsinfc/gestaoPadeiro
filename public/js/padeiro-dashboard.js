@@ -24,8 +24,7 @@ const PadeiroDashboard = {
       const finalizadas = minhasAtividades.filter(a => a.status === 'finalizada');
       const mesAtual = new Date().toISOString().slice(0, 7);
       const atividadesMes = finalizadas.filter(a => a.data && a.data.startsWith(mesAtual));
-      const kgMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.kgTotal) || 0), 0);
-      const lMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.lTotal) || 0), 0);
+      const kgMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0), 0);
 
       // Avaliações
       const seteDiasAtras = new Date();
@@ -169,13 +168,13 @@ const PadeiroDashboard = {
           <div class="pd-kpi-card pd-kpi-purple">
             <div class="pd-kpi-glow"></div>
             <div class="pd-kpi-top">
-              <div class="pd-kpi-icon-wrap pd-icon-purple"><i data-lucide="droplet" style="width:22px;height:22px"></i></div>
-              <div class="pd-kpi-trend ${lMes > 0 ? 'pd-trend-up' : ''}">
-                ${lMes > 0 ? '<i data-lucide="trending-up" style="width:14px;height:14px"></i>' : ''}
+              <div class="pd-kpi-icon-wrap pd-icon-purple"><i data-lucide="clipboard-list" style="width:22px;height:22px"></i></div>
+              <div class="pd-kpi-trend ${atividadesMes.length > 0 ? 'pd-trend-up' : ''}">
+                ${atividadesMes.length > 0 ? '<i data-lucide="trending-up" style="width:14px;height:14px"></i>' : ''}
               </div>
             </div>
-            <div class="pd-kpi-value">${lMes.toFixed(1)}<span class="pd-kpi-unit">L</span></div>
-            <div class="pd-kpi-label">Produção (Litros)</div>
+            <div class="pd-kpi-value">${atividadesMes.length}<span class="pd-kpi-unit"></span></div>
+            <div class="pd-kpi-label">Atendimentos no Mês</div>
           </div>
 
           <div class="pd-kpi-card pd-kpi-green">

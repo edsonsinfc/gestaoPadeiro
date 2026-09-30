@@ -170,8 +170,7 @@ window.Relatorios = {
 
   renderSummaryCards() {
     const data = this.getFilteredData();
-    const totalKg = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.kgTotal) || 0), 0);
-    const totalLitros = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.lTotal) || 0), 0);
+    const totalKg = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.kgTotal) || 0) + (parseFloat(curr.lTotal) || 0), 0);
     const validAvaliacoes = data.avaliacoes.filter(a => !isNaN(parseFloat(a.nota)) && parseFloat(a.nota) <= 5);
     const avgNota = validAvaliacoes.length > 0 
       ? validAvaliacoes.reduce((acc, curr) => acc + parseFloat(curr.nota), 0) / validAvaliacoes.length 
@@ -186,8 +185,6 @@ window.Relatorios = {
             <p class="summary-label">Produção Total</p>
             <h2 class="summary-value" style="font-size: 20px; line-height: 1.2;">
               <span style="color:#1C7EF2;">${totalKg.toFixed(1)} <span style="font-size: 11px; font-weight: 500;">kg</span></span>
-              <span style="color:#8E8E93; font-size:14px; font-weight:400; margin: 0 2px;">/</span>
-              <span style="color:#AF52DE;">${totalLitros.toFixed(1)} <span style="font-size: 11px; font-weight: 500;">L</span></span>
             </h2>
           </div>
           <div class="summary-icon" style="background: rgba(28, 75, 255, 0.1); color: var(--primary);">
@@ -236,13 +233,12 @@ window.Relatorios = {
     const stats = {};
 
     data.padeiros.forEach(p => {
-      stats[p.id] = { nome: p.nome, kg: 0, litros: 0, notas: [], metas: 0 };
+      stats[p.id] = { nome: p.nome, kg: 0, notas: [], metas: 0 };
     });
 
     data.atividades.forEach(a => {
       if (stats[a.padeiroId]) {
-        stats[a.padeiroId].kg += parseFloat(a.kgTotal) || 0;
-        stats[a.padeiroId].litros += parseFloat(a.lTotal) || 0;
+        stats[a.padeiroId].kg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
       }
     });
 
@@ -266,10 +262,9 @@ window.Relatorios = {
 
     return ranking.map(r => `
       <tr>
-        <td style="font-weight: 600;">${r.nome.trim().split(/\s+/)[0]}</td>
+        <td style="font-weight: 600;">${Components.getDisplayName(r.nome, ranking)}</td>
         <td>
           <div style="color:#1C7EF2; font-size:13px; font-weight:700;">${r.kg.toFixed(1)} kg</div>
-          <div style="color:#AF52DE; font-size:11px; font-weight:600; margin-top:2px;">${r.litros.toFixed(1)} L</div>
         </td>
         <td>
           <div class="flex items-center gap-2">
@@ -525,8 +520,7 @@ window.Relatorios = {
 
       // Calcular métricas
       const data = this.getFilteredData();
-      const totalKg = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.kgTotal) || 0), 0);
-      const totalLitros = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.lTotal) || 0), 0);
+      const totalKg = data.atividades.reduce((acc, curr) => acc + (parseFloat(curr.kgTotal) || 0) + (parseFloat(curr.lTotal) || 0), 0);
       const validAvaliacoes = data.avaliacoes.filter(a => !isNaN(parseFloat(a.nota)) && parseFloat(a.nota) <= 5);
       const avgNota = validAvaliacoes.length > 0 
         ? validAvaliacoes.reduce((acc, curr) => acc + parseFloat(curr.nota), 0) / validAvaliacoes.length 
@@ -588,8 +582,6 @@ window.Relatorios = {
           label: 'PRODUÇÃO TOTAL',
           value: `${totalKg.toFixed(1)}`,
           unit: 'kg',
-          value2: `${totalLitros.toFixed(1)}`,
-          unit2: 'L',
           iconColor: [37, 99, 235]
         },
         {
@@ -638,28 +630,14 @@ window.Relatorios = {
         doc.setTextColor(17, 24, 39);
         
         if (m.label === 'PRODUÇÃO TOTAL') {
-          doc.setFontSize(14);
+          doc.setFontSize(16);
           doc.setTextColor(37, 99, 235);
           doc.text(m.value, x + 6, y + 18);
-          let offset = doc.getTextWidth(m.value) + 1;
-          doc.setFontSize(9);
+          const offset = doc.getTextWidth(m.value) + 2;
+          doc.setFontSize(10);
           doc.setFont('Helvetica', 'normal');
-          doc.text(m.unit, x + 6 + offset, y + 18);
-          offset += doc.getTextWidth(m.unit) + 2;
-          
-          doc.setFontSize(12);
           doc.setTextColor(107, 114, 128);
-          doc.text('/', x + 6 + offset, y + 18);
-          offset += 3;
-          
-          doc.setFontSize(14);
-          doc.setTextColor(175, 82, 222);
-          doc.setFont('Helvetica', 'bold');
-          doc.text(m.value2, x + 6 + offset, y + 18);
-          offset += doc.getTextWidth(m.value2) + 1;
-          doc.setFontSize(9);
-          doc.setFont('Helvetica', 'normal');
-          doc.text(m.unit2, x + 6 + offset, y + 18);
+          doc.text(m.unit, x + 6 + offset, y + 18);
         } else {
           doc.text(m.value, x + 6, y + 18);
           const offset = doc.getTextWidth(m.value) + 2;
@@ -752,12 +730,11 @@ window.Relatorios = {
       // Processar ranking de padeiros
       const stats = {};
       data.padeiros.forEach(p => {
-        stats[p.id] = { nome: p.nome, kg: 0, litros: 0, notas: [], metas: 0 };
+        stats[p.id] = { nome: p.nome, kg: 0, notas: [], metas: 0 };
       });
       data.atividades.forEach(a => {
         if (stats[a.padeiroId]) {
-          stats[a.padeiroId].kg += parseFloat(a.kgTotal) || 0;
-          stats[a.padeiroId].litros += parseFloat(a.lTotal) || 0;
+          stats[a.padeiroId].kg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
         }
       });
       data.avaliacoes.forEach(a => {
@@ -786,7 +763,7 @@ window.Relatorios = {
         return [
           posStr,
           nameShort,
-          `${r.kg.toFixed(1)} kg / ${r.litros.toFixed(1)} L`,
+          `${r.kg.toFixed(1)} kg`,
           `${r.avg.toFixed(1)} ${starsStr}`,
           `${r.metas} atingidas`,
           `${r.score.toFixed(0)} pts`
@@ -796,7 +773,7 @@ window.Relatorios = {
       doc.autoTable({
         startY: tableY + 4,
         margin: { left: margin, right: margin, top: 25, bottom: 20 },
-        head: [['POS.', 'PADEIRO', 'PRODUÇÃO (KG / L)', 'MÉDIA NOTA', 'METAS', 'SCORE']],
+        head: [['POS.', 'PADEIRO', 'PRODUÇÃO (KG)', 'MÉDIA NOTA', 'METAS', 'SCORE']],
         body: tableRows,
         theme: 'plain',
         headStyles: {

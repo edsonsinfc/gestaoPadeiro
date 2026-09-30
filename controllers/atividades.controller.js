@@ -31,6 +31,12 @@ exports.listAtividades = async (req, res) => {
       atividades = atividades.filter(a => ids.includes(a.padeiroId));
     }
     
+    const activePadeiros = await Padeiro.find({ deletado: { $ne: true } });
+    atividades.forEach(a => {
+      const p = activePadeiros.find(x => x.id === a.padeiroId);
+      if (p) a.padeiroNome = p.nome;
+    });
+    
     res.json(atividades);
   } catch (error) {
     console.error('Erro ao listar atividades:', error);

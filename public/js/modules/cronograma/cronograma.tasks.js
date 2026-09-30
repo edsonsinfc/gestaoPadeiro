@@ -139,7 +139,7 @@ Object.assign(Cronograma, {
         <div class="form-group" style="background: var(--system-bg); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
           <div class="avatar" style="width:36px;height:36px;font-size:13px;background:var(--primary);flex-shrink:0;">${padeiro ? padeiro.nome.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase() : '?'}</div>
           <div>
-            <div style="font-weight:600;font-size:14px;">${padeiro ? padeiro.nome.split(' ').slice(0,2).join(' ') : '—'}</div>
+            <div style="font-weight:600;font-size:14px;">${padeiro ? Cronograma.getDisplayName(padeiro.nome) : '—'}</div>
             <div style="font-size:11px;font-family:monospace;color:var(--text-tertiary);">COD ${padeiro ? padeiro.codTec : '—'} • ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}</div>
           </div>
           <input type="hidden" name="padeiroId" value="${padeiroId}">

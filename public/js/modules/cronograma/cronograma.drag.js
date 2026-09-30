@@ -214,7 +214,7 @@ Object.assign(Cronograma, {
       const criada = await API.post('/api/cronograma', novaTarefa);
       this.tarefas.push(criada);
       this.renderSemanal();
-      Components.toast(`📎 Duplicado para ${newPadeiroNome.split(' ')[0]}!`, 'success');
+      Components.toast(`📎 Duplicado para ${Components.getDisplayName(newPadeiroNome)}!`, 'success');
     } catch (err) {
       Components.toast('Erro ao duplicar: ' + err.message, 'error');
     }

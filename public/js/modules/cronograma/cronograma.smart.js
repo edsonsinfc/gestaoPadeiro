@@ -69,7 +69,7 @@ Object.assign(Cronograma, {
               dia.tarefas.map((t, idx) => `
                 <tr style="${idx === 0 ? 'border-top: 2px solid var(--system-bg);' : ''}">
                   ${idx === 0 ? `<td rowspan="${dia.tarefas.length}" style="font-weight:600; color:var(--text-primary); vertical-align:top; border-right: 0.5px solid var(--separator); background: var(--system-bg);">${dia.diaLabel}<br><span class="text-tertiary" style="font-size:11px;">${dia.dateLabel}</span></td>` : ''}
-                  <td style="font-weight:500; font-size:13px;">${t.padeiroNome.split(' ').slice(0, 2).join(' ')}</td>
+                  <td style="font-weight:500; font-size:13px;">${Cronograma.getDisplayName(t.padeiroNome)}</td>
                   <td class="text-secondary" style="font-size:13px;">${t.clienteNome}</td>
                 </tr>`
               ).join('')

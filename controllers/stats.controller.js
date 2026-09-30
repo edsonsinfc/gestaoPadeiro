@@ -39,8 +39,18 @@ exports.getGeneralStats = async (req, res) => {
     const produtos = produtosDocs.map(d => d.toJSON());
     const clientes = clientesDocs.map(d => d.toJSON());
     const metas = metasDocs.map(d => d.toJSON());
-    const atividades = atividadesDocs.map(d => d.toJSON());
-    const avaliacoes = avaliacoesDocs.map(d => d.toJSON());
+    const atividades = atividadesDocs.map(d => {
+      const act = d.toJSON();
+      const p = padeiros.find(x => x.id === act.padeiroId);
+      if (p) act.padeiroNome = p.nome;
+      return act;
+    });
+    const avaliacoes = avaliacoesDocs.map(d => {
+      const av = d.toJSON();
+      const p = padeiros.find(x => x.id === av.padeiroId);
+      if (p) av.padeiroNome = p.nome;
+      return av;
+    });
     const colaboradoresLength = colaboradoresDocs.length;
 
     // Stats by cargo
@@ -68,16 +78,14 @@ exports.getGeneralStats = async (req, res) => {
 
     const MesAtual = new Date().toISOString().slice(0, 7);
     const atividadesMes = atividades.filter(a => a.data && a.data.startsWith(MesAtual) && a.status === 'finalizada');
-    const totalProduzidoMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.kgTotal) || 0), 0);
-    const totalLitrosMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.lTotal) || 0), 0);
+    const totalProduzidoMes = atividadesMes.reduce((s, a) => s + (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0), 0);
 
     const producaoPorPadeiro = {};
     atividadesMes.forEach(a => {
       if (!producaoPorPadeiro[a.padeiroId]) {
-        producaoPorPadeiro[a.padeiroId] = { id: a.padeiroId, nome: a.padeiroNome, totalKg: 0, totalLiters: 0, totalAtividades: 0 };
+        producaoPorPadeiro[a.padeiroId] = { id: a.padeiroId, nome: a.padeiroNome, totalKg: 0, totalAtividades: 0 };
       }
-      producaoPorPadeiro[a.padeiroId].totalKg += parseFloat(a.kgTotal) || 0;
-      producaoPorPadeiro[a.padeiroId].totalLiters += parseFloat(a.lTotal) || 0;
+      producaoPorPadeiro[a.padeiroId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
       producaoPorPadeiro[a.padeiroId].totalAtividades++;
     });
 
@@ -117,11 +125,10 @@ exports.getGeneralStats = async (req, res) => {
       const key = a.clienteId || a.clienteNome;
       if (!key) return;
       if (!atendimentosPorCliente[key]) {
-        atendimentosPorCliente[key] = { id: a.clienteId, nome: a.clienteNome, totalAtendimentos: 0, totalKg: 0, totalLiters: 0, notas: [] };
+        atendimentosPorCliente[key] = { id: a.clienteId, nome: a.clienteNome, totalAtendimentos: 0, totalKg: 0, notas: [] };
       }
       atendimentosPorCliente[key].totalAtendimentos++;
-      atendimentosPorCliente[key].totalKg += parseFloat(a.kgTotal) || 0;
-      atendimentosPorCliente[key].totalLiters += parseFloat(a.lTotal) || 0;
+      atendimentosPorCliente[key].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
       const nota = a.notaPadeiroCliente !== undefined && a.notaPadeiroCliente !== null ? a.notaPadeiroCliente : a.notaCliente;
       if (nota) atendimentosPorCliente[key].notas.push(nota);
     });
@@ -199,7 +206,6 @@ exports.getGeneralStats = async (req, res) => {
       porFilial,
       atividadesRecentes: recentes,
       totalProduzidoMes: Math.round(totalProduzidoMes * 10) / 10,
-      totalLitrosMes: Math.round(totalLitrosMes * 10) / 10,
       mesAtual: MesAtual,
       top10Pads,
       pontoCritico,
@@ -229,8 +235,7 @@ exports.getFiliaisStats = async (req, res) => {
       const aFilial = atividades.filter(a => ids.includes(a.padeiroId));
       const avFilial = avaliacoes.filter(av => ids.includes(av.padeiroId));
       
-      const kgTotal = aFilial.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0), 0);
-      const lTotal = aFilial.reduce((sum, a) => sum + parseFloat(a.lTotal || 0), 0);
+      const kgTotal = aFilial.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0) + parseFloat(a.lTotal || 0), 0);
       const notaMedia = avFilial.length > 0 
         ? avFilial.reduce((sum, av) => sum + parseFloat(av.nota || 0), 0) / avFilial.length 
         : 0;
@@ -240,7 +245,6 @@ exports.getFiliaisStats = async (req, res) => {
         totalPadeiros: pFilial.length,
         totalAtividades: aFilial.length,
         kgTotal: kgTotal.toFixed(1),
-        lTotal: lTotal.toFixed(1),
         notaMedia: notaMedia.toFixed(1)
       };
     });
@@ -268,8 +272,7 @@ exports.getFilialDetail = async (req, res) => {
       const pAtiv = atividadesFilial.filter(a => a.padeiroId === p.id);
       const pAv = avaliacoesFilial.filter(av => av.padeiroId === p.id);
       
-      const kgTotal = pAtiv.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0), 0);
-      const lTotal = pAtiv.reduce((sum, a) => sum + parseFloat(a.lTotal || 0), 0);
+      const kgTotal = pAtiv.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0) + parseFloat(a.lTotal || 0), 0);
       const notaMedia = pAv.length > 0 
         ? pAv.reduce((sum, av) => sum + parseFloat(av.nota || 0), 0) / pAv.length 
         : null;
@@ -278,7 +281,6 @@ exports.getFilialDetail = async (req, res) => {
         id: p.id,
         nome: p.nome,
         kgTotal: kgTotal.toFixed(1),
-        lTotal: lTotal.toFixed(1),
         notaMedia: notaMedia ? notaMedia.toFixed(1) : null,
         totalAtividades: pAtiv.length
       };
@@ -288,8 +290,7 @@ exports.getFilialDetail = async (req, res) => {
       nome: filialNome,
       totalPadeiros: padeiros.length,
       totalAtividades: atividadesFilial.length,
-      kgTotal: atividadesFilial.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0), 0).toFixed(1),
-      lTotal: atividadesFilial.reduce((sum, a) => sum + parseFloat(a.lTotal || 0), 0).toFixed(1),
+      kgTotal: atividadesFilial.reduce((sum, a) => sum + parseFloat(a.kgTotal || 0) + parseFloat(a.lTotal || 0), 0).toFixed(1),
       padeiros: padeirosStats,
       atividadesRecentes: atividadesFilial.slice(-10).reverse()
     });

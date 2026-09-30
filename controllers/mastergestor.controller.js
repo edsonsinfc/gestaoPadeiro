@@ -76,9 +76,9 @@ exports.getDashboardData = async (req, res) => {
     const totalAtividadesMes = filiaisMetrics.reduce((sum, f) => sum + f.realizadoAtividades, 0);
     const totalMetasGlobais = filiaisMetrics.reduce((sum, f) => sum + f.metaProducao, 0);
     
-    // Total Litros
+    
+    // Produção total em KG (somando kgTotal + lTotal histórico)
     const atividadesDoMes = atividades.filter(a => a.data && a.data.startsWith(mesAtual) && a.status === 'finalizada');
-    const totalLitrosMes = atividadesDoMes.reduce((sum, a) => sum + (parseFloat(a.lTotal) || 0), 0);
 
     // 2. Calculate Gestores Scorecards
     const gestoresScorecards = gestores.map(g => {
@@ -196,7 +196,6 @@ exports.getDashboardData = async (req, res) => {
       alerts,
       kpiGlobais: {
         totalProduzidoMes,
-        totalLitrosMes,
         totalAtividadesMes,
         totalMetasGlobais,
         mesLabel: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })

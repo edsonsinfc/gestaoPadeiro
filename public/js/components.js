@@ -38,6 +38,25 @@ if (typeof window.AbortController === 'undefined') {
 }
 
 const Components = {
+  /**
+   * Retorna o nome curto para exibição.
+   * Se dois ou mais itens na lista compartilham o mesmo primeiro nome,
+   * exibe os dois primeiros nomes (nome composto) para evitar ambiguidade.
+   * @param {string} nomeCompleto - Nome completo
+   * @param {Array} listaPessoas - Lista de pessoas para checar duplicidade (array com .nome)
+   * @returns {string} Nome para exibição
+   */
+  getDisplayName(nomeCompleto) {
+    if (!nomeCompleto) return '—';
+    const parts = nomeCompleto.trim().split(/\s+/);
+    if (parts.length <= 1) return parts[0];
+
+    const prepositions = ['de', 'da', 'do', 'dos', 'das'];
+    if (prepositions.includes(parts[1].toLowerCase()) && parts.length > 2) {
+      return parts.slice(0, 3).join(' ');
+    }
+    return parts.slice(0, 2).join(' ');
+  },
   // Toast notifications
   toast(message, type = 'info', duration = 4000) {
     const container = document.getElementById('toast-container');
@@ -1187,7 +1206,7 @@ const API_ENVIRONMENTS = {
 };
 
 // ALTERE AQUI PARA MUDAR O SERVIDOR ATIVO (dev_ngrok OU producao_hostinger)
-const ACTIVE_ENV = 'dev_ngrok'; 
+const ACTIVE_ENV = 'producao_hostinger'; 
 
 const API_URLS = {
   hostinger: API_ENVIRONMENTS[ACTIVE_ENV]
@@ -1213,9 +1232,16 @@ function formatBakerNames(data) {
   const isGestao = typeof App !== 'undefined' && App.currentRoute === 'gestao';
   if (isGestao) return data;
 
-  const getFirstName = (fullName) => {
+  const getCompoundName = (fullName) => {
     if (!fullName || typeof fullName !== 'string') return fullName;
-    return fullName.trim().split(/\s+/)[0];
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length <= 1) return parts[0];
+
+    const prepositions = ['de', 'da', 'do', 'dos', 'das'];
+    if (prepositions.includes(parts[1].toLowerCase()) && parts.length > 2) {
+      return parts.slice(0, 3).join(' ');
+    }
+    return parts.slice(0, 2).join(' ');
   };
 
   const processVal = (val) => {
@@ -1240,12 +1266,12 @@ function formatBakerNames(data) {
       val.hasOwnProperty('totalAvals')
     );
     if (isBaker) {
-      val.nome = getFirstName(val.nome);
+      val.nome = getCompoundName(val.nome);
     }
 
     // Se tiver a chave padeiroNome
     if (val.padeiroNome) {
-      val.padeiroNome = getFirstName(val.padeiroNome);
+      val.padeiroNome = getCompoundName(val.padeiroNome);
     }
 
     // Percorre todas as propriedades
@@ -1371,7 +1397,7 @@ const API = {
       const user = JSON.parse(data);
       const isGestao = typeof App !== 'undefined' && App.currentRoute === 'gestao';
       if (user && user.role === 'padeiro' && !isGestao) {
-        user.nome = user.nome.trim().split(/\s+/)[0];
+        user.nome = Components.getDisplayName(user.nome);
       }
       return user;
     } catch(e) {

@@ -1186,7 +1186,7 @@ const Metas = {
       const padeiro = this.padeiros.find(p => p.id === m.padeiroId);
       const cor = pct >= 100 ? 'var(--success)' : pct >= 50 ? 'var(--primary)' : 'var(--danger)';
       return `<tr>
-        <td style="font-weight:600">${padeiro ? padeiro.nome.split(' ').slice(0,2).join(' ') : '—'}</td>
+        <td style="font-weight:600">${padeiro ? Components.getDisplayName(padeiro.nome) : '—'}</td>
         <td>${m.metaKg} kg</td>
         <td style="color:${cor};font-weight:700">${realizado.toFixed(1)} kg</td>
         <td style="min-width:150px">

@@ -362,7 +362,8 @@ const EscalaMain = {
     if (dailyCronogramas.length > 0 || dailyActivities.length > 0) {
       // Renderizar cronograma (tarefas planejadas)
       dailyCronogramas.forEach(t => {
-        const isDone = dailyActivities.some(a => a.cronogramaId === t.id || a.cronogramaId === t._id || (a.clienteId === t.clienteId && a.data === t.data));
+        const isDone = dailyActivities.some(a => (a.cronogramaId === t.id || a.cronogramaId === t._id || (a.clienteId === t.clienteId && a.data === t.data)) && a.status === 'finalizada');
+        const isInProgress = !isDone && dailyActivities.some(a => (a.cronogramaId === t.id || a.cronogramaId === t._id || (a.clienteId === t.clienteId && a.data === t.data)) && a.status === 'em_andamento');
         
         let statusLabel = 'Pendente';
         let statusClass = 'agendar-event-bar--orange';
@@ -372,6 +373,10 @@ const EscalaMain = {
           statusLabel = 'Concluída';
           statusClass = 'agendar-event-bar--green';
           statusPillColor = 'green';
+        } else if (isInProgress || t.status === 'em_andamento') {
+          statusLabel = 'Em Andamento';
+          statusClass = 'agendar-event-bar--blue';
+          statusPillColor = 'blue';
         } else if (t.status === 'solicitado') {
           statusLabel = 'Em Análise';
           statusClass = 'agendar-event-bar--blue';
@@ -400,18 +405,22 @@ const EscalaMain = {
         const isFromCronograma = dailyCronogramas.some(t => a.cronogramaId === t.id || a.cronogramaId === t._id || (a.clienteId === t.clienteId && a.data === t.data));
         if (isFromCronograma) return;
 
+        const statusLabel = a.status === 'em_andamento' ? 'Em Andamento' : 'Realizado';
+        const statusClass = a.status === 'em_andamento' ? 'agendar-event-bar--blue' : 'agendar-event-bar--green';
+        const statusPillColor = a.status === 'em_andamento' ? 'blue' : 'green';
+
         eventsHtml += `
           <div class="agendar-event-card">
-            <div class="agendar-event-bar agendar-event-bar--blue"></div>
+            <div class="agendar-event-bar ${statusClass}"></div>
             <div class="agendar-event-content">
               <div class="agendar-event-title">${a.clienteNome || 'Cliente'}</div>
               <div class="agendar-event-time">
-                <i data-lucide="check" size="12" style="display:inline-block; vertical-align:middle; margin-right:4px; color:#22C55E;"></i>
-                Atendimento realizado por ${a.padeiroNome || 'Padeiro'} (${a.hora || 'Horário n/d'})
+                <i data-lucide="${a.status === 'em_andamento' ? 'zap' : 'check'}" size="12" style="display:inline-block; vertical-align:middle; margin-right:4px; color:${a.status === 'em_andamento' ? '#1E4BFF' : '#22C55E'};"></i>
+                Atendimento ${a.status === 'em_andamento' ? 'iniciado' : 'realizado'} por ${a.padeiroNome || 'Padeiro'} (${a.hora || 'Horário n/d'})
               </div>
             </div>
-            <span class="escala-pill escala-pill--blue" style="margin-right:12px; font-size:11px; flex-shrink:0;">
-              Realizado
+            <span class="escala-pill escala-pill--${statusPillColor}" style="margin-right:12px; font-size:11px; flex-shrink:0;">
+              ${statusLabel}
             </span>
           </div>`;
       });

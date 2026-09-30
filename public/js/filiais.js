@@ -316,7 +316,6 @@ window.Filiais = {
                     </span>
                     <span class="metric-value" style="display:flex; flex-direction:column; align-items:flex-end; gap: 2px;">
                       <span style="color:#1C7EF2;">${f.kgTotal} kg</span>
-                      <span style="color:#AF52DE; font-size:11px; font-weight:700;">${f.lTotal} L</span>
                     </span>
                   </div>
                   <div class="filial-metric">
@@ -373,7 +372,6 @@ window.Filiais = {
                 <div class="filial-det-lbl">Produção</div>
                 <div class="filial-det-val" style="display:flex; flex-direction:column; gap:2px; font-size: 13.5px; line-height:1.2;">
                   <span style="color:#1C7EF2; font-weight:800;">${data.kgTotal} kg</span>
-                  <span style="color:#AF52DE; font-size:11px; font-weight:700;">${data.lTotal} L</span>
                 </div>
               </div>
             </div>
@@ -407,7 +405,6 @@ window.Filiais = {
                     </td>
                     <td class="text-right font-bold">
                       <div style="color:#1C7EF2; font-size:13px;">${p.kgTotal} kg</div>
-                      <div style="color:#AF52DE; font-size:11px; font-weight:700;">${p.lTotal} L</div>
                     </td>
                     <td class="text-right">${p.notaMedia ? Components.starsDisplay(p.notaMedia) : '—'}</td>
                   </tr>
@@ -426,8 +423,7 @@ window.Filiais = {
                     <div class="filial-act-sub">${a.padeiroNome} • ${new Date(a.inicioEm).toLocaleDateString()}</div>
                   </div>
                   <div class="filial-act-badges">
-                    <span class="badge-kg">${a.kgTotal || 0} kg</span>
-                    <span class="badge-l">${a.lTotal || 0} L</span>
+                    <span class="badge-kg">${((parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0)).toFixed(1)} kg</span>
                   </div>
                 </div>
               `).join('')}

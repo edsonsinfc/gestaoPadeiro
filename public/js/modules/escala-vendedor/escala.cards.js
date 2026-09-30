@@ -98,7 +98,7 @@ const EscalaCards = {
     const pills = padeirosList.slice(0, 2).map((p, i) => {
       const color = this._pillColors[i % this._pillColors.length];
       const nome = p.nome || 'Padeiro';
-      const display = nome.length > 16 ? nome.split(' ')[0] : nome;
+      const display = Components.getDisplayName(nome);
       return `<span class="escala-pill escala-pill--${color}" title="${nome}">${display}</span>`;
     });
 

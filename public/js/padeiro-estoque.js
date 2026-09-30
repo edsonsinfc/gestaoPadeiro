@@ -71,21 +71,10 @@ const PadeiroEstoque = {
   },
 
   _renderPills(padeirosList) {
-    if (!padeirosList || padeirosList.length === 0) {
-      return `
-        <div class="escala-pills">
-          <span class="escala-pill escala-pill--muted">Sem padeiro atribuído</span>
-        </div>`;
-    }
-
-    const pills = padeirosList.slice(0, 2).map((p, i) => {
-      const color = this._pillColors[i % this._pillColors.length];
-      const nome = p.nome || 'Padeiro';
-      const display = nome.length > 16 ? nome.split(' ')[0] : nome;
-      return `<span class="escala-pill escala-pill--${color}" title="${nome}">${display}</span>`;
-    });
-
-    return `<div class="escala-pills">${pills.join('')}</div>`;
+    return `
+      <div class="escala-pills">
+        <span class="escala-pill escala-pill--blue" style="font-weight: 700;">Padeiro ativo: Você</span>
+      </div>`;
   },
 
   _renderStats(stats) {
@@ -121,17 +110,35 @@ const PadeiroEstoque = {
     const clientEvals = avaliacoes.filter(e =>
       e.tipo === 'cliente' && clientActivityIds.includes(e.atividadeId)
     );
+    
+    // Buscar o objeto cliente correspondente para usar a notaMedia global como fallback se necessário
+    const cliente = this.clientesAtendidos ? this.clientesAtendidos.find(c => (c.id || c._id) === clientId) : null;
+    
     const mediaNota = clientEvals.length > 0
       ? clientEvals.reduce((sum, e) => sum + (parseFloat(e.nota || e.estrelas || 0)), 0) / clientEvals.length
-      : null;
+      : (cliente && cliente.notaMedia ? parseFloat(cliente.notaMedia) : null);
 
     const ultimasFotos = [];
-    const sortedActs = [...clientActivities].sort((a, b) =>
-      new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-    );
+    const sortedActs = [...clientActivities].sort((a, b) => {
+      const dateA = a.data ? new Date(a.data + (a.hora ? 'T' + a.hora : '')) : new Date(0);
+      const dateB = b.data ? new Date(b.data + (b.hora ? 'T' + b.hora : '')) : new Date(0);
+      return dateB - dateA;
+    });
+
     for (const act of sortedActs) {
-      if (act.fotos && Array.isArray(act.fotos)) {
-        const validFotos = act.fotos.filter(f => f.path && f.path !== 'offline_pending' && !f.offline);
+      let actFotos = [];
+      if (typeof act.fotos === 'string') {
+        try {
+          actFotos = JSON.parse(act.fotos);
+        } catch (e) {
+          actFotos = [];
+        }
+      } else if (Array.isArray(act.fotos)) {
+        actFotos = act.fotos;
+      }
+
+      if (actFotos && actFotos.length > 0) {
+        const validFotos = actFotos.filter(f => f.path && f.path !== 'offline_pending' && !f.offline);
         for (const foto of validFotos) {
           if (ultimasFotos.length < 5) {
             const absUrl = foto.path.startsWith('http') ? foto.path : `${API_BASE_URL}${foto.path.replace('/uploads/', '/storage/')}`;
@@ -166,8 +173,6 @@ const PadeiroEstoque = {
       if (iosHeader) iosHeader.style.display = 'none';
       const desktopHeader = document.querySelector('.ios-desktop-header');
       if (desktopHeader) desktopHeader.style.display = 'none';
-      this.renderDetailScreen(pageContainer);
-      return;
     } else {
       if (pageContainer) {
         pageContainer.classList.remove('cperfil-active');
@@ -195,6 +200,13 @@ const PadeiroEstoque = {
       this.cachedProdutos = produtos;
       this.activeProds = produtos.filter(p => p.ativo !== false);
       
+      // Salvar no estado para uso em outras partes
+      this.clientes = clientes;
+      this.atividades = atividades;
+      this.padeiros = padeiros;
+      this.avaliacoes = avaliacoes;
+      this.agenda = agenda;
+      
       const user = API.getUser();
       
       // Obter data de hoje em YYYY-MM-DD no fuso local
@@ -210,6 +222,11 @@ const PadeiroEstoque = {
       const uniqueClientIds = [...new Set(tarefasHoje.map(t => t.clienteId).filter(Boolean))];
       this.clientesAtendidos = clientes.filter(c => uniqueClientIds.includes(c.id || c._id));
       
+      if (this.selectedClienteId) {
+        this.renderDetailScreen(pageContainer);
+        return;
+      }
+
       if (this.clientesAtendidos.length === 0) {
         pageContainer.innerHTML = Components.empty('package-open', 'Você não possui clientes agendados na escala de hoje.');
         return;
@@ -338,7 +355,7 @@ const PadeiroEstoque = {
 
     const todayActivities = this.atividades || [];
     const todayEvaluations = this.avaliacoes || [];
-    const stats = this.getClientStats(this.selectedClienteId, todayActivities, this.clientesAtendidos, todayEvaluations);
+    const stats = this.getClientStats(this.selectedClienteId, todayActivities, this.padeiros || [], todayEvaluations);
 
     let fornecedores = [...new Set(this.activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))];
     const PRIORITY = ['IREKS'];
@@ -866,7 +883,6 @@ const PadeiroEstoque = {
 
   calculateTotals() {
     let totalKg = 0;
-    let totalL = 0;
     let totalUn = 0;
     let selectedCount = 0;
     this.cartItems = this.cartItems || {};
@@ -875,8 +891,7 @@ const PadeiroEstoque = {
       const item = this.cartItems[id];
       selectedCount++;
       const val = parseFloat(String(item.v).replace(',', '.')) || 0;
-      if (item.un === 'KG') totalKg += val;
-      if (item.un === 'L') totalL += val;
+      if (item.un === 'KG' || item.un === 'L') totalKg += val;
       if (item.un === 'UN' || item.un === 'PCT') totalUn += val;
     });
 
@@ -919,7 +934,7 @@ const PadeiroEstoque = {
         if (this.cartItems[id]) {
           const item = this.cartItems[id];
           row.classList.add('selected');
-          displayWrap.innerHTML = `<div class="pf-pizza-tag" onclick="PadeiroEstoque.openCartModal()">${item.v} ${item.un}</div>`;
+          displayWrap.innerHTML = `<div class="pf-pizza-tag" onclick="PadeiroEstoque.openCartModal()">${item.v} ${item.un === 'L' ? 'KG' : item.un}</div>`;
         } else {
           const prod = this.activeProds.find(p => p.id === id);
           const origDesc = prod ? prod.descricao.replace(/'/g, "\\'") : '';
@@ -933,8 +948,7 @@ const PadeiroEstoque = {
     const displayKg = document.getElementById('flow-wallet-kg-display');
     if (displayKg) displayKg.innerText = totalKg > 0 ? totalKg.toFixed(2) : '0.0';
 
-    const displayL = document.getElementById('flow-wallet-l-display');
-    if (displayL) displayL.innerText = totalL > 0 ? totalL.toFixed(2) : '0.0';
+
 
     const displayUn = document.getElementById('flow-wallet-un-display');
     if (displayUn) displayUn.innerText = totalUn > 0 ? totalUn : '0';
@@ -1076,8 +1090,7 @@ const PadeiroEstoque = {
                     <div class="pf-ios-qty-btn" onclick="PadeiroEstoque.changeCartItemQty('${id}', 1)" style="cursor: pointer; color: #1f4cff;">+</div>
                   </div>
                   <select class="pf-ios-unit-select" onchange="PadeiroEstoque.changeCartItemUnit('${id}', this.value)" style="margin-top: 4px; padding: 2px 6px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 4px; color: #1f4cff; font-weight: 800; background: transparent; outline: none; text-transform: uppercase;">
-                    <option value="KG" ${item.un==='KG'?'selected':''}>KG</option>
-                    <option value="L" ${item.un==='L'?'selected':''}>L</option>
+                    <option value="KG" ${item.un==='KG' || item.un==='L'?'selected':''}>KG</option>
                     <option value="UN" ${item.un==='UN'?'selected':''}>UN</option>
                     <option value="PCT" ${item.un==='PCT'?'selected':''}>PCT</option>
                   </select>

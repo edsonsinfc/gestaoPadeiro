@@ -701,12 +701,14 @@
   }
 
   .gestao-view .segmented-slider {
+    position: absolute !important;
     background-color: #FFFFFF !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     height: calc(100% - 4px) !important;
     top: 2px !important;
+    left: 2px !important;
   }
 
   .gestao-view .segmented-item {

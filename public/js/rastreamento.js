@@ -597,6 +597,78 @@ window.Rastreamento = {
           border-color: rgba(10, 132, 255, 0.3);
         }
       }
+
+      /* Custom Map Markers (Apple-style / modern) */
+      .custom-div-icon-marker {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .custom-marker-container {
+        position: relative;
+        width: 36px;
+        height: 42px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .custom-marker-pin {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 10;
+        transition: transform 0.2s ease;
+      }
+      .custom-marker-pin:hover {
+        transform: scale(1.15);
+      }
+      .custom-marker-initials {
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .custom-marker-arrow {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid;
+        margin-top: -2px;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+        z-index: 9;
+      }
+      
+      /* Pulsing ring for online users */
+      .marker-pulse::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        top: 0;
+        left: 0;
+        box-shadow: 0 0 0 2px currentColor;
+        animation: marker-pulse-anim 1.5s infinite ease-out;
+        opacity: 0;
+      }
+      @keyframes marker-pulse-anim {
+        0% {
+          transform: scale(0.9);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1.6);
+          opacity: 0;
+        }
+      }
       </style>
 
       <div class="mac-rastreamento-root fade-in">
@@ -887,12 +959,33 @@ window.Rastreamento = {
     locations.forEach(loc => {
       const { userId, userName, coords, lastUpdate } = loc;
       
+      const isOnline = lastUpdate && (new Date().getTime() - new Date(lastUpdate).getTime() < 10 * 60 * 1000);
+      const initials = userName ? userName.trim().split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'PD';
+      const color = isOnline ? '#34C759' : '#8E8E93';
+      const pulseClass = isOnline ? 'marker-pulse' : '';
+      
+      const customIcon = L.divIcon({
+        className: 'custom-div-icon-marker',
+        html: `
+          <div class="custom-marker-container">
+            <div class="custom-marker-pin ${pulseClass}" style="background-color: ${color}; color: ${color};">
+              <span class="custom-marker-initials">${initials}</span>
+            </div>
+            <div class="custom-marker-arrow" style="border-top-color: ${color};"></div>
+          </div>
+        `,
+        iconSize: [36, 42],
+        iconAnchor: [18, 42],
+        popupAnchor: [0, -42]
+      });
+
       if (this.markers[userId]) {
         // Update existing marker
         this.markers[userId].setLatLng([coords.lat, coords.lng]);
+        this.markers[userId].setIcon(customIcon);
       } else {
         // Create new marker
-        const marker = L.marker([coords.lat, coords.lng]).addTo(this.map);
+        const marker = L.marker([coords.lat, coords.lng], { icon: customIcon }).addTo(this.map);
         marker.bindPopup(`
           <div class="map-popup">
             <strong>${userName}</strong><br>

@@ -55,6 +55,14 @@ exports.listCronograma = async (req, res) => {
     });
   }
 
+  const activePadeiros = await Padeiro.find({ deletado: { $ne: true } });
+  tarefas.forEach(t => {
+    if (t.padeiroId) {
+      const p = activePadeiros.find(x => x.id === t.padeiroId);
+      if (p) t.padeiroNome = p.nome;
+    }
+  });
+
   res.json(tarefas);
 };
 
@@ -82,6 +90,13 @@ exports.getWeeklyAgenda = async (req, res) => {
       data: { $gte: monStr, $lte: satStr },
       status: { $ne: 'solicitado' } // Ignora solicitações pendentes de aprovação!
     }).sort({ data: 1 });
+
+    agenda.forEach(a => {
+      if (a.padeiroId) {
+        const p = padeiros.find(x => x.id === a.padeiroId);
+        if (p) a.padeiroNome = p.nome;
+      }
+    });
 
     res.json({ padeiros, agenda });
   } catch (error) {
@@ -219,6 +234,9 @@ exports.getPadeiroAgenda = async (req, res) => {
   try {
     const agenda = await Cronograma.find({ padeiroId: req.user.id })
       .sort({ data: 1, horario: 1 });
+    agenda.forEach(a => {
+      a.padeiroNome = req.user.nome;
+    });
     res.json(agenda);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao carregar agenda' });

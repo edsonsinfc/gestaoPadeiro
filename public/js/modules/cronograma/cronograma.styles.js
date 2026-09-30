@@ -268,7 +268,8 @@ Object.assign(Cronograma, {
         }
 
         /* Segmented Control macOS style */
-        .segmented-control {
+        .cronograma-header .segmented-control {
+          position: relative !important;
           background: rgba(120, 120, 128, 0.08) !important;
           border-radius: 10px !important;
           padding: 2px !important;
@@ -276,12 +277,20 @@ Object.assign(Cronograma, {
           display: inline-flex !important;
           align-items: center !important;
           border: 1px solid rgba(0, 0, 0, 0.02) !important;
+          width: 360px !important;
         }
-        .segmented-slider {
-          background-color: #FFFFFF !important;
-          border-radius: 8px !important;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04) !important;
-        }
+        .cronograma-header .segmented-slider {
+           position: absolute !important;
+           background-color: #ffffff !important;
+           border-radius: 7px !important;
+           height: calc(100% - 4px) !important;
+           top: 2px !important;
+           left: 2px !important;
+           width: calc((100% - 4px) / 3) !important;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12) !important;
+           z-index: 1 !important;
+           transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+         }
         .segmented-item {
           font-size: 13px !important;
           font-weight: 500 !important;
@@ -291,7 +300,11 @@ Object.assign(Cronograma, {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          padding: 0 20px !important;
+          padding: 0 !important;
+          flex: 1 !important;
+          min-width: 0 !important;
+          cursor: pointer !important;
+          z-index: 2 !important;
         }
         .segmented-item.active {
           color: #18181B !important;
@@ -1359,7 +1372,7 @@ Object.assign(Cronograma, {
         }
         .cronograma-header { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
         
-        .segmented-control {
+        .cronograma-header .segmented-control {
           position: relative !important;
           width: 100% !important;
           margin-bottom: 8px !important;
@@ -1371,13 +1384,17 @@ Object.assign(Cronograma, {
           display: flex !important;
           align-items: center !important;
         }
-        .segmented-slider {
+        .cronograma-header .segmented-slider {
+          position: absolute !important;
           background-color: #ffffff !important;
           border-radius: 7px !important;
           height: calc(100% - 4px) !important;
           top: 2px !important;
+          left: 2px !important;
+          width: calc((100% - 4px) / 3) !important;
           box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12) !important;
           z-index: 1 !important;
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
         .segmented-item {
           position: relative !important;
@@ -1389,6 +1406,13 @@ Object.assign(Cronograma, {
           background: transparent !important;
           border: none !important;
           transition: color 0.2s ease !important;
+          flex: 1 !important;
+          min-width: 0 !important;
+          padding: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
         }
         .segmented-item.active {
           color: var(--text-primary) !important;

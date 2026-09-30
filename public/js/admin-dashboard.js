@@ -299,7 +299,6 @@ const AdminDashboard = {
                   </div>
                   <div class="db-chart-legend">
                     <div class="db-legend-item"><span class="db-legend-dot kg"></span> kg</div>
-                    <div class="db-legend-item"><span class="db-legend-dot litros"></span> L</div>
                   </div>
                 </div>
                 <div class="db-chart-canvas-wrap">
@@ -495,7 +494,7 @@ const AdminDashboard = {
                   <div style="width: 80px; height: 80px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #1E4BFF; margin-bottom: 12px; border: 4px solid rgba(255,255,255,0.3); box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1;">
                     ${stats.top10Pads[0].nome.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase()}
                   </div>
-                  <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #fff; z-index: 1;">${stats.top10Pads[0].nome.trim().split(/\s+/)[0]}</h1>
+                  <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #fff; z-index: 1;">${Components.getDisplayName(stats.top10Pads[0].nome, stats.top10Pads)}</h1>
                   <h2 style="font-size: 14px; font-weight: 500; margin: 0 0 20px 0; color: rgba(255,255,255,0.8); z-index: 1;">${stats.top10Pads[0].cargo || 'Padeiro'}</h2>
                   
                   <div style="display: flex; gap: 16px; width: 100%; justify-content: center; z-index: 1;">
@@ -736,11 +735,6 @@ const AdminDashboard = {
             </div>
             <div class="metric-v2-divider"></div>
             <div class="metric-v2">
-              <div class="metric-v2-value" style="color: #AF52DE;">${stats.totalLitrosMes || '0.0'} <span class="metric-v2-unit">L</span></div>
-              <div class="metric-v2-label">Total Produzido (Litros)</div>
-            </div>
-            <div class="metric-v2-divider"></div>
-            <div class="metric-v2">
               <div class="metric-v2-value">${(stats.rankingProducao || []).length}</div>
               <div class="metric-v2-label">Padeiros Ativos</div>
             </div>
@@ -748,8 +742,6 @@ const AdminDashboard = {
             <div class="metric-v2">
               <div class="metric-v2-avg-container">
                 <span class="metric-v2-avg-val kg-color">${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="metric-v2-avg-unit">kg</span></span>
-                <span class="metric-v2-avg-sep">|</span>
-                <span class="metric-v2-avg-val liters-color">${(stats.rankingProducao || []).length > 0 ? ((stats.totalLitrosMes || 0) / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="metric-v2-avg-unit">L</span></span>
               </div>
               <div class="metric-v2-label">Média por Padeiro</div>
             </div>
@@ -775,18 +767,12 @@ const AdminDashboard = {
               <div class="hig-production-stat-label">Total Produzido (Kg)</div>
             </div>
             <div class="hig-production-stat-item">
-              <div class="hig-production-stat-value">${stats.totalLitrosMes || '0.0'} <span class="hig-production-stat-unit">L</span></div>
-              <div class="hig-production-stat-label">Total Produzido (Litros)</div>
-            </div>
-            <div class="hig-production-stat-item">
               <div class="hig-production-stat-value">${(stats.rankingProducao || []).length}</div>
               <div class="hig-production-stat-label">Padeiros Ativos</div>
             </div>
             <div class="hig-production-stat-item">
               <div class="hig-production-stat-value">
-                ${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit" style="margin-right:2px;">kg</span>
-                <span style="color: #D1D1D6; margin: 0 4px; font-weight: 300;">|</span>
-                ${(stats.rankingProducao || []).length > 0 ? ((stats.totalLitrosMes || 0) / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit">L</span>
+                ${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit">kg</span>
               </div>
               <div class="hig-production-stat-label">Média por Padeiro</div>
             </div>
@@ -794,7 +780,6 @@ const AdminDashboard = {
           
           <div class="hig-chart-legend">
             <div class="hig-legend-item"><div class="hig-legend-dot kg"></div> Produção (kg)</div>
-            <div class="hig-legend-item"><div class="hig-legend-dot litros"></div> Produção (Litros)</div>
           </div>
           <div class="hig-chart-container">
             <canvas id="producaoChartDesktop"></canvas>
@@ -821,7 +806,7 @@ const AdminDashboard = {
                     <div class="ranking-info-v2">
                       ${Components.avatar(p.nome, 'avatar-sm')}
                       <div>
-                        <div class="ranking-name-v2">${p.nome.trim().split(/\s+/)[0]}</div>
+                        <div class="ranking-name-v2">${Components.getDisplayName(p.nome, stats.top10Pads)}</div>
                         <div class="ranking-role-v2">${p.cargo} • ${p.totalAtividades} ativ.</div>
                       </div>
                     </div>
@@ -862,7 +847,7 @@ const AdminDashboard = {
                     <div class="ranking-info-v2">
                       ${Components.avatar(p.nome, 'avatar-sm')}
                       <div>
-                        <div class="ranking-name-v2">${p.nome.trim().split(/\s+/)[0]}</div>
+                        <div class="ranking-name-v2">${Components.getDisplayName(p.nome, stats.pontoCritico)}</div>
                         <div class="ranking-role-v2">${p.cargo} • ${p.totalAvals} aval.</div>
                       </div>
                     </div>
@@ -980,7 +965,7 @@ const AdminDashboard = {
       // Draw Charts using Chart.js
       setTimeout(() => {
         const prodData = stats.rankingProducao || [];
-        const prodLabels = prodData.map(p => (p && p.nome) ? p.nome.trim().split(/\s+/)[0] : '—');
+        const prodLabels = prodData.map(p => (p && p.nome) ? Components.getDisplayName(p.nome, prodData) : '—');
         const prodKgVals = prodData.map(p => p ? p.totalKg : 0);
         const prodLVals = prodData.map(p => p ? p.totalLiters : 0);
         

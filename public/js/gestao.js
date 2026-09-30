@@ -219,7 +219,7 @@ const Gestao = {
       <div class="flex justify-between items-center mb-6 gestao-header-main">
         <h1 class="page-title" style="margin-bottom:0; font-size: 24px; font-weight: 700;">Gestão</h1>
         <div class="segmented-control" style="margin-bottom:0;" onclick="Components.createRipple(event, this)">
-          <div class="segmented-slider" style="width: ${['admin', 'gestor_geral'].includes(API.getUser().role) ? '20%' : '25%'}; transform: translateX(${this.currentTab === 'produtos' ? '100%' : this.currentTab === 'clientes' ? '200%' : this.currentTab === 'atividades' ? '300%' : this.currentTab === 'usuarios' ? '400%' : '0'})"></div>
+          <div class="segmented-slider" style="width: ${['admin', 'gestor_geral'].includes(API.getUser().role) ? 'calc((100% - 4px) / 5)' : 'calc((100% - 4px) / 4)'}; transform: translateX(${this.currentTab === 'produtos' ? '100%' : this.currentTab === 'clientes' ? '200%' : this.currentTab === 'atividades' ? '300%' : this.currentTab === 'usuarios' ? '400%' : '0'})"></div>
           <div class="segmented-item ${this.currentTab === 'padeiros' ? 'active' : ''}" onclick="Gestao.switchTab('padeiros')">Padeiros</div>
           <div class="segmented-item ${this.currentTab === 'produtos' ? 'active' : ''}" onclick="Gestao.switchTab('produtos')">Produtos</div>
           <div class="segmented-item ${this.currentTab === 'clientes' ? 'active' : ''}" onclick="Gestao.switchTab('clientes')">Clientes</div>
@@ -248,7 +248,7 @@ const Gestao = {
 
     const slider = document.querySelector('.segmented-control .segmented-slider');
     if (slider) {
-      slider.style.width = isSuper ? '20%' : '25%';
+      slider.style.width = isSuper ? 'calc((100% - 4px) / 5)' : 'calc((100% - 4px) / 4)';
       slider.style.transform = `translateX(${idx * 100}%)`;
     }
     document.getElementById('gestao-content').innerHTML = Components.loading();

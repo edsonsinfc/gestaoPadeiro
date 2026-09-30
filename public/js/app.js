@@ -172,7 +172,7 @@ const App = {
     // Enforce role-based routing
     if (!isManagement) {
       if (user.role === 'vendedor') {
-        const allowedVendedorRoutes = ['vendedor-inicio', 'vendedor-clientes', 'vendedor-agendamentos', 'vendedor-escala', 'vendedor-padeiro-perfil', 'vendedor-agendar-atendimento', 'vendedor-cliente-perfil', 'vendedor-sugestoes', 'vendedor-estoque'];
+        const allowedVendedorRoutes = ['vendedor-inicio', 'vendedor-clientes', 'vendedor-agendamentos', 'vendedor-escala', 'vendedor-padeiro-perfil', 'vendedor-agendar-atendimento', 'vendedor-cliente-perfil', 'vendedor-sugestoes', 'vendedor-estoque', 'vendedor-calculadora'];
         if (!allowedVendedorRoutes.includes(route)) {
           console.warn(`Acesso negado para a rota ${route} (Vendedor). Redirecionando...`);
           this.navigate('vendedor-clientes');
@@ -464,7 +464,8 @@ const App = {
         items = [
           { route: 'vendedor-clientes', label: 'Clientes', icon: 'users' },
           { route: 'vendedor-inicio', label: 'Feed', icon: 'newspaper' },
-          { route: 'vendedor-escala', label: 'Escala', icon: 'calendar-days' }
+          { route: 'vendedor-escala', label: 'Escala', icon: 'calendar-days' },
+          { route: 'vendedor-calculadora', label: 'Calculadora', icon: 'calculator' }
         ];
       } else {
         items = [
@@ -514,6 +515,7 @@ const App = {
     'vendedor-agendar-atendimento': { title: 'Agendar Atendimento', showSearch: false, searchPlaceholder: '', showLargeTitle: true },
     'vendedor-cliente-perfil': { title: 'Perfil do Cliente', showSearch: false, searchPlaceholder: '', showLargeTitle: false },
     'vendedor-padeiro-perfil': { title: 'Perfil',                showSearch: false, searchPlaceholder: '',                          showLargeTitle: false },
+    'vendedor-calculadora':  { title: 'Calculadora de Gastos',   showSearch: false, searchPlaceholder: '',                          showLargeTitle: true },
     'dev':               { title: 'Desenvolvimento',         showSearch: false, searchPlaceholder: '',                        showLargeTitle: true }
   },
 
@@ -582,10 +584,7 @@ const App = {
   async renderPage(route) {
     const pageContainer = document.getElementById('page-container');
     if (pageContainer) {
-      pageContainer.classList.remove('tf-page-active');
-      pageContainer.classList.remove('metas-view');
-      pageContainer.classList.remove('page-exit-active');
-      pageContainer.classList.remove('cperfil-active');
+      pageContainer.className = 'page-content';
     }
     document.body.classList.remove('tf-page-active');
 
@@ -655,6 +654,7 @@ const App = {
         case 'vendedor-cliente-perfil': await VendedorDashboard.renderClientePerfil(this.routeData || {}); break;
         case 'vendedor-sugestoes': await VendedorSugestoes.render(); break;
         case 'vendedor-estoque': await VendedorEstoque.render(); break;
+        case 'vendedor-calculadora': await VendedorCalculadora.render(); break;
         case 'dev': await Dev.render(); break;
         case 'auditoria': await Auditoria.render(); break;
         default:

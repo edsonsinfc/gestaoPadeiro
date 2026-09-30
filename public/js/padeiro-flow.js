@@ -554,16 +554,7 @@ const PadeiroFlow = {
           </div>
         </div>
         
-        <!-- Card 2: Litros -->
-        <div class="pf-dash-card">
-          <div class="pf-dash-card-label"><i data-lucide="droplet" style="width:14px;height:14px"></i> Líquidos</div>
-          <div class="pf-dash-card-value">
-            <span id="flow-wallet-l-display">${this.activity.lTotal || '0.0'}</span>
-            <span class="pf-dash-card-unit">L</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Itens -->
+        <!-- Card 2: Itens -->
         <div class="pf-dash-card">
           <div class="pf-dash-card-label"><i data-lucide="package" style="width:14px;height:14px"></i> Produtos</div>
           <div class="pf-dash-card-value">
@@ -572,7 +563,7 @@ const PadeiroFlow = {
           </div>
         </div>
 
-        <!-- Card 4: Unidades -->
+        <!-- Card 3: Unidades -->
         <div class="pf-dash-card">
           <div class="pf-dash-card-label"><i data-lucide="box" style="width:14px;height:14px"></i> Unidades</div>
           <div class="pf-dash-card-value">
@@ -580,10 +571,18 @@ const PadeiroFlow = {
             <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">un</span>
           </div>
         </div>
+
+        <!-- Card 4: Pacotes -->
+        <div class="pf-dash-card">
+          <div class="pf-dash-card-label"><i data-lucide="boxes" style="width:14px;height:14px"></i> Pacotes</div>
+          <div class="pf-dash-card-value">
+            <span id="flow-wallet-pct-display">0</span>
+            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">pct</span>
+          </div>
+        </div>
       </div>
       
       <input type="hidden" id="flow-kg-total" value="${this.activity.kgTotal || ''}">
-      <input type="hidden" id="flow-l-total" value="${this.activity.lTotal || ''}">
 
       <!-- 2. Produto Selecionado (Banner) -->
       <div class="pf-wallet-banner pf-animate-cascade" style="animation-delay: 0.15s" onclick="PadeiroFlow.openCartModal()">
@@ -1221,8 +1220,7 @@ const PadeiroFlow = {
                     <div class="pf-ios-qty-btn" onclick="PadeiroFlow.changeCartItemQty('${id}', 1)" style="cursor: pointer; color: #1f4cff;">+</div>
                   </div>
                   <select class="pf-ios-unit-select" onchange="PadeiroFlow.changeCartItemUnit('${id}', this.value)" style="margin-top: 4px; padding: 2px 6px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 4px; color: #1f4cff; font-weight: 800; background: transparent; outline: none; text-transform: uppercase;">
-                    <option value="KG" ${item.un==='KG'?'selected':''}>KG</option>
-                    <option value="L" ${item.un==='L'?'selected':''}>L</option>
+                    <option value="KG" ${item.un==='KG' || item.un==='L'?'selected':''}>KG</option>
                     <option value="UN" ${item.un==='UN'?'selected':''}>UN</option>
                     <option value="PCT" ${item.un==='PCT'?'selected':''}>PCT</option>
                   </select>
@@ -1345,8 +1343,8 @@ const PadeiroFlow = {
 
   calculateTotals() {
     let totalKg = 0;
-    let totalL = 0;
     let totalUn = 0;
+    let totalPct = 0;
     let selectedCount = 0;
     this.cartItems = this.cartItems || {};
 
@@ -1355,9 +1353,9 @@ const PadeiroFlow = {
       const item = this.cartItems[id];
       selectedCount++;
       const val = parseFloat(String(item.v).replace(',', '.')) || 0;
-      if (item.un === 'KG') totalKg += val;
-      if (item.un === 'L') totalL += val;
-      if (item.un === 'UN' || item.un === 'PCT') totalUn += val;
+      if (item.un === 'KG' || item.un === 'L') totalKg += val;
+      if (item.un === 'UN') totalUn += val;
+      if (item.un === 'PCT') totalPct += val;
     });
 
     // Update row visuals for currently rendered rows in DOM
@@ -1369,7 +1367,7 @@ const PadeiroFlow = {
         if (this.cartItems[id]) {
           const item = this.cartItems[id];
           row.classList.add('selected');
-          displayWrap.innerHTML = `<div class="pf-pizza-tag">${item.v} ${item.un}</div>`;
+          displayWrap.innerHTML = `<div class="pf-pizza-tag">${item.v} ${item.un === 'L' ? 'KG' : item.un}</div>`;
         } else {
           const origDesc = row.dataset.origDesc || '';
           const origCode = row.dataset.origCode || '';
@@ -1382,21 +1380,18 @@ const PadeiroFlow = {
     const totalKgInput = document.getElementById('flow-kg-total');
     if (totalKgInput) totalKgInput.value = totalKg > 0 ? totalKg.toFixed(2) : '';
 
-    const totalLInput = document.getElementById('flow-l-total');
-    if (totalLInput) totalLInput.value = totalL > 0 ? totalL.toFixed(2) : '';
-
     // Update visible Wallet text
     const displayKg = document.getElementById('flow-wallet-kg-display');
     if (displayKg) displayKg.innerText = totalKg > 0 ? totalKg.toFixed(2) : '0.0';
-
-    const displayL = document.getElementById('flow-wallet-l-display');
-    if (displayL) displayL.innerText = totalL > 0 ? totalL.toFixed(2) : '0.0';
 
     const displayUn = document.getElementById('flow-wallet-un-display');
     if (displayUn) displayUn.innerText = totalUn > 0 ? totalUn : '0';
 
     const displayItems = document.getElementById('flow-wallet-items-display');
     if (displayItems) displayItems.innerText = selectedCount;
+
+    const displayPct = document.getElementById('flow-wallet-pct-display');
+    if (displayPct) displayPct.innerText = totalPct > 0 ? totalPct : '0';
 
     const bannerAction = document.getElementById('flow-recent-action');
     const bannerTitle = document.querySelector('.pf-wallet-banner-title');
@@ -1598,19 +1593,18 @@ const PadeiroFlow = {
 
   saveDraftLocally() {
     const totalKg = document.getElementById('flow-kg-total')?.value || '';
-    const totalL  = document.getElementById('flow-l-total')?.value || '';
     this.cartItems = this.cartItems || {};
     const items = Object.keys(this.cartItems).map(id => ({
       id,
       v: this.cartItems[id].v,
-      un: this.cartItems[id].un
+      un: this.cartItems[id].un === 'L' ? 'KG' : this.cartItems[id].un
     }));
-    const draft = { totalKg, totalL, items, fotosBase64: this.selectedFotosBase64 || [] };
+    const draft = { totalKg, items, fotosBase64: this.selectedFotosBase64 || [] };
     try {
       localStorage.setItem('brago_padeiro_draft', JSON.stringify(draft));
     } catch(e) {
       console.warn("localStorage quota excedida, salvando sem fotos", e);
-      const draftNoFotos = { totalKg, totalL, items, fotosBase64: [] };
+      const draftNoFotos = { totalKg, items, fotosBase64: [] };
       localStorage.setItem('brago_padeiro_draft', JSON.stringify(draftNoFotos));
     }
   },
@@ -1729,7 +1723,6 @@ const PadeiroFlow = {
   async saveProducao() {
     const items = [];
     let totalKg = 0;
-    let totalL = 0;
 
     if (this.cartItems) {
       Object.keys(this.cartItems).forEach(id => {
@@ -1740,9 +1733,9 @@ const PadeiroFlow = {
         const sv = code ? `${code} - ${name}` : name;
         const v = parseFloat(String(item.v).replace(',', '.'));
         if (!isNaN(v) && v > 0) {
-           items.push({ produtoId: id, produtoNome: sv, unidade: item.un, quantidade: v });
-           if (item.un === 'KG') totalKg += v;
-           if (item.un === 'L') totalL += v;
+           const unidade = item.un === 'L' ? 'KG' : item.un;
+           items.push({ produtoId: id, produtoNome: sv, unidade: unidade, quantidade: v });
+           if (item.un === 'KG' || item.un === 'L') totalKg += v;
         }
       });
     }
@@ -1794,7 +1787,7 @@ const PadeiroFlow = {
 
     try {
       this.activity.kgTotal  = parseFloat(totalKg) || 0;
-      this.activity.lTotal   = parseFloat(totalL)  || 0;
+      this.activity.lTotal   = 0;
       this.activity.kgItens  = items;
       this.activity.lastStep = 2;
 
@@ -2039,7 +2032,7 @@ const PadeiroFlow = {
       <div class="pf-summary">
         <div class="pf-summary-row"><span>Cliente</span><strong>${this.activity.clienteNome||'—'}</strong></div>
         ${this.activity.kgTotal > 0 ? `<div class="pf-summary-row"><span>Produção (KG)</span><strong>${this.activity.kgTotal} kg</strong></div>` : ''}
-        ${this.activity.lTotal  > 0 ? `<div class="pf-summary-row"><span>Produção (Litros)</span><strong>${this.activity.lTotal} L</strong></div>`  : ''}
+
         <div class="pf-summary-row"><span>Produtos</span><strong>${(this.activity.kgItens||[]).length} itens</strong></div>
         <div class="pf-summary-row"><span>Sua Nota ao Cliente</span><strong>${this.activity.notaPadeiroCliente||0} ★</strong></div>
         ${this.activity.observacaoCliente ? `<div class="pf-summary-row"><span>Obs. do Atendimento</span><strong style="font-size:12px;color:#475569;text-align:right;max-width:60%;word-break:break-word;">${this.activity.observacaoCliente}</strong></div>` : ''}
@@ -2134,7 +2127,7 @@ const PadeiroFlow = {
           <p class="pf-success-sub">Seu registro foi salvo com sucesso.</p>
           <div class="pf-success-stats" style="flex-wrap:wrap;gap:16px;">
             ${this.activity.kgTotal > 0 ? `<div class="pf-stat"><span class="pf-stat-val">${this.activity.kgTotal}</span><span class="pf-stat-label">KG</span></div><div class="pf-stat-divider"></div>` : ''}
-            ${this.activity.lTotal  > 0 ? `<div class="pf-stat"><span class="pf-stat-val" style="color:#10b981;">${this.activity.lTotal}</span><span class="pf-stat-label">Litros</span></div><div class="pf-stat-divider"></div>` : ''}
+
             <div class="pf-stat"><span class="pf-stat-val">${(this.activity.kgItens||[]).length}</span><span class="pf-stat-label">Produtos</span></div>
             <div class="pf-stat-divider"></div>
             <div class="pf-stat"><span class="pf-stat-val">${this.activity.notaPadeiroCliente||0}★</span><span class="pf-stat-label">Nota ao Cliente</span></div>

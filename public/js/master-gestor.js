@@ -166,8 +166,8 @@ const MasterGestor = {
             </div>
             <div style="width:1px; height:30px; background:#D1D1D6;"></div>
             <div style="text-align:center;">
-              <div style="font-size:24px; font-weight:800; color:#AF52DE;">${(kpiGlobais.totalLitrosMes || 0).toLocaleString('pt-BR')} <span style="font-size:12px; font-weight:600; color:#8E8E93;">L</span></div>
-              <div style="font-size:11px; font-weight:600; color:#8E8E93; margin-top:2px;">Aditivos Líquidos</div>
+              <div style="font-size:24px; font-weight:800; color:#AF52DE;">${(kpiGlobais.totalAtividadesMes || 0).toLocaleString('pt-BR')}</div>
+              <div style="font-size:11px; font-weight:600; color:#8E8E93; margin-top:2px;">Atendimentos</div>
             </div>
           </div>
           <div class="chart-container" style="height: 200px; position:relative;">
@@ -358,7 +358,7 @@ const MasterGestor = {
     const title = document.getElementById('audit-sheet-title');
     const body = document.getElementById('audit-sheet-body');
 
-    title.innerText = `Auditoria: ${gestor.nome.split(' ').slice(0,2).join(' ')}`;
+    title.innerText = `Auditoria: ${Components.getDisplayName(gestor.nome)}`;
     
     body.innerHTML = `
       <!-- KPIs Comerciais do Gestor -->
@@ -393,7 +393,7 @@ const MasterGestor = {
                 <div style="display:flex; align-items:center; gap:10px;">
                   ${Components.avatar(p.nome, 'avatar-sm')}
                   <div>
-                    <div style="font-size:14px; font-weight:700; color:#1C1C1E;">${p.nome.split(' ').slice(0,2).join(' ')}</div>
+                    <div style="font-size:14px; font-weight:700; color:#1C1C1E;">${Components.getDisplayName(p.nome)}</div>
                     <div style="font-size:11px; color:#8E8E93;">${p.cargo || 'Padeiro Técnico'}</div>
                   </div>
                 </div>

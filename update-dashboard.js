@@ -207,11 +207,6 @@ const desktopHtml = `
             </div>
             <div class="metric-v2-divider"></div>
             <div class="metric-v2">
-              <div class="metric-v2-value" style="color: #AF52DE;">\${stats.totalLitrosMes || '0.0'} <span class="metric-v2-unit">L</span></div>
-              <div class="metric-v2-label">Total Produzido (Litros)</div>
-            </div>
-            <div class="metric-v2-divider"></div>
-            <div class="metric-v2">
               <div class="metric-v2-value">\${(stats.rankingProducao || []).length}</div>
               <div class="metric-v2-label">Padeiros Ativos</div>
             </div>
@@ -219,8 +214,6 @@ const desktopHtml = `
             <div class="metric-v2">
               <div class="metric-v2-avg-container">
                 <span class="metric-v2-avg-val kg-color">\${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="metric-v2-avg-unit">kg</span></span>
-                <span class="metric-v2-avg-sep">|</span>
-                <span class="metric-v2-avg-val liters-color">\${(stats.rankingProducao || []).length > 0 ? ((stats.totalLitrosMes || 0) / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="metric-v2-avg-unit">L</span></span>
               </div>
               <div class="metric-v2-label">Média por Padeiro</div>
             </div>
@@ -246,18 +239,12 @@ const desktopHtml = `
               <div class="hig-production-stat-label">Total Produzido (Kg)</div>
             </div>
             <div class="hig-production-stat-item">
-              <div class="hig-production-stat-value">\${stats.totalLitrosMes || '0.0'} <span class="hig-production-stat-unit">L</span></div>
-              <div class="hig-production-stat-label">Total Produzido (Litros)</div>
-            </div>
-            <div class="hig-production-stat-item">
               <div class="hig-production-stat-value">\${(stats.rankingProducao || []).length}</div>
               <div class="hig-production-stat-label">Padeiros Ativos</div>
             </div>
             <div class="hig-production-stat-item">
               <div class="hig-production-stat-value">
-                \${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit" style="margin-right:2px;">kg</span>
-                <span style="color: #D1D1D6; margin: 0 4px; font-weight: 300;">|</span>
-                \${(stats.rankingProducao || []).length > 0 ? ((stats.totalLitrosMes || 0) / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit">L</span>
+                \${(stats.rankingProducao || []).length > 0 ? (stats.totalProduzidoMes / (stats.rankingProducao || []).length).toFixed(1) : '0'}<span class="hig-production-stat-unit">kg</span>
               </div>
               <div class="hig-production-stat-label">Média por Padeiro</div>
             </div>
@@ -265,7 +252,6 @@ const desktopHtml = `
           
           <div class="hig-chart-legend">
             <div class="hig-legend-item"><div class="hig-legend-dot kg"></div> Produção (kg)</div>
-            <div class="hig-legend-item"><div class="hig-legend-dot litros"></div> Produção (Litros)</div>
           </div>
           <div class="hig-chart-container">
             <canvas id="producaoChartDesktop"></canvas>
