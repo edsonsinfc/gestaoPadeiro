@@ -36,15 +36,6 @@
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
   {
-    "id": "moitruedrpwjyxhdu",
-    "codigo": "15197",
-    "descricao": "ANTIMOFO E ANTI ROPE MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15197.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
     "id": "moitruedlgk2xvf2p",
     "codigo": "12424",
     "descricao": "BAGUETE CLASSICA MM C100 SACO 20KG",
@@ -549,15 +540,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee8lq1mafw9",
-    "codigo": "15646",
-    "descricao": "CALDA P/ MOLHAR BOLO MAURI 1L (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee05gypmjh3",
     "codigo": "13716",
     "descricao": "CALDO DE GALINHA 1KG (10)",
@@ -855,24 +837,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueebcjn47kh1",
-    "codigo": "15689",
-    "descricao": "CHOCO GRANULADO CROCAN MAURI 1,05KG (10)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\156890.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee05lcttks0",
-    "codigo": "15688",
-    "descricao": "CHOCO GRANULADO MACIO MAURI 1,05KG (10)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15688.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee8bv6dle65",
     "codigo": "17638",
     "descricao": "COBERTURA PASCAL C100 (SACO 2KG)",
@@ -968,42 +932,6 @@
     "descricao": "COOKIE C100 SACO 2KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee3zdxdcurk",
-    "codigo": "15193",
-    "descricao": "CR CHANTILLY SELECT MAURI 1L (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15193.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueectxxoxp7j",
-    "codigo": "16917",
-    "descricao": "CREME CHANTILLY CHOC 1,1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeckzdczrzy",
-    "codigo": "17964",
-    "descricao": "CREME CHANTILLY TRAD FLEISCHMANN 1L",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17964.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueefo6udlwqv",
-    "codigo": "15192",
-    "descricao": "CREME CHANTILLY TRAD GRAN FINALE 1L",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15192.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1269,83 +1197,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee27zdsvnzg",
-    "codigo": "16286",
-    "descricao": "FERMENTO INST M DOCE FORNATTA 500G (20)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16286.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueew4t9pajtz",
-    "codigo": "15195",
-    "descricao": "FERMENTO INST M DOCE MAURIPAN 500G (20)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\15195.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee5jjlu81xm",
-    "codigo": "15194",
-    "descricao": "FERMENTO INST M SALGA FORNATTA 500G (20)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15194.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueez6cji3b48",
-    "codigo": "16287",
-    "descricao": "FERMENTO INST M SALGA FORNATTA 500G (20)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee377wku2gt",
-    "codigo": "15424",
-    "descricao": "FERMENTO INST MAURI 4 DISPLAY X 68X10G",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeaqafryczm",
-    "codigo": "15423",
-    "descricao": "FERMENTO INST MAURI 64X125G",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\15423.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee5hbbx1hdz",
-    "codigo": "17788",
-    "descricao": "FERMENTO PO QUIMICO FLEISCHMANN 2KG (10)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17788.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee5cy93ovnt",
     "codigo": "17690",
     "descricao": "FERMENTO PO QUIMICO GOLDEN TRIEB 10KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17690.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueensmrhvfeu",
-    "codigo": "15196",
-    "descricao": "FERMENTO PÓ QUÍMICO MAURI 2KG (10)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15196.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1382,15 +1238,6 @@
     "descricao": "FOCACCIA C50 SACO 5KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\13785.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee1exexqxcv",
-    "codigo": "15208",
-    "descricao": "FONDANT MAURI 2KG (6)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15208.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1436,15 +1283,6 @@
     "descricao": "GELEIA BRILHO MARACUJA P/COBERTURA 4,3KG",
     "fornecedor": "RITTER ALIMENTOS SA",
     "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14211.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeutidgqv70",
-    "codigo": "15210",
-    "descricao": "GELEIA BRILHO NEUTRA MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15210.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1791,15 +1629,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueexq7invhsa",
-    "codigo": "15198",
-    "descricao": "MELHORADOR FARINHA MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15198.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueeys6vpws8n",
     "codigo": "18429",
     "descricao": "MELHORADOR FROST LM SACO 10KG",
@@ -1917,267 +1746,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueey14o4fojo",
-    "codigo": "17781",
-    "descricao": "MIST BOLO AIPIM FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17781.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewwppnriyu",
-    "codigo": "15183",
-    "descricao": "MIST BOLO AIPIM MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15183.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeajjw9n0m0",
-    "codigo": "17808",
-    "descricao": "MIST BOLO CENOURA FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17808.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueef06r5ynqb",
-    "codigo": "15184",
-    "descricao": "MIST BOLO CENOURA MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15184.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee0bxph2om9",
-    "codigo": "17782",
-    "descricao": "MIST BOLO CHOCOLATE FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17782.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueefcrzexpnc",
-    "codigo": "15185",
-    "descricao": "MIST BOLO CHOCOLATE MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15185.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueedjp23a1pe",
-    "codigo": "17783",
-    "descricao": "MIST BOLO COCO FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17783.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueetd9rteqbi",
-    "codigo": "15186",
-    "descricao": "MIST BOLO COCO MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15186.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueev41x3kwwp",
-    "codigo": "17789",
-    "descricao": "MIST BOLO LARANJA FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17789.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueea4piykfm8",
-    "codigo": "15187",
-    "descricao": "MIST BOLO LARANJA MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeth6elveod",
-    "codigo": "17785",
-    "descricao": "MIST BOLO MILHO FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17785.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeutooez9vw",
-    "codigo": "15188",
-    "descricao": "MIST BOLO MILHO MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15188.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueefjg6aj6pg",
-    "codigo": "15189",
-    "descricao": "MIST BOLO NEUTRO MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15189.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueevvndf3mfd",
-    "codigo": "15590",
-    "descricao": "MIST BOLO PAO LO CHOC MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15590.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueec8inhlvn9",
-    "codigo": "15589",
-    "descricao": "MIST BOLO PAO LO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueetu3e3yxah",
-    "codigo": "17807",
-    "descricao": "MIST BRIOCHE FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17807.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueep3sscjjk5",
-    "codigo": "15201",
-    "descricao": "MIST BRIOCHE MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15201.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee3em6j3egi",
-    "codigo": "17786",
-    "descricao": "MIST CAKE CHOCOLATE FLEISCHMANN 3KG (5)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17786.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueegtrdtw2kf",
-    "codigo": "15190",
-    "descricao": "MIST CAKE CHOCOLATE MAURI 3KG (5)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15190.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueees5e9hspb",
-    "codigo": "17787",
-    "descricao": "MIST CAKE NEUTRO FLEISCHMANN 3KG (5)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17787.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueemrp54j7qk",
-    "codigo": "15191",
-    "descricao": "MIST CAKE NEUTRO MAURI 3KG (5)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15191.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee0mm5m85n6",
-    "codigo": "15651",
-    "descricao": "MIST CAKEMOUSSE BRULE 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueezrrrudltb",
-    "codigo": "15647",
-    "descricao": "MIST CAKEMOUSSE CHOC INTEN MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee4vel5wiai",
-    "codigo": "15652",
-    "descricao": "MIST CAKEMOUSSE COCO 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeen8tmp0wq",
-    "codigo": "15648",
-    "descricao": "MIST CAKEMOUSSE LEITE COND 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeurrqklrkd",
-    "codigo": "15649",
-    "descricao": "MIST CAKEMOUSSE MARACUJA 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeszkd3uswb",
-    "codigo": "15650",
-    "descricao": "MIST CAKEMOUSSE PAMONHA 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeujwfx11gi",
-    "codigo": "15221",
-    "descricao": "MIST CHIPA MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15221.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee00huxyrsc",
-    "codigo": "15330",
-    "descricao": "MIST CREME RECHEIO MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15330.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueea8t37l9oa",
     "codigo": "13453",
     "descricao": "MIST P/CHIPA C80 SACO 2KG",
@@ -2214,101 +1782,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueefji33ufds",
-    "codigo": "15203",
-    "descricao": "MIST PAO DE BATATA MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15203.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee1mbhap99b",
-    "codigo": "15209",
-    "descricao": "MIST PAO DE QUEIJO MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15209.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueet6smpkx3h",
-    "codigo": "15205",
-    "descricao": "MIST PAO LEVE INTEGRAL MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15205.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeccalyc00h",
-    "codigo": "15204",
-    "descricao": "MIST PAO LEVE INTEGRAL MAURI KIT 2X5KG",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15204.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee53hgcogpi",
-    "codigo": "15206",
-    "descricao": "MIST PAO LEVE MULTIGRAO MAURI KIT 2X5KG",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15206.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueebw4pn3vzp",
-    "codigo": "17869",
-    "descricao": "MIST PAO MULTIMIX FLEISCHMANN 1KG",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueev11yd48lp",
-    "codigo": "17784",
-    "descricao": "MIST PAO MULTIMIX FLEISCHMANN 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17784.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeu5q2i9o6w",
-    "codigo": "17136",
-    "descricao": "MIST PAO MULTIUSO MAURI 1KG",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee2vxxk54a4",
-    "codigo": "15202",
-    "descricao": "MIST PAO MULTIUSO MAURI 5KG (3)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15202.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueegu0lrul13",
     "codigo": "17691",
     "descricao": "MIST SCHOKO MALTE SACO 5KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17691.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee9di8khqlz",
-    "codigo": "15207",
-    "descricao": "MISTURA P/ CHIPA MAURI 1KG (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -2399,33 +1877,6 @@
     "descricao": "OREGANO FLOCOS 200G (25)",
     "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
     "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\13721.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeszm5exccc",
-    "codigo": "15200",
-    "descricao": "OVOMALTINE CHOC CREME CROCANTE 660G (6)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15200.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueen9u3syii7",
-    "codigo": "15222",
-    "descricao": "OVOMALTINE CHOC CREME CROCANTE 660G (6)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee19v3ime87",
-    "codigo": "15199",
-    "descricao": "OVOMALTINE CHOC FLOCO CROCANTE 750G (12)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15199.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -3294,24 +2745,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruefxtdsb95cq",
-    "codigo": "15326",
-    "descricao": "RECHEIO BAUNILHA MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15326.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefowql8y5ia",
-    "codigo": "15328",
-    "descricao": "RECHEIO BRIGADEIRO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15328.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruefb19537kbe",
     "codigo": "18226",
     "descricao": "RECHEIO CAPPUCCINO 1,01KG BP",
@@ -3375,15 +2808,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruefg3add188n",
-    "codigo": "15211",
-    "descricao": "RECHEIO CHOCOLATE AO LEITE MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15211.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruef1cr65m5e7",
     "codigo": "18220",
     "descricao": "RECHEIO CHOCOLATE BRIGADEIRO 1,01KG BP",
@@ -3398,15 +2822,6 @@
     "descricao": "RECHEIO CHOCOLATE MEIO AMARGO 1,01KG BP",
     "fornecedor": "BOM PRINCIPIO ALIMENTOS",
     "fotoPath": "P:\\FOTOSPRODUTOS\\18221.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefylwontkio",
-    "codigo": "15327",
-    "descricao": "RECHEIO COCO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15327.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
@@ -3510,24 +2925,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruef1j65q9vbb",
-    "codigo": "15420",
-    "descricao": "RECHEIO LEITE CHOC TRUFADO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefo3kw403ka",
-    "codigo": "15329",
-    "descricao": "RECHEIO LEITE CONDENSADO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15329.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruefwew8jg9h1",
     "codigo": "16564",
     "descricao": "RECHEIO LEITE EM PO 1,01KG 4364",
@@ -3546,15 +2943,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruefrhj06iir2",
-    "codigo": "15212",
-    "descricao": "RECHEIO LIMÃO CREMOSO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15212.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruefky5jilras",
     "codigo": "17511",
     "descricao": "RECHEIO MARACUJA 1,01KG",
@@ -3569,15 +2957,6 @@
     "descricao": "RECHEIO MORANGO 1,01KG",
     "fornecedor": "MORALLES INDUSTRIA COMERCIO E SERVICOS DE ALIMENTOS LTDA",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17398.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefcz602vhei",
-    "codigo": "15213",
-    "descricao": "RECHEIO MORANGO CREMOSO MAURI 4KG (4)",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15213.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
@@ -3785,15 +3164,6 @@
     "descricao": "TEMPERO PARA FEIJÃO 500G (20)",
     "fornecedor": "TEMPERART IND. E COM. DE PRODUTOS ALIMENTICIOS LTDA",
     "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\13772.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefwy56x6jcj",
-    "codigo": "16358",
-    "descricao": "TESTE",
-    "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },

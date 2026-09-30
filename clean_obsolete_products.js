@@ -14,6 +14,7 @@ async function clean() {
       fornecedor LIKE '%ÓRGÃO PÚBLICO%' OR
       fornecedor LIKE '%DIMINAS%' OR
       fornecedor LIKE '%MELHOR BOCADO%' OR
+      fornecedor LIKE '%AB BRASIL%' OR
       descricao LIKE '%batedor%arame%' OR
       descricao LIKE '%batedor%fouet%'
   `);
@@ -36,6 +37,7 @@ async function clean() {
       if (f.includes('ORGAO PUBLICO') || f.includes('ÓRGÃO PÚBLICO')) return true;
       if (f.includes('DIMINAS')) return true;
       if (f.includes('MELHOR BOCADO')) return true;
+      if (f.includes('AB BRASIL')) return true;
       if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
       if (d.includes('BATEDOR DE ARAME')) return true;
 
