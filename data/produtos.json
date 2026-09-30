@@ -1,91 +1,10 @@
 [
   {
-    "id": "moitruedqsxegzb4l",
-    "codigo": "14760",
-    "descricao": "ABAFADOR DE HAMBURGUER ALUM 0,7 - 15CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
     "id": "moitruedvta97ulat",
     "codigo": "17792",
     "descricao": "ACUCAR CONFEITEIRO TOP SUGAR C100 SACO 1",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17792.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued6pyss2hhg",
-    "codigo": "18263",
-    "descricao": "ACUCAR CRISTAL 5KG",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedpzpeu7ux0",
-    "codigo": "18323",
-    "descricao": "ACUCAR SACHE CX 1000X5GR",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued8j1t5p45z",
-    "codigo": "18262",
-    "descricao": "ACUCAR SACHE CX 400X5GR",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedj6iok6j3d",
-    "codigo": "6661",
-    "descricao": "ACUCAR SACHER CX 1000X5GR",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\6661.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedn81ga04r4",
-    "codigo": "18273",
-    "descricao": "ADOCANTE ADOCYL 100ML",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18273.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedoxvlrx61p",
-    "codigo": "18274",
-    "descricao": "ADOCANTE SACHE STEVIA 50X5G LINEA",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18274.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued2vfplgf0v",
-    "codigo": "18275",
-    "descricao": "ADOCANTE SUCRALOSE 6X75ML",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18275.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedrxl3kkq1y",
-    "codigo": "18276",
-    "descricao": "ADOCANTE ZERO CAL 100ML",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18276.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
@@ -122,132 +41,6 @@
     "descricao": "ANTIMOFO E ANTI ROPE MAURI 1KG (12)",
     "fornecedor": "AB BRASIL INDUSTRIA E COMERCIO DE ALIMENTOS LTDA",
     "fotoPath": "P:\\FOTOSPRODUTOS\\15197.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedmca58rwap",
-    "codigo": "12968",
-    "descricao": "ARO CORT. RED. P/ BOLO (INOX) 3.D/F 5X4",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12968.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedh7lilnuev",
-    "codigo": "12962",
-    "descricao": "ARO CORTADOR MARGARIDA INOX",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12962.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedmntrddbz8",
-    "codigo": "12967",
-    "descricao": "ARO CORTADOR QUADRADO LISO INOX 9,8X4CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12967.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued139jrmkh3",
-    "codigo": "14475",
-    "descricao": "ARO CORTADOR REDONDO INOX 15X8CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14475.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrueda59a3e3dr",
-    "codigo": "14476",
-    "descricao": "ARO CORTADOR REDONDO INOX 20X8CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14476.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued88dzbx0v3",
-    "codigo": "14477",
-    "descricao": "ARO CORTADOR REDONDO INOX 23X8CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14477.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued2dh4magw3",
-    "codigo": "14726",
-    "descricao": "ARO MODELADOR REDONDO INOX 13X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14726.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrueduu3g1opxk",
-    "codigo": "14478",
-    "descricao": "ARO MODELADOR REDONDO INOX 15X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14478.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedjv81pugj6",
-    "codigo": "14479",
-    "descricao": "ARO MODELADOR REDONDO INOX 20X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14479.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued3ytk81y2f",
-    "codigo": "14480",
-    "descricao": "ARO MODELADOR REDONDO INOX 23X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14480.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedwmat00m33",
-    "codigo": "12963",
-    "descricao": "ARO RETANG REGULAVEL INOX 31,5X19,5X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12963.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued0luwjttcz",
-    "codigo": "14727",
-    "descricao": "ASSAD. PAO DE LO (ALUM) N.3 36X25X5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedzmkcdwbm6",
-    "codigo": "14481",
-    "descricao": "ASSADEIRA CONICA ALUMINIO 62X36X3,5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14481.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued8ubc8v5k3",
-    "codigo": "14482",
-    "descricao": "ASSADEIRA CONICA ALUMINIO 70X58X3,5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14482.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
@@ -306,42 +99,6 @@
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
   {
-    "id": "moitruedshk2pu87n",
-    "codigo": "14761",
-    "descricao": "BAND.C/TELA ESCORRER FRIT INOX 56X40X7",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedg54boi5np",
-    "codigo": "14728",
-    "descricao": "BANDEJA CANTO CRESPO INOX 44,3X31,3X1,3",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14728.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedi625avxpx",
-    "codigo": "14729",
-    "descricao": "BANDEJA CANTO CRESPO INOX 48,2X38,2X2,8",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14729.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedex4dg1y1o",
-    "codigo": "14730",
-    "descricao": "BANDEJA CANTO LISO INOX 35X20X2",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14730.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
     "id": "moitruedpghkj33r3",
     "codigo": "16232",
     "descricao": "BARQUETE FOLHADA LOSANGO CX 72",
@@ -365,69 +122,6 @@
     "descricao": "BASE CULINARIA ITAMBE 25% 1,0KG (12)",
     "fornecedor": "ITAMBE",
     "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14772.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued0g2h5v3vl",
-    "codigo": "14485",
-    "descricao": "BATEDOR DE ARAME (INOX) 35CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14485.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedvq762zpxr",
-    "codigo": "14484",
-    "descricao": "BATEDOR FOUET INOX 30CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14484.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedai6yqwncj",
-    "codigo": "14836",
-    "descricao": "BICO P/CONF. PIT. 3 (INOX) PCT C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedvoaa1n4ga",
-    "codigo": "14731",
-    "descricao": "BICO P/CONF.CRESP. N.3 (INOX) PT C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedaeox9vxki",
-    "codigo": "14732",
-    "descricao": "BICO P/CONF.CRESP.N.5 (INOX) PT C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued9b9n93j2p",
-    "codigo": "14834",
-    "descricao": "BICO P/CONF.ESP. FOLHA PQ (INOX) PCT C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedcsjjgb8zq",
-    "codigo": "14835",
-    "descricao": "BICO P/CONF.ESP. MARG. 3 (INOX) PCT C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
@@ -500,222 +194,6 @@
     "descricao": "BISC PACIENCIA 100G (20)",
     "fornecedor": "MASSALEVE COMERCIO DE ALIMENTOS LTDA",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17185.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedkt9l6hom5",
-    "codigo": "14585",
-    "descricao": "BISCOITO BACON CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14585.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedzokvbct7a",
-    "codigo": "14563",
-    "descricao": "BISCOITO BAMBOLE CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14563.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruednfklu2vie",
-    "codigo": "14564",
-    "descricao": "BISCOITO BEIJINHO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14564.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedxndu207o1",
-    "codigo": "14565",
-    "descricao": "BISCOITO BEM CASADO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14565.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued8ta2gwzoh",
-    "codigo": "14566",
-    "descricao": "BISCOITO CANELA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14566.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedfd2osj3ku",
-    "codigo": "14567",
-    "descricao": "BISCOITO CASADINHO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14567.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedme1ndofdi",
-    "codigo": "14568",
-    "descricao": "BISCOITO CHOCOBIS CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14568.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrueduk0jcujkr",
-    "codigo": "14569",
-    "descricao": "BISCOITO CHOCOMINAS CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14569.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued0cd5q7pn3",
-    "codigo": "14570",
-    "descricao": "BISCOITO DIMINAS CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14570.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued3nt1ezq16",
-    "codigo": "14571",
-    "descricao": "BISCOITO ENROLADINHO GOIABA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14571.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued5ehmc7oh6",
-    "codigo": "14572",
-    "descricao": "BISCOITO FLORZINHA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14572.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued3gd37q767",
-    "codigo": "14573",
-    "descricao": "BISCOITO LEITE CONDENSADO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14573.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedrixy357fl",
-    "codigo": "14574",
-    "descricao": "BISCOITO MARGARIDA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14574.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedla7yv7xzx",
-    "codigo": "14579",
-    "descricao": "BISCOITO NEVADA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14579.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued2o32wlwk1",
-    "codigo": "14580",
-    "descricao": "BISCOITO PALITO CHOCOLATE CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14580.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedxradpomae",
-    "codigo": "14581",
-    "descricao": "BISCOITO PALMIER CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14581.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrueduo0wmnoiw",
-    "codigo": "14582",
-    "descricao": "BISCOITO PAO DE MEL CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14582.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruednq8udkvb9",
-    "codigo": "14586",
-    "descricao": "BISCOITO PIMENTA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14586.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrueddf6siy915",
-    "codigo": "14587",
-    "descricao": "BISCOITO PIZZA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14587.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedc92c8qrym",
-    "codigo": "14588",
-    "descricao": "BISCOITO QUEIJO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14588.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedvybqujkpa",
-    "codigo": "14583",
-    "descricao": "BISCOITO SEQUILHOS CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "192.168.73.10\\FOTOSPRODUTOS\\14583.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruednqcxv3tnr",
-    "codigo": "14584",
-    "descricao": "BISCOITO SOL CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14584.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedufljgojkw",
-    "codigo": "14589",
-    "descricao": "BISCOITO TORRADINHA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14589.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedig2lu6kqm",
-    "codigo": "17607",
-    "descricao": "BOLO BROWNIE CX 24X60G 72492",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17607.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
@@ -1044,73 +522,10 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee5qgepqzw6",
-    "codigo": "14535",
-    "descricao": "CAFE DO SITIO A VACUO 250GR",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14535.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueeum3rwc3o0",
     "codigo": "17711",
     "descricao": "CAIXA ESPECIAL DONUTS",
     "fornecedor": "PONTA DE ESTOQUE",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewxxzy71ra",
-    "codigo": "16501",
-    "descricao": "CAIXA FOOD DONUTS - 73765 ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueez7tp68kxd",
-    "codigo": "16787",
-    "descricao": "CAKE RECH BANANA AVEIA MEL CX 2X1KG ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeahumdvvl3",
-    "codigo": "16784",
-    "descricao": "CAKE RECH CHOCOLATE CX 2X1KG ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueep19r0jx0z",
-    "codigo": "16785",
-    "descricao": "CAKE RECH COCO CX 2X1KG",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeesqo8i8xw",
-    "codigo": "16788",
-    "descricao": "CAKE RECH INT CASTANHA TAMARA CX 2X1KG ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexr3ez0b97",
-    "codigo": "16786",
-    "descricao": "CAKE RECH RED VELVET CX 2X1KG ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
     "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
@@ -1161,38 +576,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee73e3bhjmu",
-    "codigo": "12965",
-    "descricao": "CALHA ESPUMONE EM V INOX",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12965.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee9ipksxp6i",
     "codigo": "18488",
     "descricao": "CANTUCCI C100 SACO 2KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueekitoqhzqv",
-    "codigo": "14268",
-    "descricao": "CARAVELA COB COVER CACAO BD 5KG 45BB",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14268.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeue4z52rrg",
-    "codigo": "14267",
-    "descricao": "CARAVELA COB COVER WHITE BD 5KG 45BA",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14267.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1211,15 +599,6 @@
     "descricao": "CARAVELA FLOCOS AO LEIT 2,05K AX48SM (8)",
     "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
     "fotoPath": "P:\\FOTOSPRODUTOS\\14756.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeqolxtdh6f",
-    "codigo": "14597",
-    "descricao": "CARAVELA FLOCOS BRANCO 2,05K AX48SB (8)",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14597.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1368,65 +747,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee1xtse1hy8",
-    "codigo": "14486",
-    "descricao": "CARRETILHA CRES C/5 (PLAS/INOX) 2,7X15,2",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14486.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueel0ktk2x1y",
     "codigo": "18210",
     "descricao": "CEBOLA CARAMELIZADA 1,01KG BP",
     "fornecedor": "BOM PRINCIPIO ALIMENTOS",
     "fotoPath": "P:\\FOTOSPRODUTOS\\18210.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueed4ttp8zr3",
-    "codigo": "18321",
-    "descricao": "CHA BOLDO MATE LEAO CX10UNI",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14535.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee03wxa1hn9",
-    "codigo": "18270",
-    "descricao": "CHA CAMOMILA MATE LEAO CX10UNI",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18270.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee5kobff6e6",
-    "codigo": "18271",
-    "descricao": "CHA CAPIM CIDREIRA MATE LEAO CX10UNI",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18271.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeayfatpuks",
-    "codigo": "18272",
-    "descricao": "CHA ERVA DOCE MATE LEAO CX10UNI",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18272.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexz8srtp7g",
-    "codigo": "18277",
-    "descricao": "CHA HORTELA MATE LEAO CX10UNI",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\18277.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1503,42 +828,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueew9bnwka1q",
-    "codigo": "14832",
-    "descricao": "CHANTILY MONNA LISA CX 1K(12) AV50AB",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueecbjf5m6r0",
-    "codigo": "14151",
-    "descricao": "CHANTILY MONNA LISA DELUXE CX 1K(12 51AC",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14151.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueea4a72oo9s",
-    "codigo": "16179",
-    "descricao": "CHICAGO PIZZA CALABRESA CX 12X190G ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16179.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueedxg8viyq6",
-    "codigo": "16178",
-    "descricao": "CHICAGO PIZZA FRANGO CX 12X190G ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16178.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueezv8n7pmi3",
     "codigo": "14890",
     "descricao": "CHOC CARAVEL NOCCIOL FORN AVELA BD 20KG",
@@ -1584,38 +873,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueehhwfzaevv",
-    "codigo": "14733",
-    "descricao": "COADOR FIO DE OVOS INOX C/3 BICOS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14733.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee8bv6dle65",
     "codigo": "17638",
     "descricao": "COBERTURA PASCAL C100 (SACO 2KG)",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17638.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexpqbvlcya",
-    "codigo": "14763",
-    "descricao": "COLHER DE CREME (POLIAMIDA) 30CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14763.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueefkt43ftir",
-    "codigo": "14487",
-    "descricao": "COLHER DE CREME (POLIAMIDA) 35CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14487.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -1692,24 +954,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee5ice1uc2u",
-    "codigo": "14489",
-    "descricao": "CONCHA CEREAIS INOX 1000G",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14489.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueesg5v5jytu",
-    "codigo": "14488",
-    "descricao": "CONCHA CEREAIS INOX 500G",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14488.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee9qr9n5ykg",
     "codigo": "13712",
     "descricao": "COND.CURCUMA 1KG (10)",
@@ -1723,15 +967,6 @@
     "codigo": "18487",
     "descricao": "COOKIE C100 SACO 2KG",
     "fornecedor": "IREKS DO BRASIL",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee1vni8kn86",
-    "codigo": "14741",
-    "descricao": "CORTADOR PETIT FLOUR CORAC. INOX PCT C/4",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
     "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
@@ -1827,15 +1062,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee5kimgokzs",
-    "codigo": "14149",
-    "descricao": "CREME VEGETAL MAXIME CHEF 24%G CX 1K(12)",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14149.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueer6h9kcoml",
     "codigo": "12541",
     "descricao": "CROISSANT C50 (SACO 10KG)",
@@ -1903,15 +1129,6 @@
     "codigo": "15762",
     "descricao": "CROISSANT CONGEL QUEIJO (SACO 5KG)(2)",
     "fornecedor": "FARINE EMUNAH ALIMENTOS EIRELI",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueea2xmhvvv1",
-    "codigo": "17636",
-    "descricao": "CROISSANT CONGEL TRADICIONAL (CX 240G)",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
     "fotoPath": "P:\\FOTOSPRODUTOS\\15670 15671 15672 15673 15762 15763 17636.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
@@ -2007,227 +1224,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueefpb8nrkm3",
-    "codigo": "17357",
-    "descricao": "DONUTS CHOCOLATE DARK CX 24X70 73642",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17357.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueerlr2l7w47",
-    "codigo": "16148",
-    "descricao": "DONUTS COBERT CHOC/CREME CX 24X80G ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueet8cp4rarz",
-    "codigo": "16122",
-    "descricao": "DONUTS COBERT CHOC/CREME CX 24X80G 76537",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16122.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueea8pllw15t",
-    "codigo": "16586",
-    "descricao": "DONUTS CORACAO CHOC CX 24X80G 74175",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16586.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeldp6pryu4",
-    "codigo": "17772",
-    "descricao": "DONUTS CORACAO FINI CX 24X80G 74168",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueerjac7gz2q",
-    "codigo": "16124",
-    "descricao": "DONUTS ESP DIAMANTE NEGRO CX 24X70G",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeeqrf9p8cs",
-    "codigo": "16123",
-    "descricao": "DONUTS ESP LAKA CX 24X70G",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16123.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee31f6ak8i9",
-    "codigo": "16766",
-    "descricao": "DONUTS KIT KAT CX 24X70G 76483",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16766.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee7ge5kogxm",
-    "codigo": "16767",
-    "descricao": "DONUTS LEITE MOÇA CX 24X70G 72348",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16767.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeylr6bmgoc",
-    "codigo": "16126",
-    "descricao": "DONUTS RECH AVELA/ NUT CX 24X70G 72379",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16126.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee8jldf23zs",
-    "codigo": "16109",
-    "descricao": "DONUTS RECH BAV/CREME CX 24X70G 76322",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16109.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueektdhuu7tj",
-    "codigo": "16125",
-    "descricao": "DONUTS RECH CAPPUCCINO CX 24X70G ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeza7prt87r",
-    "codigo": "16120",
-    "descricao": "DONUTS RECH CHOCOLATE CX 24X70G 76308",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16120.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeyork9wly5",
-    "codigo": "16970",
-    "descricao": "DONUTS RECH CHURROS CX 24X70G 72287",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16970.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueedx1io9mwq",
-    "codigo": "16119",
-    "descricao": "DONUTS RECH DOCE DE LEIT CX 24X70G 76315",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16119.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee40ihcgpkl",
-    "codigo": "16121",
-    "descricao": "DONUTS RECH FRUTAS VERM CX 24X70G 76339",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16121.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeby6nna66p",
-    "codigo": "16542",
-    "descricao": "DONUTS RECH OURO BRANCO CX 24X70G",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee4acga1lgk",
-    "codigo": "16605",
-    "descricao": "DONUTS RECH PACOQUITA CX 24X70G 72560",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16605.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueej8ya9cz42",
-    "codigo": "16783",
-    "descricao": "DONUTS RECH PISTACHE CX 24X70G 73598",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16783.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueel6bj3sepa",
-    "codigo": "16543",
-    "descricao": "DONUTS RECH SONHO DE VALSA CX 24X70G",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee4fx7d4eqc",
     "codigo": "14923",
     "descricao": "ECLAIR GOLDEN PCT C/600G",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\14923.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee1437wtbv4",
-    "codigo": "14762",
-    "descricao": "ESPANADEIRA PLASTICA P/ BALCAO",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14762.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeyz12j9js7",
-    "codigo": "14841",
-    "descricao": "ESPATULA (INOX) 30CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewl9sf9ni4",
-    "codigo": "14842",
-    "descricao": "ESPATULA C/ DEGRAUS (INOX) 25CM SO DE LA",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeliz2i8q43",
-    "codigo": "14767",
-    "descricao": "FACA FIO ONDULADO (INOX) 14 / 35 CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14767.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -2394,335 +1395,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueeqd12tkv51",
-    "codigo": "14839",
-    "descricao": "FORMA ART. CORACAO MD (ALUM) 29,5X7CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeve76xixwg",
-    "codigo": "14840",
-    "descricao": "FORMA ART. MARG. C/8 GOMOS (ALUM) 27X7CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueekjt4zqua6",
-    "codigo": "14768",
-    "descricao": "FORMA ARTIST. CORACAO PQ (ALUM) 25,3X7CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeqi5npgkqc",
-    "codigo": "14490",
-    "descricao": "FORMA BOLO INGLES ALUMINIO 21X9X4,5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14490.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueecfumzkko8",
-    "codigo": "12964",
-    "descricao": "FORMA CALHA RETANGULAR ALUMINIO 45X5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12964.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexyq1s7x3h",
-    "codigo": "14735",
-    "descricao": "FORMA COPO DE GELO 10,2X5CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14735.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueen0ira3yb3",
-    "codigo": "14736",
-    "descricao": "FORMA COPO DE GELO 7X3,5CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14736.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeowk2i1ctd",
-    "codigo": "14523",
-    "descricao": "FORMA CUPCAKE GR 12 (ALUM) 35,5X26,5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14523.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee5mo33cier",
-    "codigo": "14739",
-    "descricao": "FORMA CUPCAKE GR 12 C/ANT. 35,4X27X3",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueema2mm9w9i",
-    "codigo": "14491",
-    "descricao": "FORMA CUPCAKE PEQ ALUMINIO 12 CAVIDADES",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14491.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueef1oe5okxt",
-    "codigo": "12959",
-    "descricao": "FORMA CUPCAKE PEQUENO COM 24 CAVIDADES",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12959.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueen7da59ihr",
-    "codigo": "14499",
-    "descricao": "FORMA EMPAD LISA NR.4 ALU 5X2,6X6,8 C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14499.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueehpv84lsy4",
-    "codigo": "14492",
-    "descricao": "FORMA P. FORMA BABY C/TAMPA (ALUM) 22X10",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14492.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeg7p9y4qjq",
-    "codigo": "15764",
-    "descricao": "FORMA PANDORO ALUMINIO 9,5X14X24CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\15764.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueenzph189lo",
-    "codigo": "12973",
-    "descricao": "FORMA PAO CENTEIO (ALUM) 20,5X9,8X6,6",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12973.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee0xhmq6ojd",
-    "codigo": "14734",
-    "descricao": "FORMA PAO DE FORMA (ALUM) 30X10X10",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexfhvmwz9s",
-    "codigo": "14500",
-    "descricao": "FORMA PETIT GATEAU ALUMINIO 6,5X6CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14500.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeacmkemovt",
-    "codigo": "14493",
-    "descricao": "FORMA PIZZA (ALUM) 30X1,5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14493.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee9j7eus38e",
-    "codigo": "14617",
-    "descricao": "FORMA PIZZA ALUMINIO 25CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14617.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueec283zse0p",
-    "codigo": "14618",
-    "descricao": "FORMA PIZZA ALUMINIO 35CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14618.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee6s0hieprg",
-    "codigo": "12081",
-    "descricao": "FORMA PUDIM TORTA SUICA ALUM 13X6CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12081.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeg9j8b50rn",
-    "codigo": "13185",
-    "descricao": "FORMA PUDIM TORTA SUICA ALUM 13X8CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\13185.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeh9vancvdk",
-    "codigo": "14502",
-    "descricao": "FORMA QUINDIM ALUMINIO 5,1CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14502.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueefos61eh3b",
-    "codigo": "14501",
-    "descricao": "FORMA QUINDIM ALUMINIO 5,8CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14501.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee4o3yddzpt",
-    "codigo": "14503",
-    "descricao": "FORMA QUINDIM MINI ALUMINIO 3,7CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14503.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewjg4o6dkw",
-    "codigo": "14494",
-    "descricao": "FORMA REBAIXADA BALLERINE ALUM 18,5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14494.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee9ihxcdcqp",
     "codigo": "12834",
     "descricao": "FORMA STOLEN 300GR PT C/50",
     "fornecedor": "ALUMIFORMAS -PEDRO ROBERTO REZENDE ME",
     "fotoPath": "P:\\FOTOSPRODUTOS\\12834.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee8vlfvtbmn",
-    "codigo": "14495",
-    "descricao": "FORMA TORTA SUICA (ALUM) 15X8X19",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14495.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee7ld31gixx",
-    "codigo": "14524",
-    "descricao": "FORMA TORTA SUICA (ALUM) 17X8X19,4",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14524.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeu19ea8kby",
-    "codigo": "14496",
-    "descricao": "FORMA TORTA SUICA (ALUM) 18X8X21",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14496.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueemjylx0ffe",
-    "codigo": "14497",
-    "descricao": "FORMINHA ALUMINIO EMPADA LISA N1 C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14497.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueep44kqsa9m",
-    "codigo": "14498",
-    "descricao": "FORMINHA ALUMINIO EMPADA LISA N3 C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14498.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee4qswwonjd",
-    "codigo": "14764",
-    "descricao": "FORMINHA EMPADA CRESPA N3 7,4X2,2CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14764.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeo7aznsr3u",
-    "codigo": "14766",
-    "descricao": "FORMINHA EMPADA LISA N5 9X3,2CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14766.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueesdc15zqwi",
-    "codigo": "12974",
-    "descricao": "FORMINHA MODELO LUNA ALUM 8X4,3CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12974.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueecmmvef6fj",
-    "codigo": "14737",
-    "descricao": "FORMINHA REBAIXADA ALUMINIO 9X2,9CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14737.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueecjm9p8gk2",
-    "codigo": "14765",
-    "descricao": "FORMINHA TORTA MACA CRESPA 7,6CM C/12",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14765.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -2840,105 +1517,6 @@
     "descricao": "GRANO PAO FRANCES C50 SACO 5KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\12432.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeqon0aw07g",
-    "codigo": "14504",
-    "descricao": "JOGO CORTADOR ESFIHA COM 4 PEÇAS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14504.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeos8ky4ptk",
-    "codigo": "14507",
-    "descricao": "JOGO CORTADOR QUAD LISO INOX C/7 PEÇAS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14507.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewh1t7u57x",
-    "codigo": "14750",
-    "descricao": "JOGO CORTADOR QUAD LISO/CRESPO PLAST C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14750.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeethl9jrd4",
-    "codigo": "14740",
-    "descricao": "JOGO CORTADOR RED LISO/CRESPO PLAST C/6",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14740.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee2c73zxrjw",
-    "codigo": "14508",
-    "descricao": "JOGO CORTADOR REDOND LISO INOX C/7 PEÇAS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14508.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueehm90i6xep",
-    "codigo": "12969",
-    "descricao": "JOGO CORTADOR SEXTAVADO INOX C/5",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12969.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee02llaa5vm",
-    "codigo": "14505",
-    "descricao": "JOGO PETIT FOUR INOX C/20 PEÇAS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14505.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueem2yfl3jq1",
-    "codigo": "14506",
-    "descricao": "JOGO PETIT FOUR MINI INOX C/13 PEÇAS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14506.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueemienn5lua",
-    "codigo": "14518",
-    "descricao": "KIT EJETOR FOLHAS PLASTICO C/3 TAMANHOS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14518.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeipf73qwlq",
-    "codigo": "14519",
-    "descricao": "KIT EJETOR FOLHAS PLASTICO C/4 TAMANHOS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14519.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueexcy67ui5w",
-    "codigo": "14742",
-    "descricao": "KIT ESTECAS PLASTICO C/14 ITENS",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14742.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -3065,15 +1643,6 @@
     "descricao": "MALTE DARK AROMA TOSTADO NATUAL C/500G",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\13505.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee3dlvpyygp",
-    "codigo": "14738",
-    "descricao": "MARCADOR DE TORTA PED  (INOX) 28CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -3339,146 +1908,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee9kgmpoosi",
-    "codigo": "16234",
-    "descricao": "MINI DONUTS RECH BAV/CREME CX 72X15G 453",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16234.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueezfen7iks3",
-    "codigo": "16236",
-    "descricao": "MINI DONUTS RECH CHOCOLA CX 72X15G 9460",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16236.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueey036y2dub",
-    "codigo": "16237",
-    "descricao": "MINI DONUTS RECH CHOCOLATE CX 72X15G ",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueewvtnlujow",
-    "codigo": "16235",
-    "descricao": "MINI DONUTS RECH DOC LEITE CX 72X15G 477",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16235.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeg59h4rkxg",
-    "codigo": "17634",
-    "descricao": "MINI RING COBERT CH PT/BR CX48X15G 74106",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17634.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee54o2vvfgl",
-    "codigo": "17868",
-    "descricao": "MINI RING COBERT CHOC BR CX48 74090",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueevsq20laju",
-    "codigo": "17632",
-    "descricao": "MINI RING COBERT CHOC PT CX48X15G 74090",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17632.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeodf088m6r",
-    "codigo": "17633",
-    "descricao": "MINI RING COBERT CHOC ROS CX48X15G 74113",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17633.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee27i2v0dig",
-    "codigo": "17703",
-    "descricao": "MINI RING HOMER CX 48X15G 74137",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17703.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueegwarc6x5p",
-    "codigo": "14753",
-    "descricao": "MIRALL CHOC BCO GLAÇAGEM BD 3KG 24ED",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueergt4b7es6",
     "codigo": "14270",
     "descricao": "MIRALL CHOC BCO GLAÇAGEM BD 5KG 24AD",
     "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
     "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14270.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeaq9cst0ct",
-    "codigo": "14754",
-    "descricao": "MIRALL CHOC. GLAÇAGEM BD 3KG 23ED",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueea1iwt3ptx",
-    "codigo": "14271",
-    "descricao": "MIRALL CHOC. GLAÇAGEM BD 5KG 23AD",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14271.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueedp9ehw0f6",
-    "codigo": "14716",
-    "descricao": "MIRALL MORANGO GLAÇAGEM BD 3KG",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeutgqc0qtn",
-    "codigo": "14272",
-    "descricao": "MIRALL MORANGO GLAÇAGEM BD 5KG",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14272.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueeqpqy0rapg",
-    "codigo": "14755",
-    "descricao": "MIRALL NEUTRA GLAÇAGEM BD 3KG",
-    "fornecedor": "ORGAO PUBLICO ",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -3942,38 +2376,11 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueexnpebgx22",
-    "codigo": "16180",
-    "descricao": "MUFFIN BAUNILHA CX 15X80G 76032",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16180.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueewn9nugou8",
     "codigo": "18486",
     "descricao": "MUFFIN C100 SACO 2KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee7bqgy6lkf",
-    "codigo": "16182",
-    "descricao": "MUFFIN CHOCOLATE C/GOTAS CX 15X80G 76025",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16182.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee10jsspa1v",
-    "codigo": "16181",
-    "descricao": "MUFFIN RED VELVET CX 15X80G 76056",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16181.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -4797,15 +3204,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruef2ag00v7l5",
-    "codigo": "17637",
-    "descricao": "PAO TORRADA CONGEL TRADICIONAL (CX 240G)",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruefxd0287vb7",
     "codigo": "13521",
     "descricao": "PAO VEGANO C100 SACO 5KG",
@@ -4824,56 +3222,11 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruefx3v743kjx",
-    "codigo": "14509",
-    "descricao": "PEGADOR DE DOCE C/MOLA (INOX)20CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14509.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef45fihr40v",
-    "codigo": "14510",
-    "descricao": "PEGADOR DE PAO (INOX)",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14510.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefxo7g4xuzs",
-    "codigo": "17314",
-    "descricao": "PETIT GATEAU CHOCOLATE CX 24X80G 79156",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17314.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitrueft8aj0hjp1",
     "codigo": "15980",
     "descricao": "PRESTIGIO NESTLE 33GR  (E) ",
     "fornecedor": "CASA DO CHOCOLATE PROD ALIMENTOS",
     "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefjxy5zcrmt",
-    "codigo": "17288",
-    "descricao": "PUDIM DE LEITE COND CONG CX 24X90G 79187",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17288.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefc8f0zj6ul",
-    "codigo": "17606",
-    "descricao": "PUDIM DE LEITE COND CONG CX12X90G 78975",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17606.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
@@ -4892,33 +3245,6 @@
     "descricao": "PÃO CRAFT MALTE SOFT C50 (SACO 5KG)",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\13829.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefq3xofkk3y",
-    "codigo": "14511",
-    "descricao": "RASPADEIRA INOX CABO PP C/10CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14511.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefqy4kfp948",
-    "codigo": "14512",
-    "descricao": "RASPADEIRA INOX CABO PP C/11,7CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14512.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitrueflypzc9rt6",
-    "codigo": "14513",
-    "descricao": "RASPADOR CHOCOLATE MEIA LUA INOX 10CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14513.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
@@ -5400,231 +3726,6 @@
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
   {
-    "id": "moitruefyc3qllcbp",
-    "codigo": "17629",
-    "descricao": "RING ABACAXI 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17629.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefruwxqudz2",
-    "codigo": "16749",
-    "descricao": "RING BLUEBERRY 75G CX C/24 73383",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16749.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef4ylq302vw",
-    "codigo": "16793",
-    "descricao": "RING BRIGADEIRO 75G CX C/24 73901",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16793.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef33p3glcto",
-    "codigo": "16958",
-    "descricao": "RING CARNAVAL 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16958.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefnx46fx7f6",
-    "codigo": "17335",
-    "descricao": "RING CHOC PRETO-BRANCO 75G CX C/24 77183",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17335.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef3vbo6nudr",
-    "codigo": "16128",
-    "descricao": "RING CHOCOLATE 75G CX C/24 72874",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16128.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefhq8donxrn",
-    "codigo": "17642",
-    "descricao": "RING CHOCOLATE BRANCO 75G CX C/24 72898",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17642.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefu7dlshjpp",
-    "codigo": "17518",
-    "descricao": "RING CHOCOLATE HALLOWEEN 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17518.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitrueffaycp5f1b",
-    "codigo": "17551",
-    "descricao": "RING CHOCOLATE NATALINO 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefmup5s4xbr",
-    "codigo": "16750",
-    "descricao": "RING COBERT BRIGADEIRO CX 24X75G",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\16750.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef8jcygsk5c",
-    "codigo": "16129",
-    "descricao": "RING COOKIES & CREAM 75G CX C/24 72867",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16129.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef8t0kx0g4y",
-    "codigo": "17334",
-    "descricao": "RING CREME DE MORANGO 75G CX C/24 77176",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17334.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef5bxis5uba",
-    "codigo": "16130",
-    "descricao": "RING DOCE LEITE CROCANTE 75G C/24 72850",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16130.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef3jxgsswxy",
-    "codigo": "16127",
-    "descricao": "RING FRUTAS VERMELHAS 75G CX C/24 72911",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16127.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefs72p5kg4b",
-    "codigo": "17123",
-    "descricao": "RING HOMER CREME 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17123.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef03b375ww0",
-    "codigo": "17702",
-    "descricao": "RING PACOQUITA 75G CX C/24 73987",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17702.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef6oq0nhafx",
-    "codigo": "16751",
-    "descricao": "RING PINK LEMONADE 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16751.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefcfibtvosl",
-    "codigo": "17656",
-    "descricao": "RING PISTACHE 75G CX C/24 72904",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17656.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefor045shqc",
-    "codigo": "17643",
-    "descricao": "RING TRIPLO CHOCOLATE 75G CX C/24",
-    "fornecedor": "MELHOR BOCADO ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\17643.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef2j4remh54",
-    "codigo": "12971",
-    "descricao": "ROLO CORT. TRELICA (INOX) 12 CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\12971.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitrueft91e58qbz",
-    "codigo": "14514",
-    "descricao": "ROLO DE MASSA GIRATORIO POLIETILENO 35CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14514.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefkrzet9e7x",
-    "codigo": "14575",
-    "descricao": "ROSQ. AMANTEIGADA C/ABACAXI CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14575.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefwumbloio2",
-    "codigo": "14576",
-    "descricao": "ROSQ. AMANTEIGADA C/COCO CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14576.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef15xr6vc6t",
-    "codigo": "14577",
-    "descricao": "ROSQ. AMANTEIGADA C/FLOCOS CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14577.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefhroar7dw8",
-    "codigo": "14578",
-    "descricao": "ROSQ. AMANTEIGADA C/LARANJA CX 2KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14578.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
     "id": "moitruefvh97ufdms",
     "codigo": "7127",
     "descricao": "SONHO GOLDEN BERLINER SACO 2KG",
@@ -5648,78 +3749,6 @@
     "descricao": "SUPER SOFT C50 (SACO 5KG) (E)",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\12215.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef4712xezaz",
-    "codigo": "14483",
-    "descricao": "SUPORTE GIRATORIO POLIETILENO 29,5CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14483.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefkca78r6wz",
-    "codigo": "14590",
-    "descricao": "SUSPIRO CX 1,200KG",
-    "fornecedor": "BISCOITO CASEIRO DIMINAS",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\14590.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefp0ag86juw",
-    "codigo": "14619",
-    "descricao": "TAPETE SILICONE 18 CAVI 6,8CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14619.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef3niy3lhhr",
-    "codigo": "14646",
-    "descricao": "TAPETE SILICONE 18 CAVIDADES 6,8CM 8124",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14646.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef9i4evhb3j",
-    "codigo": "14647",
-    "descricao": "TAPETE SILICONE 53 CAVIDADES 3,8CM 8124",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14647.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruef2ji8tbvie",
-    "codigo": "14525",
-    "descricao": "TAPETE SILICONE 60X40",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14525.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefiyk1vq0ke",
-    "codigo": "14515",
-    "descricao": "TELA P/GLACEADO INOX 60X40CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14515.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefc0eutk8z7",
-    "codigo": "14769",
-    "descricao": "TELA REDONDA P/ PIZZA (ALUMI) 35CM",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },
@@ -5792,24 +3821,6 @@
     "descricao": "TOP MACIO MASSA DOCE SACO 5KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\9627.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefjox5z12ny",
-    "codigo": "14516",
-    "descricao": "TRINCHA MESTRE CUCA",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14516.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefgss0427dg",
-    "codigo": "14517",
-    "descricao": "TRINCHA MESTRE CUCA GRANDE",
-    "fornecedor": "DOUPAN IND.COM.PROD.PANIFICAÇÃO LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\14517.PNG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   },

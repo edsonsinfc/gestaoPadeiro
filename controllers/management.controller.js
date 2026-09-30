@@ -243,3 +243,37 @@ exports.syncClientesFromJson = async (req, res) => {
     res.status(500).json({ error: 'Erro interno ao sincronizar os clientes.', details: error.message });
   }
 };
+
+exports.cleanProdutosObsoletos = async (req, res) => {
+  const allowed = ['admin', 'gestor_geral', 'master_gestor'];
+  if (!allowed.includes(req.user.role)) return res.status(403).json({ error: 'Acesso restrito' });
+
+  const { pool } = require('../data/mysqlDB');
+
+  try {
+    const [delResult] = await pool.query(`
+      DELETE FROM produtos 
+      WHERE 
+        fornecedor LIKE '%DOUPAN%' OR
+        fornecedor LIKE '%ORGAO PUBLICO%' OR
+        fornecedor LIKE '%ÓRGÃO PÚBLICO%' OR
+        fornecedor LIKE '%DIMINAS%' OR
+        fornecedor LIKE '%MELHOR BOCADO%' OR
+        descricao LIKE '%batedor%arame%' OR
+        descricao LIKE '%batedor%fouet%'
+    `);
+
+    const [countResult] = await pool.query('SELECT COUNT(*) as total FROM produtos');
+
+    res.json({
+      success: true,
+      removidos: delResult.affectedRows,
+      totalRestante: countResult[0].total,
+      message: `Limpeza concluída! ${delResult.affectedRows} produtos obsoletos foram removidos.`
+    });
+  } catch (error) {
+    console.error('Erro ao limpar produtos obsoletos:', error);
+    res.status(500).json({ error: 'Erro ao limpar produtos obsoletos', details: error.message });
+  }
+};
+

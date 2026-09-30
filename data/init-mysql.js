@@ -424,6 +424,26 @@ async function initTables() {
     console.log('   ⚠️ Migração parcial ou tabela inexistente (push_subscriptions):', e.message);
   }
 
+  // Limpeza automática de produtos obsoletos (DOUPAN, Órgão Público, Diminas, Melhor Bocado, Batedores)
+  try {
+    const [delResult] = await pool.query(`
+      DELETE FROM produtos 
+      WHERE 
+        fornecedor LIKE '%DOUPAN%' OR
+        fornecedor LIKE '%ORGAO PUBLICO%' OR
+        fornecedor LIKE '%ÓRGÃO PÚBLICO%' OR
+        fornecedor LIKE '%DIMINAS%' OR
+        fornecedor LIKE '%MELHOR BOCADO%' OR
+        descricao LIKE '%batedor%arame%' OR
+        descricao LIKE '%batedor%fouet%'
+    `);
+    if (delResult && delResult.affectedRows > 0) {
+      console.log(`      🧹 [CLEANUP] Removidos ${delResult.affectedRows} produtos obsoletos da tabela produtos.`);
+    }
+  } catch (e) {
+    console.warn('   ⚠️ Erro ao verificar produtos obsoletos:', e.message);
+  }
+
   console.log('   ✅ Tabelas MySQL verificadas/criadas');
 }
 
