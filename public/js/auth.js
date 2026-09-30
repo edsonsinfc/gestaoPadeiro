@@ -72,8 +72,8 @@ const Auth = {
       <!-- Google Login Button Container -->
       <div id="google-login-btn" class="google-btn-container"></div>
 
-      <!-- PWA Install Option -->
-      <button type="button" id="pwa-install-btn" class="comodato-btn-pwa" style="display: flex;" onclick="Auth.handleInstallApp()">
+      <!-- APK / PWA Install Option -->
+      <button type="button" id="pwa-install-btn" class="comodato-btn-pwa" style="display: ${typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform() ? 'none' : 'flex'};" onclick="Auth.handleInstallApp()">
         <i data-lucide="download" style="width: 18px; height: 18px; margin-right: 8px;"></i>
         BAIXAR APLICATIVO
       </button>
@@ -81,17 +81,23 @@ const Auth = {
   },
 
   async handleInstallApp() {
-    if (window.deferredPrompt) {
-      window.deferredPrompt.prompt();
-      const { outcome } = await window.deferredPrompt.userChoice;
-      window.deferredPrompt = null;
-      document.getElementById('pwa-install-btn').style.display = 'none';
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      alert('No iPhone: Toque no ícone de "Compartilhar" (quadrado com seta no Safari) e selecione "Adicionar à Tela de Início".');
+      return;
+    }
+
+    if (typeof App !== 'undefined' && typeof App.downloadApk === 'function') {
+      App.downloadApk();
     } else {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      const msg = isIOS 
-        ? 'No iPhone: Toque no ícone de "Compartilhar" (quadrado com seta) e selecione "Adicionar à Tela de Início".'
-        : 'Para instalar o App via IP: Clique nos 3 pontinhos do Chrome (topo direito) e selecione "Instalar Aplicativo".';
-      alert(msg);
+      const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'SmartGestor.apk';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   },
 
