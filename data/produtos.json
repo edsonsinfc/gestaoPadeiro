@@ -216,60 +216,6 @@
     "criadoEm": "2026-04-28T16:13:05.317Z"
   },
   {
-    "id": "moitrued44x38e2mz",
-    "codigo": "14080",
-    "descricao": "BOLO DE CHOC. CREMOSO 5KG(5X5) (RICONI)",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14080.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedmjkr8wnfb",
-    "codigo": "14079",
-    "descricao": "BOLO DE LARANJA CREMOSO 5KG(5X5) RICONI",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14079.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedpi4qgrdi5",
-    "codigo": "14081",
-    "descricao": "BOLO DE MANDIOCA CREMOSO 5KG(5X5) RICONI",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14081.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued47i19dbtl",
-    "codigo": "14076",
-    "descricao": "BOLO DE MARACUJÁ 5KG(5X5) ( RICONI)",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14076.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitruedi2vg14zb0",
-    "codigo": "14078",
-    "descricao": "BOLO DE MILHO CREMOSO 3KG(5X3) ( RICONI)",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14078.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
-    "id": "moitrued0xbo168ek",
-    "codigo": "14082",
-    "descricao": "BOLO DE MILHO CREMOSO 5KG(5X5) (RICONI)",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14082.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.317Z"
-  },
-  {
     "id": "moitruedt9osvh62z",
     "codigo": "7121",
     "descricao": "BOLO GOLDEN CAKE AIPIM SACO 2KG",
@@ -1202,15 +1148,6 @@
     "descricao": "FERMENTO PO QUIMICO GOLDEN TRIEB 10KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\17690.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitruee4345ygrjh",
-    "codigo": "14083",
-    "descricao": "FERMENTO QUIMICO EM PO CX 2KG(10) RICONI",
-    "fornecedor": "RICONI- PASCOAL BUTINI INDUSTRIA E COMERCIO DE PRODUTOS ALIM",
-    "fotoPath": "\\\\10.2.4.3\\FOTOSPRODUTOS\\14083.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },

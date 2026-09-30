@@ -435,6 +435,7 @@ async function initTables() {
         fornecedor LIKE '%DIMINAS%' OR
         fornecedor LIKE '%MELHOR BOCADO%' OR
         fornecedor LIKE '%AB BRASIL%' OR
+        fornecedor LIKE '%RICONI%' OR
         descricao LIKE '%batedor%arame%' OR
         descricao LIKE '%batedor%fouet%'
     `);
