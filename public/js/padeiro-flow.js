@@ -58,12 +58,18 @@ const PadeiroFlow = {
 
     try {
       const agenda = await API.get('/api/cronograma/agenda');
-      todasTarefasHoje = (agenda || []).filter(a => (!a.padeiroId || a.padeiroId === me.id) && a.data === today);
-    } catch(e) {}
+      todasTarefasHoje = (agenda || []).filter(a => {
+        if (!a) return false;
+        const aData = (a.data || '').split('T')[0];
+        return aData === today || aData.startsWith(today);
+      });
+    } catch(e) {
+      console.warn('Erro ao buscar agenda:', e);
+    }
 
     try {
       const atividades = await API.get('/api/atividades');
-      atividadesHoje = (atividades || []).filter(a => a.data === today);
+      atividadesHoje = (atividades || []).filter(a => ((a.data || '').split('T')[0]) === today);
     } catch(e) {}
 
     const atividadesFinalizadasHoje = atividadesHoje.filter(a => a.status === 'finalizada');
@@ -72,8 +78,7 @@ const PadeiroFlow = {
     const tarefasPendentes = todasTarefasHoje.filter(t => {
       if (t.status === 'concluida') return false;
       const jaFinalizada = atividadesFinalizadasHoje.some(act => 
-        (act.cronogramaId && (act.cronogramaId === t.id || act.cronogramaId === t._id)) ||
-        (act.clienteId && act.clienteId === t.clienteId)
+        (act.cronogramaId && (act.cronogramaId === t.id || act.cronogramaId === t._id))
       );
       return !jaFinalizada;
     });

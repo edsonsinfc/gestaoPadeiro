@@ -1,0 +1,541 @@
+/* ==========================================================================
+   BIA AGENT - APPLE HIG DESIGN SYSTEM
+   SmartGestor - Brago Distribuidora
+   ========================================================================== */
+
+/* ─── Botão Flutuante (Floating Trigger) ────────────────────────────────── */
+.bia-trigger-btn {
+  position: fixed;
+  bottom: 84px;
+  right: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  box-shadow: 0 10px 25px rgba(30, 75, 255, 0.45), 0 4px 10px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99990;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.bia-trigger-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 14px 32px rgba(30, 75, 255, 0.55), 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.bia-trigger-btn:active {
+  transform: scale(0.92);
+}
+
+/* Anel de Pulso Suave */
+.bia-trigger-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(94, 130, 255, 0.5);
+  animation: biaPulseRing 2.8s infinite cubic-bezier(0.25, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+@keyframes biaPulseRing {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  60% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.bia-trigger-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.bia-trigger-btn:hover .bia-trigger-icon {
+  transform: rotate(12deg) scale(1.05);
+}
+
+.bia-badge-hint {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  background: #FF3B30;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  animation: biaBadgeBounce 1s infinite alternate ease-in-out;
+}
+
+@keyframes biaBadgeBounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+
+/* ─── Modal Apple HIG Backdrop & Container ─────────────────────────────── */
+.bia-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bia-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bia-modal-card {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  height: 640px;
+  max-height: calc(100vh - 100px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(35px) saturate(190%);
+  -webkit-backdrop-filter: blur(35px) saturate(190%);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(30px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+}
+
+.bia-modal-overlay.active .bia-modal-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ─── Header Apple HIG ─────────────────────────────────────────────────── */
+.bia-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.bia-header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bia-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(30, 75, 255, 0.35);
+  position: relative;
+}
+
+.bia-avatar-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #34C759;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.bia-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.bia-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bia-verified-icon {
+  width: 14px;
+  height: 14px;
+  color: #1E4BFF;
+}
+
+.bia-subtitle {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bia-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bia-btn-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4B5563;
+  transition: all 0.2s ease;
+}
+
+.bia-btn-circle:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #111827;
+}
+
+/* ─── Sugestões Rápidas (Pills) ────────────────────────────────────────── */
+.bia-suggestions-bar {
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  scrollbar-width: none;
+}
+
+.bia-suggestions-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.bia-chip {
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(30, 75, 255, 0.08);
+  color: #1E4BFF;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(30, 75, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.bia-chip:hover {
+  background: #1E4BFF;
+  color: #fff;
+  border-color: #1E4BFF;
+  transform: translateY(-1px);
+}
+
+/* ─── Corpo de Mensagens (Chat) ────────────────────────────────────────── */
+.bia-messages-body {
+  flex: 1;
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bia-msg-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  max-width: 90%;
+  animation: biaMsgFadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes biaMsgFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bia-msg-row.user {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.bia-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(30, 75, 255, 0.25);
+}
+
+.bia-msg-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.48;
+  word-break: break-word;
+  position: relative;
+}
+
+.bia-msg-row.bia .bia-msg-bubble {
+  background: #F3F4F6;
+  color: #1F2937;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.bia-msg-row.user .bia-msg-bubble {
+  background: linear-gradient(135deg, #1E4BFF 0%, #153FCC 100%);
+  color: #FFFFFF;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 3px 10px rgba(30, 75, 255, 0.3);
+}
+
+/* ─── Card de Escala Operacional (Ação BIA) ─────────────────────────────── */
+.bia-action-card {
+  margin-top: 10px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid rgba(30, 75, 255, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  padding: 14px;
+  width: 100%;
+}
+
+.bia-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.bia-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bia-card-badge {
+  background: rgba(30, 75, 255, 0.1);
+  color: #1E4BFF;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.bia-card-desc {
+  font-size: 12px;
+  color: #4B5563;
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+
+.bia-card-preview-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+
+.bia-preview-item {
+  padding: 8px 10px;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bia-preview-item:last-child {
+  border-bottom: none;
+}
+
+.bia-btn-apply {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(30, 75, 255, 0.35);
+  transition: all 0.2s ease;
+}
+
+.bia-btn-apply:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.bia-btn-apply:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Typing Indicator (Digitando) ─────────────────────────────────────── */
+.bia-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  border-radius: 16px;
+  width: fit-content;
+}
+
+.bia-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9CA3AF;
+  animation: biaDotBounce 1.4s infinite ease-in-out both;
+}
+
+.bia-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.bia-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes biaDotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1.1); opacity: 1; }
+}
+
+/* ─── Input Bar Apple HIG ──────────────────────────────────────────────── */
+.bia-input-area {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.bia-input-box {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 24px;
+  padding: 4px 6px 4px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bia-input-box:focus-within {
+  border-color: #1E4BFF;
+  box-shadow: 0 0 0 3px rgba(30, 75, 255, 0.15);
+}
+
+.bia-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: #111827;
+  outline: none;
+  font-family: inherit;
+  padding: 8px 0;
+}
+
+.bia-btn-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%);
+  border: none;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(30, 75, 255, 0.35);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.bia-btn-send:hover {
+  transform: scale(1.05);
+}
+
+.bia-btn-send:active {
+  transform: scale(0.92);
+}
+
+.bia-btn-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Responsividade Mobile ────────────────────────────────────────────── */
+@media (max-width: 500px) {
+  .bia-modal-overlay {
+    padding: 0;
+  }
+  .bia-modal-card {
+    width: 100vw;
+    max-width: 100vw;
+    height: 85vh;
+    max-height: 85vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-radius: 24px 24px 0 0;
+    transform: translateY(100%);
+  }
+  .bia-modal-overlay.active .bia-modal-card {
+    transform: translateY(0);
+  }
+  .bia-trigger-btn {
+    bottom: 78px;
+    right: 18px;
+    width: 54px;
+    height: 54px;
+  }
+}

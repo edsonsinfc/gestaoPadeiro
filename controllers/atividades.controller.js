@@ -4,7 +4,18 @@ const { getIo } = require('../sockets/location.socket');
 exports.listAtividades = async (req, res) => {
   try {
     const query = {};
-    if (req.user.role === 'padeiro') query.padeiroId = req.user.id;
+    if (req.user.role === 'padeiro') {
+      let padeiroIds = [req.user.id];
+      if (req.user.codTec) {
+        try {
+          const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
+          samePadeiros.forEach(p => {
+            if (p.id && !padeiroIds.includes(p.id)) padeiroIds.push(p.id);
+          });
+        } catch (err) {}
+      }
+      query.padeiroId = padeiroIds.length === 1 ? req.user.id : { $in: padeiroIds };
+    }
     if (req.query.padeiroId) query.padeiroId = req.query.padeiroId;
     if (req.query.data) query.data = req.query.data;
     
@@ -59,8 +70,18 @@ exports.createAtividade = async (req, res) => {
     const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const { clienteId, clienteNome, cronogramaId } = req.body;
     
+    let padeiroIds = [req.user.id];
+    if (req.user.codTec) {
+      try {
+        const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
+        samePadeiros.forEach(p => {
+          if (p.id && !padeiroIds.includes(p.id)) padeiroIds.push(p.id);
+        });
+      } catch (err) {}
+    }
+
     const existing = await Atividade.findOne({
-      padeiroId: req.user.id,
+      padeiroId: padeiroIds.length === 1 ? req.user.id : { $in: padeiroIds },
       clienteId,
       data: today,
       status: 'em_andamento'
@@ -75,7 +96,7 @@ exports.createAtividade = async (req, res) => {
       if (slot) tempoMinimoMinutos = slot.tempoMinimoMinutos || 0;
     } else {
       const slot = await Cronograma.findOne({ 
-        padeiroId: req.user.id, 
+        padeiroId: padeiroIds.length === 1 ? req.user.id : { $in: padeiroIds }, 
         clienteId, 
         data: today 
       });

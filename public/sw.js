@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v217';
+const CACHE_NAME = 'brago-padeiro-v219';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
@@ -98,10 +98,15 @@ self.addEventListener('activate', (event) => {
 
 // ─── FETCH: Estratégias por tipo de recurso ───────────────────────────────────
 self.addEventListener('fetch', (event) => {
+  // CRÍTICO: Métodos não-GET (POST, PUT, DELETE) nunca devem ser interceptados pelo Cache
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   const url = event.request.url;
 
-  // 1. API e Socket.io — sempre rede, nunca cache
-  if (url.includes('/api/') || url.includes('/socket.io/')) {
+  // APIs externas (Google Gemini / AI Studio) e internas nunca devem passar pelo cache
+  if (url.includes('googleapis.com') || url.includes('/api/') || url.includes('/socket.io/')) {
     return; // deixa o browser lidar normalmente
   }
 

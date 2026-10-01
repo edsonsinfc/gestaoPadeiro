@@ -125,7 +125,16 @@ exports.getGeneralStats = async (req, res) => {
       const key = a.clienteId || a.clienteNome;
       if (!key) return;
       if (!atendimentosPorCliente[key]) {
-        atendimentosPorCliente[key] = { id: a.clienteId, nome: a.clienteNome, totalAtendimentos: 0, totalKg: 0, notas: [] };
+        const cliObj = clientes.find(c => c.id === a.clienteId || c.nome === a.clienteNome);
+        atendimentosPorCliente[key] = {
+          id: a.clienteId,
+          nome: a.clienteNome,
+          nomeFantasia: cliObj?.nomeFantasia || '',
+          bairro: cliObj?.bairro || '',
+          totalAtendimentos: 0,
+          totalKg: 0,
+          notas: []
+        };
       }
       atendimentosPorCliente[key].totalAtendimentos++;
       atendimentosPorCliente[key].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
@@ -133,11 +142,16 @@ exports.getGeneralStats = async (req, res) => {
       if (nota) atendimentosPorCliente[key].notas.push(nota);
     });
     const rankingClientes = Object.values(atendimentosPorCliente)
-      .map(c => ({
-        ...c,
-        notaMedia: c.notas.length > 0 ? c.notas.reduce((a, b) => a + parseFloat(b), 0) / c.notas.length : null
-      }))
-      .sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
+      .map(c => {
+        const cliObj = clientes.find(x => x.id === c.id || x.nome === c.nome);
+        return {
+          ...c,
+          nomeFantasia: c.nomeFantasia || cliObj?.nomeFantasia || '',
+          bairro: c.bairro || cliObj?.bairro || '',
+          notaMedia: c.notas.length > 0 ? c.notas.reduce((a, b) => a + parseFloat(b), 0) / c.notas.length : null
+        };
+      })
+      .sort((a, b) => (b.totalKg - a.totalKg) || (b.totalAtendimentos - a.totalAtendimentos))
       .slice(0, 10);
 
     const produtosMaisUsadosMap = {};

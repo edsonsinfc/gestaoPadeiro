@@ -228,17 +228,41 @@ exports.deleteTarefa = async (req, res) => {
 };
 
 exports.getPadeiroAgenda = async (req, res) => {
-  if (req.user.role !== 'padeiro') {
-    return res.status(403).json({ error: 'Acesso negado' });
-  }
   try {
-    const agenda = await Cronograma.find({ padeiroId: req.user.id })
+    let orConditions = [{ padeiroId: req.user.id }];
+    
+    // Se o usuário tiver codTec, busca também por codTec ou por outros IDs com o mesmo codTec
+    if (req.user.codTec) {
+      orConditions.push({ codTec: req.user.codTec });
+      try {
+        const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
+        samePadeiros.forEach(p => {
+          if (p.id) orConditions.push({ padeiroId: p.id });
+        });
+      } catch (err) {}
+    }
+
+    if (req.user.nome) {
+      orConditions.push({ padeiroNome: req.user.nome });
+    }
+
+    // Se for admin, gestor ou vendedor visualizando a tela do padeiro
+    if (req.user.role && req.user.role !== 'padeiro') {
+      const today = new Date().toISOString().split('T')[0];
+      const agenda = await Cronograma.find({ data: req.query.data || today })
+        .sort({ horario: 1 });
+      return res.json(agenda);
+    }
+
+    const agenda = await Cronograma.find({ $or: orConditions })
       .sort({ data: 1, horario: 1 });
+      
     agenda.forEach(a => {
-      a.padeiroNome = req.user.nome;
+      a.padeiroNome = a.padeiroNome || req.user.nome;
     });
     res.json(agenda);
   } catch (error) {
+    console.error('Erro ao carregar agenda do padeiro:', error);
     res.status(500).json({ error: 'Erro ao carregar agenda' });
   }
 };
