@@ -2128,7 +2128,14 @@ const VendedorSugestoesHelper = {
     const clientInitial = clientName[0].toUpperCase();
 
     // Obter fornecedores únicos e ordená-los com prioridade para IREKS
-    let fornecedores = [...new Set(this.produtos.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))];
+    const forbiddenSup = ['DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI', 'ALUMIFORMAS', 'GOIAS', 'GOIÁS', 'POLICO', 'PONTA', 'SS ALIMENTOS', 'PEROLA SS'];
+    let fornecedores = [...new Set(this.produtos.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))]
+      .filter(f => {
+        const up = f.toUpperCase().trim();
+        if (forbiddenSup.some(b => up.includes(b))) return false;
+        if (up === 'SS' || up.startsWith('SS ') || up.endsWith(' SS') || up.includes(' SS ')) return false;
+        return true;
+      });
     const PRIORITY = ['IREKS'];
     fornecedores.sort((a, b) => {
       const isA = PRIORITY.some(p => a.toUpperCase().includes(p));

@@ -16,6 +16,14 @@ async function clean() {
       fornecedor LIKE '%MELHOR BOCADO%' OR
       fornecedor LIKE '%AB BRASIL%' OR
       fornecedor LIKE '%RICONI%' OR
+      fornecedor LIKE '%ALUMIFORMAS%' OR
+      fornecedor LIKE '%GOIAS%' OR
+      fornecedor LIKE '%GOIÁS%' OR
+      fornecedor LIKE '%POLICO%' OR
+      fornecedor LIKE '%PONTA%' OR
+      fornecedor LIKE '%SS ALIMENTOS%' OR
+      fornecedor LIKE '%PEROLA SS%' OR
+      (TRIM(fornecedor) = 'SS' OR TRIM(fornecedor) LIKE 'SS %' OR TRIM(fornecedor) LIKE '% SS' OR TRIM(fornecedor) LIKE '% SS %') OR
       descricao LIKE '%batedor%arame%' OR
       descricao LIKE '%batedor%fouet%'
   `);
@@ -40,6 +48,12 @@ async function clean() {
       if (f.includes('MELHOR BOCADO')) return true;
       if (f.includes('AB BRASIL')) return true;
       if (f.includes('RICONI')) return true;
+      if (f.includes('ALUMIFORMAS')) return true;
+      if (f.includes('GOIAS') || f.includes('GOIÁS')) return true;
+      if (f.includes('POLICO')) return true;
+      if (f.includes('PONTA')) return true;
+      if (f.includes('SS ALIMENTOS') || f.includes('PEROLA SS')) return true;
+      if (f === 'SS' || f.startsWith('SS ') || f.endsWith(' SS') || f.includes(' SS ')) return true;
       if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
       if (d.includes('BATEDOR DE ARAME')) return true;
 

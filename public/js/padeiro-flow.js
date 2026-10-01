@@ -463,9 +463,17 @@ const PadeiroFlow = {
       'DIMINAS',
       'MELHOR BOCADO',
       'AB BRASIL',
-      'RICONI'
+      'RICONI',
+      'ALUMIFORMAS',
+      'GOIAS',
+      'GOIÁS',
+      'POLICO',
+      'PONTA',
+      'SS ALIMENTOS',
+      'PEROLA SS'
     ];
     if (forbidden.some(b => f.includes(b))) return true;
+    if (f === 'SS' || f.startsWith('SS ') || f.endsWith(' SS') || f.includes(' SS ')) return true;
     if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
     if (d.includes('BATEDOR DE ARAME')) return true;
     return false;
@@ -545,9 +553,17 @@ const PadeiroFlow = {
     this.renderLimit = 50;
     this.renderedCount = 0;
 
-    const forbiddenSuppliers = ['DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI'];
+    const forbiddenSuppliers = [
+      'DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI',
+      'ALUMIFORMAS', 'GOIAS', 'GOIÁS', 'POLICO', 'PONTA', 'SS ALIMENTOS', 'PEROLA SS'
+    ];
     let fornecedores = [...new Set(activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))]
-      .filter(f => !forbiddenSuppliers.some(b => f.toUpperCase().includes(b)));
+      .filter(f => {
+        const up = f.toUpperCase().trim();
+        if (forbiddenSuppliers.some(b => up.includes(b))) return false;
+        if (up === 'SS' || up.startsWith('SS ') || up.endsWith(' SS') || up.includes(' SS ')) return false;
+        return true;
+      });
     
     const PRIORITY = ['IREKS']; // Adicione outras marcas populares aqui se precisar
     fornecedores.sort((a, b) => {

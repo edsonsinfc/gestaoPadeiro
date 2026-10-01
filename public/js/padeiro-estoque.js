@@ -197,8 +197,15 @@ const PadeiroEstoque = {
         API.get('/api/cronograma/agenda').catch(() => [])
       ]);
       
+      const forbiddenSup = ['DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI', 'ALUMIFORMAS', 'GOIAS', 'GOIÁS', 'POLICO', 'PONTA', 'SS ALIMENTOS', 'PEROLA SS'];
       this.cachedProdutos = produtos;
-      this.activeProds = produtos.filter(p => p.ativo !== false);
+      this.activeProds = produtos.filter(p => {
+        if (p.ativo === false) return false;
+        const f = (p.fornecedor || '').toUpperCase().trim();
+        if (forbiddenSup.some(b => f.includes(b))) return false;
+        if (f === 'SS' || f.startsWith('SS ') || f.endsWith(' SS') || f.includes(' SS ')) return false;
+        return true;
+      });
       
       // Salvar no estado para uso em outras partes
       this.clientes = clientes;
@@ -357,7 +364,17 @@ const PadeiroEstoque = {
     const todayEvaluations = this.avaliacoes || [];
     const stats = this.getClientStats(this.selectedClienteId, todayActivities, this.padeiros || [], todayEvaluations);
 
-    let fornecedores = [...new Set(this.activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))];
+    const forbiddenSuppliers = [
+      'DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI',
+      'ALUMIFORMAS', 'GOIAS', 'GOIÁS', 'POLICO', 'PONTA', 'SS ALIMENTOS', 'PEROLA SS'
+    ];
+    let fornecedores = [...new Set(this.activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))]
+      .filter(f => {
+        const up = f.toUpperCase().trim();
+        if (forbiddenSuppliers.some(b => up.includes(b))) return false;
+        if (up === 'SS' || up.startsWith('SS ') || up.endsWith(' SS') || up.includes(' SS ')) return false;
+        return true;
+      });
     const PRIORITY = ['IREKS'];
     fornecedores.sort((a, b) => {
       const isA = PRIORITY.some(p => a.toUpperCase().includes(p));

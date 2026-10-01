@@ -459,15 +459,6 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitrueeum3rwc3o0",
-    "codigo": "17711",
-    "descricao": "CAIXA ESPECIAL DONUTS",
-    "fornecedor": "PONTA DE ESTOQUE",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitrueevz7j1tohi",
     "codigo": "14150",
     "descricao": "CALDA BRAVO DOLCE VITA CX 1KG(12)",
@@ -1179,28 +1170,10 @@
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
   {
-    "id": "moitruee9ihxcdcqp",
-    "codigo": "12834",
-    "descricao": "FORMA STOLEN 300GR PT C/50",
-    "fornecedor": "ALUMIFORMAS -PEDRO ROBERTO REZENDE ME",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\12834.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
     "id": "moitruee4y6l2zl98",
     "codigo": "14770",
     "descricao": "FRIGGITUTTO ÓLEO DE PALMA SC 10L ",
     "fornecedor": "UNIGRA BRASIL IND. E COM. DE PROD",
-    "fotoPath": "",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueezq5vq366t",
-    "codigo": "14799",
-    "descricao": "FRUTAS CRISTALIZADAS PEROLA 10KG FL",
-    "fornecedor": "SS ALIMENTOS INDUSTRIA E COMERCIO - PEROLA SS",
     "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
@@ -1760,24 +1733,6 @@
     "descricao": "MIX MACIO PCT C/ 500G (20)",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\14648.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueevrioricfr",
-    "codigo": "11929",
-    "descricao": "MOLHO DE TOMATE TRADICIONAL (E)",
-    "fornecedor": "GOIAS VERDE ALIMENTOS LTDA",
-    "fotoPath": "\\\\192.168.73.10\\FOTOSPRODUTOS\\11929.JPG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.318Z"
-  },
-  {
-    "id": "moitrueevbfcoy7x7",
-    "codigo": "16210",
-    "descricao": "MOLHO DE TOMATE TRADICIONAL (E)",
-    "fornecedor": "GOIAS VERDE ALIMENTOS LTDA",
-    "fotoPath": "P:\\FOTOSPRODUTOS\\16210.JPG",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.318Z"
   },
@@ -3128,15 +3083,6 @@
     "descricao": "TOP MACIO MASSA DOCE SACO 5KG",
     "fornecedor": "IREKS DO BRASIL",
     "fotoPath": "P:\\FOTOSPRODUTOS\\9627.PNG",
-    "ativo": true,
-    "criadoEm": "2026-04-28T16:13:05.319Z"
-  },
-  {
-    "id": "moitruefx38uag1lx",
-    "codigo": "14823",
-    "descricao": "UVA PASSA PRETA FLAME 10KG FL",
-    "fornecedor": "POLICO COMERCIAL DE ALIMENTOS LTDA",
-    "fotoPath": "",
     "ativo": true,
     "criadoEm": "2026-04-28T16:13:05.319Z"
   }

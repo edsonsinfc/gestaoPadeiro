@@ -35,7 +35,14 @@ const FORBIDDEN_SUPPLIERS = [
   'DIMINAS',
   'MELHOR BOCADO',
   'AB BRASIL',
-  'RICONI'
+  'RICONI',
+  'ALUMIFORMAS',
+  'GOIAS',
+  'GOIÁS',
+  'POLICO',
+  'PONTA',
+  'SS ALIMENTOS',
+  'PEROLA SS'
 ];
 
 function isForbiddenProduct(p) {
@@ -43,6 +50,7 @@ function isForbiddenProduct(p) {
   const f = (p.fornecedor || '').toUpperCase().trim();
   const d = (p.descricao || '').toUpperCase().trim();
   if (FORBIDDEN_SUPPLIERS.some(forbidden => f.includes(forbidden))) return true;
+  if (f === 'SS' || f.startsWith('SS ') || f.endsWith(' SS') || f.includes(' SS ')) return true;
   if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
   if (d.includes('BATEDOR DE ARAME')) return true;
   return false;
