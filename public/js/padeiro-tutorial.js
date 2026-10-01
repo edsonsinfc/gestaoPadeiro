@@ -36,27 +36,14 @@ const PadeiroTutorial = {
     },
     {
       route: 'padeiro-atividade',
-      title: 'Simulação: Passo 1',
-      content: 'Ao iniciar um atendimento, você primeiro confirma o cliente. O sistema já sugere quem está na sua rota!',
-      target: '#wizard-content',
-      icon: 'play-circle',
-      action: () => {
-        if (typeof PadeiroFlow !== 'undefined') {
-          PadeiroFlow.activity = { clienteNome: 'Supermercado Modelo (Tutorial)', clienteId: 'mock' };
-          PadeiroFlow.currentStep = 0;
-          PadeiroFlow.renderWizard(document.getElementById('page-container'));
-        }
-      }
-    },
-    {
-      route: 'padeiro-atividade',
-      title: 'Simulação: Passo 2',
-      content: 'Na etapa de Produção, você registra o que fabricou. É possível adicionar vários itens e tirar fotos para comprovação.',
+      title: 'Simulação: Produção',
+      content: 'Na etapa de Produção, você seleciona o cliente agendado e registra o que fabricou. É possível adicionar vários itens e fotos.',
       target: '#wizard-content',
       icon: 'package',
       action: () => {
         if (typeof PadeiroFlow !== 'undefined') {
-          PadeiroFlow.currentStep = 1;
+          PadeiroFlow.activity = { clienteNome: 'Supermercado Modelo (Tutorial)', clienteId: 'mock' };
+          PadeiroFlow.currentStep = 0;
           PadeiroFlow.renderWizard(document.getElementById('page-container'));
           setTimeout(() => {
             const input = document.querySelector('.kg-produto-search');
@@ -70,20 +57,7 @@ const PadeiroTutorial = {
     },
     {
       route: 'padeiro-atividade',
-      title: 'Simulação: Passo 3',
-      content: 'Depois de produzir, o responsável pela loja avalia o serviço e assina digitalmente no seu celular.',
-      target: '#wizard-content',
-      icon: 'star',
-      action: () => {
-        if (typeof PadeiroFlow !== 'undefined') {
-          PadeiroFlow.currentStep = 2;
-          PadeiroFlow.renderWizard(document.getElementById('page-container'));
-        }
-      }
-    },
-    {
-      route: 'padeiro-atividade',
-      title: 'Simulação: Passo 4',
+      title: 'Simulação: Finalizar',
       content: 'Por fim, você revisa o resumo e encerra a atividade. O sistema envia tudo em tempo real para a central!',
       target: '#wizard-content',
       icon: 'check-circle',
@@ -91,7 +65,7 @@ const PadeiroTutorial = {
         if (typeof PadeiroFlow !== 'undefined') {
           PadeiroFlow.activity.inicioEm = new Date(Date.now() - 3600000).toISOString(); // 1h ago
           PadeiroFlow.activity.tempoMinimoMinutos = 0;
-          PadeiroFlow.currentStep = 3;
+          PadeiroFlow.currentStep = 1;
           PadeiroFlow.renderWizard(document.getElementById('page-container'));
         }
       }

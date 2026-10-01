@@ -38,7 +38,7 @@ const App = {
             if (result.pluginId === 'Camera' && result.methodName === 'getPhoto') {
               if (result.success && result.data) {
                 window.lastRestoredPhoto = result.data;
-                if (window.PadeiroFlow && window.PadeiroFlow.currentStep === 1 && typeof window.PadeiroFlow.handleRestoredPhoto === 'function') {
+                if (window.PadeiroFlow && (window.PadeiroFlow.currentStep === 0 || window.PadeiroFlow.currentStep === 1) && typeof window.PadeiroFlow.handleRestoredPhoto === 'function') {
                   window.PadeiroFlow.handleRestoredPhoto(result.data);
                 }
               } else {

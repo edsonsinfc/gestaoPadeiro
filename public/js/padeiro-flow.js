@@ -7,10 +7,7 @@ const PadeiroFlow = {
   activity: {},
   timerInterval: null,
   steps: [
-    { label: 'Iniciar', icon: 'play' },
     { label: 'Produção', icon: 'package' },
-    { label: 'Avaliar Cliente', icon: 'smile' },
-    { label: 'Avaliação', icon: 'star' },
     { label: 'Finalizar', icon: 'check-circle' }
   ],
   selectedFiles: [],
@@ -37,17 +34,18 @@ const PadeiroFlow = {
 
     const today = this.getTodayLocal();
 
-    if (!prefill.clienteId) {
-      try {
-        const agenda = await API.get('/api/cronograma/agenda');
-        const slot = agenda.find(a => a.data === today && (!a.status || a.status === 'pendente'));
-        if (slot) {
-          this.activity.clienteId = slot.clienteId;
-          this.activity.clienteNome = slot.clienteNome;
-          this.activity.cronogramaId = slot.id || slot._id;
-        }
-      } catch(e) {}
-    }
+    let agendaHoje = [];
+    try {
+      const agenda = await API.get('/api/cronograma/agenda');
+      agendaHoje = (agenda || []).filter(a => a.data === today && (!a.status || a.status === 'pendente' || a.status === 'em_andamento'));
+      this.agendaHoje = agendaHoje;
+
+      if (!this.activity.clienteId && agendaHoje.length > 0) {
+        this.activity.clienteId = agendaHoje[0].clienteId;
+        this.activity.clienteNome = agendaHoje[0].clienteNome;
+        this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
+      }
+    } catch(e) {}
 
     try {
       const atividades = await API.get('/api/atividades');
@@ -64,6 +62,9 @@ const PadeiroFlow = {
         }
       }
     } catch(e) {}
+
+    // Garante que a atividade é iniciada no backend automaticamente
+    await this.ensureActivityStarted();
 
     App.routeData = {};
     this.renderWizard(container);
@@ -117,15 +118,16 @@ const PadeiroFlow = {
     if (this.pendingPreviousResume) {
       this.activity = this.pendingPreviousResume;
       const oldStep = parseInt(this.pendingPreviousResume.lastStep) || 0;
-      this.currentStep = oldStep;
+      const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
+      this.currentStep = hasFinishedProd ? 1 : 0;
       this.pendingPreviousResume = null;
       this.renderWizard(document.getElementById('page-container'));
     }
   },
 
   renderResumeModal(container, em) {
-    const stepMap = {0:0, 1:1, 2:2, 3:3, 4:4};
-    const stepLabel = this.steps[stepMap[parseInt(em.lastStep)||0]]?.label || 'Iniciar';
+    const isFinalizar = (parseInt(em.lastStep) >= 2) || (em.kgItens && em.kgItens.length > 0);
+    const stepLabel = isFinalizar ? 'Finalizar' : 'Produção';
     container.innerHTML = `
       <div class="pf-container pf-resume-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
         <div class="pf-resume-card">
@@ -149,11 +151,8 @@ const PadeiroFlow = {
     if (this.pendingResume) {
       this.activity = this.pendingResume;
       const oldStep = parseInt(this.pendingResume.lastStep) || 0;
-      if (oldStep <= 0) this.currentStep = 0;
-      else if (oldStep === 1) this.currentStep = 1;
-      else if (oldStep === 2) this.currentStep = 2;
-      else if (oldStep === 3) this.currentStep = 3;
-      else this.currentStep = 4;
+      const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
+      this.currentStep = hasFinishedProd ? 1 : 0;
       this.pendingResume = null;
     }
     this.renderWizard(document.getElementById('page-container'));
@@ -242,19 +241,17 @@ const PadeiroFlow = {
       if (bar) bar.classList.remove('active');
     }
     
-    // Hide FAB if not in step 1 (Produção)
+    // Hide FAB if not in step 0 (Produção)
     const fab = document.getElementById('pf-cart-fab');
-    if (fab && this.currentStep !== 1) {
+    if (fab && this.currentStep !== 0) {
       fab.classList.remove('visible');
     }
 
     const c = document.getElementById('wizard-content');
     switch(this.currentStep) {
-      case 0: this.stepIniciar(c); break;
-      case 1: this.stepProducao(c); break;
-      case 2: this.stepAvaliarCliente(c); break;
-      case 3: this.stepAvaliacao(c); break;
-      case 4: this.stepFinalizar(c); break;
+      case 0: this.stepProducao(c); break;
+      case 1:
+      default: this.stepFinalizar(c); break;
     }
     Components.renderIcons();
   },
@@ -381,29 +378,32 @@ const PadeiroFlow = {
     Components.renderIcons();
   },
 
-  async startActivity() {
-    const sel = document.getElementById('flow-cliente');
-    const nome = sel.options[sel.selectedIndex]?.dataset.nome;
+  async ensureActivityStarted() {
+    if (this.activity.id || this.activity._id) return;
     try {
-      if (!this.activity.cronogramaId) await this.fetchTodayClient();
-      
       const clientGeneratedId = 'act_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
       const today = this.getTodayLocal();
       const now = new Date();
       
       let tempoMinimoMinutos = 0;
       try {
-        const agenda = await API.get('/api/cronograma/agenda');
-        const slot = agenda.find(a => (a.id || a._id) === this.activity.cronogramaId);
+        const agenda = this.agendaHoje || await API.get('/api/cronograma/agenda');
+        const slot = (agenda || []).find(a => (a.id || a._id) === this.activity.cronogramaId);
         if (slot) tempoMinimoMinutos = slot.tempoMinimoMinutos || 0;
       } catch (e) {}
 
+      const clienteId = this.activity.clienteId || (this.agendaHoje && this.agendaHoje[0] ? this.agendaHoje[0].clienteId : '');
+      const clienteNome = this.activity.clienteNome || (this.agendaHoje && this.agendaHoje[0] ? this.agendaHoje[0].clienteNome : 'Cliente');
+      const cronogramaId = this.activity.cronogramaId || (this.agendaHoje && this.agendaHoje[0] ? (this.agendaHoje[0].id || this.agendaHoje[0]._id) : null);
+
+      if (!clienteId) return;
+
       const body = { 
         id: clientGeneratedId,
-        clienteId: sel.value, 
-        clienteNome: nome, 
-        cronogramaId: this.activity.cronogramaId || null, 
-        lastStep: 1, 
+        clienteId: clienteId, 
+        clienteNome: clienteNome, 
+        cronogramaId: cronogramaId, 
+        lastStep: 0, 
         timeline: [],
         inicioEm: now.toISOString(),
         data: today,
@@ -419,37 +419,56 @@ const PadeiroFlow = {
           status: 'em_andamento'
         };
         this.saveDraftLocally();
-      } else {
-        this.activity = a;
+      } else if (a) {
+        this.activity = { ...this.activity, ...a };
       }
       
       if (!this.activity.timeline) this.activity.timeline = [];
-      
-      // Captura localização e salva
       await this.captureTimelineEvent('Início do Atendimento');
       await this.updateActivity();
 
       try {
         if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'em_andamento' });
       } catch (err) {
-        console.warn('Aviso: Erro ao atualizar status na agenda (pode ter sido excluida).', err);
+        console.warn('Aviso: Erro ao atualizar status na agenda.', err);
       }
-      this.currentStep = 1;
-      this.renderWizard(document.getElementById('page-container'));
-      Components.toast('Atividade iniciada!', 'success');
-    } catch(e) { Components.toast(e.message, 'error'); }
+    } catch(e) {
+      console.warn('Erro ao auto-iniciar atividade:', e);
+    }
   },
-  
-  onClientChange() {
+
+  async onClientChange() {
     const sel = document.getElementById('flow-cliente');
-    const btn = document.getElementById('pf-btn-start');
-    if (sel && btn) {
-      btn.disabled = !sel.value;
+    if (sel) {
       const opt = sel.options[sel.selectedIndex];
       this.activity.clienteId = sel.value;
       this.activity.clienteNome = opt.dataset.nome;
       this.activity.cronogramaId = opt.dataset.cronograma;
+      if (this.activity.id || this.activity._id) {
+        await this.updateActivity();
+      } else {
+        await this.ensureActivityStarted();
+      }
     }
+  },
+
+  isForbiddenProduct(p) {
+    if (!p) return true;
+    const f = (p.fornecedor || '').toUpperCase().trim();
+    const d = (p.descricao || '').toUpperCase().trim();
+    const forbidden = [
+      'DOUPAN',
+      'ORGAO PUBLICO',
+      'ÓRGÃO PÚBLICO',
+      'DIMINAS',
+      'MELHOR BOCADO',
+      'AB BRASIL',
+      'RICONI'
+    ];
+    if (forbidden.some(b => f.includes(b))) return true;
+    if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
+    if (d.includes('BATEDOR DE ARAME')) return true;
+    return false;
   },
 
   // STEP 1: PRODUÇÃO (Produtos + Fotos combinados)
@@ -461,7 +480,7 @@ const PadeiroFlow = {
       try {
         const cached = await OfflineManager.getCachedData('/api/produtos');
         if (cached && Array.isArray(cached) && cached.length > 0) {
-          produtos = cached;
+          produtos = cached.filter(p => !this.isForbiddenProduct(p));
           console.log('[FastLoad] Catálogo carregado do cache local:', produtos.length);
         }
       } catch (err) {
@@ -472,7 +491,8 @@ const PadeiroFlow = {
     // 2. Se não houver nada no cache local (ex: primeira execução), busca na rede de forma síncrona
     if (produtos.length === 0) {
       try {
-        produtos = await API.get('/api/produtos');
+        const res = await API.get('/api/produtos');
+        produtos = (res || []).filter(p => !this.isForbiddenProduct(p));
       } catch(e) {
         console.error('Erro ao buscar produtos online:', e);
       }
@@ -481,13 +501,14 @@ const PadeiroFlow = {
       API.get('/api/produtos')
         .then(async (freshProds) => {
           if (freshProds && Array.isArray(freshProds) && freshProds.length > 0) {
-            const hasChanged = freshProds.length !== produtos.length || 
-                              JSON.stringify(freshProds[0]) !== JSON.stringify(produtos[0]);
+            const cleanFresh = freshProds.filter(p => !this.isForbiddenProduct(p));
+            const hasChanged = cleanFresh.length !== produtos.length || 
+                              JSON.stringify(cleanFresh[0]) !== JSON.stringify(produtos[0]);
             
-            this.cachedProdutos = freshProds;
-            this.activeProds = freshProds.filter(p => p.ativo !== false);
+            this.cachedProdutos = cleanFresh;
+            this.activeProds = cleanFresh.filter(p => p.ativo !== false);
             
-            if (hasChanged && this.currentStep === 1) {
+            if (hasChanged && this.currentStep === 0) {
               console.log('[FastLoad] Novo catálogo recebido do servidor. Atualizando tela...');
               
               if (typeof OfflineManager !== 'undefined') {
@@ -508,7 +529,7 @@ const PadeiroFlow = {
       this.restoreDraftLocally();
     }
 
-    const activeProds = produtos.filter(p => p.ativo !== false);
+    const activeProds = produtos.filter(p => p.ativo !== false && !this.isForbiddenProduct(p));
     
     // Popula o cache de imagens em memória em background
     if (typeof OfflineManager !== 'undefined') {
@@ -523,7 +544,10 @@ const PadeiroFlow = {
     this.currentFilteredProds = activeProds;
     this.renderLimit = 50;
     this.renderedCount = 0;
-    let fornecedores = [...new Set(activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))];
+
+    const forbiddenSuppliers = ['DOUPAN', 'ORGAO', 'DIMINAS', 'MELHOR BOCADO', 'AB BRASIL', 'RICONI'];
+    let fornecedores = [...new Set(activeProds.map(p => p.fornecedor).filter(f => f && f.trim() !== ''))]
+      .filter(f => !forbiddenSuppliers.some(b => f.toUpperCase().includes(b)));
     
     const PRIORITY = ['IREKS']; // Adicione outras marcas populares aqui se precisar
     fornecedores.sort((a, b) => {
@@ -534,12 +558,41 @@ const PadeiroFlow = {
       return a.localeCompare(b);
     });
 
+    const agendaHoje = this.agendaHoje || [];
+    const canSelect = agendaHoje.length > 1;
+
     c.innerHTML = `
-      <div class="pf-step-header pf-animate-cascade" style="animation-delay: 0.05s">
-        <div class="pf-step-icon pf-icon-green"><i data-lucide="package" style="width:24px;height:24px"></i></div>
-        <div>
-          <h2 class="pf-step-title">Produção Realizada</h2>
-          <p class="pf-step-sub">Selecione os produtos e informe a quantidade.</p>
+      <!-- Card Cliente Agendado (Realocado da Etapa 1) -->
+      <div class="pf-highlight-card pf-animate-cascade" style="animation-delay: 0.05s; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <label class="pf-label" style="color: #1E4BFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i data-lucide="store" style="width:18px;height:18px"></i> Cliente Agendado
+          </label>
+          <span class="pf-badge-hoje">
+            <span class="pf-pulse-dot"></span>
+            HOJE
+          </span>
+        </div>
+        <div class="pf-select-wrap">
+          ${canSelect ? `
+            <select class="pf-select pf-select-highlight" id="flow-cliente" onchange="PadeiroFlow.onClientChange()">
+              ${agendaHoje.map(a => `
+                <option value="${a.clienteId}" 
+                        data-nome="${a.clienteNome}" 
+                        data-cronograma="${a.id || a._id}"
+                        ${this.activity.clienteId === a.clienteId ? 'selected' : ''}>
+                  ${a.clienteNome} (${a.horario || '08:00'})
+                </option>`).join('')}
+            </select>
+            <div class="pf-select-lock" style="color: #1E4BFF;"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></div>
+          ` : `
+            <div class="pf-select pf-select-highlight" style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; font-weight: 700; color: #1e293b; padding-right: 14px; cursor: default;">
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; text-transform: uppercase;">${this.activity.clienteNome || (agendaHoje[0] ? agendaHoje[0].clienteNome : 'Cliente Agendado')}</span>
+              <div class="pf-select-lock" style="position: static; transform: none; color: #1E4BFF; display: flex; align-items: center;">
+                <i data-lucide="lock" style="width:14px;height:14px"></i>
+              </div>
+            </div>
+          `}
         </div>
       </div>
 
@@ -1453,7 +1506,7 @@ const PadeiroFlow = {
       document.body.appendChild(fab);
     }
     
-    if (this.currentStep === 1) {
+    if (this.currentStep === 0) {
       fab.classList.add('visible');
     } else {
       fab.classList.remove('visible');
@@ -1789,7 +1842,7 @@ const PadeiroFlow = {
       this.activity.kgTotal  = parseFloat(totalKg) || 0;
       this.activity.lTotal   = 0;
       this.activity.kgItens  = items;
-      this.activity.lastStep = 2;
+      this.activity.lastStep = 1;
 
       // Upload fotos aguardando a finalização para não "travar" background
       if (this.selectedFiles.length > 0) {
@@ -1808,7 +1861,7 @@ const PadeiroFlow = {
       // Fecha o modal só depois de concluir tudo
       this.closeCartModal();
       
-      this.currentStep = 2;
+      this.currentStep = 1;
       this.renderWizard(document.getElementById('page-container'));
     } catch (err) {
       console.error(err);
@@ -2034,7 +2087,7 @@ const PadeiroFlow = {
         ${this.activity.kgTotal > 0 ? `<div class="pf-summary-row"><span>Produção (KG)</span><strong>${this.activity.kgTotal} kg</strong></div>` : ''}
 
         <div class="pf-summary-row"><span>Produtos</span><strong>${(this.activity.kgItens||[]).length} itens</strong></div>
-        <div class="pf-summary-row"><span>Sua Nota ao Cliente</span><strong>${this.activity.notaPadeiroCliente||0} ★</strong></div>
+        ${this.activity.notaPadeiroCliente ? `<div class="pf-summary-row"><span>Sua Nota ao Cliente</span><strong>${this.activity.notaPadeiroCliente} ★</strong></div>` : ''}
         ${this.activity.observacaoCliente ? `<div class="pf-summary-row"><span>Obs. do Atendimento</span><strong style="font-size:12px;color:#475569;text-align:right;max-width:60%;word-break:break-word;">${this.activity.observacaoCliente}</strong></div>` : ''}
       </div>
 
@@ -2129,8 +2182,7 @@ const PadeiroFlow = {
             ${this.activity.kgTotal > 0 ? `<div class="pf-stat"><span class="pf-stat-val">${this.activity.kgTotal}</span><span class="pf-stat-label">KG</span></div><div class="pf-stat-divider"></div>` : ''}
 
             <div class="pf-stat"><span class="pf-stat-val">${(this.activity.kgItens||[]).length}</span><span class="pf-stat-label">Produtos</span></div>
-            <div class="pf-stat-divider"></div>
-            <div class="pf-stat"><span class="pf-stat-val">${this.activity.notaPadeiroCliente||0}★</span><span class="pf-stat-label">Nota ao Cliente</span></div>
+            ${this.activity.notaPadeiroCliente ? `<div class="pf-stat-divider"></div><div class="pf-stat"><span class="pf-stat-val">${this.activity.notaPadeiroCliente}★</span><span class="pf-stat-label">Nota ao Cliente</span></div>` : ''}
           </div>
           <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-inicio')">
             <i data-lucide="home" style="width:18px;height:18px"></i> Voltar ao Painel
@@ -2414,6 +2466,8 @@ const PadeiroFlow = {
     }
   }
 };
+
+window.PadeiroFlow = PadeiroFlow;
 
 // ============================================================
 // PUSH SERVICE: Inscrição automática de notificações push

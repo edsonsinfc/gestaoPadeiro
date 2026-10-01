@@ -28,9 +28,30 @@ function hasDriveMapping(codigo) {
   return false;
 }
 
+const FORBIDDEN_SUPPLIERS = [
+  'DOUPAN',
+  'ORGAO PUBLICO',
+  'ÓRGÃO PÚBLICO',
+  'DIMINAS',
+  'MELHOR BOCADO',
+  'AB BRASIL',
+  'RICONI'
+];
+
+function isForbiddenProduct(p) {
+  if (!p) return true;
+  const f = (p.fornecedor || '').toUpperCase().trim();
+  const d = (p.descricao || '').toUpperCase().trim();
+  if (FORBIDDEN_SUPPLIERS.some(forbidden => f.includes(forbidden))) return true;
+  if (d.includes('BATEDOR') && (d.includes('ARAME') || d.includes('FOUET') || d.includes('INOX'))) return true;
+  if (d.includes('BATEDOR DE ARAME')) return true;
+  return false;
+}
+
 exports.listProdutos = async (req, res) => {
   try {
-    const produtos = await Produto.find();
+    const rawProdutos = await Produto.find();
+    const produtos = rawProdutos.filter(p => !isForbiddenProduct(p));
     
     // Check if the FTP catalog is loaded/available
     let catalog = {};
