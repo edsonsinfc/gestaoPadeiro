@@ -3,7 +3,7 @@
  * BRAGO Distribuidora - Perfil Vendedor
  */
 
-const VendedorCalculadora = {
+var VendedorCalculadora = window.VendedorCalculadora = {
   async render() {
     const container = document.getElementById('page-container');
     if (!container) return;

@@ -2604,21 +2604,3 @@ const VendedorEstoque = {
   }
 };
 
-const VendedorCalculadora = {
-  async render() {
-    const container = document.getElementById('page-container');
-    if (!container) return;
-    
-    container.innerHTML = `
-      <div class="calculator-container" style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: var(--text-secondary); text-align: center;">
-        <div style="background: rgba(0, 113, 227, 0.08); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: var(--primary); transition: transform 0.3s ease;">
-          <i data-lucide="calculator" style="width: 38px; height: 38px;"></i>
-        </div>
-        <h2 style="font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">Calculadora de Gastos</h2>
-        <p style="font-size: 15px; max-width: 320px; line-height: 1.6; margin: 0 auto; color: var(--text-tertiary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">Esta funcionalidade está sendo preparada e estará disponível em breve.</p>
-      </div>
-    `;
-    Components.renderIcons();
-  }
-};
-
