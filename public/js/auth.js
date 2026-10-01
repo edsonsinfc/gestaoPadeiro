@@ -4,6 +4,10 @@
  */
 
 const Auth = {
+  getUser() {
+    return (typeof API !== 'undefined' && typeof API.getUser === 'function') ? API.getUser() : null;
+  },
+
   renderLogin() {
     return `
     <div class="login-page">

@@ -52,7 +52,7 @@ const PadeiroFlow = {
     } catch(e) {}
 
     // 2. Buscar agenda do usuário e atividades de hoje
-    const me = (typeof Auth !== 'undefined' && Auth.getUser()) || (typeof API !== 'undefined' && API.getUser()) || {};
+    const me = (typeof API !== 'undefined' && typeof API.getUser === 'function' ? API.getUser() : null) || {};
     let todasTarefasHoje = [];
     let atividadesHoje = [];
 
