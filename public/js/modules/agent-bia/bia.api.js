@@ -166,6 +166,17 @@ const BiaAPI = {
         action = 'escala_alta_performance';
       } else if (lower.includes('padrão de escala') || lower.includes('padrao de escala') || lower.includes('padrão anterior') || lower.includes('padrao anterior') || lower.includes('escala que já foi feita')) {
         action = 'escala_padrao_anterior';
+      } else if (
+        lower.includes('desfazer') ||
+        lower.includes('desfaça') ||
+        lower.includes('desfaca') ||
+        lower.includes('reverter') ||
+        lower.includes('cancelar escala') ||
+        lower.includes('apagar escala') ||
+        lower.includes('desfazer alteraç') ||
+        lower.includes('desfazer alterac')
+      ) {
+        action = 'desfazer_alteracoes';
       }
     }
 

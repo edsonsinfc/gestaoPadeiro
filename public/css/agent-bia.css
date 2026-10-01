@@ -422,6 +422,76 @@
   transform: none;
 }
 
+/* ─── Undo Action Styles (Apple HIG) ──────────────────────────────────── */
+.bia-undo-card {
+  border-left: 3px solid #FF3B30 !important;
+  background: #FFF9F9 !important;
+}
+
+.bia-btn-undo-confirm {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF3B30 0%, #FF6459 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 59, 48, 0.3);
+  transition: all 0.2s ease;
+}
+
+.bia-btn-undo-confirm:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.bia-btn-undo-confirm:active {
+  transform: translateY(0);
+}
+
+.bia-btn-undo-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bia-btn-undo-secondary {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 59, 48, 0.06);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  color: #D32F2F;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.bia-btn-undo-secondary:hover {
+  background: rgba(255, 59, 48, 0.12);
+  border-color: rgba(255, 59, 48, 0.35);
+}
+
+.bia-btn-undo-secondary:active {
+  transform: scale(0.98);
+}
+
+.bia-btn-undo-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ─── Typing Indicator (Digitando) ─────────────────────────────────────── */
 .bia-typing-indicator {
   display: flex;

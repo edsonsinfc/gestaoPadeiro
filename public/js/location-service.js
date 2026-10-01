@@ -45,34 +45,43 @@ const LocationService = {
         const user = API.getUser();
         if (!user) return;
 
-        // Verifica se a atualização afeta o padeiro logado
-        const isMyTask = data && data.tarefa && data.tarefa.padeiroId === user.id;
+        // Verifica se a atualização afeta o padeiro logado ou se é gestor/admin
+        const tarefa = data && data.tarefa;
+        const isMyTask = tarefa && (
+          tarefa.padeiroId === user.id ||
+          (user.codTec && String(tarefa.codTec) === String(user.codTec)) ||
+          (user.nome && tarefa.padeiroNome && user.nome.trim().toLowerCase() === tarefa.padeiroNome.trim().toLowerCase())
+        );
         const isGeneralUpdate = data && (data.action === 'delete_all' || data.action === 'load_template');
+        const isStaff = user.role === 'admin' || user.role === 'gestor' || user.role === 'gestor_geral' || user.role === 'gestor_regional' || user.role === 'vendedor';
 
-        if (isMyTask || isGeneralUpdate) {
-          // Atualiza o cache local da agenda em background enquanto está online
-          if (typeof API !== 'undefined' && typeof API.get === 'function') {
-            API.get('/api/cronograma/agenda')
-              .then(() => {
-                // Se estiver na tela de agenda, atualiza a exibição em tempo real
-                if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
-                  console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
-                  if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
-                    PadeiroAgenda.render();
-                  }
-                }
+        if (isMyTask || isGeneralUpdate || isStaff) {
+          console.log('⚡ [Socket] Atualização de agenda relevante! Sincronizando tela em tempo real...');
+          
+          // Se estiver na tela de registro de atividade (padeiro-atividade), recarrega imediatamente!
+          if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-atividade') {
+            if (typeof PadeiroFlow !== 'undefined') {
+              // Se não tiver iniciado produção ativa (está na tela vazia ou no passo inicial), recarrega já!
+              if (!PadeiroFlow.activity || !PadeiroFlow.activity.id || PadeiroFlow.currentStep === 0) {
+                console.log('⚡ [Socket] Executando PadeiroFlow.render() imediatamente!');
+                PadeiroFlow.render();
+              }
+            }
+          }
 
-                // Se estiver na tela de registro de atividade (passo 0), atualiza a exibição do select de tarefas
-                if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-atividade') {
-                  if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
-                    console.log('🔄 Recarregando o seletor de tarefas (passo 0) na tela de atividades...');
-                    PadeiroFlow.renderStep();
-                  }
-                }
-              })
-              .catch((err) => {
-                console.error('Erro ao atualizar cache de agenda:', err);
-              });
+          // Se estiver na tela de agenda semanal, recarrega
+          if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-agenda') {
+            if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+              console.log('🔄 Recarregando a escala/agenda do padeiro na tela...');
+              PadeiroAgenda.render();
+            }
+          }
+
+          // Se estiver no painel do cronograma
+          if (typeof App !== 'undefined' && App.currentRoute === 'cronograma') {
+            if (typeof Cronograma !== 'undefined' && typeof Cronograma.loadData === 'function') {
+              Cronograma.loadData();
+            }
           }
 
           // Mostrar um feedback visual (toast)

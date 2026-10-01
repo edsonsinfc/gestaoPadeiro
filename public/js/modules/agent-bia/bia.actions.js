@@ -312,20 +312,55 @@ const BiaActions = {
   },
 
   /**
-   * Executa a gravação em massa das tarefas no banco de dados via API
+   * Salva o registro de uma alteração no histórico local
    */
-  async aplicarTarefasNoSistema(tarefas, onProgress) {
+  recordAction(actionRecord) {
+    try {
+      const history = this.getActionHistory();
+      history.unshift(actionRecord);
+      if (history.length > 15) history.pop();
+      localStorage.setItem('BIA_ACTION_HISTORY', JSON.stringify(history));
+    } catch (e) {
+      console.warn('[BIA] Erro ao salvar histórico de ações:', e);
+    }
+  },
+
+  /**
+   * Retorna a lista de ações registradas
+   */
+  getActionHistory() {
+    try {
+      const saved = localStorage.getItem('BIA_ACTION_HISTORY');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  /**
+   * Retorna a última alteração realizada pela Bia
+   */
+  getLastAction() {
+    const history = this.getActionHistory();
+    return history.length > 0 ? history[0] : null;
+  },
+
+  /**
+   * Executa a gravação em massa das tarefas no banco de dados via API e salva histórico para reversão
+   */
+  async aplicarTarefasNoSistema(tarefas, onProgress, escalaInfo = {}) {
     if (!tarefas || tarefas.length === 0) {
       throw new Error('Nenhuma tarefa para aplicar.');
     }
 
     let criadas = 0;
+    const createdIds = [];
     const total = tarefas.length;
 
     for (let i = 0; i < tarefas.length; i++) {
       const t = tarefas[i];
       try {
-        await API.post('/api/cronograma', {
+        const res = await API.post('/api/cronograma', {
           padeiroId: t.padeiroId,
           padeiroNome: t.padeiroNome,
           codTec: t.codTec || '',
@@ -337,6 +372,12 @@ const BiaActions = {
           status: 'pendente',
           observacao: t.observacao || 'Escala gerada pela Bia'
         });
+
+        const createdId = res?.id || res?._id || res?.tarefa?.id || res?.tarefa?._id;
+        if (createdId) {
+          createdIds.push(createdId);
+        }
+
         criadas++;
         if (typeof onProgress === 'function') {
           onProgress(criadas, total);
@@ -344,6 +385,19 @@ const BiaActions = {
       } catch (err) {
         console.warn('[BIA] Falha ao criar tarefa individual:', err);
       }
+    }
+
+    // Registrar no histórico para permitir reversão
+    if (createdIds.length > 0) {
+      this.recordAction({
+        id: 'bia_batch_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        tipo: escalaInfo.tipo || 'escala',
+        titulo: escalaInfo.titulo || 'Escala no Cronograma',
+        descricao: escalaInfo.descricao || '',
+        tarefasCriadasIds: createdIds,
+        totalTarefas: createdIds.length
+      });
     }
 
     if (typeof Cronograma !== 'undefined' && typeof Cronograma.render === 'function') {
@@ -354,7 +408,59 @@ const BiaActions = {
       }
     }
 
-    return { sucesso: true, criadas, total };
+    return { sucesso: true, criadas, total, createdIds };
+  },
+
+  /**
+   * AÇÃO: Desfazer a última escala ou alteração realizada pela Bia
+   */
+  async desfazerUltimaAcao(onProgress) {
+    const lastAction = this.getLastAction();
+    if (!lastAction || !lastAction.tarefasCriadasIds || lastAction.tarefasCriadasIds.length === 0) {
+      return {
+        sucesso: false,
+        mensagem: 'Nenhuma alteração recente da Bia encontrada para desfazer.'
+      };
+    }
+
+    let removidas = 0;
+    const ids = lastAction.tarefasCriadasIds;
+    const total = ids.length;
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      try {
+        await API.delete(`/api/cronograma/${id}`);
+        removidas++;
+        if (typeof onProgress === 'function') {
+          onProgress(removidas, total);
+        }
+      } catch (err) {
+        console.warn(`[BIA] Falha ao excluir tarefa ${id}:`, err);
+      }
+    }
+
+    // Remover a ação do histórico após desfazer
+    try {
+      const history = this.getActionHistory();
+      history.shift();
+      localStorage.setItem('BIA_ACTION_HISTORY', JSON.stringify(history));
+    } catch (e) {}
+
+    // Sincronizar visualmente o Cronograma se estiver ativo
+    if (typeof Cronograma !== 'undefined' && typeof Cronograma.render === 'function') {
+      try {
+        await Cronograma.render();
+      } catch (e) {}
+    }
+
+    return {
+      sucesso: true,
+      removidas,
+      total,
+      titulo: lastAction.titulo || 'Escala',
+      tipo: lastAction.tipo
+    };
   }
 };
 

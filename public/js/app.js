@@ -103,6 +103,42 @@ const App = {
 
     // Check for APK updates (for native Capacitor app)
     this.checkApkUpdate();
+
+    // Sincronização instantânea ao retornar ao aplicativo (Foreground / Unminimize / Unlock)
+    this.setupForegroundSync();
+  },
+
+  setupForegroundSync() {
+    const handleResume = () => {
+      console.log('⚡ [App Lifecycle] App ativo em primeiro plano. Verificando conexão e agenda...');
+      if (typeof LocationService !== 'undefined' && LocationService.socket) {
+        if (!LocationService.socket.connected) {
+          LocationService.socket.connect();
+        }
+      }
+      if (this.currentRoute === 'padeiro-atividade') {
+        if (typeof PadeiroFlow !== 'undefined' && (!PadeiroFlow.activity || !PadeiroFlow.activity.id || PadeiroFlow.currentStep === 0)) {
+          console.log('⚡ [App Lifecycle] Re-sincronizando PadeiroFlow imediatamente...');
+          PadeiroFlow.render();
+        }
+      } else if (this.currentRoute === 'padeiro-agenda') {
+        if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {
+          PadeiroAgenda.render();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') handleResume();
+    });
+
+    window.addEventListener('focus', handleResume);
+
+    if (window.Capacitor?.Plugins?.App?.addListener) {
+      window.Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) handleResume();
+      });
+    }
   },
 
   navigate(route, data = {}, pushToHistory = true) {
@@ -217,6 +253,14 @@ const App = {
       const headerWrapper = document.getElementById('header-wrapper');
       if (headerWrapper) {
         headerWrapper.innerHTML = this.renderHeader(route);
+      }
+      // Garante que a barra inferior esteja presente caso a tela já tenha layout montado
+      const existingBottomNav = document.getElementById('bottom-navbar');
+      if (!existingBottomNav) {
+        const bottomNavHtml = this.renderBottomNavbar(user);
+        if (bottomNavHtml) {
+          existingLayout.insertAdjacentHTML('beforeend', bottomNavHtml);
+        }
       }
       document.getElementById('page-container').innerHTML = Components.loading();
     }
@@ -433,39 +477,14 @@ const App = {
 
   renderBottomNavbar(user) {
     const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-    if (isManagement) return '';
     let items = [];
 
     if (isManagement) {
-      if (user.role === 'master_gestor') {
-        items = [
-          { route: 'admin-dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
-          { route: 'filiais', label: 'Filiais', icon: 'map' },
-          { route: 'rastreamento', label: 'Rastreio', icon: 'map-pin' },
-          { route: 'avaliacoes', label: 'Avaliações', icon: 'star' },
-          { route: 'timeline', label: 'Timeline', icon: 'clock' },
-          { route: 'gestao', label: 'Gestão', icon: 'users' },
-          { route: 'metas', label: 'Metas', icon: 'target' },
-          { route: 'relatorios', label: 'Relatórios', icon: 'bar-chart-2' }
-        ];
-      } else {
-        items = [
-          { route: 'admin-dashboard', label: 'Dashboard', icon: 'layout-dashboard' }
-        ];
-        if (user.role === 'admin' || user.role === 'gestor_geral') {
-          items.push({ route: 'filiais', label: 'Filiais', icon: 'map' });
-        }
-        items.push({ route: 'cronograma', label: 'Cronograma', icon: 'calendar-days' });
-        items.push({ route: 'gestao', label: 'Gestão', icon: 'users' });
-        items.push({ route: 'metas', label: 'Metas', icon: 'target' });
-        items.push({ route: 'avaliacoes', label: 'Avaliações', icon: 'star' });
-        items.push({ route: 'rastreamento', label: 'Rastreio', icon: 'map' });
-        items.push({ route: 'timeline', label: 'Timeline', icon: 'clock' });
-        items.push({ route: 'relatorios', label: 'Relatórios', icon: 'bar-chart-2' });
-        if (user.role === 'admin') {
-          items.push({ route: 'dev', label: 'Dev', icon: 'terminal' });
-        }
-      }
+      items = [
+        { route: 'rastreamento', label: 'Rastreio', icon: 'map-pin' },
+        { route: 'cronograma', label: 'Cronograma', icon: 'calendar-days' },
+        { route: 'admin-dashboard', label: 'Dashboard', icon: 'layout-dashboard' }
+      ];
     } else {
       if (user.role === 'vendedor') {
         items = [
@@ -550,7 +569,7 @@ const App = {
             <i data-lucide="bell" size="20"></i>
             <span class="ios-notif-badge" id="ios-notif-badge" style="display:none">0</span>
           </button>
-          <button class="ios-nav-btn ios-avatar-btn" aria-label="Perfil">
+          <button class="ios-nav-btn ios-avatar-btn" aria-label="Perfil" onclick="App.handleAvatarClick(event)">
             <div class="ios-avatar-circle">${initials}</div>
           </button>
         </div>
@@ -722,6 +741,26 @@ const App = {
     document.body.style.overflow = '';
   },
 
+  handleAvatarClick(e) {
+    if (e) e.stopPropagation();
+    const user = API.getUser();
+    if (!user) return;
+    const nome = user.nome || 'Usuário';
+    const roleLabels = {
+      admin: 'Administrador',
+      gestor: 'Gestor',
+      gestor_geral: 'Gestor Geral',
+      gestor_regional: 'Gestor Regional',
+      master_gestor: 'Master Gestor',
+      vendedor: 'Vendedor'
+    };
+    const cargo = roleLabels[user.role] || user.cargo || 'Padeiro';
+
+    if (confirm(`Conectado como: ${nome}\nPerfil: ${cargo}\n\nDeseja sair da sua conta?`)) {
+      Auth.logout();
+    }
+  },
+
   // === iOS HEADER SCROLL COLLAPSE ===
   _scrollBound: false,
   bindHeaderScroll() {
@@ -800,16 +839,24 @@ const App = {
     }, 2000);
   },
 
+  openExternalApkDownload(url) {
+    const targetUrl = url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+    if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+      window.open(targetUrl, '_system');
+    } else {
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.download = 'SmartGestor.apk';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  },
+
   downloadApk() {
-    // Trigger download of the APK directly from GitHub Releases latest
     const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = 'SmartGestor.apk';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    this.openExternalApkDownload(downloadUrl);
 
     // Esconde o banner
     const banner = document.getElementById('apk-install-banner');
@@ -830,13 +877,7 @@ const App = {
 
   downloadApkAgain() {
     const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = 'SmartGestor.apk';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    this.openExternalApkDownload(downloadUrl);
     if (typeof Components !== 'undefined' && Components.toast) {
       Components.toast('Download iniciado novamente! 📥', 'success');
     }
@@ -1045,9 +1086,9 @@ const App = {
               Lembrar Mais Tarde
             </button>
           ` : `
-            <a href="${absoluteUrl}" target="_blank" onclick="window.location.href='${absoluteUrl}'" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; text-decoration: none;">
+            <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none;">
               <i data-lucide="download" style="width:18px;height:18px"></i> Baixar Atualização (APK)
-            </a>
+            </button>
             <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
               Lembrar Mais Tarde
             </button>
@@ -1084,9 +1125,9 @@ const App = {
         if (actionContainer && progressBar && progressBar.style.width === '0%') {
           if (progressText) progressText.textContent = 'Download demorando? Baixe direto:';
           actionContainer.innerHTML = `
-            <a href="${absoluteUrl}" target="_blank" onclick="window.location.href='${absoluteUrl}'" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; text-decoration: none;">
+            <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; cursor: pointer; border: none;">
               <i data-lucide="download" style="width:18px;height:18px"></i> Baixar APK Diretamente
-            </a>
+            </button>
             <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
               Fechar
             </button>
@@ -1144,9 +1185,9 @@ const App = {
           }
           if (actionContainer) {
             actionContainer.innerHTML = `
-              <a href="${absoluteUrl}" target="_blank" onclick="window.location.href='${absoluteUrl}'" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; text-decoration: none;">
+              <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; cursor: pointer; border: none;">
                 <i data-lucide="download" style="width:18px;height:18px"></i> Baixar APK Diretamente
-              </a>
+              </button>
               <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
                 Fechar
               </button>

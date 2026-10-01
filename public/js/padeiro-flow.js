@@ -20,6 +20,7 @@ const PadeiroFlow = {
   },
 
   async render(prefill = {}) {
+    this.stopNoActivitiesAutoPoller();
     const container = document.getElementById('page-container');
     container.innerHTML = Components.loading();
     this.currentStep = 0;
@@ -146,6 +147,7 @@ const PadeiroFlow = {
   },
 
   renderNoActivitiesScheduledScreen(container, dateStr) {
+    this.startNoActivitiesAutoPoller();
     const fullDate = this.formatFullDate(dateStr);
     container.innerHTML = `
       <div class="pf-container pf-resume-container fade-in" style="max-width:520px;margin:30px auto;padding:0 16px;text-align:center;">
@@ -155,19 +157,22 @@ const PadeiroFlow = {
             <i data-lucide="calendar-off" style="width:40px;height:40px"></i>
           </div>
 
-          <span style="display: inline-block; background: #EEF2FF; color: #1E4BFF; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px; margin-bottom: 12px; border: 1px solid #dbeafe;">
-            Sem Escala Hoje
-          </span>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: #1E4BFF; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px; border: 1px solid #dbeafe;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; display: inline-block; animation: pulse 1.5s infinite;"></span>
+              Sincronização Ativa
+            </span>
+          </div>
 
           <h2 style="color: #0f172a; font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">
             Nenhuma Atividade Agendada
           </h2>
           
-          <p style="font-size: 14px; color: #64748b; margin-bottom: 22px; line-height: 1.5;">
-            Você não possui tarefas ou clientes programados na sua agenda para o dia de hoje.
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">
+            Você não possui tarefas programadas no momento. Assim que um gestor adicionar uma tarefa para você, ela aparecerá automaticamente nesta tela!
           </p>
 
-          <div style="text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+          <div style="text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 22px;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
               <i data-lucide="calendar" style="width: 18px; height: 18px; color: #1E4BFF;"></i>
               <div>
@@ -176,16 +181,20 @@ const PadeiroFlow = {
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
-              <i data-lucide="info" style="width: 18px; height: 18px; color: #64748b;"></i>
+              <i data-lucide="zap" style="width: 18px; height: 18px; color: #F59E0B;"></i>
               <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
-                Consulte sua agenda semanal para os próximos dias ou inicie um atendimento avulso caso esteja prestando suporte presencial.
+                O sistema monitora novas tarefas a cada 3 segundos em segundo plano.
               </div>
             </div>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-agenda')" style="background: linear-gradient(135deg, #1E4BFF 0%, #002ECC 100%); box-shadow: 0 6px 18px rgba(30, 75, 255, 0.25); height: 48px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <i data-lucide="calendar" style="width:18px;height:18px"></i> Ver Minha Agenda Semanal
+            <button class="pf-btn-primary pf-btn-full" id="btn-check-new-tasks" onclick="PadeiroFlow.checkNewTasksNow()" style="background: linear-gradient(135deg, #1E4BFF 0%, #002ECC 100%); box-shadow: 0 6px 18px rgba(30, 75, 255, 0.25); height: 48px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="refresh-cw" style="width:18px;height:18px"></i> Verificar Agora
+            </button>
+
+            <button class="pf-btn-full" onclick="App.navigate('padeiro-agenda')" style="background: #ffffff; border: 1.5px solid #cbd5e1; color: #1e293b; height: 46px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="calendar" style="width:18px;height:18px;color:#1E4BFF;"></i> Ver Minha Agenda Semanal
             </button>
             
             <button class="pf-btn-full" onclick="PadeiroFlow.startAdHocActivity()" style="background: #f1f5f9; border: 1.5px solid #cbd5e1; color: #1e293b; height: 46px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
@@ -201,6 +210,55 @@ const PadeiroFlow = {
       </div>
     `;
     Components.renderIcons();
+  },
+
+  startNoActivitiesAutoPoller() {
+    this.stopNoActivitiesAutoPoller();
+    this._emptyScreenPollInterval = setInterval(async () => {
+      if (typeof App === 'undefined' || App.currentRoute !== 'padeiro-atividade') {
+        this.stopNoActivitiesAutoPoller();
+        return;
+      }
+      try {
+        const agenda = await API.get('/api/cronograma/agenda');
+        const today = this.getTodayLocal();
+        const tarefasHoje = (agenda || []).filter(a => {
+          if (!a) return false;
+          const aData = (a.data || '').split('T')[0];
+          return aData === today || aData.startsWith(today);
+        });
+        if (tarefasHoje.length > 0) {
+          console.log('⚡ [Auto-Poller] Nova tarefa detectada! Atualizando tela de atividades...');
+          this.stopNoActivitiesAutoPoller();
+          this.render();
+        }
+      } catch (e) {}
+    }, 3000);
+  },
+
+  stopNoActivitiesAutoPoller() {
+    if (this._emptyScreenPollInterval) {
+      clearInterval(this._emptyScreenPollInterval);
+      this._emptyScreenPollInterval = null;
+    }
+  },
+
+  async checkNewTasksNow() {
+    const btn = document.getElementById('btn-check-new-tasks');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px;"></span> Consultando...`;
+    }
+    try {
+      await this.render();
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Escala verificada!', 'info');
+      }
+    } catch (err) {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Erro ao buscar tarefas: ' + err.message, 'error');
+      }
+    }
   },
 
   renderAllActivitiesCompletedScreen(container, todasTarefasHoje, atividadesFinalizadasHoje, dateStr) {

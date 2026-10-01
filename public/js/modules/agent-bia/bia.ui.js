@@ -120,6 +120,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           <div class="bia-chip" data-prompt="Bia faça uma escala seguindo o padrão de escala">
             <i data-lucide="calendar" style="width: 13px; height: 13px;"></i> Padrão Habitual
           </div>
+          <div class="bia-chip" data-prompt="Bia desfaça a última escala criada">
+            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i> Desfazer Escala
+          </div>
           <div class="bia-chip" data-prompt="Quem são os padeiros com maior produção neste mês?">
             <i data-lucide="trending-up" style="width: 13px; height: 13px;"></i> Top Padeiros
           </div>
@@ -250,6 +253,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         await this.handleEscalaAltaPerformance();
       } else if (response.action === 'escala_padrao_anterior') {
         await this.handleEscalaPadraoAnterior();
+      } else if (response.action === 'desfazer_alteracoes') {
+        await this.handleDesfazerUltimaAcao();
       }
 
     } catch (err) {
@@ -290,6 +295,78 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     } catch (e) {
       this.removeTypingIndicator();
       this.addBiaMessage(`Não consegui replicar o padrão anterior: ${e.message}`);
+    }
+  },
+
+  /**
+   * Trata o pedido de desfazer a última ação da Bia com Card de Confirmação
+   */
+  async handleDesfazerUltimaAcao() {
+    const lastAction = BiaActions.getLastAction();
+    if (!lastAction || !lastAction.tarefasCriadasIds || lastAction.tarefasCriadasIds.length === 0) {
+      this.addBiaMessage('Nenhuma alteração recente gerada por mim foi encontrada no histórico para desfazer.');
+      return;
+    }
+
+    const body = document.getElementById('bia-messages-body');
+    if (!body) return;
+
+    const card = document.createElement('div');
+    card.className = 'bia-action-card bia-undo-card';
+    const cardId = 'card-undo-' + Date.now();
+    const hora = new Date(lastAction.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    card.innerHTML = `
+      <div class="bia-card-top">
+        <span class="bia-card-title" style="color: #FF3B30;">
+          <i data-lucide="rotate-ccw" style="width: 15px; height: 15px; color: #FF3B30;"></i> Desfazer Alterações
+        </span>
+        <span class="bia-card-badge" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30;">${lastAction.totalTarefas} Tarefas</span>
+      </div>
+      <div class="bia-card-desc">
+        Deseja excluir as <strong>${lastAction.totalTarefas} tarefas</strong> geradas em "<strong>${lastAction.titulo}</strong>" às ${hora}?
+      </div>
+
+      <button id="${cardId}" class="bia-btn-undo-confirm">
+        <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Confirmar e Desfazer Escala
+      </button>
+    `;
+
+    body.appendChild(card);
+    if (window.lucide) lucide.createIcons();
+    this.scrollToBottom();
+
+    const btn = document.getElementById(cardId);
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:rotate 0.8s linear infinite;"></span> Excluindo tarefas...`;
+
+        try {
+          const res = await BiaActions.desfazerUltimaAcao((removidas, total) => {
+            btn.innerHTML = `Removendo tarefas (${removidas}/${total})...`;
+          });
+
+          if (res.sucesso) {
+            btn.style.background = '#34C759';
+            btn.innerHTML = `<i data-lucide="check" style="width:15px;height:15px;"></i> ${res.removidas} Tarefas Removidas com Sucesso!`;
+            if (window.lucide) lucide.createIcons();
+
+            if (typeof Components !== 'undefined' && Components.toast) {
+              Components.toast(`Escala desfeita! ${res.removidas} tarefas removidas.`, 'info');
+            }
+
+            this.addBiaMessage(`As **${res.removidas} tarefas** geradas anteriormente foram removidas do Cronograma com sucesso.`);
+          } else {
+            btn.disabled = false;
+            btn.innerHTML = res.mensagem || 'Nenhuma tarefa para desfazer.';
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = 'Erro ao desfazer. Tentar novamente';
+          console.error('[BIA] Erro ao desfazer:', err);
+        }
+      });
     }
   },
 
@@ -351,7 +428,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         try {
           const res = await BiaActions.aplicarTarefasNoSistema(escala.tarefas, (criadas, total) => {
             btn.innerHTML = `Gravando tarefas (${criadas}/${total})...`;
-          });
+          }, escala);
 
           btn.style.background = '#34C759';
           btn.innerHTML = `<i data-lucide="check" style="width:15px;height:15px;"></i> ${res.criadas} Tarefas Aplicadas com Sucesso!`;
@@ -362,6 +439,41 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           }
 
           this.addBiaMessage(`As **${res.criadas} tarefas** foram adicionadas com sucesso ao Cronograma. Você já pode visualizá-las na tela de Cronograma.`);
+
+          // Adicionar botão de desfazer diretamente abaixo da confirmação
+          const undoContainer = document.createElement('div');
+          undoContainer.style.marginTop = '10px';
+          undoContainer.innerHTML = `
+            <button id="btn-undo-direct-${cardId}" class="bia-btn-undo-secondary">
+              <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i> Desfazer esta escala
+            </button>
+          `;
+          card.appendChild(undoContainer);
+          if (window.lucide) lucide.createIcons();
+
+          const undoBtn = document.getElementById(`btn-undo-direct-${cardId}`);
+          if (undoBtn) {
+            undoBtn.addEventListener('click', async () => {
+              undoBtn.disabled = true;
+              undoBtn.innerHTML = `Desfazendo tarefas...`;
+              const undoRes = await BiaActions.desfazerUltimaAcao();
+              if (undoRes.sucesso) {
+                undoBtn.style.color = '#34C759';
+                undoBtn.style.borderColor = 'rgba(52, 199, 89, 0.3)';
+                undoBtn.style.background = 'rgba(52, 199, 89, 0.08)';
+                undoBtn.innerHTML = `<i data-lucide="check" style="width:13px;height:13px;"></i> Escala revertida (${undoRes.removidas} tarefas removidas)`;
+                if (window.lucide) lucide.createIcons();
+                if (typeof Components !== 'undefined' && Components.toast) {
+                  Components.toast(`Escala desfeita (${undoRes.removidas} tarefas removidas).`, 'info');
+                }
+                BiaUI.addBiaMessage(`As **${undoRes.removidas} tarefas** foram removidas do cronograma com sucesso.`);
+              } else {
+                undoBtn.disabled = false;
+                undoBtn.innerHTML = undoRes.mensagem || 'Não foi possível desfazer';
+              }
+            });
+          }
+
         } catch (err) {
           btn.disabled = false;
           btn.style.background = '#FF3B30';
