@@ -26,57 +26,103 @@ public class ApkUpdaterPlugin extends Plugin {
     @PluginMethod
     public void downloadAndInstall(PluginCall call) {
         String urlString = call.getString("url");
-        if (urlString == null) {
+        if (urlString == null || urlString.isEmpty()) {
             call.reject("URL is required");
             return;
         }
 
         // Run download in a background thread to avoid blocking the UI thread
         new Thread(() -> {
+            HttpURLConnection connection = null;
+            InputStream inputStream = null;
+            FileOutputStream outputStream = null;
+
             try {
                 Context context = getContext();
                 URL url = new URL(urlString);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
 
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    call.reject("Server returned HTTP " + connection.getResponseCode());
-                    return;
+                // Handle redirects (GitHub Releases redirect 302 to AWS S3)
+                int redirectCount = 0;
+                while (redirectCount < 7) {
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setInstanceFollowRedirects(true);
+                    connection.setRequestProperty("User-Agent", "SmartGestor-App");
+                    connection.setConnectTimeout(15000);
+                    connection.setReadTimeout(30000);
+                    connection.connect();
+
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                            || responseCode == HttpURLConnection.HTTP_MOVED_PERM
+                            || responseCode == HttpURLConnection.HTTP_SEE_OTHER
+                            || responseCode == 307
+                            || responseCode == 308) {
+                        String newUrl = connection.getHeaderField("Location");
+                        connection.disconnect();
+                        if (newUrl != null && !newUrl.isEmpty()) {
+                            url = new URL(newUrl);
+                            redirectCount++;
+                            continue;
+                        }
+                    }
+
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        call.reject("Server returned HTTP " + responseCode);
+                        return;
+                    }
+                    break;
                 }
 
-                // Create a temporary file in the cache directory
+                // Create or overwrite the temporary file in the cache directory
                 File cacheDir = context.getCacheDir();
                 File apkFile = new File(cacheDir, "update.apk");
                 if (apkFile.exists()) {
                     apkFile.delete();
                 }
 
-                InputStream inputStream = connection.getInputStream();
-                FileOutputStream outputStream = new FileOutputStream(apkFile);
+                inputStream = connection.getInputStream();
+                outputStream = new FileOutputStream(apkFile);
 
-                byte[] buffer = new byte[4096];
+                byte[] buffer = new byte[8192];
                 int bytesRead;
-                int totalBytesRead = 0;
-                int fileLength = connection.getContentLength();
+                long totalBytesRead = 0;
+                long fileLength = connection.getContentLengthLong();
+
+                long lastNotifyTime = 0;
 
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                     totalBytesRead += bytesRead;
-                    
-                    // Optional: send progress event back to Web view
-                    if (fileLength > 0) {
+
+                    long now = System.currentTimeMillis();
+                    if (fileLength > 0 && (now - lastNotifyTime > 150)) {
+                        lastNotifyTime = now;
                         JSObject progressObj = new JSObject();
                         progressObj.put("progress", (float) totalBytesRead / fileLength);
+                        progressObj.put("bytes", totalBytesRead);
+                        progressObj.put("total", fileLength);
                         notifyListeners("downloadProgress", progressObj);
                     }
                 }
 
+                outputStream.flush();
                 outputStream.close();
-                inputStream.close();
-                connection.disconnect();
+                outputStream = null;
 
-                Log.d(TAG, "APK downloaded successfully to: " + apkFile.getAbsolutePath());
+                inputStream.close();
+                inputStream = null;
+                connection.disconnect();
+                connection = null;
+
+                Log.d(TAG, "APK downloaded successfully to: " + apkFile.getAbsolutePath() + " (" + totalBytesRead + " bytes)");
+
+                // Send 100% progress
+                JSObject finalProgress = new JSObject();
+                finalProgress.put("progress", 1.0f);
+                finalProgress.put("bytes", totalBytesRead);
+                finalProgress.put("total", totalBytesRead);
+                notifyListeners("downloadProgress", finalProgress);
 
                 // Trigger installation
                 installApk(context, apkFile, call);
@@ -84,6 +130,10 @@ public class ApkUpdaterPlugin extends Plugin {
             } catch (Exception e) {
                 Log.e(TAG, "Error downloading or installing APK", e);
                 call.reject("Error: " + e.getMessage());
+            } finally {
+                try { if (outputStream != null) outputStream.close(); } catch (Exception ignored) {}
+                try { if (inputStream != null) inputStream.close(); } catch (Exception ignored) {}
+                try { if (connection != null) connection.disconnect(); } catch (Exception ignored) {}
             }
         }).start();
     }
@@ -94,7 +144,6 @@ public class ApkUpdaterPlugin extends Plugin {
             Uri apkUri;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // Use FileProvider for Android 7.0 (Nougat) and above
                 String authority = context.getPackageName() + ".fileprovider";
                 apkUri = FileProvider.getUriForFile(context, authority, apkFile);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -104,9 +153,9 @@ public class ApkUpdaterPlugin extends Plugin {
 
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            
+
             context.startActivity(intent);
-            
+
             JSObject result = new JSObject();
             result.put("success", true);
             call.resolve(result);
