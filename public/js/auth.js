@@ -154,7 +154,7 @@ const Auth = {
       }
 
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
+      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-atividade'));
     } catch (err) {
       errorEl.classList.add('active');
       errorEl.textContent = err.message;
@@ -363,7 +363,7 @@ const Auth = {
       }
 
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
+      App.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-atividade'));
     } catch (err) {
       if (errorEl) {
         errorEl.classList.add('active');

@@ -13,8 +13,12 @@ const App = {
 
     if (user && token) {
       const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
+      const isPadeiro = !isManagement && user.role !== 'vendedor';
       const savedRoute = safeGetLocalStorage('currentRoute');
-      const initialRoute = savedRoute || (isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-inicio'));
+      let initialRoute = savedRoute;
+      if (!initialRoute || (isPadeiro && initialRoute === 'padeiro-inicio')) {
+        initialRoute = isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-atividade');
+      }
       history.replaceState({ route: initialRoute, data: {} }, '', '');
       this.navigate(initialRoute, {}, false);
     } else {
@@ -143,7 +147,7 @@ const App = {
       const user = API.getUser();
       if (user && API.token) {
         const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
-        this.navigate(isManagement ? 'admin-dashboard' : 'padeiro-inicio');
+        this.navigate(isManagement ? 'admin-dashboard' : (user.role === 'vendedor' ? 'vendedor-clientes' : 'padeiro-atividade'));
         return;
       }
       app.innerHTML = Auth.renderLogin();
@@ -182,7 +186,7 @@ const App = {
         const allowedPadeiroRoutes = ['padeiro-inicio', 'padeiro-atividade', 'padeiro-agenda', 'padeiro-estoque'];
         if (!allowedPadeiroRoutes.includes(route)) {
           console.warn(`Acesso negado para a rota ${route} (Padeiro). Redirecionando...`);
-          this.navigate('padeiro-inicio');
+          this.navigate('padeiro-atividade');
           return;
         }
       }
@@ -361,14 +365,17 @@ const App = {
 
     const padeiroNav = `
       <div class="nav-section-title hig-sidebar-section-label">Menu</div>
-      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-inicio" onclick="App.navigate('padeiro-inicio')">
-        <span class="nav-icon"><i data-lucide="home"></i></span><span class="nav-text">Início</span>
-      </div>
       <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-atividade" onclick="App.navigate('padeiro-atividade')">
-        <span class="nav-icon"><i data-lucide="clipboard-list"></i></span><span class="nav-text">Nova Atividade</span>
+        <span class="nav-icon"><i data-lucide="clipboard-list"></i></span><span class="nav-text">Registro de Atividade</span>
       </div>
       <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-agenda" onclick="App.navigate('padeiro-agenda')">
         <span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-text">Minha Agenda</span>
+      </div>
+      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-estoque" onclick="App.navigate('padeiro-estoque')">
+        <span class="nav-icon"><i data-lucide="package"></i></span><span class="nav-text">Estoque</span>
+      </div>
+      <div class="nav-item hig-sidebar-nav-item" data-route="padeiro-inicio" onclick="App.navigate('padeiro-inicio')">
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span><span class="nav-text">Meu Painel</span>
       </div>
     `;
 
@@ -469,10 +476,10 @@ const App = {
         ];
       } else {
         items = [
-          { route: 'padeiro-inicio', label: 'Início', icon: 'home' },
-          { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
           { route: 'padeiro-atividade', label: 'Atividade', icon: 'clipboard-list' },
-          { route: 'padeiro-estoque', label: 'Estoque', icon: 'package' }
+          { route: 'padeiro-agenda', label: 'Agenda', icon: 'calendar-days' },
+          { route: 'padeiro-estoque', label: 'Estoque', icon: 'package' },
+          { route: 'padeiro-inicio', label: 'Meu Painel', icon: 'layout-dashboard' }
         ];
       }
     }

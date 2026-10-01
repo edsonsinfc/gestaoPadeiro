@@ -2200,8 +2200,11 @@ const PadeiroFlow = {
             <div class="pf-stat"><span class="pf-stat-val">${(this.activity.kgItens||[]).length}</span><span class="pf-stat-label">Produtos</span></div>
             ${this.activity.notaPadeiroCliente ? `<div class="pf-stat-divider"></div><div class="pf-stat"><span class="pf-stat-val">${this.activity.notaPadeiroCliente}★</span><span class="pf-stat-label">Nota ao Cliente</span></div>` : ''}
           </div>
-          <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-inicio')">
-            <i data-lucide="home" style="width:18px;height:18px"></i> Voltar ao Painel
+          <button class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.startFresh()">
+            <i data-lucide="plus-circle" style="width:18px;height:18px"></i> Novo Registro de Atividade
+          </button>
+          <button class="pf-btn-ghost pf-btn-full" onclick="App.navigate('padeiro-inicio')" style="margin-top: 10px;">
+            <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i> Ver Meu Painel
           </button>
         </div>
       </div>`;
