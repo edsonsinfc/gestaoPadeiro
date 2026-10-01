@@ -29,27 +29,15 @@ const PadeiroFlow = {
     this.isSignatureDrawn = false;
     this.backgroundUploadPromise = null;
     this.backgroundSignaturePromise = null;
-    this.activity = prefill;
+    this.activity = { ...prefill };
     this.activity.timeline = this.activity.timeline || [];
 
     const today = this.getTodayLocal();
 
-    let agendaHoje = [];
-    try {
-      const agenda = await API.get('/api/cronograma/agenda');
-      agendaHoje = (agenda || []).filter(a => a.data === today && (!a.status || a.status === 'pendente' || a.status === 'em_andamento'));
-      this.agendaHoje = agendaHoje;
-
-      if (!this.activity.clienteId && agendaHoje.length > 0) {
-        this.activity.clienteId = agendaHoje[0].clienteId;
-        this.activity.clienteNome = agendaHoje[0].clienteNome;
-        this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
-      }
-    } catch(e) {}
-
+    // 1. Verificar se há atividade em andamento
     try {
       const atividades = await API.get('/api/atividades');
-      const em = atividades.find(a => a.status === 'em_andamento');
+      const em = (atividades || []).find(a => a.status === 'em_andamento');
       if (em) {
         if (em.data === today) {
           this.pendingResume = em;
@@ -63,11 +51,230 @@ const PadeiroFlow = {
       }
     } catch(e) {}
 
-    // Garante que a atividade é iniciada no backend automaticamente
-    await this.ensureActivityStarted();
+    // 2. Buscar agenda do usuário e atividades de hoje
+    const me = (typeof Auth !== 'undefined' && Auth.getUser()) || (typeof API !== 'undefined' && API.getUser()) || {};
+    let todasTarefasHoje = [];
+    let atividadesHoje = [];
+
+    try {
+      const agenda = await API.get('/api/cronograma/agenda');
+      todasTarefasHoje = (agenda || []).filter(a => (!a.padeiroId || a.padeiroId === me.id) && a.data === today);
+    } catch(e) {}
+
+    try {
+      const atividades = await API.get('/api/atividades');
+      atividadesHoje = (atividades || []).filter(a => a.data === today);
+    } catch(e) {}
+
+    const atividadesFinalizadasHoje = atividadesHoje.filter(a => a.status === 'finalizada');
+
+    // Tarefas pendentes do dia (não concluídas e não vinculadas a atividade já finalizada hoje)
+    const tarefasPendentes = todasTarefasHoje.filter(t => {
+      if (t.status === 'concluida') return false;
+      const jaFinalizada = atividadesFinalizadasHoje.some(act => 
+        (act.cronogramaId && (act.cronogramaId === t.id || act.cronogramaId === t._id)) ||
+        (act.clienteId && act.clienteId === t.clienteId)
+      );
+      return !jaFinalizada;
+    });
+
+    const isExplicitStart = !!(prefill && (prefill.clienteId || prefill.forceStart));
+
+    // Se NÃO for início forçado/específico por clique em cliente da agenda
+    if (!isExplicitStart) {
+      // Caso 1: Nenhuma tarefa agendada no dia
+      if (todasTarefasHoje.length === 0) {
+        this.renderNoActivitiesScheduledScreen(container, today);
+        return;
+      }
+
+      // Caso 2: Usuário já cumpriu todas as tarefas do dia
+      if (todasTarefasHoje.length > 0 && tarefasPendentes.length === 0) {
+        this.renderAllActivitiesCompletedScreen(container, todasTarefasHoje, atividadesFinalizadasHoje, today);
+        return;
+      }
+    }
+
+    this.agendaHoje = tarefasPendentes;
+
+    if (!this.activity.clienteId && tarefasPendentes.length > 0) {
+      this.activity.clienteId = tarefasPendentes[0].clienteId;
+      this.activity.clienteNome = tarefasPendentes[0].clienteNome;
+      this.activity.cronogramaId = tarefasPendentes[0].id || tarefasPendentes[0]._id;
+    }
+
+    // Auto-inicia atividade no backend se já houver cliente definido
+    if (this.activity.clienteId) {
+      await this.ensureActivityStarted();
+    }
 
     App.routeData = {};
     this.renderWizard(container);
+  },
+
+  formatFullDate(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      const dateObj = new Date(y, m, d);
+      const diaSemana = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+      const diaSemanaCap = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+      const dataFormatada = dateObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return `${diaSemanaCap}, ${dataFormatada}`;
+    }
+    return dateStr;
+  },
+
+  async startAdHocActivity() {
+    const container = document.getElementById('page-container');
+    if (container) container.innerHTML = Components.loading();
+    try {
+      this.todosClientes = await API.get('/api/clientes');
+    } catch (e) {
+      this.todosClientes = [];
+    }
+    this.agendaHoje = [];
+    await this.render({ forceStart: true });
+  },
+
+  renderNoActivitiesScheduledScreen(container, dateStr) {
+    const fullDate = this.formatFullDate(dateStr);
+    container.innerHTML = `
+      <div class="pf-container pf-resume-container fade-in" style="max-width:520px;margin:30px auto;padding:0 16px;text-align:center;">
+        <div class="pf-resume-card" style="border: 1px solid #e2e8f0; box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.08); background: #ffffff; border-radius: 24px; padding: 28px 22px;">
+          
+          <div style="background: rgba(30, 75, 255, 0.08); color: #1E4BFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; width: 80px; height: 80px; border-radius: 50%; box-shadow: 0 4px 14px rgba(30, 75, 255, 0.15);">
+            <i data-lucide="calendar-off" style="width:40px;height:40px"></i>
+          </div>
+
+          <span style="display: inline-block; background: #EEF2FF; color: #1E4BFF; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px; margin-bottom: 12px; border: 1px solid #dbeafe;">
+            Sem Escala Hoje
+          </span>
+
+          <h2 style="color: #0f172a; font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">
+            Nenhuma Atividade Agendada
+          </h2>
+          
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 22px; line-height: 1.5;">
+            Você não possui tarefas ou clientes programados na sua agenda para o dia de hoje.
+          </p>
+
+          <div style="text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <i data-lucide="calendar" style="width: 18px; height: 18px; color: #1E4BFF;"></i>
+              <div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">Data de Hoje</div>
+                <div style="font-size: 13px; color: #1e293b; font-weight: 700;">${fullDate}</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+              <i data-lucide="info" style="width: 18px; height: 18px; color: #64748b;"></i>
+              <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
+                Consulte sua agenda semanal para os próximos dias ou inicie um atendimento avulso caso esteja prestando suporte presencial.
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-agenda')" style="background: linear-gradient(135deg, #1E4BFF 0%, #002ECC 100%); box-shadow: 0 6px 18px rgba(30, 75, 255, 0.25); height: 48px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i data-lucide="calendar" style="width:18px;height:18px"></i> Ver Minha Agenda Semanal
+            </button>
+            
+            <button class="pf-btn-full" onclick="PadeiroFlow.startAdHocActivity()" style="background: #f1f5f9; border: 1.5px solid #cbd5e1; color: #1e293b; height: 46px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="plus-circle" style="width:18px;height:18px;color:#1E4BFF;"></i> Iniciar Atendimento Extra / Avulso
+            </button>
+
+            <button class="pf-btn-ghost pf-btn-full" onclick="App.navigate('padeiro-inicio')" style="margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; color: #64748b;">
+              <i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> Ver Meu Painel
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+    Components.renderIcons();
+  },
+
+  renderAllActivitiesCompletedScreen(container, todasTarefasHoje, atividadesFinalizadasHoje, dateStr) {
+    const fullDate = this.formatFullDate(dateStr);
+    const totalTarefas = todasTarefasHoje.length;
+
+    container.innerHTML = `
+      <div class="pf-container pf-resume-container fade-in" style="max-width:520px;margin:30px auto;padding:0 16px;text-align:center;">
+        <div class="pf-resume-card" style="border: 1px solid #d1fae5; box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.15); background: #ffffff; border-radius: 24px; padding: 28px 22px;">
+          
+          <div style="background: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; width: 80px; height: 80px; border-radius: 50%; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.22);">
+            <i data-lucide="trophy" style="width:40px;height:40px"></i>
+          </div>
+
+          <span style="display: inline-block; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px; margin-bottom: 12px; border: 1px solid #a7f3d0;">
+            ✓ 100% Concluído
+          </span>
+
+          <h2 style="color: #0f172a; font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">
+            Todas as Tarefas Cumpridas!
+          </h2>
+          
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 22px; line-height: 1.5;">
+            Excelente trabalho! Você concluiu com sucesso todos os atendimentos programados para hoje.
+          </p>
+
+          <div style="text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+              <div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">Data</div>
+                <div style="font-size: 13px; color: #1e293b; font-weight: 700;">${fullDate}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">Progresso</div>
+                <div style="font-size: 13px; color: #059669; font-weight: 800;">${totalTarefas} de ${totalTarefas} tarefas</div>
+              </div>
+            </div>
+
+            <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
+              Tarefas Concluídas Hoje
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
+              ${todasTarefasHoje.map(t => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;">
+                  <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="background: #ecfdf5; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <i data-lucide="check" style="width: 14px; height: 14px; color: #059669;"></i>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      ${t.clienteNome || 'Cliente'}
+                    </span>
+                  </div>
+                  <span style="font-size: 11px; color: #64748b; font-weight: 600; flex-shrink: 0; margin-left: 8px;">
+                    ${t.horario || 'Realizado'}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="pf-btn-primary pf-btn-full" onclick="App.navigate('padeiro-inicio')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25); height: 48px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i> Ver Meu Painel / Produção
+            </button>
+            
+            <button class="pf-btn-full" onclick="App.navigate('padeiro-agenda')" style="background: #ffffff; border: 1.5px solid #cbd5e1; color: #1e293b; height: 46px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="calendar" style="width:18px;height:18px;color:#1E4BFF;"></i> Ver Agenda Semanal
+            </button>
+
+            <button class="pf-btn-ghost pf-btn-full" onclick="PadeiroFlow.startAdHocActivity()" style="margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; color: #64748b;">
+              <i data-lucide="plus-circle" style="width:16px;height:16px"></i> Iniciar Atendimento Extra / Avulso
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+    Components.renderIcons();
   },
 
   renderPendingPreviousActivityScreen(container, em) {
@@ -169,8 +376,7 @@ const PadeiroFlow = {
     this.backgroundSignaturePromise = null;
     this.currentStep = 0;
     localStorage.removeItem('brago_padeiro_draft');
-    await this.fetchTodayClient();
-    this.renderWizard(document.getElementById('page-container'));
+    await this.render();
   },
 
   async fetchTodayClient() {
@@ -441,13 +647,15 @@ const PadeiroFlow = {
     const sel = document.getElementById('flow-cliente');
     if (sel) {
       const opt = sel.options[sel.selectedIndex];
-      this.activity.clienteId = sel.value;
-      this.activity.clienteNome = opt.dataset.nome;
-      this.activity.cronogramaId = opt.dataset.cronograma;
-      if (this.activity.id || this.activity._id) {
-        await this.updateActivity();
-      } else {
-        await this.ensureActivityStarted();
+      if (opt && opt.value) {
+        this.activity.clienteId = sel.value;
+        this.activity.clienteNome = opt.dataset.nome || opt.text;
+        this.activity.cronogramaId = opt.dataset.cronograma || null;
+        if (this.activity.id || this.activity._id) {
+          await this.updateActivity();
+        } else {
+          await this.ensureActivityStarted();
+        }
       }
     }
   },
@@ -575,14 +783,22 @@ const PadeiroFlow = {
     });
 
     const agendaHoje = this.agendaHoje || [];
-    const canSelect = agendaHoje.length > 1;
+    let todosClientes = this.todosClientes || [];
+    if (agendaHoje.length === 0 && todosClientes.length === 0) {
+      try {
+        todosClientes = await API.get('/api/clientes');
+        this.todosClientes = todosClientes;
+      } catch (e) {
+        todosClientes = [];
+      }
+    }
 
     c.innerHTML = `
       <!-- Card Cliente Agendado (Realocado da Etapa 1) -->
       <div class="pf-highlight-card pf-animate-cascade" style="animation-delay: 0.05s; margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
           <label class="pf-label" style="color: #1E4BFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-            <i data-lucide="store" style="width:18px;height:18px"></i> Cliente Agendado
+            <i data-lucide="store" style="width:18px;height:18px"></i> ${agendaHoje.length === 0 ? 'Cliente do Atendimento' : 'Cliente Agendado'}
           </label>
           <span class="pf-badge-hoje">
             <span class="pf-pulse-dot"></span>
@@ -590,7 +806,7 @@ const PadeiroFlow = {
           </span>
         </div>
         <div class="pf-select-wrap">
-          ${canSelect ? `
+          ${agendaHoje.length > 1 ? `
             <select class="pf-select pf-select-highlight" id="flow-cliente" onchange="PadeiroFlow.onClientChange()">
               ${agendaHoje.map(a => `
                 <option value="${a.clienteId}" 
@@ -601,14 +817,26 @@ const PadeiroFlow = {
                 </option>`).join('')}
             </select>
             <div class="pf-select-lock" style="color: #1E4BFF;"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></div>
-          ` : `
+          ` : (agendaHoje.length === 1 ? `
             <div class="pf-select pf-select-highlight" style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; font-weight: 700; color: #1e293b; padding-right: 14px; cursor: default;">
               <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; text-transform: uppercase;">${this.activity.clienteNome || (agendaHoje[0] ? agendaHoje[0].clienteNome : 'Cliente Agendado')}</span>
               <div class="pf-select-lock" style="position: static; transform: none; color: #1E4BFF; display: flex; align-items: center;">
                 <i data-lucide="lock" style="width:14px;height:14px"></i>
               </div>
             </div>
-          `}
+          ` : `
+            <select class="pf-select pf-select-highlight" id="flow-cliente" onchange="PadeiroFlow.onClientChange()">
+              <option value="" disabled ${!this.activity.clienteId ? 'selected' : ''}>Selecione o Cliente do Atendimento...</option>
+              ${todosClientes.map(cli => `
+                <option value="${cli.id || cli._id}" 
+                        data-nome="${cli.nome || cli.razaoSocial || 'Cliente'}" 
+                        data-cronograma=""
+                        ${this.activity.clienteId === (cli.id || cli._id) ? 'selected' : ''}>
+                  ${cli.nome || cli.razaoSocial}
+                </option>`).join('')}
+            </select>
+            <div class="pf-select-lock" style="color: #1E4BFF;"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></div>
+          `)}
         </div>
       </div>
 
@@ -1807,6 +2035,14 @@ const PadeiroFlow = {
            if (item.un === 'KG' || item.un === 'L') totalKg += v;
         }
       });
+    }
+
+    if (!this.activity.clienteId) {
+      Components.showAlert(
+        'Cliente Obrigatório', 
+        'Por favor, selecione o cliente do atendimento no topo da tela antes de avançar.'
+      );
+      return;
     }
 
     if (items.length === 0) { Components.toast('Informe a quantidade de pelo menos um produto.', 'error'); return; }
