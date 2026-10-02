@@ -9,6 +9,25 @@
       "client_info": {
         "mobilesdk_app_id": "1:39182514815:android:8310dd19b605f4245add4a",
         "android_client_info": {
+          "package_name": "com.brago.gestaopadeiro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhc-X_nvqhvbI1Ww-FQu7W9St6McRyc4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39182514815:android:8310dd19b605f4245add4a",
+        "android_client_info": {
           "package_name": "com.brago.smartgestor"
         }
       },

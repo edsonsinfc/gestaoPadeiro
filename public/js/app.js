@@ -863,8 +863,20 @@ const App = {
   },
 
   openExternalApkDownload(url) {
-    const targetUrl = url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
-    if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
+    const targetUrl = url || `${window.location.origin}/download/apk`;
+
+    // Se estiver rodando no app nativo Capacitor e possuir o plugin de auto-update
+    if (isCapacitor && ApkUpdater && typeof ApkUpdater.downloadAndInstall === 'function') {
+      ApkUpdater.downloadAndInstall({ url: targetUrl }).catch((err) => {
+        console.warn('[ApkUpdater] Falha no instalador nativo, abrindo via sistema:', err);
+        window.open(targetUrl, '_system');
+      });
+      return;
+    }
+
+    if (isCapacitor) {
       window.open(targetUrl, '_system');
     } else {
       const link = document.createElement('a');
@@ -877,8 +889,28 @@ const App = {
     }
   },
 
-  downloadApk() {
-    const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+  async downloadApk() {
+    // 1. Se estiver no navegador e o PWA suportar instalação nativa direta em 1 toque
+    if (window.deferredPrompt) {
+      try {
+        window.deferredPrompt.prompt();
+        const choiceResult = await window.deferredPrompt.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          console.log('[PWA] Usuário instalou o app diretamente');
+          window.deferredPrompt = null;
+          this.dismissApkBanner();
+          if (typeof Components !== 'undefined' && Components.toast) {
+            Components.toast('Smart Gestor adicionado à tela inicial! 🎉', 'success');
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn('[PWA] Erro ao acionar prompt de instalação:', err);
+      }
+    }
+
+    // 2. Download direto do APK com modal de ajuda
+    const downloadUrl = `${window.location.origin}/download/apk`;
     this.openExternalApkDownload(downloadUrl);
 
     // Esconde o banner
@@ -899,7 +931,7 @@ const App = {
   },
 
   downloadApkAgain() {
-    const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+    const downloadUrl = `${window.location.origin}/download/apk`;
     this.openExternalApkDownload(downloadUrl);
     if (typeof Components !== 'undefined' && Components.toast) {
       Components.toast('Download iniciado novamente! 📥', 'success');

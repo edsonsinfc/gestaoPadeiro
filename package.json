@@ -1,6 +1,6 @@
 {
   "name": "sistema-padeiro-brago",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Sistema de Gerenciamento de Padeiros - Brago Distribuidora",
   "main": "server.js",
   "scripts": {

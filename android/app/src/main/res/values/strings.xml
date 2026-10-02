@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Smart Gestor</string>
     <string name="title_activity_main">Smart Gestor</string>
-    <string name="package_name">com.brago.smartgestor</string>
-    <string name="custom_url_scheme">com.brago.smartgestor</string>
+    <string name="package_name">com.brago.gestaopadeiro</string>
+    <string name="custom_url_scheme">com.brago.gestaopadeiro</string>
 </resources>

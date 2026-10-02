@@ -78,6 +78,22 @@ app.use('/storage/:type/:filename', async (req, res, next) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Rota de download direto do APK com headers nativos para Android
+app.get(['/download/apk', '/SmartGestor.apk'], (req, res) => {
+  const possiblePaths = [
+    path.join(__dirname, 'SmartGestor.apk'),
+    path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk'),
+    path.join(__dirname, 'public', 'SmartGestor.apk')
+  ];
+  const apkPath = possiblePaths.find(p => fs.existsSync(p));
+  if (apkPath) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="SmartGestor.apk"');
+    return res.sendFile(apkPath);
+  }
+  return res.redirect('https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk');
+});
+
 
 // ============================================================
 // FTP PRODUCT IMAGE PROXY (read-only, optimized)
