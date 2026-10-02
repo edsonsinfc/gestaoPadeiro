@@ -149,6 +149,8 @@ const App = {
           PadeiroAgenda.render();
         }
       }
+      // Checar se há nova versão do APK disponível ao reabrir o app
+      this.checkApkUpdate();
     };
 
     document.addEventListener('visibilitychange', () => {
