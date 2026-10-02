@@ -294,6 +294,32 @@ exports.updateTarefaStatus = async (req, res) => {
     );
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
+    // Se a tarefa for marcada como concluída, sincroniza qualquer atividade em andamento correspondente
+    if (status === 'concluida') {
+      try {
+        const atvs = await Atividade.find({
+          $or: [
+            { cronogramaId: req.params.id },
+            { clienteId: tarefa.clienteId, data: tarefa.data, padeiroId: tarefa.padeiroId }
+          ],
+          status: 'em_andamento'
+        });
+        for (const atv of atvs) {
+          await Atividade.findByIdAndUpdate(atv.id, {
+            status: 'finalizada',
+            fimEm: new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
+          });
+          const ioAtv = getIo();
+          if (ioAtv) {
+            ioAtv.emit('activity-updated', { ...atv, status: 'finalizada' });
+          }
+        }
+      } catch (atvErr) {
+        console.warn('Aviso ao sincronizar atividade ao concluir cronograma:', atvErr);
+      }
+    }
+
     const io = getIo();
     if (io) {
       io.emit('agenda-updated', { action: 'status_update', tarefa });

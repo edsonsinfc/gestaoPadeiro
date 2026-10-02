@@ -84,6 +84,20 @@ const LocationService = {
             }
           }
 
+          // Se estiver no dashboard do padeiro
+          if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-inicio') {
+            if (typeof PadeiroDashboard !== 'undefined' && typeof PadeiroDashboard.render === 'function') {
+              PadeiroDashboard.render();
+            }
+          }
+
+          // Se estiver no rastreamento
+          if (typeof App !== 'undefined' && App.currentRoute === 'rastreamento') {
+            if (typeof Rastreamento !== 'undefined' && typeof Rastreamento.loadData === 'function') {
+              Rastreamento.loadData();
+            }
+          }
+
           // Mostrar um feedback visual (toast)
           if (typeof Components !== 'undefined' && typeof Components.toast === 'function') {
             let msg = 'Sua agenda de tarefas foi atualizada!';
@@ -98,6 +112,20 @@ const LocationService = {
               msg = 'Novo cronograma de tarefas carregado!';
             }
             Components.toast(msg, 'info', 5000);
+          }
+        }
+      });
+
+      // Escutar atualizações de atividade em tempo real
+      this.socket.on('activity-updated', (atividade) => {
+        console.log('⚡ Atividade atualizada recebida via Socket:', atividade);
+        if (typeof App !== 'undefined') {
+          if (App.currentRoute === 'padeiro-inicio' && typeof PadeiroDashboard !== 'undefined') {
+            PadeiroDashboard.render();
+          } else if (App.currentRoute === 'padeiro-agenda' && typeof PadeiroAgenda !== 'undefined') {
+            PadeiroAgenda.render();
+          } else if (App.currentRoute === 'rastreamento' && typeof Rastreamento !== 'undefined') {
+            Rastreamento.loadData();
           }
         }
       });

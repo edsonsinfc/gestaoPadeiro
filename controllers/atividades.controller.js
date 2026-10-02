@@ -130,6 +130,39 @@ exports.createAtividade = async (req, res) => {
 
     const atividade = await Atividade.create(nova);
     
+    // Atualiza status do Cronograma correspondente para 'em_andamento'
+    try {
+      const cronoId = atividade.cronogramaId || nova.cronogramaId;
+      if (cronoId) {
+        await Cronograma.findByIdAndUpdate(cronoId, { 
+          status: 'em_andamento', 
+          atualizadoEm: new Date().toISOString() 
+        });
+        const io = getIo();
+        if (io) {
+          io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: 'em_andamento' } });
+        }
+      } else if (atividade.clienteId && atividade.data) {
+        const matchingTasks = await Cronograma.find({
+          clienteId: atividade.clienteId,
+          data: atividade.data,
+          status: 'pendente'
+        });
+        for (const t of matchingTasks) {
+          await Cronograma.findByIdAndUpdate(t.id, { 
+            status: 'em_andamento', 
+            atualizadoEm: new Date().toISOString() 
+          });
+          const io = getIo();
+          if (io) {
+            io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: 'em_andamento' } });
+          }
+        }
+      }
+    } catch (cronoErr) {
+      console.warn('Aviso: Erro ao sincronizar status em_andamento no cronograma:', cronoErr);
+    }
+
     const io = getIo();
     if (io) {
       io.emit('activity-updated', atividade);
@@ -175,6 +208,44 @@ exports.updateAtividade = async (req, res) => {
     );
     
     if (!atividade) return res.status(404).json({ error: 'Atividade não encontrada' });
+
+    // Sincronizar status do Cronograma quando a atividade for finalizada
+    if (updateData.status === 'finalizada' || atividade.status === 'finalizada') {
+      try {
+        const cronoId = atividade.cronogramaId || req.body.cronogramaId;
+        if (cronoId) {
+          await Cronograma.findByIdAndUpdate(cronoId, { 
+            status: 'concluida', 
+            atualizadoEm: new Date().toISOString() 
+          });
+          const io = getIo();
+          if (io) {
+            io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: 'concluida' } });
+          }
+        }
+        
+        // Também busca cronograma por clienteId + data caso não houvesse cronogramaId direto
+        if (atividade.clienteId && atividade.data) {
+          const matchingTasks = await Cronograma.find({
+            clienteId: atividade.clienteId,
+            data: atividade.data,
+            status: { $ne: 'concluida' }
+          });
+          for (const t of matchingTasks) {
+            await Cronograma.findByIdAndUpdate(t.id, { 
+              status: 'concluida', 
+              atualizadoEm: new Date().toISOString() 
+            });
+            const io = getIo();
+            if (io) {
+              io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: 'concluida' } });
+            }
+          }
+        }
+      } catch (cronoErr) {
+        console.error('Erro ao sincronizar status concluído no cronograma:', cronoErr);
+      }
+    }
 
     const io = getIo();
     if (io) {

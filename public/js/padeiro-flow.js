@@ -41,9 +41,14 @@ const PadeiroFlow = {
       const em = (atividades || []).find(a => a.status === 'em_andamento');
       if (em) {
         if (em.data === today) {
-          this.pendingResume = em;
-          this.confirmResume();
-          return;
+          if (prefill && prefill.clienteId && String(prefill.clienteId) !== String(em.clienteId)) {
+            // Se prefill veio especificamente para outro cliente, não força retomada da atividade antiga
+            this.pendingResume = null;
+          } else {
+            this.pendingResume = em;
+            await this.confirmResume();
+            return;
+          }
         } else {
           this.pendingPreviousResume = em;
           this.renderPendingPreviousActivityScreen(container, em);
@@ -107,6 +112,12 @@ const PadeiroFlow = {
       this.activity.clienteId = tarefasPendentes[0].clienteId;
       this.activity.clienteNome = tarefasPendentes[0].clienteNome;
       this.activity.cronogramaId = tarefasPendentes[0].id || tarefasPendentes[0]._id;
+    } else if (this.activity.clienteId && tarefasPendentes.length > 0) {
+      const match = tarefasPendentes.find(t => String(t.clienteId) === String(this.activity.clienteId));
+      if (match) {
+        this.activity.clienteNome = this.activity.clienteNome || match.clienteNome;
+        this.activity.cronogramaId = this.activity.cronogramaId || (match.id || match._id);
+      }
     }
 
     // Auto-inicia atividade no backend se já houver cliente definido
@@ -384,15 +395,39 @@ const PadeiroFlow = {
     Components.renderIcons();
   },
 
-  confirmResumePrevious() {
+  async confirmResumePrevious() {
     if (this.pendingPreviousResume) {
       this.activity = this.pendingPreviousResume;
       const oldStep = parseInt(this.pendingPreviousResume.lastStep) || 0;
       const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
       this.currentStep = hasFinishedProd ? 1 : 0;
       this.pendingPreviousResume = null;
-      this.renderWizard(document.getElementById('page-container'));
     }
+    try {
+      const today = this.getTodayLocal();
+      const agenda = await API.get('/api/cronograma/agenda');
+      this.agendaHoje = (agenda || []).filter(a => {
+        if (!a) return false;
+        const aData = (a.data || '').split('T')[0];
+        return aData === today || aData.startsWith(today);
+      });
+      if (this.agendaHoje.length > 0) {
+        if (!this.activity.clienteId) {
+          this.activity.clienteId = this.agendaHoje[0].clienteId;
+          this.activity.clienteNome = this.agendaHoje[0].clienteNome;
+          this.activity.cronogramaId = this.agendaHoje[0].id || this.agendaHoje[0]._id;
+        } else {
+          const match = this.agendaHoje.find(t => String(t.clienteId) === String(this.activity.clienteId));
+          if (match) {
+            this.activity.clienteNome = this.activity.clienteNome || match.clienteNome;
+            this.activity.cronogramaId = this.activity.cronogramaId || (match.id || match._id);
+          }
+        }
+      }
+    } catch (e) {
+      this.agendaHoje = [];
+    }
+    this.renderWizard(document.getElementById('page-container'));
   },
 
   renderResumeModal(container, em) {
@@ -417,13 +452,37 @@ const PadeiroFlow = {
     Components.renderIcons();
   },
 
-  confirmResume() {
+  async confirmResume() {
     if (this.pendingResume) {
       this.activity = this.pendingResume;
       const oldStep = parseInt(this.pendingResume.lastStep) || 0;
       const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
       this.currentStep = hasFinishedProd ? 1 : 0;
       this.pendingResume = null;
+    }
+    try {
+      const today = this.getTodayLocal();
+      const agenda = await API.get('/api/cronograma/agenda');
+      this.agendaHoje = (agenda || []).filter(a => {
+        if (!a) return false;
+        const aData = (a.data || '').split('T')[0];
+        return aData === today || aData.startsWith(today);
+      });
+      if (this.agendaHoje.length > 0) {
+        if (!this.activity.clienteId) {
+          this.activity.clienteId = this.agendaHoje[0].clienteId;
+          this.activity.clienteNome = this.agendaHoje[0].clienteNome;
+          this.activity.cronogramaId = this.agendaHoje[0].id || this.agendaHoje[0]._id;
+        } else {
+          const match = this.agendaHoje.find(t => String(t.clienteId) === String(this.activity.clienteId));
+          if (match) {
+            this.activity.clienteNome = this.activity.clienteNome || match.clienteNome;
+            this.activity.cronogramaId = this.activity.cronogramaId || (match.id || match._id);
+          }
+        }
+      }
+    } catch (e) {
+      this.agendaHoje = [];
     }
     this.renderWizard(document.getElementById('page-container'));
   },
@@ -846,6 +905,14 @@ const PadeiroFlow = {
     });
 
     const agendaHoje = this.agendaHoje || [];
+    
+    // Auto-atribui cliente da agenda se já houver tarefa agendada
+    if (agendaHoje.length > 0 && !this.activity.clienteId) {
+      this.activity.clienteId = agendaHoje[0].clienteId;
+      this.activity.clienteNome = agendaHoje[0].clienteNome;
+      this.activity.cronogramaId = agendaHoje[0].id || agendaHoje[0]._id;
+    }
+
     let todosClientes = this.todosClientes || [];
     if (agendaHoje.length === 0 && todosClientes.length === 0) {
       try {
@@ -871,13 +938,18 @@ const PadeiroFlow = {
         <div class="pf-select-wrap">
           ${agendaHoje.length > 1 ? `
             <select class="pf-select pf-select-highlight" id="flow-cliente" onchange="PadeiroFlow.onClientChange()">
-              ${agendaHoje.map(a => `
+              ${agendaHoje.map((a, idx) => {
+                const isSelected = this.activity.clienteId
+                  ? String(this.activity.clienteId) === String(a.clienteId)
+                  : idx === 0;
+                return `
                 <option value="${a.clienteId}" 
                         data-nome="${a.clienteNome}" 
                         data-cronograma="${a.id || a._id}"
-                        ${this.activity.clienteId === a.clienteId ? 'selected' : ''}>
+                        ${isSelected ? 'selected' : ''}>
                   ${a.clienteNome} (${a.horario || '08:00'})
-                </option>`).join('')}
+                </option>`;
+              }).join('')}
             </select>
             <div class="pf-select-lock" style="color: #1E4BFF;"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></div>
           ` : (agendaHoje.length === 1 ? `
@@ -887,16 +959,21 @@ const PadeiroFlow = {
                 <i data-lucide="lock" style="width:14px;height:14px"></i>
               </div>
             </div>
+            <input type="hidden" id="flow-cliente" value="${this.activity.clienteId || (agendaHoje[0] ? agendaHoje[0].clienteId : '')}" data-nome="${this.activity.clienteNome || (agendaHoje[0] ? agendaHoje[0].clienteNome : '')}" data-cronograma="${this.activity.cronogramaId || (agendaHoje[0] ? (agendaHoje[0].id || agendaHoje[0]._id) : '')}" />
           ` : `
             <select class="pf-select pf-select-highlight" id="flow-cliente" onchange="PadeiroFlow.onClientChange()">
               <option value="" disabled ${!this.activity.clienteId ? 'selected' : ''}>Selecione o Cliente do Atendimento...</option>
-              ${todosClientes.map(cli => `
-                <option value="${cli.id || cli._id}" 
+              ${todosClientes.map(cli => {
+                const cid = cli.id || cli._id;
+                const isSelected = this.activity.clienteId && String(this.activity.clienteId) === String(cid);
+                return `
+                <option value="${cid}" 
                         data-nome="${cli.nome || cli.razaoSocial || 'Cliente'}" 
                         data-cronograma=""
-                        ${this.activity.clienteId === (cli.id || cli._id) ? 'selected' : ''}>
+                        ${isSelected ? 'selected' : ''}>
                   ${cli.nome || cli.razaoSocial}
-                </option>`).join('')}
+                </option>`;
+              }).join('')}
             </select>
             <div class="pf-select-lock" style="color: #1E4BFF;"><i data-lucide="chevron-down" style="width:14px;height:14px"></i></div>
           `)}
@@ -2100,6 +2177,28 @@ const PadeiroFlow = {
       });
     }
 
+    // Garantir resolução imediata do clienteId a partir do DOM ou da agenda caso não esteja setado
+    if (!this.activity.clienteId) {
+      const sel = document.getElementById('flow-cliente');
+      if (sel && sel.value) {
+        this.activity.clienteId = sel.value;
+        if (sel.tagName === 'SELECT') {
+          const opt = sel.options[sel.selectedIndex];
+          if (opt) {
+            this.activity.clienteNome = opt.dataset.nome || opt.text;
+            this.activity.cronogramaId = opt.dataset.cronograma || this.activity.cronogramaId || null;
+          }
+        } else if (sel.dataset) {
+          this.activity.clienteNome = sel.dataset.nome || this.activity.clienteNome;
+          this.activity.cronogramaId = sel.dataset.cronograma || this.activity.cronogramaId || null;
+        }
+      } else if (this.agendaHoje && this.agendaHoje.length > 0) {
+        this.activity.clienteId = this.agendaHoje[0].clienteId;
+        this.activity.clienteNome = this.agendaHoje[0].clienteNome;
+        this.activity.cronogramaId = this.agendaHoje[0].id || this.agendaHoje[0]._id;
+      }
+    }
+
     if (!this.activity.clienteId) {
       Components.showAlert(
         'Cliente Obrigatório', 
@@ -2466,9 +2565,34 @@ const PadeiroFlow = {
     this.activity.status = 'finalizada';
     this.activity.fimEm = new Date().toISOString();
     await this.captureTimelineEvent('Atividade Encerrada');
+
+    // Se cronogramaId não estava associado, tenta associar antes de salvar
+    if (!this.activity.cronogramaId && this.activity.clienteId) {
+      try {
+        const agenda = this.agendaHoje || await API.get('/api/cronograma/agenda');
+        const match = (agenda || []).find(a => 
+          String(a.clienteId) === String(this.activity.clienteId) &&
+          (a.status === 'pendente' || a.status === 'em_andamento')
+        );
+        if (match) {
+          this.activity.cronogramaId = match.id || match._id;
+        }
+      } catch (e) {}
+    }
+
     await this.updateActivity();
+
     try {
-      if (this.activity.cronogramaId) await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'concluida' });
+      if (this.activity.cronogramaId) {
+        await API.patch(`/api/cronograma/agenda/${this.activity.cronogramaId}/status`, { status: 'concluida' });
+      } else if (this.activity.clienteId) {
+        const agenda = this.agendaHoje || await API.get('/api/cronograma/agenda');
+        const match = (agenda || []).find(a => String(a.clienteId) === String(this.activity.clienteId));
+        if (match && (match.id || match._id)) {
+          await API.patch(`/api/cronograma/agenda/${match.id || match._id}/status`, { status: 'concluida' });
+        }
+      }
+
       if (typeof NotificationService !== 'undefined' && typeof NotificationService.triggerLocalNotification === 'function') {
         const clienteNome = this.activity.clienteNome || 'Cliente';
         NotificationService.triggerLocalNotification('Tarefa Concluída 🥖', `A tarefa para ${clienteNome} foi concluída com sucesso!`);
@@ -2477,8 +2601,28 @@ const PadeiroFlow = {
       console.warn('Aviso: Erro ao concluir tarefa na agenda (pode ter sido excluida).', err);
     }
     
-    // Limpar o rascunho para não carregar de volta no próximo atendimento
+    // Limpar o rascunho e referências de retomada
     localStorage.removeItem('brago_padeiro_draft');
+    this.pendingResume = null;
+    this.pendingPreviousResume = null;
+
+    // Atualizar cache offline da agenda
+    if (typeof OfflineManager !== 'undefined' && typeof OfflineManager.getCachedData === 'function') {
+      try {
+        const cachedAgenda = await OfflineManager.getCachedData('/api/cronograma/agenda');
+        if (Array.isArray(cachedAgenda)) {
+          let mudou = false;
+          cachedAgenda.forEach(item => {
+            if ((this.activity.cronogramaId && (item.id === this.activity.cronogramaId || item._id === this.activity.cronogramaId)) ||
+                String(item.clienteId) === String(this.activity.clienteId)) {
+              item.status = 'concluida';
+              mudou = true;
+            }
+          });
+          if (mudou) await OfflineManager.cacheData('/api/cronograma/agenda', cachedAgenda);
+        }
+      } catch (cacheErr) {}
+    }
     
     this.renderSuccess();
   },
@@ -2508,11 +2652,19 @@ const PadeiroFlow = {
         </div>
       </div>`;
     Components.renderIcons();
-    this.activity = {}; this.currentStep = 0;
+    this.activity = {}; 
+    this.currentStep = 0;
+    this.pendingResume = null;
+    this.pendingPreviousResume = null;
   },
 
   async updateActivity() {
     const id = this.activity._id || this.activity.id;
+    if (!id) {
+      console.warn('updateActivity: ID não encontrado, criando atividade...');
+      await this.ensureActivityStarted();
+      return;
+    }
     const res = await API.put(`/api/atividades/${id}`, this.activity);
     if (res && !res.offline) this.activity = { ...this.activity, ...res };
   },
