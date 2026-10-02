@@ -39,22 +39,62 @@ const BiaAPI = {
   },
 
   /**
+   * Helper para normalizar texto (sem acentos e minúsculas)
+   */
+  normalizeText(txt) {
+    if (!txt) return '';
+    return txt.toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  },
+
+  /**
+   * Retorna dados da data de hoje
+   */
+  getHojeFormatado() {
+    const agora = new Date();
+    const iso = agora.toISOString().split('T')[0];
+    const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const diaSemana = dias[agora.getDay()];
+    const diaMes = String(agora.getDate()).padStart(2, '0') + '/' + String(agora.getMonth() + 1).padStart(2, '0');
+    return { iso, diaSemana, diaMes };
+  },
+
+  /**
+   * Retorna dados da data de amanhã
+   */
+  getAmanhaFormatado() {
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+    const iso = amanha.toISOString().split('T')[0];
+    const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const diaSemana = dias[amanha.getDay()];
+    const diaMes = String(amanha.getDate()).padStart(2, '0') + '/' + String(amanha.getMonth() + 1).padStart(2, '0');
+    return { iso, diaSemana, diaMes };
+  },
+
+  /**
    * Gera uma resposta local inteligente e assertiva sem precisar de chaves externas
    */
   generateLocalFallback(userMessage, ctx = {}) {
-    const lower = (userMessage || '').toLowerCase().trim();
+    const norm = this.normalizeText(userMessage);
     const rankingPadeiros = ctx.rankingPadeiros || [];
     const rankingClientes = ctx.rankingClientes || [];
+    const padeirosAtivos = ctx.padeirosAtivos || [];
+    const clientesAtivos = ctx.clientesAtivos || [];
+    const cronograma = ctx.cronogramaHistorico || [];
 
     // 1. Desfazer / Reverter (Prioridade Máxima)
     if (
-      lower.includes('desfazer') ||
-      lower.includes('desfaça') ||
-      lower.includes('desfaca') ||
-      lower.includes('reverter') ||
-      lower.includes('cancelar escala') ||
-      lower.includes('apagar escala') ||
-      lower.includes('remover escala')
+      norm.includes('desfazer') ||
+      norm.includes('desfaca') ||
+      norm.includes('reverter') ||
+      norm.includes('voltar atras') ||
+      norm.includes('cancelar escala') ||
+      norm.includes('apagar escala') ||
+      norm.includes('remover escala')
     ) {
       return {
         text: 'Localizei os registros das últimas ações geradas no cronograma. Deseja reverter as alterações recentes criadas pela Bia?',
@@ -67,13 +107,17 @@ const BiaAPI = {
       };
     }
 
-    // 2. Escala Padrão Anterior
+    // 2. Escala Padrão Anterior / Habitual
     if (
-      lower.includes('padrão') ||
-      lower.includes('padrao') ||
-      lower.includes('anterior') ||
-      lower.includes('habitual') ||
-      lower.includes('replicar escala')
+      norm.includes('padrao') ||
+      norm.includes('habitual') ||
+      norm.includes('anterior') ||
+      norm.includes('rotina') ||
+      norm.includes('costume') ||
+      norm.includes('repetir escala') ||
+      norm.includes('replicar escala') ||
+      norm.includes('o que ja faziam') ||
+      norm.includes('igual antes')
     ) {
       return {
         text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas desde Junho/2026. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual**.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
@@ -88,20 +132,21 @@ const BiaAPI = {
 
     // 3. Escala de Alta Performance ou Solicitação Geral de Escala
     if (
-      lower.includes('escala') ||
-      lower.includes('cronograma') ||
-      lower.includes('programação') ||
-      lower.includes('programacao') ||
-      lower.includes('montar escala') ||
-      lower.includes('gerar escala') ||
-      lower.includes('fazer escala') ||
-      lower.includes('crie uma escala') ||
-      lower.includes('criar uma escala') ||
-      lower.includes('cria uma escala') ||
-      lower.includes('alta performance')
+      norm.includes('alta performance') ||
+      norm.includes('performance') ||
+      norm.includes('otimizada') ||
+      norm.includes('gerar escala') ||
+      norm.includes('montar escala') ||
+      norm.includes('criar escala') ||
+      norm.includes('fazer escala') ||
+      norm.includes('crie uma escala') ||
+      norm.includes('criar uma escala') ||
+      norm.includes('escala da semana') ||
+      norm.includes('nova escala') ||
+      norm.includes('distribuir padeiros')
     ) {
       return {
-        text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar Escala no Cronograma** para confirmar.',
+        text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
         action: 'escala_alta_performance',
         actionData: {
           action: 'escala_alta_performance',
@@ -111,65 +156,242 @@ const BiaAPI = {
       };
     }
 
-    // 4. Ranking Padeiros
+    // 4. Agenda / Tarefas de Hoje
     if (
-      lower.includes('padeiro') ||
-      lower.includes('produz mais') ||
-      lower.includes('produtividade') ||
-      lower.includes('ranking')
+      norm.includes('hoje') ||
+      norm.includes('pra hoje') ||
+      norm.includes('agenda') ||
+      norm.includes('programacao de hoje') ||
+      norm.includes('tarefas de hoje') ||
+      norm.includes('escalados hoje') ||
+      norm.includes('trabalha hoje') ||
+      norm.includes('atendimento hoje')
+    ) {
+      const hoje = this.getHojeFormatado();
+      const tarefasHoje = cronograma.filter(t => t.data === hoje.iso);
+
+      if (tarefasHoje.length > 0) {
+        const lista = tarefasHoje.map(t => {
+          const hIni = t.horario || '08:00';
+          const hFim = t.horarioFim || '17:00';
+          return `* **${t.padeiroNome}** ➔ **${t.clienteNome}** (${hIni} às ${hFim})`;
+        }).join('\n');
+
+        return {
+          text: `Para hoje (**${hoje.diaSemana}, ${hoje.diaMes}**), temos **${tarefasHoje.length} tarefas** agendadas no cronograma:\n\n${lista}\n\nDeseja realizar alguma alteração ou gerar uma nova escala?`,
+          action: null
+        };
+      } else {
+        return {
+          text: `Não localizei tarefas agendadas no cronograma para hoje (**${hoje.diaSemana}, ${hoje.diaMes}**).\n\nSe desejar, posso gerar os agendamentos automaticamente agora mesmo. Basta pedir: *"Bia, faça a escala no padrão habitual"* ou *"Bia, crie uma escala de alta performance"*.`,
+          action: null
+        };
+      }
+    }
+
+    // 5. Agenda / Tarefas de Amanhã
+    if (
+      norm.includes('amanha') ||
+      norm.includes('pra amanha') ||
+      norm.includes('trabalha amanha') ||
+      norm.includes('escala de amanha')
+    ) {
+      const amanha = this.getAmanhaFormatado();
+      const tarefasAmanha = cronograma.filter(t => t.data === amanha.iso);
+
+      if (tarefasAmanha.length > 0) {
+        const lista = tarefasAmanha.map(t => {
+          const hIni = t.horario || '08:00';
+          const hFim = t.horarioFim || '17:00';
+          return `* **${t.padeiroNome}** ➔ **${t.clienteNome}** (${hIni} às ${hFim})`;
+        }).join('\n');
+
+        return {
+          text: `Para amanhã (**${amanha.diaSemana}, ${amanha.diaMes}**), temos **${tarefasAmanha.length} tarefas** agendadas:\n\n${lista}`,
+          action: null
+        };
+      } else {
+        return {
+          text: `Ainda não constam tarefas agendadas para amanhã (**${amanha.diaSemana}, ${amanha.diaMes}**).\n\nPosso gerar a programação semanal completa quando desejar!`,
+          action: null
+        };
+      }
+    }
+
+    // 6. Panorama Geral / Estatísticas da Equipe
+    if (
+      norm.includes('quantos padeiros') ||
+      norm.includes('quantos clientes') ||
+      norm.includes('total de padeiro') ||
+      norm.includes('total de cliente') ||
+      norm.includes('resumo') ||
+      norm.includes('status') ||
+      norm.includes('panorama') ||
+      norm.includes('visao geral') ||
+      norm.includes('equipe') ||
+      norm.includes('lojas cadastradas') ||
+      norm.includes('como estao as coisas')
+    ) {
+      const totalP = padeirosAtivos.length;
+      const totalC = clientesAtivos.length;
+      const totalTarefas = cronograma.length;
+      const topP = rankingPadeiros[0]?.nome || '—';
+      const topC = rankingClientes[0]?.nome || '—';
+
+      return {
+        text: `Aqui está o panorama operacional atual do Smart Gestor:\n* **Padeiros Ativos**: ${totalP} profissionais cadastrados\n* **Clientes Ativos**: ${totalC} lojas atendidas\n* **Tarefas Registradas**: ${totalTarefas} agendamentos no sistema\n* **Maior Produção**: ${topP}\n* **Maior Demanda**: ${topC}\n\nO sistema está em perfeito funcionamento. Em que posso te ajudar agora?`,
+        action: null
+      };
+    }
+
+    // 7. Consulta sobre Padeiro Específico
+    let padeiroEncontrado = null;
+    for (const p of padeirosAtivos) {
+      const pNomeNorm = this.normalizeText(p.nome);
+      const partesNome = pNomeNorm.split(/\s+/).filter(w => w.length > 3 && !['padeiro', 'teste', 'silva', 'santos', 'sousa', 'souza', 'oliveira'].includes(w));
+      const bateu = partesNome.some(parte => norm.includes(parte)) || norm.includes(pNomeNorm);
+      if (bateu) {
+        padeiroEncontrado = p;
+        break;
+      }
+    }
+
+    if (padeiroEncontrado) {
+      const p = padeiroEncontrado;
+      const rankingObj = rankingPadeiros.find(rp => rp.id === p.id) || p;
+      const kg = (rankingObj.totalKg || 0).toFixed(0);
+      const ativ = rankingObj.totalAtividades || 0;
+
+      const hojeIso = this.getHojeFormatado().iso;
+      const proximasTarefas = cronograma
+        .filter(t => (t.padeiroId === p.id || this.normalizeText(t.padeiroNome) === this.normalizeText(p.nome)) && t.data >= hojeIso)
+        .slice(0, 4);
+
+      let escalaTexto = '';
+      if (proximasTarefas.length > 0) {
+        escalaTexto = '\n\n**Próximos agendamentos no Cronograma:**\n' + proximasTarefas.map(t => `* ${t.data} (${t.diaNome || ''}): **${t.clienteNome}** (${t.horario || '08:00'})`).join('\n');
+      } else {
+        escalaTexto = '\n\n*Nenhuma escala futura agendada para ele no momento.*';
+      }
+
+      return {
+        text: `Informações sobre o padeiro **${p.nome}**:\n* **Cargo**: ${p.cargo || 'Padeiro Técnico'}\n* **Código Técnico**: ${p.codTec || 'N/A'}\n* **Produção Registrada**: ${kg} kg (${ativ} atendimentos realizados)${escalaTexto}`,
+        action: null
+      };
+    }
+
+    // 8. Consulta sobre Cliente Específico
+    let clienteEncontrado = null;
+    for (const c of clientesAtivos) {
+      const cNomeNorm = this.normalizeText(c.nome);
+      const cFantNorm = this.normalizeText(c.nomeFantasia);
+      const termosBusca = [
+        cFantNorm,
+        ...cFantNorm.split(/\s+/).filter(w => w.length > 3 && !['padaria', 'panificadora', 'comercial', 'alimentos', 'supermercado', 'mercado', 'ltda'].includes(w))
+      ];
+      const bateu = termosBusca.some(termo => termo && norm.includes(termo));
+      if (bateu) {
+        clienteEncontrado = c;
+        break;
+      }
+    }
+
+    if (clienteEncontrado) {
+      const c = clienteEncontrado;
+      const rankingObj = rankingClientes.find(rc => rc.id === c.id) || c;
+      const kg = (rankingObj.totalKg || 0).toFixed(0);
+      const visitas = rankingObj.totalVisitas || 0;
+
+      const hojeIso = this.getHojeFormatado().iso;
+      const proximasVisitas = cronograma
+        .filter(t => (t.clienteId === c.id || this.normalizeText(t.clienteNome).includes(this.normalizeText(c.nomeFantasia || c.nome))) && t.data >= hojeIso)
+        .slice(0, 4);
+
+      let visitasTexto = '';
+      if (proximasVisitas.length > 0) {
+        visitasTexto = '\n\n**Próximas visitas agendadas:**\n' + proximasVisitas.map(t => `* ${t.data}: Padeiro **${t.padeiroNome}** (${t.horario || '08:00'})`).join('\n');
+      } else {
+        visitasTexto = '\n\n*Nenhuma visita futura agendada no cronograma para esta loja.*';
+      }
+
+      return {
+        text: `Cliente **${c.nomeFantasia || c.nome}**:\n* **Razão Social**: ${c.nome}\n* **Bairro/Região**: ${c.bairro || 'Brasília/DF'}\n* **Volume Recebido**: ${kg} kg (${visitas} atendimentos)${visitasTexto}`,
+        action: null
+      };
+    }
+
+    // 9. Ranking e Produtividade
+    if (
+      norm.includes('ranking') ||
+      norm.includes('produz mais') ||
+      norm.includes('produtividade') ||
+      norm.includes('mais produtivo') ||
+      norm.includes('top padeiro') ||
+      norm.includes('maiores clientes') ||
+      norm.includes('volume') ||
+      norm.includes('demanda')
     ) {
       if (rankingPadeiros.length > 0) {
-        const lista = rankingPadeiros.slice(0, 5).map((p, idx) => {
+        const listaP = rankingPadeiros.slice(0, 5).map((p, idx) => {
           const kg = (p.totalKg || 0).toFixed(0);
-          const ativ = p.totalAtividades || 0;
-          return `* **${idx + 1}º ${p.nome}**: ${kg} kg produzidos (${ativ} atendimentos)`;
+          return `* **${idx + 1}º ${p.nome}**: ${kg} kg (${p.totalAtividades || 0} visitas)`;
         }).join('\n');
 
         return {
-          text: `Aqui está o ranking atual de produtividade dos padeiros ativos no sistema:\n\n${lista}\n\nSe desejar, posso criar uma escala de alta performance baseada nesses números. Basta solicitar: *"Bia, crie uma escala de alta performance"*.`,
-          action: null,
-          actionData: null
+          text: `Aqui está o ranking atual de produtividade dos padeiros:\n\n${listaP}\n\nPara otimizar o atendimento com base nesses números, peça: *"Bia, crie uma escala de alta performance"*.`,
+          action: null
         };
       }
-      return {
-        text: 'Não foram encontrados registros recentes de produção para calcular o ranking no momento.',
-        action: null,
-        actionData: null
-      };
     }
 
-    // 5. Ranking Clientes
+    // 10. Saudações e Cumprimentos
     if (
-      lower.includes('cliente') ||
-      lower.includes('maiores clientes') ||
-      lower.includes('demanda') ||
-      lower.includes('volume')
+      norm === 'oi' ||
+      norm === 'ola' ||
+      norm.startsWith('oi ') ||
+      norm.startsWith('ola ') ||
+      norm.includes('bom dia') ||
+      norm.includes('boa tarde') ||
+      norm.includes('boa noite') ||
+      norm.includes('tudo bem') ||
+      norm.includes('como vai') ||
+      norm.includes('e ai') ||
+      norm.includes('fala bia') ||
+      norm.includes('opa') ||
+      norm.includes('salve')
     ) {
-      if (rankingClientes.length > 0) {
-        const lista = rankingClientes.slice(0, 5).map((c, idx) => {
-          const kg = (c.totalKg || 0).toFixed(0);
-          const visitas = c.totalVisitas || 0;
-          return `* **${idx + 1}º ${c.nome}**: ${kg} kg recebidos (${visitas} visitas registradas)`;
-        }).join('\n');
+      const hoje = this.getHojeFormatado();
+      const tarefasHojeCount = cronograma.filter(t => t.data === hoje.iso).length;
+      const saudacao = norm.includes('boa tarde') ? 'Boa tarde' : (norm.includes('boa noite') ? 'Boa noite' : 'Bom dia');
 
-        return {
-          text: `Aqui estão os principais clientes por volume de atendimento:\n\n${lista}\n\nVocê pode gerar uma escala otimizada para esses clientes pedindo: *"Bia, crie uma escala de alta performance"*.`,
-          action: null,
-          actionData: null
-        };
-      }
       return {
-        text: 'Não há dados suficientes de visitas e volume para listar os clientes no momento.',
-        action: null,
-        actionData: null
+        text: `${saudacao}! Estou à disposição para gerenciar a operação hoje (**${hoje.diaSemana}, ${hoje.diaMes}**).\n\nTemos **${tarefasHojeCount} atendimentos agendados** para o dia de hoje.\n\nComo posso te apoiar agora? Você pode me pedir para verificar as escalas, consultar um padeiro ou gerar novos agendamentos semanais!`,
+        action: null
       };
     }
 
-    // 6. Mensagem padrão
+    // 11. Dúvidas sobre a Bia / Ajuda
+    if (
+      norm.includes('ajuda') ||
+      norm.includes('o que voce faz') ||
+      norm.includes('quem e voce') ||
+      norm.includes('como funciona') ||
+      norm.includes('comandos') ||
+      norm.includes('funcionalidades') ||
+      norm.includes('socorro')
+    ) {
+      return {
+        text: `Eu sou a **Bia**, sua assistente operacional de inteligência artificial.\n\nVeja o que posso fazer diretamente:\n* 📅 **Padrão Habitual**: Replicar a rotina habitual que a equipe já costuma fazer (*"Bia, faça a escala no padrão habitual"*)\n* ⚡ **Alta Performance**: Gerar escala alocando os mais produtivos nos clientes de maior demanda (*"Bia, crie uma escala"*)\n* 📋 **Agenda Diária**: Consultar agendamentos de hoje ou amanhã (*"O que temos pra hoje?"*)\n* 👨‍🍳 **Consultar Equipe**: Obter dados de qualquer padeiro ou cliente (*"Quem é Daniel?"*, *"Quem atende a Line Bakery?"*)\n* ↩️ **Desfazer**: Reverter a última escala criada (*"Desfazer última escala"*)\n\nDigite sua dúvida ou instrução quando quiser!`,
+        action: null
+      };
+    }
+
+    // 12. Fallback Conversacional Dinâmico Inteligente
+    const totalP = padeirosAtivos.length;
+    const totalC = clientesAtivos.length;
     return {
-      text: 'Olá! Sou a **Bia**, sua assistente operacional. Como posso ajudar na operação hoje?\n\nExemplos de comandos:\n* *"Bia, crie uma escala"*\n* *"Bia, faça a escala no padrão anterior"*\n* *"Quem são os padeiros com maior produção?"*\n* *"Desfazer última alteração"*',
-      action: null,
-      actionData: null
+      text: `Entendido! Estou acompanhando toda a operação da equipe (${totalP} padeiros e ${totalC} lojas ativas).\n\nPara te apoiar da melhor forma sobre *"**${userMessage}**"*, você pode me solicitar:\n* 📅 **Agenda**: *"O que temos pra hoje?"* ou *"Quem trabalha amanhã?"*\n* ⚡ **Escalas**: *"Bia, faça a escala no padrão habitual"* ou *"Bia, crie uma escala"*\n* 👥 **Equipe**: Consultar qualquer padeiro pelo nome ou ver quem atende determinada loja\n* 📊 **Ranking**: *"Quem são os padeiros com maior produção?"*\n\nComo deseja prosseguir?`,
+      action: null
     };
   },
 
