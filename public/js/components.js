@@ -1447,7 +1447,23 @@ const API = {
       const res = await fetch(`${API_BASE_URL}${url}`, { ...options, headers, signal: controller.signal });
       clearTimeout(timeoutId);
       
-      const data = await res.json();
+      // Protecao contra resposta HTML (pagina de erro, redirect, etc.) — evita "unexpected token '<'"
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        // Servidor retornou algo que nao e JSON (HTML, texto, redirect)
+        const rawText = await res.text();
+        console.warn(`[API] Resposta nao-JSON em ${url} (status ${res.status}, type: ${contentType}):`, rawText.substring(0, 120));
+        if (!res.ok) {
+          throw new APIError(`Servidor retornou resposta inesperada (${res.status}). Verifique a conexao.`, res.status);
+        }
+        // Se OK mas nao JSON, tenta parsear mesmo assim como fallback
+        try { data = JSON.parse(rawText); } catch (_) {
+          throw new APIError('Resposta do servidor invalida. Tente novamente.', res.status);
+        }
+      }
       if (!res.ok) {
         if (res.status === 401) {
           this.setToken(null);
@@ -1536,7 +1552,17 @@ const API = {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
-      const data = await res.json();
+      // Protecao contra resposta HTML no upload
+      const uploadContentType = res.headers.get('content-type') || '';
+      let data;
+      if (uploadContentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const rawText = await res.text();
+        console.warn('[API] Upload retornou resposta nao-JSON:', rawText.substring(0, 120));
+        if (!res.ok) throw new Error(`Erro no upload (${res.status})`);
+        try { data = JSON.parse(rawText); } catch (_) { data = { success: true }; }
+      }
       if (!res.ok) {
         if (res.status === 401) {
           this.setToken(null);

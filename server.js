@@ -561,7 +561,23 @@ app.use(errorHandler);
 
 
 
-// SPA fallback
+
+// API 404 handler — rotas /api/* nao encontradas devem retornar JSON, nunca HTML
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: `Rota de API nao encontrada: ${req.method} ${req.originalUrl}` });
+});
+
+// Global Express error handler — garante que erros sempre retornem JSON nas rotas /api
+app.use((err, req, res, next) => {
+  if (req.originalUrl.startsWith('/api')) {
+    const status = err.status || err.statusCode || 500;
+    console.error(`[Express] Erro ${status} em ${req.method} ${req.originalUrl}:`, err.message || err);
+    return res.status(status).json({ error: err.message || 'Erro interno no servidor' });
+  }
+  next(err);
+});
+
+// SPA fallback — apenas para rotas nao-API
 app.post('/', require('./controllers/auth.controller').googleLoginRedirect);
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
