@@ -54,6 +54,20 @@ class SqlCollection {
     const values = [];
     
     keys.forEach(key => {
+      if (key === '$or' && Array.isArray(query.$or)) {
+        const orParts = [];
+        query.$or.forEach(cond => {
+          const subWhere = this.buildWhere(cond);
+          if (subWhere.sql) {
+            orParts.push(subWhere.sql.replace(/^\s*WHERE\s*/i, ''));
+            values.push(...subWhere.values);
+          }
+        });
+        if (orParts.length > 0) {
+          parts.push(`(${orParts.join(' OR ')})`);
+        }
+        return;
+      }
       const val = query[key];
       if (val instanceof RegExp) {
         parts.push(`\`${key}\` REGEXP ?`);
@@ -78,7 +92,7 @@ class SqlCollection {
       }
     });
     
-    return { sql: ' WHERE ' + parts.join(' AND '), values };
+    return { sql: parts.length > 0 ? ' WHERE ' + parts.join(' AND ') : '', values };
   }
 
   find(query = {}) {

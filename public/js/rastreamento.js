@@ -77,197 +77,746 @@ window.Rastreamento = {
       .mac-mobile-block { display: none !important; }
 
       /* Reconstrução da Aba Rastreamento para Mobile (Mantendo o Desktop macOS idêntico) */
+      /* Isolamento Desktop — não exibe elementos exclusivos do mobile */
+      @media (min-width: 1024px) {
+        .mobile-only-tracking {
+          display: none !important;
+        }
+      }
+
+      /* ─── Mobile Rastreamento Redesign (Fiel à Imagem 1) ─────────────────── */
       @media (max-width: 1023px) {
+        .desktop-only-tracking {
+          display: none !important;
+        }
+
         .mac-rastreamento-root {
           width: 100% !important;
           box-sizing: border-box !important;
+          background: #F8FAFC !important;
+          padding: 12px 14px 120px !important;
           overflow-x: hidden !important;
         }
+
         .mac-layout {
-          flex-direction: column;
+          flex-direction: column !important;
           overflow: visible !important;
           width: 100% !important;
           box-sizing: border-box !important;
+          gap: 16px !important;
         }
+
         .mac-sidebar {
-          order: 3;
+          order: 1 !important;
           position: relative !important;
           width: 100% !important;
           height: auto !important;
-          background: var(--bg-card) !important;
-          border: 1px solid var(--separator) !important;
-          border-radius: var(--radius-md) !important;
-          box-shadow: var(--shadow-md) !important;
-          margin-top: 20px !important;
-          padding: 16px !important;
-          box-sizing: border-box !important;
+          background: transparent !important;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
           left: 0 !important;
           top: 0 !important;
           bottom: auto !important;
+          z-index: 10 !important;
         }
-        .mac-sidebar-header {
-          padding: 0 0 12px 0 !important;
-        }
-        .mac-sidebar-title {
-          font-size: 14px !important;
-          color: var(--text-primary) !important;
-          text-transform: none !important;
-          letter-spacing: normal !important;
-        }
-        .mac-sidebar-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .mac-track-item {
-          height: auto !important;
-          padding: 12px !important;
-          margin: 0 !important;
-          border-radius: var(--radius-md) !important;
-          border: 1px solid var(--separator) !important;
-          background: var(--bg-card) !important;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          color: var(--text-primary) !important;
-          box-sizing: border-box !important;
-        }
-        .mac-avatar {
-          width: 36px !important;
-          height: 36px !important;
-          font-size: 14px !important;
-        }
-        .mac-track-name {
-          font-size: 14px !important;
-          font-weight: 600 !important;
-          color: var(--text-primary) !important;
-          white-space: normal !important;
-          overflow: visible !important;
-          text-overflow: clip !important;
-          margin-left: 10px;
-        }
-        .mac-track-status {
-          margin-left: auto;
-          margin-right: 12px;
-        }
-        .mac-main-content {
-          order: 1;
-          flex: none !important;
-          width: 100% !important;
-          display: flex;
-          flex-direction: column;
-          background: transparent !important;
-          overflow: visible !important;
-          box-sizing: border-box !important;
-        }
-        .mac-page-header {
-          padding: 0 0 16px 0 !important;
-          background: transparent !important;
-        }
-        .mac-page-title {
-          font-size: 28px !important;
-          font-weight: 700 !important;
-          color: var(--text-primary) !important;
-        }
-        .mac-page-subtitle {
-          display: block !important;
-          font-size: 13px !important;
-          color: var(--text-secondary) !important;
-        }
-        .mac-page-header-right {
-          display: none !important;
-        }
-        .mac-toolbar {
-          height: auto !important;
-          width: 100% !important;
-          background: var(--bg-card) !important;
-          padding: 16px !important;
-          border-radius: var(--radius-md) !important;
-          border: 1px solid var(--separator) !important;
-          box-shadow: var(--shadow-md) !important;
+
+        /* Card Azul Superior (Track your Package -> Rastrear Padeiro) */
+        .mobile-track-hero-card {
+          background: linear-gradient(135deg, #1E3A8A 0%, #203173 100%) !important;
+          border-radius: 24px !important;
+          padding: 22px 18px 24px !important;
+          color: #FFFFFF !important;
+          box-shadow: 0 12px 28px rgba(30, 58, 138, 0.28) !important;
           margin-bottom: 20px !important;
+          box-sizing: border-box !important;
+        }
+
+        .mobile-hero-title {
+          font-size: 23px !important;
+          font-weight: 800 !important;
+          color: #FFFFFF !important;
+          letter-spacing: -0.4px !important;
+          margin: 0 0 4px 0 !important;
+        }
+
+        .mobile-hero-subtitle {
+          font-size: 13px !important;
+          color: rgba(255, 255, 255, 0.78) !important;
+          margin: 0 0 18px 0 !important;
+          font-weight: 400 !important;
+        }
+
+        .mobile-hero-search-bar {
+          display: flex !important;
+          align-items: center !important;
+          gap: 10px !important;
+          width: 100% !important;
+        }
+
+        .mobile-search-input-wrapper {
+          flex: 1 !important;
+          height: 48px !important;
+          background: #FFFFFF !important;
+          border-radius: 14px !important;
+          display: flex !important;
+          align-items: center !important;
+          padding: 0 14px !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+          box-sizing: border-box !important;
+        }
+
+        .mobile-search-icon {
+          width: 18px !important;
+          height: 18px !important;
+          color: #94A3B8 !important;
+          margin-right: 10px !important;
+          flex-shrink: 0 !important;
+        }
+
+        .mobile-search-input-wrapper input {
+          width: 100% !important;
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          color: #0F172A !important;
+          font-size: 13.5px !important;
+          font-family: inherit !important;
+        }
+
+        .mobile-search-input-wrapper input::placeholder {
+          color: #94A3B8 !important;
+        }
+
+        .mobile-filter-btn {
+          width: 48px !important;
+          height: 48px !important;
+          border-radius: 14px !important;
+          background: #F59E0B !important;
+          border: none !important;
+          color: #FFFFFF !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          box-shadow: 0 4px 14px rgba(245, 158, 11, 0.38) !important;
+          flex-shrink: 0 !important;
+          transition: transform 0.2s ease, opacity 0.2s ease !important;
+        }
+
+        .mobile-filter-btn:active {
+          transform: scale(0.94) !important;
+        }
+
+        .mobile-filter-btn i, .mobile-filter-btn svg {
+          width: 20px !important;
+          height: 20px !important;
+          stroke-width: 2.2 !important;
+        }
+
+        /* Seção Mais Opções (More Services) */
+        .mobile-section-header {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          margin: 16px 2px 12px !important;
+        }
+
+        .mobile-section-heading {
+          font-size: 16px !important;
+          font-weight: 800 !important;
+          color: #0F172A !important;
+          letter-spacing: -0.2px !important;
+        }
+
+        .mobile-section-icon {
+          width: 18px !important;
+          height: 18px !important;
+          color: #64748B !important;
+        }
+
+        .mobile-services-cards {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 12px !important;
+          margin-bottom: 20px !important;
+        }
+
+        .mobile-svc-card {
+          border-radius: 20px !important;
+          padding: 16px !important;
+          min-height: 110px !important;
           display: flex !important;
           flex-direction: column !important;
-          align-items: stretch !important;
-          gap: 12px !important;
-          backdrop-filter: none !important;
-          -webkit-backdrop-filter: none !important;
-          overflow-x: visible !important;
+          justify-content: space-between !important;
           box-sizing: border-box !important;
+          cursor: pointer !important;
+          transition: transform 0.2s ease !important;
         }
-        .mac-toolbar-group {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          width: 100%;
-          box-sizing: border-box;
+
+        .mobile-svc-card:active {
+          transform: scale(0.97) !important;
         }
-        .mac-label {
+
+        .mobile-svc-card.card-blue {
+          background: #EEF2FF !important;
+        }
+
+        .mobile-svc-card.card-orange {
+          background: #FFF7ED !important;
+        }
+
+        .mobile-svc-title {
+          font-size: 15px !important;
+          font-weight: 800 !important;
+          color: #0F172A !important;
+          display: block !important;
+          margin-bottom: 2px !important;
+        }
+
+        .mobile-svc-desc {
           font-size: 11px !important;
-          color: var(--text-tertiary) !important;
-          font-weight: 600 !important;
+          color: #64748B !important;
+          font-weight: 500 !important;
+          display: block !important;
         }
-        .mac-select, .mac-input {
-          width: 60% !important;
-          height: 36px !important;
-          border: 1px solid var(--separator) !important;
-          border-radius: var(--radius-sm) !important;
-          background: var(--bg-card) !important;
-          color: var(--text-main) !important;
+
+        .mobile-svc-footer {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          margin-top: 14px !important;
+        }
+
+        .mobile-svc-btn {
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 50% !important;
+          background: #1E2D7D !important;
+          color: #FFFFFF !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+
+        .mobile-svc-btn i, .mobile-svc-btn svg {
+          width: 14px !important;
+          height: 14px !important;
+          stroke-width: 2.5 !important;
+        }
+
+        .mobile-svc-badge {
+          color: #3B82F6 !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        .mobile-svc-card.card-orange .mobile-svc-badge {
+          color: #F97316 !important;
+        }
+
+        .mobile-svc-badge i, .mobile-svc-badge svg {
+          width: 22px !important;
+          height: 22px !important;
+          opacity: 0.85 !important;
+        }
+
+        /* Lista de Padeiros (Cards no Padrão da Imagem 1) */
+        .mac-sidebar-list {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+          overflow: visible !important;
+          padding-bottom: 12px !important;
+        }
+
+        .mac-track-item {
+          background: #FFFFFF !important;
+          border-radius: 18px !important;
+          padding: 14px 16px !important;
+          margin: 0 !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 14px !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
           box-sizing: border-box !important;
+          color: inherit !important;
         }
-        .mac-separator {
+
+        .mac-track-item:active {
+          transform: scale(0.98) !important;
+        }
+
+        .mac-track-item.selected {
+          border-color: #1E4BFF !important;
+          background: #F8FAFF !important;
+          box-shadow: 0 6px 20px rgba(30, 75, 255, 0.12) !important;
+        }
+
+        .mobile-track-icon-box {
+          width: 46px !important;
+          height: 46px !important;
+          border-radius: 14px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-shrink: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .mobile-track-icon-box.online {
+          background: #DCFCE7 !important;
+          color: #15803D !important;
+        }
+
+        .mobile-track-icon-box.offline {
+          background: #FEF3C7 !important;
+          color: #B45309 !important;
+        }
+
+        .mobile-track-photo {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          border-radius: 14px !important;
+        }
+
+        .mobile-track-avatar-initial {
+          width: 100% !important;
+          height: 100% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          color: #FFFFFF !important;
+          font-weight: 700 !important;
+          font-size: 16px !important;
+        }
+
+        .mobile-track-info {
+          flex: 1 !important;
+          min-width: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 2px !important;
+        }
+
+        .mac-track-name {
+          font-size: 15px !important;
+          font-weight: 800 !important;
+          color: #0F172A !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          margin: 0 !important;
+        }
+
+        .mobile-track-meta {
+          font-size: 12px !important;
+          color: #64748B !important;
+          font-weight: 500 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        .mobile-track-status-pill {
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          font-size: 12px !important;
+          font-weight: 700 !important;
+          flex-shrink: 0 !important;
+        }
+
+        .mobile-track-status-pill.online {
+          color: #10B981 !important;
+        }
+
+        .mobile-track-status-pill.offline {
+          color: #F59E0B !important;
+        }
+
+        .mobile-status-dot {
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50% !important;
+          display: inline-block !important;
+        }
+
+        .mobile-status-dot.active {
+          background: #10B981 !important;
+          box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .mobile-status-dot.inactive {
+          background: #F59E0B !important;
+        }
+
+        .sidebar-filial-header {
+          margin: 14px 2px 6px !important;
+        }
+
+        /* Controle de Visão no Mobile: Lista (Visão 1) vs Sub-aba Detalhes (Visão 2) */
+        .mac-rastreamento-root:not(.mobile-view-detail) .mac-main-content {
           display: none !important;
         }
-        .mac-toolbar-actions {
-          margin-left: 0 !important;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          width: 100%;
-          box-sizing: border-box;
+
+        .mac-rastreamento-root:not(.mobile-view-detail) .mac-sidebar {
+          display: flex !important;
         }
-        .mac-btn {
-          flex: 1;
-          min-width: 100px;
-          height: 36px !important;
-          border-radius: var(--radius-sm) !important;
-          font-size: 14px !important;
-          font-weight: 600 !important;
+
+        .mac-rastreamento-root.mobile-view-detail .mac-sidebar {
+          display: none !important;
         }
-        .mac-btn-primary {
-          background: var(--primary) !important;
-          color: white !important;
+
+        .mac-rastreamento-root.mobile-view-detail .mac-main-content {
+          display: flex !important;
+          flex-direction: column !important;
+          width: 100% !important;
+          min-height: 100vh !important;
+          background: #F8FAFC !important;
+          padding: 0 0 100px 0 !important;
+          margin: 0 !important;
+          overflow: visible !important;
+          order: 1 !important;
         }
-        .mac-btn-borderless {
-          background: var(--bg-input) !important;
-          color: var(--text-secondary) !important;
+
+        .mac-page-header, .mac-toolbar, #bottom-client-panel {
+          display: none !important;
         }
-        .mac-btn-destructive {
-          background: var(--danger-light) !important;
-          color: var(--danger) !important;
-        }
+
+        /* Mapa no topo da Sub-aba Mobile (Imagem 2) */
         .mac-map-container {
           width: 100% !important;
-          background: var(--bg-card) !important;
-          border-radius: 16px !important;
+          height: 44vh !important;
+          min-height: 280px !important;
+          max-height: 380px !important;
+          border-radius: 0 0 28px 28px !important;
           overflow: hidden !important;
-          box-shadow: var(--shadow-lg) !important;
-          height: 450px !important;
-          flex: none !important;
-          display: flex;
-          flex-direction: column;
-          box-sizing: border-box !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07) !important;
+          border: none !important;
+          position: relative !important;
+          background: #E2E8F0 !important;
+          z-index: 10 !important;
         }
+
         #tracking-map {
           height: 100% !important;
+          width: 100% !important;
         }
-        .mac-timeline-container {
-          padding: 16px;
+
+        /* Botão Voltar Circular no Canto Superior Esquerdo do Mapa (Imagem 2) */
+        .mobile-map-back-btn {
+          position: absolute !important;
+          top: 16px !important;
+          left: 16px !important;
+          z-index: 1000 !important;
+          width: 40px !important;
+          height: 40px !important;
+          border-radius: 50% !important;
+          background: rgba(255, 255, 255, 0.95) !important;
+          backdrop-filter: blur(10px) !important;
+          -webkit-backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          color: #1E293B !important;
+          cursor: pointer !important;
+          transition: transform 0.2s ease, background 0.2s ease !important;
         }
-        .sidebar-filial-header {
-          margin: 16px 0 8px !important;
+
+        .mobile-map-back-btn:active {
+          transform: scale(0.92) !important;
+          background: #F1F5F9 !important;
+        }
+
+        .mobile-map-back-btn i, .mobile-map-back-btn svg {
+          width: 20px !important;
+          height: 20px !important;
+          stroke-width: 2.5 !important;
+        }
+
+        /* Sub-aba / Card Inferior de Detalhes do Padeiro (Imagem 2) */
+        .mobile-subtab-container {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+          margin-top: -18px !important;
+          z-index: 20 !important;
+          position: relative !important;
+        }
+
+        /* Card Azul do Topo (Imagem 2) */
+        .subtab-header-card {
+          background: linear-gradient(135deg, #1E2D7D 0%, #17215B 100%) !important;
+          border-radius: 26px !important;
+          margin: 0 14px !important;
+          padding: 18px 20px !important;
+          color: #FFFFFF !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          box-shadow: 0 10px 25px rgba(30, 45, 125, 0.28) !important;
+        }
+
+        .subtab-header-left {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 3px !important;
+        }
+
+        .subtab-baker-name {
+          font-size: 19px !important;
+          font-weight: 800 !important;
+          color: #FFFFFF !important;
+          letter-spacing: -0.3px !important;
+          margin: 0 !important;
+        }
+
+        .subtab-baker-role {
+          font-size: 13px !important;
+          color: rgba(255, 255, 255, 0.8) !important;
+          font-weight: 500 !important;
+        }
+
+        .subtab-baker-rating {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 5px !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          color: #FFFFFF !important;
+          margin-top: 4px !important;
+        }
+
+        .subtab-baker-photo-wrap {
+          width: 58px !important;
+          height: 58px !important;
+          border-radius: 18px !important;
+          background: rgba(255, 255, 255, 0.15) !important;
+          border: 2px solid rgba(255, 255, 255, 0.3) !important;
+          overflow: hidden !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-shrink: 0 !important;
+        }
+
+        .subtab-baker-photo {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+
+        .subtab-baker-initial {
+          color: #FFFFFF !important;
+          font-weight: 800 !important;
+          font-size: 20px !important;
+        }
+
+        /* Card Branco: Status da Rota / Timeline (Imagem 2) */
+        .subtab-body {
+          background: #FFFFFF !important;
+          border-radius: 26px !important;
+          margin: 0 14px !important;
+          padding: 22px 20px 24px !important;
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important;
+          border: 1px solid rgba(226, 232, 240, 0.85) !important;
+        }
+
+        .subtab-body-header {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          margin-bottom: 22px !important;
+        }
+
+        .subtab-body-title {
+          font-size: 17px !important;
+          font-weight: 800 !important;
+          color: #0F172A !important;
+          letter-spacing: -0.3px !important;
+        }
+
+        .subtab-body-details-link {
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          color: #64748B !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 2px !important;
+          cursor: pointer !important;
+        }
+
+        /* Timeline Vertical */
+        .subtab-timeline {
+          display: flex !important;
+          flex-direction: column !important;
+          position: relative !important;
+          padding-left: 36px !important;
+        }
+
+        .subtab-timeline::before {
+          content: '' !important;
+          position: absolute !important;
+          left: 17px !important;
+          top: 24px !important;
+          bottom: 24px !important;
+          width: 2px !important;
+          background: repeating-linear-gradient(to bottom, #F97316 0, #F97316 4px, transparent 4px, transparent 8px) !important;
+        }
+
+        .subtab-step {
+          position: relative !important;
+          margin-bottom: 22px !important;
+        }
+
+        .subtab-step:last-child {
+          margin-bottom: 0 !important;
+        }
+
+        .subtab-step-indicator {
+          position: absolute !important;
+          left: -36px !important;
+          top: 0 !important;
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 50% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          z-index: 2 !important;
+        }
+
+        .subtab-step-indicator.orange {
+          background: #F97316 !important;
+          color: #FFFFFF !important;
+          box-shadow: 0 3px 10px rgba(249, 115, 22, 0.35) !important;
+        }
+
+        .subtab-step-indicator.gray {
+          background: #E2E8F0 !important;
+          color: #64748B !important;
+        }
+
+        .subtab-step-content {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 4px !important;
+        }
+
+        .subtab-step-title-row {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+        }
+
+        .subtab-step-title {
+          font-size: 14px !important;
+          font-weight: 700 !important;
+          color: #0F172A !important;
+        }
+
+        .subtab-step-time {
+          font-size: 11px !important;
+          color: #64748B !important;
+          font-weight: 500 !important;
+        }
+
+        .subtab-step-subtitle {
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          color: #334155 !important;
+        }
+
+        .subtab-step-address {
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          color: #0F172A !important;
+          margin-top: 2px !important;
+        }
+
+        /* Card Interno do Cliente (Imagem 2) */
+        .subtab-client-card {
+          margin-top: 10px !important;
+          background: #F8FAFC !important;
+          border-radius: 18px !important;
+          padding: 12px 14px !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        }
+
+        .subtab-client-avatar-wrap {
+          width: 42px !important;
+          height: 42px !important;
+          border-radius: 50% !important;
+          background: #DBEAFE !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-shrink: 0 !important;
+        }
+
+        .subtab-client-info {
+          flex: 1 !important;
+          min-width: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 2px !important;
+        }
+
+        .subtab-client-label {
+          font-size: 10.5px !important;
+          color: #64748B !important;
+          font-weight: 600 !important;
+        }
+
+        .subtab-client-name {
+          font-size: 14px !important;
+          font-weight: 800 !important;
+          color: #0F172A !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        .subtab-client-actions {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+        }
+
+        .subtab-action-circle {
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 50% !important;
+          background: #1E2D7D !important;
+          color: #FFFFFF !important;
+          border: none !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: transform 0.2s ease !important;
+        }
+
+        .subtab-action-circle:active {
+          transform: scale(0.92) !important;
+        }
+
+        .subtab-action-circle i, .subtab-action-circle svg {
+          width: 17px !important;
+          height: 17px !important;
+          stroke-width: 2.2 !important;
         }
       }
 
@@ -677,7 +1226,60 @@ window.Rastreamento = {
         <div class="mac-layout">
           <!-- Sidebar -->
           <aside class="mac-sidebar">
-            <header class="mac-sidebar-header" style="display: flex; flex-direction: column; gap: 10px;">
+            
+            <!-- MOBILE HERO CARD (Visible only on mobile <= 1023px) -->
+            <div class="mobile-track-hero-card mobile-only-tracking">
+              <h1 class="mobile-hero-title">Rastrear Padeiro</h1>
+              <p class="mobile-hero-subtitle">Acompanhe a rota e localização em tempo real</p>
+              <div class="mobile-hero-search-bar">
+                <div class="mobile-search-input-wrapper">
+                  <i data-lucide="search" class="mobile-search-icon"></i>
+                  <input type="text" id="mobile-search-input" placeholder="Buscar por nome ou filial..." oninput="Rastreamento.filterBakers(this.value)" />
+                </div>
+                <button type="button" class="mobile-filter-btn" onclick="Rastreamento.recenterMap()" title="Centralizar Mapa">
+                  <i data-lucide="sliders-horizontal"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- MOBILE SERVICES SECTION (Visible only on mobile <= 1023px) -->
+            <div class="mobile-services-section mobile-only-tracking">
+              <div class="mobile-section-header">
+                <span class="mobile-section-heading">Mais Opções</span>
+                <i data-lucide="arrow-left-right" class="mobile-section-icon"></i>
+              </div>
+              <div class="mobile-services-cards">
+                <div class="mobile-svc-card card-blue" onclick="Rastreamento.recenterMap()">
+                  <div class="mobile-svc-content">
+                    <span class="mobile-svc-title">Em Rota</span>
+                    <span class="mobile-svc-desc">Localização GPS</span>
+                  </div>
+                  <div class="mobile-svc-footer">
+                    <span class="mobile-svc-btn"><i data-lucide="arrow-right"></i></span>
+                    <span class="mobile-svc-badge"><i data-lucide="navigation"></i></span>
+                  </div>
+                </div>
+                <div class="mobile-svc-card card-orange" onclick="document.getElementById('mobile-search-input')?.focus()">
+                  <div class="mobile-svc-content">
+                    <span class="mobile-svc-title">Filiais</span>
+                    <span class="mobile-svc-desc">Equipe conectada</span>
+                  </div>
+                  <div class="mobile-svc-footer">
+                    <span class="mobile-svc-btn"><i data-lucide="arrow-right"></i></span>
+                    <span class="mobile-svc-badge"><i data-lucide="building-2"></i></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MOBILE SECTION HEADER (Visible only on mobile <= 1023px) -->
+            <div class="mobile-section-header mobile-only-tracking" style="margin-top: 18px; margin-bottom: 12px;">
+              <span class="mobile-section-heading">Padeiros em Atividade</span>
+              <i data-lucide="arrow-left-right" class="mobile-section-icon"></i>
+            </div>
+
+            <!-- DESKTOP HEADER (Visible only on desktop >= 1024px) -->
+            <header class="mac-sidebar-header desktop-only-tracking" style="display: flex; flex-direction: column; gap: 10px;">
               <h2 class="mac-sidebar-title">Padeiros</h2>
               <div id="sidebar-search-container" style="display: none; width: 100%;">
                 <div style="position: relative; width: 100%;">
@@ -686,6 +1288,7 @@ window.Rastreamento = {
                 </div>
               </div>
             </header>
+
             <div id="active-track-list" class="mac-sidebar-list">
               <div style="padding: 12px 20px; font-size: 13px; color: var(--mac-tertiary);">Aguardando sinais...</div>
             </div>
@@ -747,6 +1350,11 @@ window.Rastreamento = {
             
             <!-- Map Area -->
             <div id="view-mapa" class="mac-map-container" style="display:flex; flex-direction:column; position: relative;">
+               <!-- Mobile Back Button (Visible only on mobile <= 1023px) -->
+               <button type="button" class="mobile-map-back-btn mobile-only-tracking" onclick="Rastreamento.closeMobileSubtab()" title="Voltar para a Lista">
+                 <i data-lucide="chevron-left"></i>
+               </button>
+
                <!-- Floating Map Actions (Top Right) -->
                <div class="mac-map-floating-actions">
                  <button class="mac-floating-btn" onclick="Rastreamento.toggleSearch()" title="Buscar Padeiro">
@@ -759,7 +1367,7 @@ window.Rastreamento = {
                
                <div id="tracking-map" style="flex:1;"></div>
                
-               <!-- Bottom Floating Client Panel -->
+               <!-- Bottom Floating Client Panel (Desktop) -->
                <div id="bottom-client-panel" class="bottom-client-panel">
                  <div class="bcp-header">
                    <h3 class="bcp-title" id="bcp-main-title">Padeiro Selecionado</h3>
@@ -793,6 +1401,101 @@ window.Rastreamento = {
                  <div id="trail-info" class="mac-footer-left"></div>
                  <div class="mac-footer-right">Leaflet | © OpenStreetMap</div>
                </div>
+            </div>
+
+            <!-- Sub-aba de Detalhes do Padeiro no Mobile (Design Estrito da Imagem 2) -->
+            <div id="mobile-subtab-container" class="mobile-subtab-container mobile-only-tracking">
+              <!-- Card Azul Escuro Superior -->
+              <div class="subtab-header-card">
+                <div class="subtab-header-left">
+                  <h2 class="subtab-baker-name" id="subtab-baker-name">Padeiro Selecionado</h2>
+                  <div class="subtab-baker-role" id="subtab-baker-role">Personal Courier • Padeiro</div>
+                  <div class="subtab-baker-rating">
+                    <i data-lucide="star" style="width: 14px; height: 14px; fill: #F59E0B; stroke: #F59E0B;"></i>
+                    <span id="subtab-baker-rating">5.0</span>
+                  </div>
+                </div>
+                <div class="subtab-header-right">
+                  <div class="subtab-baker-photo-wrap" id="subtab-baker-photo-wrap">
+                    <img id="subtab-baker-photo" src="" alt="Foto" class="subtab-baker-photo" style="display: none;" />
+                    <div id="subtab-baker-initial" class="subtab-baker-initial">PD</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Branco: Status da Rota & Timeline -->
+              <div class="subtab-body">
+                <div class="subtab-body-header">
+                  <span class="subtab-body-title">Package Status</span>
+                  <span class="subtab-body-details-link">
+                    Details <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                  </span>
+                </div>
+
+                <!-- Timeline de 3 Passos (Imagem 2) -->
+                <div class="subtab-timeline">
+                  <!-- Passo 1: Início da Rota / Cliente Atual -->
+                  <div class="subtab-step">
+                    <div class="subtab-step-indicator orange">
+                      <i data-lucide="bike" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <div class="subtab-step-content">
+                      <div class="subtab-step-title-row">
+                        <span class="subtab-step-title" id="subtab-step1-title">Picked Up</span>
+                        <span class="subtab-step-time" id="subtab-step1-time">Em andamento</span>
+                      </div>
+                      <div class="subtab-step-subtitle" id="subtab-step1-sub">Rastreamento ativo</div>
+
+                      <!-- Card Interno do Cliente / Atendimento -->
+                      <div class="subtab-client-card">
+                        <div class="subtab-client-avatar-wrap">
+                          <i data-lucide="user" style="width: 20px; height: 20px; color: #3B82F6;"></i>
+                        </div>
+                        <div class="subtab-client-info">
+                          <span class="subtab-client-label">Your Shipper</span>
+                          <span class="subtab-client-name" id="subtab-client-name">Aguardando...</span>
+                        </div>
+                        <div class="subtab-client-actions">
+                          <button type="button" class="subtab-action-circle" onclick="Rastreamento.callCurrentBaker()" title="Ligar">
+                            <i data-lucide="phone"></i>
+                          </button>
+                          <button type="button" class="subtab-action-circle" onclick="Rastreamento.messageCurrentBaker()" title="Mensagem">
+                            <i data-lucide="message-square"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Passo 2: Entrega no Cliente / Destino -->
+                  <div class="subtab-step">
+                    <div class="subtab-step-indicator gray">
+                      <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div class="subtab-step-content">
+                      <div class="subtab-step-title-row">
+                        <span class="subtab-step-title">Delivery On</span>
+                        <span class="subtab-step-time" id="subtab-step2-time">Hoje</span>
+                      </div>
+                      <div class="subtab-step-address" id="subtab-dest-address">Não informado</div>
+                    </div>
+                  </div>
+
+                  <!-- Passo 3: Pagamento / Conclusão da Produção -->
+                  <div class="subtab-step">
+                    <div class="subtab-step-indicator gray">
+                      <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div class="subtab-step-content">
+                      <div class="subtab-step-title-row">
+                        <span class="subtab-step-title">Payment Method</span>
+                        <span class="subtab-step-time" id="subtab-step3-time">--:--</span>
+                      </div>
+                      <div class="subtab-step-address" id="subtab-payment-desc">Em Produção / Concluído</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
           </main>
@@ -1072,17 +1775,28 @@ window.Rastreamento = {
         const isOnline = !!loc;
         
         if (isMobile) {
+          const displayCod = padeiro.codTec ? padeiro.codTec : padeiro.id.substring(0, 6).toUpperCase();
+          const hasPhoto = !!(padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem);
+          const photoUrl = padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem;
+
           html += `
             <div class="mac-track-item ${isSelected ? 'selected' : ''}" id="track-item-${padeiro.id}" onclick="Rastreamento.selectActiveItem('${padeiro.id}')">
-              ${(padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem) ? `
-                <img src="${padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
-              ` : `
-                <div class="mac-avatar" style="background-color: ${color}; color: #FFF; width: 36px; height: 36px; font-size: 15px; font-weight: 600; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;">${initial}</div>
-              `}
-              <div class="mac-track-name" style="margin-left: 10px;">${padeiro.nome}</div>
-              <div class="mac-track-status ${isOnline ? 'active' : 'inactive'}"></div>
-              <div class="mac-track-icon">
-                 <i data-lucide="crosshair" style="width: 16px; height: 16px;"></i>
+              <div class="mobile-track-icon-box ${isOnline ? 'online' : 'offline'}">
+                ${hasPhoto ? `
+                  <img src="${photoUrl}" class="mobile-track-photo" alt="${padeiro.nome}" />
+                ` : `
+                  <i data-lucide="${isOnline ? 'package' : 'bike'}" style="width: 24px; height: 24px; stroke-width: 2.2;"></i>
+                `}
+              </div>
+              <div class="mobile-track-info">
+                <div class="mac-track-name">${padeiro.nome}</div>
+                <div class="mobile-track-meta track-item-subtitle">
+                  COD: ${displayCod} <span class="filial-name-highlight">• ${filial}</span>
+                </div>
+              </div>
+              <div class="mobile-track-status-pill ${isOnline ? 'online' : 'offline'}">
+                <span class="mobile-status-dot ${isOnline ? 'active' : 'inactive'}"></span>
+                <span>${isOnline ? 'Em Rota' : 'Pendente'}</span>
               </div>
             </div>
           `;
@@ -1185,6 +1899,47 @@ window.Rastreamento = {
     }
   },
 
+  closeMobileSubtab() {
+    const rootEl = document.querySelector('.mac-rastreamento-root');
+    if (rootEl) {
+      rootEl.classList.remove('mobile-view-detail');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize();
+    }, 150);
+  },
+
+  callCurrentBaker() {
+    const baker = this.currentSelectedBaker;
+    const phone = baker?.telefone || baker?.celular || baker?.contato;
+    if (phone) {
+      window.location.href = `tel:${phone.replace(/\D/g, '')}`;
+    } else {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast(`Contato de ${baker?.nome || 'padeiro'} não cadastrado`, 'info');
+      } else {
+        alert(`Contato de ${baker?.nome || 'padeiro'} não cadastrado`);
+      }
+    }
+  },
+
+  messageCurrentBaker() {
+    const baker = this.currentSelectedBaker;
+    const phone = baker?.telefone || baker?.celular || baker?.contato;
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const num = cleanPhone.length <= 11 ? '55' + cleanPhone : cleanPhone;
+      window.open(`https://wa.me/${num}?text=Ol%C3%A1%20${encodeURIComponent(baker?.nome || '')}%2C%20mensagem%20do%20SmartGestor`, '_blank');
+    } else {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast(`WhatsApp de ${baker?.nome || 'padeiro'} não cadastrado`, 'info');
+      } else {
+        alert(`WhatsApp de ${baker?.nome || 'padeiro'} não cadastrado`);
+      }
+    }
+  },
+
   selectActiveItem(userId) {
     const isMobile = window.innerWidth < 1024;
     
@@ -1210,12 +1965,54 @@ window.Rastreamento = {
     if (target) {
       if (isMobile) {
         target.classList.add('selected');
-        
-        // Rola a tela suavemente para cima, centralizando o mapa
-        const mapContainer = document.getElementById('view-mapa');
-        if (mapContainer) {
-          mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Ativa a Sub-aba / Tela de Detalhes no Mobile (Design da Imagem 2)
+        const rootEl = document.querySelector('.mac-rastreamento-root');
+        if (rootEl) {
+          rootEl.classList.add('mobile-view-detail');
         }
+
+        // Guarda o padeiro ativo
+        const padeiro = (this.allPadeiros || []).find(p => p.id === userId);
+        this.currentSelectedBaker = padeiro;
+
+        // Preenche dados do Cabeçalho Azul Superior da Sub-aba
+        if (padeiro) {
+          const nameEl = document.getElementById('subtab-baker-name');
+          const roleEl = document.getElementById('subtab-baker-role');
+          const ratingEl = document.getElementById('subtab-baker-rating');
+          const photoEl = document.getElementById('subtab-baker-photo');
+          const initialEl = document.getElementById('subtab-baker-initial');
+
+          if (nameEl) nameEl.innerText = padeiro.nome || 'Padeiro Selecionado';
+          if (roleEl) roleEl.innerText = `${padeiro.filial ? padeiro.filial + ' • ' : ''}Personal Courier`;
+          if (ratingEl) ratingEl.innerText = '5.0';
+
+          const photoUrl = padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem;
+          if (photoUrl && photoEl) {
+            photoEl.src = photoUrl;
+            photoEl.style.display = 'block';
+            if (initialEl) initialEl.style.display = 'none';
+          } else {
+            if (photoEl) photoEl.style.display = 'none';
+            if (initialEl) {
+              initialEl.innerText = padeiro.nome ? padeiro.nome[0].toUpperCase() : 'PD';
+              initialEl.style.display = 'block';
+            }
+          }
+        }
+
+        // Rola até o topo
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Atualiza tamanho do Leaflet para renderizar o mapa perfeitamente no novo container
+        setTimeout(() => {
+          if (this.map) {
+            this.map.invalidateSize();
+            this.focusPadeiro(userId);
+          }
+          if (window.lucide) lucide.createIcons();
+        }, 150);
       } else {
         target.classList.add('expanded');
         const bottomPanel = document.getElementById('bottom-client-panel');
@@ -1319,6 +2116,23 @@ window.Rastreamento = {
       if (bcpDestino) bcpDestino.innerText = destinoStr;
       if (bcpEtapa) bcpEtapa.innerText = etapaAtual;
       if (bcpLocal) bcpLocal.innerText = locStr;
+
+      // Atualiza os elementos da Sub-aba Mobile (Imagem 2)
+      const subtabClientName = document.getElementById('subtab-client-name');
+      const subtabDestAddress = document.getElementById('subtab-dest-address');
+      const subtabPaymentDesc = document.getElementById('subtab-payment-desc');
+      const subtabStep1Time = document.getElementById('subtab-step1-time');
+      const subtabStep2Time = document.getElementById('subtab-step2-time');
+      const subtabStep3Time = document.getElementById('subtab-step3-time');
+
+      const nowTimeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      if (subtabClientName) subtabClientName.innerText = clienteAtual;
+      if (subtabDestAddress) subtabDestAddress.innerText = destinoStr !== 'Não info.' ? destinoStr : 'Destino da rota em andamento';
+      if (subtabPaymentDesc) subtabPaymentDesc.innerText = etapaAtual !== '--' ? `Etapa: ${etapaAtual}` : 'Produção Programada';
+      if (subtabStep1Time) subtabStep1Time.innerText = `Hoje • ${nowTimeStr}`;
+      if (subtabStep2Time) subtabStep2Time.innerText = `Previsão: ${nowTimeStr}`;
+      if (subtabStep3Time) subtabStep3Time.innerText = nowTimeStr;
       
       if (this.bcpInterval) clearInterval(this.bcpInterval);
       const updateRestante = () => {

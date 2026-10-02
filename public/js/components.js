@@ -24,6 +24,9 @@ function safeSetLocalStorage(key, val) {
     console.warn(`[Storage] Não foi possível salvar a chave ${key} no localStorage:`, e);
   }
 }
+window.safeGetLocalStorage = safeGetLocalStorage;
+window.safeSetLocalStorage = safeSetLocalStorage;
+
 
 // Polyfill seguro de AbortController para WebViews antigas no APK
 if (typeof window.AbortController === 'undefined') {

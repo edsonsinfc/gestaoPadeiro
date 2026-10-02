@@ -229,23 +229,6 @@ exports.deleteTarefa = async (req, res) => {
 
 exports.getPadeiroAgenda = async (req, res) => {
   try {
-    let orConditions = [{ padeiroId: req.user.id }];
-    
-    // Se o usuário tiver codTec, busca também por codTec ou por outros IDs com o mesmo codTec
-    if (req.user.codTec) {
-      orConditions.push({ codTec: req.user.codTec });
-      try {
-        const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
-        samePadeiros.forEach(p => {
-          if (p.id) orConditions.push({ padeiroId: p.id });
-        });
-      } catch (err) {}
-    }
-
-    if (req.user.nome) {
-      orConditions.push({ padeiroNome: req.user.nome });
-    }
-
     // Se for admin, gestor ou vendedor visualizando a tela do padeiro
     if (req.user.role && req.user.role !== 'padeiro') {
       const today = new Date().toISOString().split('T')[0];
@@ -254,16 +237,49 @@ exports.getPadeiroAgenda = async (req, res) => {
       return res.json(agenda);
     }
 
-    const agenda = await Cronograma.find({ $or: orConditions })
-      .sort({ data: 1, horario: 1 });
-      
+    let padeiroIds = [req.user.id];
+    
+    // Se o usuário tiver codTec, busca também outros IDs com o mesmo codTec
+    if (req.user.codTec) {
+      try {
+        const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
+        samePadeiros.forEach(p => {
+          if (p.id && !padeiroIds.includes(p.id)) padeiroIds.push(p.id);
+        });
+      } catch (err) {}
+    }
+
+    // Busca principal por IDs do padeiro
+    const query = padeiroIds.length === 1 ? { padeiroId: req.user.id } : { padeiroId: { $in: padeiroIds } };
+    let agenda = await Cronograma.find(query).sort({ data: 1, horario: 1 });
+
+    // Se tiver codTec, garante que tarefas gravadas diretamente com o codTec também venham
+    if (req.user.codTec) {
+      try {
+        const byCod = await Cronograma.find({ codTec: req.user.codTec });
+        const existingIds = new Set(agenda.map(a => a.id));
+        byCod.forEach(t => {
+          if (!existingIds.has(t.id)) agenda.push(t);
+        });
+      } catch (err) {}
+    }
+
+    // Se tiver nome e não encontrou por ID/codTec, busca por nome como fallback
+    if (req.user.nome && agenda.length === 0) {
+      try {
+        const byNome = await Cronograma.find({ padeiroNome: req.user.nome });
+        agenda = byNome;
+      } catch (err) {}
+    }
+
     agenda.forEach(a => {
       a.padeiroNome = a.padeiroNome || req.user.nome;
     });
+
     res.json(agenda);
   } catch (error) {
     console.error('Erro ao carregar agenda do padeiro:', error);
-    res.status(500).json({ error: 'Erro ao carregar agenda' });
+    res.status(500).json({ error: 'Erro ao carregar agenda: ' + error.message });
   }
 };
 

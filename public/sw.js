@@ -1,4 +1,4 @@
-const CACHE_NAME = 'brago-padeiro-v220';
+const CACHE_NAME = 'brago-padeiro-v224';
 
 // Arquivos externos (CDN) — cache-first, raramente mudam
 const STATIC_CDN = [
@@ -15,7 +15,6 @@ const LOCAL_ASSETS = [
   '/css/components.css',
   '/css/animations.css',
   '/css/styles.css',
-  '/css/modal-move.css',
   '/css/padeiro-flow.css',
   '/css/padeiro-estoque.css',
   '/css/Designabainicio vendedor.css',
@@ -137,8 +136,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((res) => {
-          // Atualiza o cache com a versão mais recente
+          // Atualiza o cache com a versão mais recente apenas se for válido
           if (res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            // Se for .js ou .css, nunca armazenar se o servidor devolveu HTML (ex: fallback 404)
+            if ((url.includes('/js/') || url.includes('/css/')) && contentType.includes('text/html')) {
+              return res;
+            }
             const clone = res.clone();
             caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           }
@@ -146,9 +150,19 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // Offline: usa cache como fallback
-          return caches.match(event.request).then(
-            (cached) => cached || caches.match('/index.html')
-          );
+          return caches.match(event.request, { ignoreSearch: true }).then((cached) => {
+            if (cached) return cached;
+            // Apenas para navegação de página HTML é permitido fallback para index.html
+            if (event.request.mode === 'navigate' || url.endsWith('.html')) {
+              return caches.match('/index.html');
+            }
+            // Para scripts e folhas de estilo, NUNCA retorne index.html
+            return new Response('/* Offline: asset unavailable */', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': url.includes('/css/') ? 'text/css' : 'application/javascript' }
+            });
+          });
         })
     );
     return;

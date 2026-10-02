@@ -74,6 +74,19 @@
 <body>
   <!-- Global Error Handler — evita tela branca no APK -->
   <script>
+    // Storage seguro imediato para prevenir ReferenceError em qualquer script ou WebView
+    window.safeGetLocalStorage = function(key) {
+      try { return localStorage.getItem(key); } catch(e) { return null; }
+    };
+    window.safeSetLocalStorage = function(key, val) {
+      try {
+        if (val === null || val === undefined) localStorage.removeItem(key);
+        else localStorage.setItem(key, val);
+      } catch(e) {}
+    };
+    var safeGetLocalStorage = window.safeGetLocalStorage;
+    var safeSetLocalStorage = window.safeSetLocalStorage;
+
     window.__smartgestor_errors = [];
     window.onerror = function(msg, src, line, col, err) {
       console.error('❌ [GLOBAL ERROR]', msg, src, line, col, err);
@@ -135,7 +148,7 @@
   <script src="/js/leaflet.js"></script>
   
   <!-- Real-time Tracking -->
-  <script src="/js/components.js"></script>
+  <script src="/js/components.js?v=2.5"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     if (typeof io === 'undefined') {
@@ -190,7 +203,7 @@
   <script src="/js/modules/agent-bia/bia.api.js"></script>
   <script src="/js/modules/agent-bia/bia.ui.js"></script>
   <script src="/js/modules/agent-bia/bia.main.js"></script>
-  <script src="/js/app.js?v=3.3"></script>
+  <script src="/js/app.js?v=3.4"></script>
   <!-- Update Banner (hidden by default) -->
   <div id="pwa-update-banner" style="
     display: none;

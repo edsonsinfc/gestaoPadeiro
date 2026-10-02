@@ -1,7 +1,30 @@
-/**
- * App Router - Main SPA Controller
- * BRAGO Sistema Padeiro
- */
+// Wrappers resilientes de localStorage para prevenir ReferenceError caso componentes venham de cache antigo
+if (typeof window.safeGetLocalStorage !== 'function') {
+  window.safeGetLocalStorage = function(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn(`[Storage] Não foi possível ler a chave ${key} do localStorage:`, e);
+      return null;
+    }
+  };
+}
+if (typeof window.safeSetLocalStorage !== 'function') {
+  window.safeSetLocalStorage = function(key, val) {
+    try {
+      if (val === null || val === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, val);
+      }
+    } catch (e) {
+      console.warn(`[Storage] Não foi possível salvar a chave ${key} no localStorage:`, e);
+    }
+  };
+}
+var safeGetLocalStorage = window.safeGetLocalStorage;
+var safeSetLocalStorage = window.safeSetLocalStorage;
+
 const App = {
   APP_VERSION: '1.0.0',
   currentRoute: 'login',
