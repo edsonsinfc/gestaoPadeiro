@@ -1062,13 +1062,33 @@ const App = {
       }
     } catch (_) {}
 
+    if (manual && typeof Components !== 'undefined' && Components.toast) {
+      Components.toast('Buscando atualizações no GitHub...', 'info');
+    }
+
     try {
-      if (manual && typeof Components !== 'undefined' && Components.toast) {
-        Components.toast('Buscando atualizações no GitHub...', 'info');
+      // Usa fetch direto com timeout de 8s — NÃO depende do token de auth para não falhar
+      // se o usuário ainda não estiver logado no momento da verificação automática.
+      const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) || 'https://app2.bragodistribuidora.com.br';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      let info = null;
+      try {
+        const res = await fetch(`${baseUrl}/api/app-version`, {
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json', 'User-Agent': 'SmartGestor-App' }
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) info = await res.json();
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        // Fallback: tenta via API.get (autenticado)
+        try { info = await API.get('/api/app-version'); } catch (_) {}
       }
 
-      const info = await API.get('/api/app-version');
       if (info && info.version) {
+        console.log(`[Update Check] Versão atual: v${this.APP_VERSION} | Versão remota: v${info.version}`);
         if (this.isVersionNewer(this.APP_VERSION, info.version)) {
           this.showUpdateModal(info);
         } else if (manual) {
@@ -1104,53 +1124,53 @@ const App = {
 
     const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
     const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
+    const hasNativeUpdater = isCapacitor && ApkUpdater && typeof ApkUpdater.downloadAndInstall === 'function';
     const absoluteUrl = info.url.startsWith('http') ? info.url : `${API_BASE_URL || window.location.origin}${info.url}`;
+    const isMandatory = !!info.mandatory;
 
     const modal = document.createElement('div');
     modal.id = 'apk-update-modal';
     modal.className = 'pf-modal-overlay active';
     modal.style.zIndex = '99999';
 
+    const closeBtn = isMandatory
+      ? '' // Obrigatória: sem botão de fechar
+      : `<button onclick="document.getElementById('apk-update-modal').remove()" style="position: absolute; top: 14px; right: 14px; background: transparent; border: none; font-size: 20px; color: var(--text-tertiary); cursor: pointer; padding: 4px;">✕</button>`;
+
+    const skipBtn = isMandatory
+      ? '' // Obrigatória: sem botão de pular
+      : `<button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()" style="font-size: 12px; color: var(--text-tertiary);">Lembrar Mais Tarde</button>`;
+
     modal.innerHTML = `
       <div class="pf-modal-ios" style="max-width:340px; margin:auto; border-radius:24px; padding:24px; text-align:center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); background: var(--surface-bg); position: relative;">
-        <!-- Botão Fechar no canto superior -->
-        <button onclick="document.getElementById('apk-update-modal').remove()" style="position: absolute; top: 14px; right: 14px; background: transparent; border: none; font-size: 20px; color: var(--text-tertiary); cursor: pointer; padding: 4px;">
-          ✕
-        </button>
+        ${closeBtn}
 
         <div class="pf-resume-icon" style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; width: 64px; height: 64px; border-radius: 50%;">
           <i data-lucide="download-cloud" style="width: 32px; height: 32px;"></i>
         </div>
-        <h3 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Atualização Disponível</h3>
+        <h3 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">${isMandatory ? '🚨 Atualização Obrigatória' : 'Atualização Disponível'}</h3>
         <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px;">
-          Nova versão <strong>v${info.version}</strong> pronta.<br>${isCapacitor && ApkUpdater ? 'Baixando atualização automaticamente...' : 'Baixe a nova versão para atualizar:'}
+          Nova versão <strong>v${info.version}</strong> disponível.${isMandatory ? '<br><strong style="color:#ef4444;">Esta atualização é obrigatória.</strong>' : ''}
         </p>
 
-        ${isCapacitor && ApkUpdater ? `
-          <!-- Barra de Progresso Animada -->
+        ${hasNativeUpdater ? `
           <div style="background: #e2e8f0; border-radius: 12px; height: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
             <div id="apk-download-bar" style="background: linear-gradient(90deg, #1E4BFF, #60A5FA); width: 0%; height: 100%; border-radius: 12px; transition: width 0.2s ease;"></div>
           </div>
           <div id="apk-download-text" style="font-size: 13px; font-weight: 700; color: #1E4BFF; margin-bottom: 16px;">
-            Iniciando download...
+            Preparando download...
           </div>
         ` : ''}
 
         <div id="apk-update-action-container">
-          ${isCapacitor && ApkUpdater ? `
-            <p style="font-size: 12px; color: var(--text-tertiary); margin: 0 0 12px 0; line-height: 1.4;">
-              O instalador abrirá automaticamente na tela ao finalizar.
-            </p>
-            <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()" style="font-size: 12px; color: var(--text-tertiary);">
-              Lembrar Mais Tarde
-            </button>
+          ${hasNativeUpdater ? `
+            <p style="font-size: 12px; color: var(--text-tertiary); margin: 0 0 12px 0; line-height: 1.4;">O instalador abrirá automaticamente ao concluir.</p>
+            ${skipBtn}
           ` : `
-            <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none;">
+            <button id="apk-direct-download-btn" onclick="App.forceOpenApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none;">
               <i data-lucide="download" style="width:18px;height:18px"></i> Baixar Atualização (APK)
             </button>
-            <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
-              Lembrar Mais Tarde
-            </button>
+            ${skipBtn}
           `}
         </div>
       </div>
@@ -1161,102 +1181,118 @@ const App = {
       Components.renderIcons();
     }
 
-    if (autoStart && isCapacitor && ApkUpdater) {
-      this.downloadApkUpdate(info.url, info.version);
+    if (autoStart && hasNativeUpdater) {
+      this.downloadApkUpdate(absoluteUrl, info.version);
+    } else if (!hasNativeUpdater && isCapacitor) {
+      // APK Capacitor mas SEM plugin nativo: dispara download direto automaticamente
+      console.log('[Update Check] ApkUpdater não disponível, disparando download direto via sistema...');
+      setTimeout(() => this.forceOpenApkDownload(absoluteUrl), 800);
+    }
+  },
+
+  // Força a abertura do download do APK via browser externo (funciona em todas as versões do app)
+  forceOpenApkDownload(url) {
+    console.log('[Update Check] Abrindo download via navegador externo:', url);
+    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+    if (isCapacitor) {
+      // _system = abre no Chrome/browser externo do Android, onde o APK pode ser baixado e instalado
+      window.open(url, '_system');
+    } else {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'SmartGestor.apk';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   },
 
   downloadApkUpdate(url, version) {
     const absoluteUrl = url.startsWith('http') ? url : `${API_BASE_URL || window.location.origin}${url}`;
-    
-    const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
-    const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
 
+    const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     const progressBar = document.getElementById('apk-download-bar');
     const progressText = document.getElementById('apk-download-text');
     const actionContainer = document.getElementById('apk-update-action-container');
 
-    if (isCapacitor && ApkUpdater) {
-      console.log('[Update Check] Iniciando download e instalação automática nativa:', absoluteUrl);
+    const showFallbackBtn = (msg) => {
+      if (progressText) { progressText.style.color = '#ef4444'; progressText.textContent = msg || 'Erro no download automático.'; }
+      if (actionContainer) {
+        actionContainer.innerHTML = `
+          <button onclick="App.forceOpenApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; cursor: pointer; border: none;">
+            <i data-lucide="download" style="width:18px;height:18px"></i> Baixar APK Manualmente
+          </button>
+          <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">Fechar</button>
+        `;
+        if (typeof Components !== 'undefined' && Components.renderIcons) Components.renderIcons();
+      }
+    };
 
-      // Se demorar mais de 15 segundos sem avançar, oferece botão de download direto
-      const fallbackTimer = setTimeout(() => {
-        if (actionContainer && progressBar && progressBar.style.width === '0%') {
-          if (progressText) progressText.textContent = 'Download demorando? Baixe direto:';
-          actionContainer.innerHTML = `
-            <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; cursor: pointer; border: none;">
-              <i data-lucide="download" style="width:18px;height:18px"></i> Baixar APK Diretamente
-            </button>
-            <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
-              Fechar
-            </button>
-          `;
-          if (typeof Components !== 'undefined' && Components.renderIcons) Components.renderIcons();
-        }
-      }, 15000);
+    if (!ApkUpdater || typeof ApkUpdater.downloadAndInstall !== 'function') {
+      // Plugin não disponível nesta versão do APK: download via browser externo
+      console.warn('[Update Check] ApkUpdater não disponível, fallback para download externo.');
+      this.forceOpenApkDownload(absoluteUrl);
+      return;
+    }
 
-      let progressListener = null;
+    console.log('[Update Check] Iniciando download nativo:', absoluteUrl);
+    if (progressText) progressText.textContent = 'Iniciando download...';
+
+    // Fallback após 5s sem progresso detectado
+    let downloadStarted = false;
+    const fallbackTimer = setTimeout(() => {
+      if (!downloadStarted) {
+        console.warn('[Update Check] Nenhum progresso detectado em 5s, ativando fallback.');
+        showFallbackBtn('Download não iniciou automaticamente.');
+      }
+    }, 5000);
+
+    // Listener de progresso
+    let progressListener = null;
+    try {
       if (typeof ApkUpdater.addListener === 'function') {
-        progressListener = ApkUpdater.addListener('downloadProgress', (info) => {
+        progressListener = ApkUpdater.addListener('downloadProgress', (evt) => {
+          downloadStarted = true;
           clearTimeout(fallbackTimer);
-          if (info && typeof info.progress === 'number') {
-            const percent = Math.min(100, Math.round(info.progress * 100));
-            if (progressBar) progressBar.style.width = `${percent}%`;
+          if (evt && typeof evt.progress === 'number') {
+            const pct = Math.min(100, Math.round(evt.progress * 100));
+            if (progressBar) progressBar.style.width = `${pct}%`;
             if (progressText) {
-              if (info.bytes && info.total) {
-                const mbRead = (info.bytes / (1024 * 1024)).toFixed(1);
-                const mbTotal = (info.total / (1024 * 1024)).toFixed(1);
-                progressText.textContent = `Baixando: ${percent}% (${mbRead} MB de ${mbTotal} MB)`;
+              if (evt.bytes && evt.total) {
+                const mb = (evt.bytes / 1048576).toFixed(1);
+                const total = (evt.total / 1048576).toFixed(1);
+                progressText.textContent = `Baixando: ${pct}% (${mb} MB de ${total} MB)`;
               } else {
-                progressText.textContent = `Baixando: ${percent}%`;
+                progressText.textContent = `Baixando: ${pct}%`;
               }
             }
           }
         });
       }
-
-      ApkUpdater.downloadAndInstall({ url: absoluteUrl })
-        .then(() => {
-          clearTimeout(fallbackTimer);
-          console.log('[Update Check] Intent de instalação disparado com sucesso!');
-          if (progressListener && typeof progressListener.remove === 'function') {
-            progressListener.remove();
-          }
-          if (progressText) {
-            progressText.style.color = '#10b981';
-            progressText.textContent = 'Download concluído! Abrindo instalador...';
-          }
-          if (progressBar) progressBar.style.width = '100%';
-          setTimeout(() => {
-            const modal = document.getElementById('apk-update-modal');
-            if (modal) modal.remove();
-          }, 4000);
-        })
-        .catch(err => {
-          clearTimeout(fallbackTimer);
-          console.error('[Update Check] Erro no download/instalação nativa:', err);
-          if (progressListener && typeof progressListener.remove === 'function') {
-            progressListener.remove();
-          }
-          if (progressText) {
-            progressText.style.color = '#ef4444';
-            progressText.textContent = 'Erro no download automático.';
-          }
-          if (actionContainer) {
-            actionContainer.innerHTML = `
-              <button onclick="App.openExternalApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 8px; cursor: pointer; border: none;">
-                <i data-lucide="download" style="width:18px;height:18px"></i> Baixar APK Diretamente
-              </button>
-              <button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()">
-                Fechar
-              </button>
-            `;
-            if (typeof Components !== 'undefined' && Components.renderIcons) Components.renderIcons();
-          }
-        });
-    } else {
-      window.location.href = absoluteUrl;
+    } catch (listenerErr) {
+      console.warn('[Update Check] Falha ao registrar listener de progresso:', listenerErr);
     }
+
+    const cleanup = () => {
+      clearTimeout(fallbackTimer);
+      try { if (progressListener && typeof progressListener.remove === 'function') progressListener.remove(); } catch (_) {}
+    };
+
+    ApkUpdater.downloadAndInstall({ url: absoluteUrl })
+      .then(() => {
+        downloadStarted = true;
+        cleanup();
+        console.log('[Update Check] Instalador disparado!');
+        if (progressText) { progressText.style.color = '#10b981'; progressText.textContent = 'Download concluído! Abrindo instalador...'; }
+        if (progressBar) progressBar.style.width = '100%';
+        setTimeout(() => { const m = document.getElementById('apk-update-modal'); if (m) m.remove(); }, 4000);
+      })
+      .catch(err => {
+        cleanup();
+        console.error('[Update Check] Erro no downloadAndInstall:', err);
+        showFallbackBtn('Falha no download automático. Baixe manualmente:');
+      });
   }
 };
 // Initialize on DOM ready — envolvido em try-catch global para nunca deixar tela branca
