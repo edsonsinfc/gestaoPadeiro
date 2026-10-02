@@ -125,13 +125,13 @@ window.Rastreamento = {
           z-index: 10 !important;
         }
 
-        /* Card Azul Superior (Track your Package -> Rastrear Padeiro) */
+        /* Card Azul Superior (Track your Package -> Rastrear Padeiro) com o gradiente padrão do sistema */
         .mobile-track-hero-card {
-          background: linear-gradient(135deg, #1E3A8A 0%, #203173 100%) !important;
+          background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%) !important;
           border-radius: 24px !important;
           padding: 22px 18px 24px !important;
           color: #FFFFFF !important;
-          box-shadow: 0 12px 28px rgba(30, 58, 138, 0.28) !important;
+          box-shadow: 0 12px 28px rgba(30, 75, 255, 0.35) !important;
           margin-bottom: 20px !important;
           box-sizing: border-box !important;
         }
@@ -296,11 +296,12 @@ window.Rastreamento = {
           width: 32px !important;
           height: 32px !important;
           border-radius: 50% !important;
-          background: #1E2D7D !important;
+          background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%) !important;
           color: #FFFFFF !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
+          box-shadow: 0 3px 10px rgba(30, 75, 255, 0.3) !important;
         }
 
         .mobile-svc-btn i, .mobile-svc-btn svg {
@@ -488,40 +489,61 @@ window.Rastreamento = {
           margin: 0 !important;
         }
 
-        .mac-rastreamento-root.mobile-view-detail .mac-main-content {
-          display: flex !important;
-          flex-direction: column !important;
-          width: 100% !important;
-          min-height: 100vh !important;
-          background: #FFFFFF !important;
-          padding: 0 0 50px 0 !important;
+        .mac-rastreamento-root.mobile-view-detail {
+          padding: 0 !important;
           margin: 0 !important;
-          overflow: visible !important;
-          order: 1 !important;
+          background: #0F172A !important;
+          height: 100vh !important;
+          height: 100dvh !important;
+          overflow: hidden !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail .mac-layout {
+          gap: 0 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          height: 100vh !important;
+          height: 100dvh !important;
+          overflow: hidden !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail .mac-main-content {
+          display: block !important;
+          position: relative !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          height: 100dvh !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
         .mac-page-header, .mac-toolbar, #bottom-client-panel {
           display: none !important;
         }
 
-        /* Mapa no topo da Sub-aba Mobile fiel à Imagem 2 */
-        .mac-map-container {
+        /* Mapa em tela cheia suave no fundo da sub-aba mobile */
+        .mac-rastreamento-root.mobile-view-detail .mac-map-container {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
           width: 100% !important;
-          height: 44vh !important;
-          min-height: 280px !important;
-          max-height: 380px !important;
+          height: 100% !important;
+          min-height: 100% !important;
+          max-height: 100% !important;
           border-radius: 0 !important;
           overflow: hidden !important;
           box-shadow: none !important;
           border: none !important;
-          position: relative !important;
           background: #E2E8F0 !important;
           z-index: 1 !important;
           margin: 0 !important;
           padding: 0 !important;
         }
 
-        #tracking-map {
+        .mac-rastreamento-root.mobile-view-detail #tracking-map {
           height: 100% !important;
           width: 100% !important;
         }
@@ -567,33 +589,65 @@ window.Rastreamento = {
           stroke-width: 2.5 !important;
         }
 
-        /* Sub-aba / Card Unificado de Detalhes do Padeiro (Imagem 2) */
-        .mobile-subtab-container {
+        /* Sub-aba / Bottom Sheet Fluída de Detalhes do Padeiro (Imagem 2) */
+        .mac-rastreamento-root.mobile-view-detail .mobile-subtab-container {
+          position: fixed !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          z-index: 1001 !important;
+          width: 100% !important;
+          max-height: 76vh !important;
+          max-height: 76dvh !important;
           display: flex !important;
           flex-direction: column !important;
-          margin-top: -24px !important;
-          z-index: 10 !important;
-          position: relative !important;
-          width: 100% !important;
           background: #FFFFFF !important;
           border-radius: 28px 28px 0 0 !important;
-          box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08) !important;
+          box-shadow: 0 -10px 36px rgba(15, 23, 42, 0.22) !important;
+          transform: translateY(0) !important;
+          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
+          will-change: transform !important;
           overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
-        /* Card Azul do Topo (Imagem 2) */
+        /* Estado Minimizado Fluído: a sub-aba desce suavemente mantendo o cabeçalho no rodapé */
+        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .mobile-subtab-container {
+          transform: translateY(calc(100% - 94px)) !important;
+        }
+
+        /* Card Azul do Topo (Sub-aba do Padeiro) com o gradiente padrão do sistema */
         .subtab-header-card {
-          background: #1C2A72 !important;
+          background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%) !important;
           border-radius: 28px 28px 0 0 !important;
           margin: 0 !important;
-          padding: 22px 20px 22px 20px !important;
+          padding: 16px 20px 18px 20px !important;
           color: #FFFFFF !important;
           display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
-          box-shadow: none !important;
+          box-shadow: 0 6px 20px rgba(30, 75, 255, 0.25) !important;
           box-sizing: border-box !important;
           width: 100% !important;
+          position: relative !important;
+          cursor: pointer !important;
+          user-select: none !important;
+          touch-action: pan-y !important;
+          flex-shrink: 0 !important;
+        }
+
+        /* Barra de Puxar Nativa estilo iOS */
+        .subtab-header-card::before {
+          content: '' !important;
+          position: absolute !important;
+          top: 6px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: 38px !important;
+          height: 4px !important;
+          background: rgba(255, 255, 255, 0.38) !important;
+          border-radius: 2px !important;
         }
 
         .subtab-header-left {
@@ -611,8 +665,8 @@ window.Rastreamento = {
         }
 
         .subtab-minimize-btn {
-          width: 26px !important;
-          height: 26px !important;
+          width: 28px !important;
+          height: 28px !important;
           border-radius: 8px !important;
           background: rgba(255, 255, 255, 0.18) !important;
           border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -622,7 +676,7 @@ window.Rastreamento = {
           justify-content: center !important;
           cursor: pointer !important;
           padding: 0 !important;
-          transition: all 0.2s ease !important;
+          transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease !important;
           flex-shrink: 0 !important;
         }
 
@@ -631,30 +685,18 @@ window.Rastreamento = {
         }
 
         .subtab-minimize-btn:active {
-          transform: scale(0.9) !important;
+          transform: scale(0.92) !important;
           background: rgba(255, 255, 255, 0.38) !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .subtab-minimize-btn {
+          transform: rotate(180deg) !important;
         }
 
         .subtab-minimize-btn i, .subtab-minimize-btn svg {
           width: 16px !important;
           height: 16px !important;
           stroke-width: 2.6 !important;
-        }
-
-        /* Estado Minimizado */
-        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .mac-map-container {
-          height: calc(100vh - 105px) !important;
-          max-height: calc(100vh - 105px) !important;
-          transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        }
-
-        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .subtab-body {
-          display: none !important;
-        }
-
-        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .subtab-header-card {
-          cursor: pointer !important;
-          box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18) !important;
         }
 
         .subtab-baker-name {
@@ -711,11 +753,15 @@ window.Rastreamento = {
           background: #FFFFFF !important;
           border-radius: 0 !important;
           margin: 0 !important;
-          padding: 22px 20px 40px 20px !important;
+          padding: 20px 20px 36px 20px !important;
           box-shadow: none !important;
           border: none !important;
           box-sizing: border-box !important;
           width: 100% !important;
+          flex: 1 !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: contain !important;
         }
 
         .subtab-body-header {
@@ -920,14 +966,14 @@ window.Rastreamento = {
           width: 40px !important;
           height: 40px !important;
           border-radius: 13px !important;
-          background: #1C2A72 !important;
+          background: linear-gradient(135deg, #1E4BFF 0%, #5E82FF 100%) !important;
           color: #FFFFFF !important;
           border: none !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           cursor: pointer !important;
-          box-shadow: 0 2px 8px rgba(28, 42, 114, 0.25) !important;
+          box-shadow: 0 4px 12px rgba(30, 75, 255, 0.3) !important;
           transition: transform 0.15s ease, opacity 0.15s ease !important;
         }
 
@@ -2067,21 +2113,32 @@ window.Rastreamento = {
     const rootEl = document.querySelector('.mac-rastreamento-root');
     if (!rootEl) return;
     const isMin = rootEl.classList.toggle('mobile-subtab-minimized');
-    const iconEl = document.getElementById('subtab-minimize-icon');
-    if (iconEl) {
-      iconEl.setAttribute('data-lucide', isMin ? 'chevron-up' : 'chevron-down');
+    
+    // Suavemente ajusta a visão do mapa para a área visível da tela
+    if (this._subtabRouteGroup && this.map) {
+      try {
+        const bounds = this._subtabRouteGroup.getBounds();
+        if (bounds.isValid()) {
+          const h = window.innerHeight;
+          if (isMin) {
+            this.map.fitBounds(bounds.pad(0.12), { animate: true, duration: 0.4 });
+          } else {
+            this.map.fitBounds(bounds, {
+              paddingTopLeft: [40, 20],
+              paddingBottomRight: [20, Math.round(h * 0.42)],
+              animate: true,
+              duration: 0.4
+            });
+          }
+        }
+      } catch (err) {}
     }
-    if (window.lucide) lucide.createIcons();
-    setTimeout(() => {
-      if (this.map) this.map.invalidateSize();
-    }, 250);
   },
 
   onSubtabHeaderClick(e) {
-    const rootEl = document.querySelector('.mac-rastreamento-root');
-    if (rootEl && rootEl.classList.contains('mobile-subtab-minimized')) {
-      this.toggleMinimizeMobileSubtab(e);
-    }
+    // Se clicar no botão de minimizar, ele já dispara seu próprio evento
+    if (e && e.target && e.target.closest('#subtab-minimize-btn')) return;
+    this.toggleMinimizeMobileSubtab(e);
   },
 
   viewBakerFullDetails() {
@@ -2114,10 +2171,14 @@ window.Rastreamento = {
       }));
     }
 
-    // 2. Se não houver pontos em memória, buscar trilha do backend para a data de hoje
+    // 2. Se não houver pontos em memória, buscar trilha do backend para hoje
     if (points.length === 0) {
       try {
-        const data = await API.get(`/api/tracking/trail/${userId}?date=${today}`);
+        let data = await API.get(`/api/tracking/trail/${userId}?date=${today}`);
+        // Se a data de hoje ainda não tiver pontos registrados, busca a trilha real mais recente
+        if (!data || !data.sessions || data.sessions.length === 0) {
+          data = await API.get(`/api/tracking/trail/${userId}`);
+        }
         if (data && data.sessions && Array.isArray(data.sessions)) {
           data.sessions.forEach(sess => {
             if (sess.points && Array.isArray(sess.points)) {
@@ -2130,11 +2191,11 @@ window.Rastreamento = {
           });
         }
       } catch (err) {
-        console.warn('Erro ao carregar trilha de hoje:', err);
+        console.warn('Erro ao carregar trilha real do backend:', err);
       }
     }
 
-    // 3. Se ainda não houver pontos de GPS direto, verificar se há pontos na timeline das atividades de hoje
+    // 3. Se ainda não houver pontos, verificar coordenadas registradas nas atividades
     if (points.length === 0) {
       try {
         const atividades = await API.get(`/api/atividades?padeiroId=${userId}&data=${today}`);
@@ -2153,7 +2214,7 @@ window.Rastreamento = {
           });
         }
       } catch (err) {
-        console.warn('Erro ao buscar coordenadas nas atividades de hoje:', err);
+        console.warn('Erro ao buscar coordenadas nas atividades:', err);
       }
     }
 
@@ -2162,58 +2223,88 @@ window.Rastreamento = {
       points.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
     }
 
+    // Filtrar pontos idênticos repetidos em sequência
+    const cleanPoints = [];
+    points.forEach(p => {
+      if (cleanPoints.length === 0) {
+        cleanPoints.push(p);
+      } else {
+        const prev = cleanPoints[cleanPoints.length - 1];
+        const dist = Math.abs(prev.lat - p.lat) + Math.abs(prev.lng - p.lng);
+        if (dist > 0.0001) {
+          cleanPoints.push(p);
+        }
+      }
+    });
+
     let routeCoords = [];
     let startPoint = null;
     let endPoint = null;
     let currentPoint = null;
+    let durationMinsText = 'Em Rota';
 
-    if (points.length >= 2) {
-      // DADOS REAIS DE HOJE ENCONTRADOS!
-      routeCoords = points.map(p => [p.lat, p.lng]);
-      startPoint = routeCoords[0];
-      currentPoint = routeCoords[routeCoords.length - 1];
-      endPoint = routeCoords[routeCoords.length - 1];
-    } else {
-      // Fallback gracioso caso não haja histórico de GPS registrado hoje ainda
-      let center = [-23.5505, -46.6333];
-      const marker = this.markers[userId];
-      if (marker) {
-        center = [marker.getLatLng().lat, marker.getLatLng().lng];
-      } else if (this.allPadeiros) {
-        const baker = this.allPadeiros.find(p => p.id === userId);
-        if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
-          center = [baker.coords.lat, baker.coords.lng];
+    if (cleanPoints.length >= 2) {
+      // DADOS REAIS DE GPS OBTIDOS COM SUCESSO!
+      startPoint = [cleanPoints[0].lat, cleanPoints[0].lng];
+      currentPoint = [cleanPoints[cleanPoints.length - 1].lat, cleanPoints[cleanPoints.length - 1].lng];
+      endPoint = currentPoint;
+      routeCoords = cleanPoints.map(p => [p.lat, p.lng]);
+
+      // Tenta traçar a rota real pelas ruas via OSRM com tempo real estimado
+      try {
+        const startCoord = `${cleanPoints[0].lng},${cleanPoints[0].lat}`;
+        const endCoord = `${cleanPoints[cleanPoints.length - 1].lng},${cleanPoints[cleanPoints.length - 1].lat}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${startCoord};${endCoord}?overview=full&geometries=geojson`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (osrmRes.ok) {
+          const osrmData = await osrmRes.json();
+          if (osrmData && osrmData.routes && osrmData.routes[0]) {
+            const route = osrmData.routes[0];
+            if (route.geometry && route.geometry.coordinates && route.geometry.coordinates.length > 2) {
+              routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+            }
+            if (route.duration) {
+              const mins = Math.max(1, Math.round(route.duration / 60));
+              durationMinsText = `${mins} min`;
+            }
+          }
         }
+      } catch (e) {
+        // Fallback para as coordenadas reais do GPS
       }
-
-      const [lat, lng] = center;
-      routeCoords = [
-        [lat - 0.0070, lng - 0.0045],
-        [lat - 0.0052, lng - 0.0045],
-        [lat - 0.0052, lng - 0.0016],
-        [lat - 0.0018, lng - 0.0016],
-        [lat - 0.0016, lng + 0.0014],
-        [lat, lng],
-        [lat + 0.0048, lng + 0.0014],
-        [lat + 0.0072, lng + 0.0032]
-      ];
-      startPoint = routeCoords[0];
-      currentPoint = [lat, lng];
-      endPoint = routeCoords[routeCoords.length - 1];
+    } else if (cleanPoints.length === 1 || this.markers[userId]) {
+      // Apenas 1 ponto real conhecido: posiciona o marcador na localização real sem trajeto fake
+      const pt = cleanPoints.length === 1 ? cleanPoints[0] : this.markers[userId].getLatLng();
+      currentPoint = [pt.lat, pt.lng];
+      startPoint = currentPoint;
+      endPoint = currentPoint;
+    } else if (this.allPadeiros) {
+      const baker = this.allPadeiros.find(p => p.id === userId);
+      if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
+        currentPoint = [baker.coords.lat, baker.coords.lng];
+        startPoint = currentPoint;
+        endPoint = currentPoint;
+      }
     }
 
-    // Polilinha Roxa (#5C67F5) idêntica à Imagem 2
-    const polyline = L.polyline(routeCoords, {
-      color: '#5C67F5',
-      weight: 3.5,
-      opacity: 0.95,
-      lineCap: 'round',
-      lineJoin: 'round'
-    });
-    this._subtabRouteGroup.addLayer(polyline);
+    // Polilinha Roxa (#5C67F5) idêntica à Imagem 2 (desenhada APENAS se houver rota real com 2+ pontos)
+    if (routeCoords.length >= 2) {
+      const polyline = L.polyline(routeCoords, {
+        color: '#5C67F5',
+        weight: 4,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      this._subtabRouteGroup.addLayer(polyline);
+    }
 
     // Marcador 1: Origem (Casa / Home)
-    if (startPoint) {
+    if (startPoint && routeCoords.length >= 2) {
       const homeIcon = L.divIcon({
         className: 'subtab-map-marker-home',
         html: `
@@ -2228,7 +2319,7 @@ window.Rastreamento = {
       this._subtabRouteGroup.addLayer(homeMarker);
     }
 
-    // Marcador 2: Posição do Entregador com badge pill
+    // Marcador 2: Posição do Entregador com badge pill real
     if (currentPoint) {
       const waypointIcon = L.divIcon({
         className: 'subtab-map-marker-waypoint',
@@ -2236,7 +2327,7 @@ window.Rastreamento = {
           <div style="display: flex; align-items: center; gap: 8px; transform: translate(-10px, -14px);">
             <div style="width: 18px; height: 18px; background: #5C67F5; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
             <div style="background: #EEF2FF; color: #4338CA; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(92, 103, 245, 0.2); white-space: nowrap; border: 1px solid rgba(92, 103, 245, 0.25); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              ${points.length >= 2 ? 'Em Rota' : '20 min'}
+              ${durationMinsText}
             </div>
           </div>
         `,
@@ -2247,8 +2338,8 @@ window.Rastreamento = {
       this._subtabRouteGroup.addLayer(waypointMarker);
     }
 
-    // Marcador 3: Destino (Pin) se diferente do ponto inicial
-    if (endPoint && (endPoint[0] !== startPoint[0] || endPoint[1] !== startPoint[1])) {
+    // Marcador 3: Destino (Pin) se fornecido por atividade ou se houver cliente
+    if (endPoint && routeCoords.length >= 2 && (endPoint[0] !== startPoint[0] || endPoint[1] !== startPoint[1])) {
       const destIcon = L.divIcon({
         className: 'subtab-map-marker-dest',
         html: `
@@ -2263,9 +2354,22 @@ window.Rastreamento = {
       this._subtabRouteGroup.addLayer(destMarker);
     }
 
-    // Enquadra a visão do mapa suavemente
+    // Enquadra a visão do mapa suavemente com padding para não esconder a rota atrás da sub-aba
     try {
-      this.map.fitBounds(this._subtabRouteGroup.getBounds().pad(0.2), { animate: true });
+      const bounds = this._subtabRouteGroup.getBounds();
+      if (bounds.isValid()) {
+        const rootEl = document.querySelector('.mac-rastreamento-root');
+        const isMin = rootEl && rootEl.classList.contains('mobile-subtab-minimized');
+        const h = window.innerHeight;
+        this.map.fitBounds(bounds, {
+          paddingTopLeft: [40, 20],
+          paddingBottomRight: [20, isMin ? 40 : Math.round(h * 0.42)],
+          animate: true,
+          duration: 0.4
+        });
+      } else if (currentPoint) {
+        this.map.setView(currentPoint, 15);
+      }
     } catch (e) {
       if (currentPoint) this.map.setView(currentPoint, 15);
     }

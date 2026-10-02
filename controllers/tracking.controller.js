@@ -14,22 +14,66 @@ const TrackingController = {
       const { userId } = req.params;
       const { date } = req.query; // YYYY-MM-DD
 
-      if (!userId || !date) {
-        return res.status(400).json({ error: 'userId e date são obrigatórios' });
+      if (!userId) {
+        return res.status(400).json({ error: 'userId é obrigatório' });
       }
 
-      // Query for the specific day
-      // Assuming timestamp is ISO string "YYYY-MM-DDTHH:mm:ss.sssZ"
-      const startOfDay = `${date}T00:00:00.000Z`;
-      const endOfDay = `${date}T23:59:59.999Z`;
+      let points = [];
+      let actualDate = date;
 
-      const points = await HistoricoLocalizacao.find({
-        userId,
-        timestamp: { $gte: startOfDay, $lte: endOfDay }
-      }).sort({ timestamp: 1 });
+      if (date) {
+        const startOfDay = `${date}T00:00:00.000Z`;
+        const endOfDay = `${date}T23:59:59.999Z`;
+
+        points = await HistoricoLocalizacao.find({
+          userId,
+          timestamp: { $gte: startOfDay, $lte: endOfDay }
+        }).sort({ timestamp: 1 });
+      }
+
+      // If no points found for requested date (or date omitted), fallback to most recent date with real points
+      if (!points || points.length === 0) {
+        const latestPoints = await HistoricoLocalizacao.find({ userId }).sort({ timestamp: -1 }).limit(1);
+        const latestPoint = latestPoints && latestPoints[0] ? latestPoints[0] : null;
+        if (latestPoint && latestPoint.timestamp) {
+          actualDate = latestPoint.timestamp.split('T')[0];
+          const startOfFallback = `${actualDate}T00:00:00.000Z`;
+          const endOfFallback = `${actualDate}T23:59:59.999Z`;
+
+          points = await HistoricoLocalizacao.find({
+            userId,
+            timestamp: { $gte: startOfFallback, $lte: endOfFallback }
+          }).sort({ timestamp: 1 });
+        }
+      }
+
+      // If all points for that day have identical coordinates (stationary),
+      // collect the most recent distinct coordinates across history to show actual trajectory
+      if (points && points.length > 0) {
+        const uniqueCoords = new Set(points.map(p => `${Number(p.lat).toFixed(4)},${Number(p.lng).toFixed(4)}`));
+        if (uniqueCoords.size < 2) {
+          const recentPoints = await HistoricoLocalizacao.find({ userId })
+            .sort({ timestamp: -1 })
+            .limit(200);
+
+          const distinctHistorical = [];
+          const seen = new Set();
+          for (const pt of recentPoints) {
+            const key = `${Number(pt.lat).toFixed(4)},${Number(pt.lng).toFixed(4)}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              distinctHistorical.push(pt);
+            }
+          }
+          if (distinctHistorical.length >= 2) {
+            distinctHistorical.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            points = distinctHistorical;
+          }
+        }
+      }
 
       if (!points || points.length === 0) {
-        return res.json({ sessions: [], totalPoints: 0 });
+        return res.json({ sessions: [], totalPoints: 0, date: actualDate || date });
       }
 
       // Group points into sessions (break if > 15 minutes gap)

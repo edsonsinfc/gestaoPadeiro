@@ -77,6 +77,8 @@ const BiaActions = {
         rankingPadeiros,
         rankingClientes,
         cronogramaHistorico: cronograma || [],
+        atividades: atividades || [],
+        atividadesFinalizadas,
         totalAtividades: atividadesFinalizadas.length
       };
     } catch (err) {
@@ -201,110 +203,198 @@ const BiaActions = {
   },
 
   /**
+   * Helper para normalizar strings (sem acentos, minúsculas, sem espaços extras)
+   */
+  normalizeStr(str) {
+    if (!str) return '';
+    return str.toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  },
+
+  /**
    * AÇÃO: Criar Escala Seguindo Padrão Anterior
-   * Analisa a rotina habitual do usuário/padeiro no cronograma anterior e replica para a semana
+   * Analisa a rotina habitual da equipe a partir de Junho/2026 (cronogramas e atividades)
+   * e replica rigorosamente o padrão de atendimento por dia da semana sem alocações aleatórias.
    */
   async criarEscalaPadraoAnterior(context) {
     const ctx = context || await this.getSystemContext();
-    const { rankingPadeiros, clientesAtivos, cronogramaHistorico } = ctx;
+    const { padeirosAtivos, rankingPadeiros, clientesAtivos, cronogramaHistorico, atividades } = ctx;
 
-    if (!rankingPadeiros || rankingPadeiros.length === 0) {
+    const padeirosLista = rankingPadeiros && rankingPadeiros.length > 0 ? rankingPadeiros : padeirosAtivos;
+    if (!padeirosLista || padeirosLista.length === 0) {
       throw new Error('Nenhum padeiro ativo disponível.');
     }
-    if (!cronogramaHistorico || cronogramaHistorico.length === 0) {
-      // Fallback para distribuição de alta performance se não houver histórico prévio
+
+    // Marco temporal estrito: apenas dados a partir de Junho/2026
+    const DATA_CORTE = '2026-06-01';
+
+    // 1. Unificar histórico de Cronograma e Atividades a partir de Junho/2026
+    const cronoFiltrado = (cronogramaHistorico || []).filter(c => c && c.data && c.data >= DATA_CORTE);
+    const ativFiltradas = (atividades || []).filter(a => a && a.data && a.data >= DATA_CORTE);
+
+    const historicoBruto = [
+      ...cronoFiltrado.map(c => ({
+        source: 'cronograma',
+        padeiroId: c.padeiroId,
+        padeiroNome: c.padeiroNome,
+        codTec: c.codTec || '',
+        clienteId: c.clienteId,
+        clienteNome: c.clienteNome,
+        data: c.data
+      })),
+      ...ativFiltradas.map(a => ({
+        source: 'atividade',
+        padeiroId: a.padeiroId,
+        padeiroNome: a.padeiroNome,
+        codTec: a.codTec || '',
+        clienteId: a.clienteId,
+        clienteNome: a.clienteNome,
+        data: a.data
+      }))
+    ];
+
+    if (historicoBruto.length === 0) {
       return this.criarEscalaAltaPerformance(ctx);
     }
+
+    // 2. Mapeamento e resolução inteligente (Entity Resolution) com as entidades ativas
+    const historicoNormalizado = [];
+    historicoBruto.forEach(r => {
+      // Padeiro: correspondência por ID ou similaridade de nome
+      let pAtivo = padeirosLista.find(p => p.id === r.padeiroId);
+      if (!pAtivo && r.padeiroNome) {
+        const rNomeNorm = this.normalizeStr(r.padeiroNome);
+        pAtivo = padeirosLista.find(p => {
+          const pNomeNorm = this.normalizeStr(p.nome);
+          return pNomeNorm === rNomeNorm || pNomeNorm.includes(rNomeNorm) || rNomeNorm.includes(pNomeNorm);
+        });
+      }
+
+      // Cliente: correspondência por ID ou similaridade de Razão Social / Nome Fantasia
+      let cAtivo = (clientesAtivos || []).find(c => c.id === r.clienteId);
+      if (!cAtivo && r.clienteNome) {
+        const rCliNorm = this.normalizeStr(r.clienteNome);
+        cAtivo = (clientesAtivos || []).find(c => {
+          const cNomeNorm = this.normalizeStr(c.nome);
+          const cFantNorm = this.normalizeStr(c.nomeFantasia);
+          return (cNomeNorm && (cNomeNorm === rCliNorm || rCliNorm.includes(cNomeNorm) || cNomeNorm.includes(rCliNorm))) ||
+                 (cFantNorm && (cFantNorm === rCliNorm || rCliNorm.includes(cFantNorm) || cFantNorm.includes(cFantNorm)));
+        });
+      }
+
+      if (pAtivo && cAtivo) {
+        historicoNormalizado.push({
+          padeiroId: pAtivo.id,
+          padeiroNome: pAtivo.nome,
+          codTec: pAtivo.codTec || r.codTec || '',
+          clienteId: cAtivo.id,
+          clienteNome: cAtivo.nomeFantasia || cAtivo.nome,
+          data: r.data
+        });
+      }
+    });
+
+    // 3. Montar frequência habitual:
+    // freqPorDia[pId][dayOfWeek][cId] = count
+    // freqGeral[pId][cId] = count
+    // diasAtivosPadeiro[pId] = Set(dayOfWeek)
+    const freqPorDia = {};
+    const freqGeral = {};
+    const diasAtivosPadeiro = {};
+
+    historicoNormalizado.forEach(r => {
+      const dataObj = new Date(r.data + 'T00:00:00');
+      const dayOfWeek = dataObj.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
+      if (dayOfWeek < 1 || dayOfWeek > 6) return;
+
+      if (!freqPorDia[r.padeiroId]) freqPorDia[r.padeiroId] = {};
+      if (!freqPorDia[r.padeiroId][dayOfWeek]) freqPorDia[r.padeiroId][dayOfWeek] = {};
+      freqPorDia[r.padeiroId][dayOfWeek][r.clienteId] = (freqPorDia[r.padeiroId][dayOfWeek][r.clienteId] || 0) + 1;
+
+      if (!freqGeral[r.padeiroId]) freqGeral[r.padeiroId] = {};
+      freqGeral[r.padeiroId][r.clienteId] = (freqGeral[r.padeiroId][r.clienteId] || 0) + 1;
+
+      if (!diasAtivosPadeiro[r.padeiroId]) diasAtivosPadeiro[r.padeiroId] = new Set();
+      diasAtivosPadeiro[r.padeiroId].add(dayOfWeek);
+    });
+
+    // Apenas padeiros que efetivamente possuem histórico habitual desde Junho/2026
+    const padeirosComHabito = padeirosLista.filter(p => freqGeral[p.id]);
 
     const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || 0;
     const weekDates = this.getWeekDates(weekOffset);
     const diasSemanaNomes = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const weekDatesIso = weekDates.map(d => d.toISOString().split('T')[0]);
 
-    // Mapear frequência habitual: padeiroId + diaDaSemana => cliente mais frequente
-    const frequenciaPadrao = {};
-
-    cronogramaHistorico.forEach(t => {
-      if (!t.data || !t.padeiroId || !t.clienteId) return;
-      const dataObj = new Date(t.data + 'T00:00:00');
-      const dayOfWeek = dataObj.getDay();
-      if (dayOfWeek < 1 || dayOfWeek > 6) return;
-
-      if (!frequenciaPadrao[t.padeiroId]) {
-        frequenciaPadrao[t.padeiroId] = {};
-      }
-      if (!frequenciaPadrao[t.padeiroId][dayOfWeek]) {
-        frequenciaPadrao[t.padeiroId][dayOfWeek] = {};
-      }
-      frequenciaPadrao[t.padeiroId][dayOfWeek][t.clienteId] = (frequenciaPadrao[t.padeiroId][dayOfWeek][t.clienteId] || 0) + 1;
-    });
-
-    const clienteMaisFrequente = {};
-    Object.keys(frequenciaPadrao).forEach(pId => {
-      clienteMaisFrequente[pId] = {};
-      for (let day = 1; day <= 6; day++) {
-        const clientesCount = frequenciaPadrao[pId][day];
-        if (clientesCount) {
-          let bestCId = null;
-          let bestCnt = -1;
-          Object.entries(clientesCount).forEach(([cId, cnt]) => {
-            if (cnt > bestCnt) {
-              bestCnt = cnt;
-              bestCId = cId;
-            }
-          });
-          clienteMaisFrequente[pId][day] = bestCId;
-        }
-      }
-    });
-
-    const novasTarefas = [];
-    const tarefasExistentes = cronogramaHistorico.filter(t => weekDatesIso.includes(t.data));
+    // Mapear tarefas já agendadas nesta semana para não duplicar
+    const tarefasExistentes = (cronogramaHistorico || []).filter(t => t && weekDatesIso.includes(t.data));
     const ocupadosMap = new Set();
     tarefasExistentes.forEach(t => ocupadosMap.add(`${t.data}_${t.padeiroId}`));
+
+    const novasTarefas = [];
 
     for (let diaIdx = 0; diaIdx < 6; diaIdx++) {
       const date = weekDates[diaIdx];
       const dateStr = date.toISOString().split('T')[0];
       const diaNome = diasSemanaNomes[diaIdx];
       const dayOfWeek = diaIdx + 1;
-      const clientesUsadosNoDia = new Set();
 
-      for (const padeiro of rankingPadeiros) {
+      for (const padeiro of padeirosComHabito) {
         if (ocupadosMap.has(`${dateStr}_${padeiro.id}`)) {
           continue;
         }
 
-        let targetClienteId = clienteMaisFrequente[padeiro.id]?.[dayOfWeek];
-        let clienteObj = clientesAtivos.find(c => c.id === targetClienteId);
+        let targetClienteId = null;
+        let countVisitas = 0;
 
-        if (!clienteObj || clientesUsadosNoDia.has(clienteObj.id)) {
-          clienteObj = clientesAtivos.find(c => !clientesUsadosNoDia.has(c.id));
+        // A. Procurar cliente mais frequente neste dia específico da semana
+        const clientesNoDia = freqPorDia[padeiro.id]?.[dayOfWeek];
+        if (clientesNoDia) {
+          const ordenados = Object.entries(clientesNoDia).sort((a, b) => b[1] - a[1]);
+          if (ordenados.length > 0) {
+            targetClienteId = ordenados[0][0];
+            countVisitas = ordenados[0][1];
+          }
         }
 
-        if (clienteObj) {
-          clientesUsadosNoDia.add(clienteObj.id);
-          novasTarefas.push({
-            padeiroId: padeiro.id,
-            padeiroNome: padeiro.nome,
-            codTec: padeiro.codTec || '',
-            clienteId: clienteObj.id,
-            clienteNome: clienteObj.nomeFantasia || clienteObj.nome,
-            data: dateStr,
-            diaNome,
-            horario: '08:00',
-            horarioFim: '17:00',
-            status: 'pendente',
-            observacao: 'Escala Padrão Habitual (Bia IA) - Baseada no histórico prévio'
-          });
+        // B. Se não houver registro específico para o dia, mas o padeiro trabalha na maior parte da semana (>= 4 dias),
+        // aloca seu cliente habitual principal
+        if (!targetClienteId && diasAtivosPadeiro[padeiro.id]?.size >= 4) {
+          const geralOrdenados = Object.entries(freqGeral[padeiro.id] || {}).sort((a, b) => b[1] - a[1]);
+          if (geralOrdenados.length > 0) {
+            targetClienteId = geralOrdenados[0][0];
+            countVisitas = geralOrdenados[0][1];
+          }
+        }
+
+        if (targetClienteId) {
+          const clienteObj = (clientesAtivos || []).find(c => c.id === targetClienteId);
+          if (clienteObj) {
+            novasTarefas.push({
+              padeiroId: padeiro.id,
+              padeiroNome: padeiro.nome,
+              codTec: padeiro.codTec || '',
+              clienteId: clienteObj.id,
+              clienteNome: clienteObj.nomeFantasia || clienteObj.nome,
+              data: dateStr,
+              diaNome,
+              horario: '08:00',
+              horarioFim: '17:00',
+              status: 'pendente',
+              observacao: `Escala Padrão Habitual (Bia IA) - Histórico: ${countVisitas}x visitas desde Junho/2026`
+            });
+          }
         }
       }
     }
 
     return {
       tipo: 'padrao_anterior',
-      titulo: 'Escala no Padrão Anterior',
-      descricao: `Replicado o padrão habitual de dias e clientes praticados anteriormente pela equipe.`,
+      titulo: 'Escala no Padrão Anterior Habitual',
+      descricao: `Replicado o padrão habitual da equipe com base no histórico real registrado desde Junho/2026 (${novasTarefas.length} atendimentos sugeridos).`,
       tarefas: novasTarefas,
       totalTarefas: novasTarefas.length,
       datas: weekDatesIso

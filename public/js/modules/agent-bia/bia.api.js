@@ -76,11 +76,11 @@ const BiaAPI = {
       lower.includes('replicar escala')
     ) {
       return {
-        text: 'Entendido! Analisei o histórico de escalas anteriores da equipe. Preparei uma proposta replicando o **Padrão de Escala Anterior** habitual para os dias da semana.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar Escala no Cronograma** para confirmar.',
+        text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas desde Junho/2026. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual**.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
         action: 'escala_padrao_anterior',
         actionData: {
           action: 'escala_padrao_anterior',
-          descricao: 'Escala replicando padrão anterior',
+          descricao: 'Escala replicando padrão anterior habitual desde Junho/2026',
           confirmar: true
         }
       };
