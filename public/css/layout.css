@@ -356,8 +356,28 @@ img, video {
   text-align: center;
   width: 100%;
   box-sizing: border-box;
-  letter-spacing: 0.3px;
   margin-top: auto;
 }
+
+/* Ocultação de elementos globais durante a visualização fiel da Sub-aba Rastreamento (Imagem 2) */
+body.tracking-mobile-subtab-open .top-header,
+body.tracking-mobile-subtab-open .ios-mobile-header,
+body.tracking-mobile-subtab-open #header-wrapper,
+body.tracking-mobile-subtab-open .bottom-navbar,
+body.tracking-mobile-subtab-open #bottom-navbar,
+body.tracking-mobile-subtab-open .bia-trigger-btn,
+body.tracking-mobile-subtab-open #bia-trigger-btn {
+  display: none !important;
+}
+
+body.tracking-mobile-subtab-open #page-container {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
 
 

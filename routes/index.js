@@ -21,5 +21,6 @@ router.use('/timeline-events', require('./timeline.routes'));
 router.use('/master-gestor', require('./mastergestor.routes'));
 router.use('/auditoria', require('./auditoria.routes'));
 router.use('/estoque', require('./estoque.routes'));
+router.use('/bia', require('./bia.routes'));
 
 module.exports = router;

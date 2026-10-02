@@ -263,3 +263,9 @@ exports.getPendingEmails = (req, res) => {
   const emails = emailService.getPendingEmails(req.params.email);
   res.json(emails);
 };
+
+exports.getGoogleConfig = (req, res) => {
+  res.json({
+    clientId: GOOGLE_CLIENT_ID || '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com'
+  });
+};

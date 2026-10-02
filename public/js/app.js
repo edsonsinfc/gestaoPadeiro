@@ -185,6 +185,7 @@ const App = {
     
     // Auto-collapse mobile drawer/sidebar on navigation
     this.closeDrawer();
+    document.body.classList.remove('tracking-mobile-subtab-open');
     
     const pageContainer = document.getElementById('page-container');
     if (pageContainer) {

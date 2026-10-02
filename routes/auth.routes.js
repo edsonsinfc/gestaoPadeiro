@@ -8,5 +8,6 @@ router.post('/google-login-redirect', ctrl.googleLoginRedirect);
 router.post('/first-access', ctrl.firstAccess);
 router.post('/set-password', ctrl.setPassword);
 router.get('/pending-emails/:email', ctrl.getPendingEmails);
+router.get('/google-config', ctrl.getGoogleConfig);
 
 module.exports = router;

@@ -316,19 +316,38 @@ const Auth = {
     Components.toast('Sessão encerrada.', 'info');
   },
 
-  initGoogleLogin() {
+  async initGoogleLogin() {
+    const isNative = typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+    const parent = document.getElementById('google-login-btn');
+
+    // No APK nativo Android, o Google bloqueia OAuth por WebView (erro de disallowed_useragent)
+    if (isNative) {
+      if (parent) parent.style.display = 'none';
+      return;
+    }
+
     try {
       if (typeof google === 'undefined') {
         setTimeout(() => this.initGoogleLogin(), 500);
         return;
       }
 
+      // Obter Client ID dinamicamente do servidor ou usar fallback
+      let clientId = window.GOOGLE_CLIENT_ID || '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com';
+      try {
+        if (typeof API !== 'undefined' && typeof API.get === 'function') {
+          const cfg = await API.get('/api/auth/google-config').catch(() => null);
+          if (cfg && cfg.clientId) clientId = cfg.clientId;
+        }
+      } catch (e) {}
+
       google.accounts.id.initialize({
-        client_id: '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com',
-        callback: (response) => this.handleGoogleLogin(response)
+        client_id: clientId,
+        callback: (response) => this.handleGoogleLogin(response),
+        auto_select: false,
+        cancel_on_tap_outside: true
       });
 
-      const parent = document.getElementById('google-login-btn');
       if (parent) {
         google.accounts.id.renderButton(parent, {
           theme: 'outline',
@@ -341,9 +360,8 @@ const Auth = {
       }
     } catch (err) {
       console.error('❌ Erro ao inicializar/renderizar botão do Google:', err);
-      // Se for erro da API do Google no ambiente local/nativo, desiste para evitar loop infinito
       if (err.message && (err.message.includes('initialize') || err.message.includes('accounts') || err.message.includes('google'))) {
-        console.warn('⚠️ Google Sign-In indisponível neste ambiente (provavelmente APK ou domínio local).');
+        console.warn('⚠️ Google Sign-In indisponível neste ambiente (provavelmente restrição de domínio ou WebView).');
       } else {
         setTimeout(() => this.initGoogleLogin(), 2000);
       }

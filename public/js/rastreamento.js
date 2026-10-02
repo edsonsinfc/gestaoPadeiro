@@ -11,8 +11,10 @@ window.Rastreamento = {
   allPadeiros: [],
   liveTrailPoints: {},
   _livePolyline: null,
+  _subtabRouteGroup: null,
 
   async render() {
+    document.body.classList.remove('tracking-mobile-subtab-open');
     if (this.bcpInterval) clearInterval(this.bcpInterval);
     const container = document.getElementById('page-container');
     
