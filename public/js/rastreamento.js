@@ -603,6 +603,60 @@ window.Rastreamento = {
           min-width: 0 !important;
         }
 
+        .subtab-header-title-row {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          min-width: 0 !important;
+        }
+
+        .subtab-minimize-btn {
+          width: 26px !important;
+          height: 26px !important;
+          border-radius: 8px !important;
+          background: rgba(255, 255, 255, 0.18) !important;
+          border: 1px solid rgba(255, 255, 255, 0.3) !important;
+          color: #FFFFFF !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          padding: 0 !important;
+          transition: all 0.2s ease !important;
+          flex-shrink: 0 !important;
+        }
+
+        .subtab-minimize-btn:hover {
+          background: rgba(255, 255, 255, 0.28) !important;
+        }
+
+        .subtab-minimize-btn:active {
+          transform: scale(0.9) !important;
+          background: rgba(255, 255, 255, 0.38) !important;
+        }
+
+        .subtab-minimize-btn i, .subtab-minimize-btn svg {
+          width: 16px !important;
+          height: 16px !important;
+          stroke-width: 2.6 !important;
+        }
+
+        /* Estado Minimizado */
+        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .mac-map-container {
+          height: calc(100vh - 105px) !important;
+          max-height: calc(100vh - 105px) !important;
+          transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .subtab-body {
+          display: none !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail.mobile-subtab-minimized .subtab-header-card {
+          cursor: pointer !important;
+          box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18) !important;
+        }
+
         .subtab-baker-name {
           font-size: 20px !important;
           font-weight: 700 !important;
@@ -732,6 +786,12 @@ window.Rastreamento = {
           color: #64748B !important;
         }
 
+        .subtab-step-badge.badge-green {
+          background: #10B981 !important;
+          color: #FFFFFF !important;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        }
+
         .subtab-step-line {
           flex: 1 !important;
           width: 0 !important;
@@ -740,6 +800,10 @@ window.Rastreamento = {
 
         .subtab-step-line.line-orange {
           border-left: 2px dashed #FF7A18 !important;
+        }
+
+        .subtab-step-line.line-green {
+          border-left: 2px solid #10B981 !important;
         }
 
         .subtab-step-line.line-gray {
@@ -1463,10 +1527,15 @@ window.Rastreamento = {
 
             <!-- Sub-aba de Detalhes do Padeiro no Mobile (Design Fiel à Imagem 2) -->
             <div id="mobile-subtab-container" class="mobile-subtab-container mobile-only-tracking">
-              <!-- Card Azul Escuro Superior (Header do Courier) -->
-              <div class="subtab-header-card">
+              <!-- Card Azul Escuro Superior (Header do Courier com Botão Minimizar) -->
+              <div class="subtab-header-card" onclick="Rastreamento.onSubtabHeaderClick(event)">
                 <div class="subtab-header-left">
-                  <h2 class="subtab-baker-name" id="subtab-baker-name">Leslie Alexander</h2>
+                  <div class="subtab-header-title-row">
+                    <button type="button" class="subtab-minimize-btn" id="subtab-minimize-btn" onclick="Rastreamento.toggleMinimizeMobileSubtab(event)" title="Minimizar / Expandir">
+                      <i data-lucide="chevron-down" id="subtab-minimize-icon" style="width: 16px; height: 16px;"></i>
+                    </button>
+                    <h2 class="subtab-baker-name" id="subtab-baker-name">Leslie Alexander</h2>
+                  </div>
                   <div class="subtab-baker-role" id="subtab-baker-role">Personal Courier</div>
                   <div class="subtab-baker-rating">
                     <i data-lucide="star" style="width: 14px; height: 14px; fill: #F59E0B; stroke: #F59E0B;"></i>
@@ -1489,32 +1558,32 @@ window.Rastreamento = {
                   </span>
                 </div>
 
-                <!-- Timeline de 3 Passos (Imagem 2) -->
+                <!-- Timeline de 3 Passos Reais (Fiel à Imagem 2) -->
                 <div class="subtab-timeline">
-                  <!-- Passo 1: Picked Up / Shipper -->
+                  <!-- Passo 1: Início do Atendimento / Shipper -->
                   <div class="subtab-timeline-step">
                     <div class="subtab-step-left">
-                      <div class="subtab-step-badge badge-orange">
+                      <div class="subtab-step-badge badge-orange" id="subtab-step1-badge">
                         <i data-lucide="bike" style="width: 18px; height: 18px;"></i>
                       </div>
-                      <div class="subtab-step-line line-orange"></div>
+                      <div class="subtab-step-line line-orange" id="subtab-step1-line"></div>
                     </div>
                     <div class="subtab-step-main">
                       <div class="subtab-step-header">
-                        <span class="subtab-step-title" id="subtab-step1-title">Picked Up</span>
-                        <span class="subtab-step-time" id="subtab-step1-time">22 May 3:45 PM</span>
+                        <span class="subtab-step-title" id="subtab-step1-title">Início do Atendimento</span>
+                        <span class="subtab-step-time" id="subtab-step1-time">--:--</span>
                       </div>
-                      <div class="subtab-step-val" id="subtab-step1-sub">30 minutes ago</div>
+                      <div class="subtab-step-val" id="subtab-step1-sub">Aguardando início...</div>
 
-                      <!-- Card Interno do Shipper -->
+                      <!-- Card Interno do Shipper / Cliente -->
                       <div class="subtab-shipper-card">
                         <div class="subtab-shipper-left">
                           <div class="subtab-shipper-avatar">
-                            <img id="subtab-shipper-photo" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop" alt="Shipper" />
+                            <img id="subtab-shipper-photo" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop" alt="Cliente" />
                           </div>
                           <div class="subtab-shipper-meta">
-                            <span class="subtab-shipper-lbl">Your Shipper</span>
-                            <span class="subtab-shipper-val" id="subtab-client-name">Robert Fox</span>
+                            <span class="subtab-shipper-lbl" id="subtab-shipper-lbl">Cliente em Atendimento</span>
+                            <span class="subtab-shipper-val" id="subtab-client-name">Aguardando...</span>
                           </div>
                         </div>
                         <div class="subtab-shipper-actions">
@@ -1529,36 +1598,36 @@ window.Rastreamento = {
                     </div>
                   </div>
 
-                  <!-- Passo 2: Delivery On -->
+                  <!-- Passo 2: Em Atendimento / Produção / Rota -->
                   <div class="subtab-timeline-step">
                     <div class="subtab-step-left">
-                      <div class="subtab-step-badge badge-gray">
+                      <div class="subtab-step-badge badge-gray" id="subtab-step2-badge">
                         <i data-lucide="navigation" style="width: 16px; height: 16px;"></i>
                       </div>
-                      <div class="subtab-step-line line-gray"></div>
+                      <div class="subtab-step-line line-gray" id="subtab-step2-line"></div>
                     </div>
                     <div class="subtab-step-main">
                       <div class="subtab-step-header">
-                        <span class="subtab-step-lbl">Delivery On</span>
-                        <span class="subtab-step-time" id="subtab-step2-time">22 May 4:15 PM</span>
+                        <span class="subtab-step-lbl" id="subtab-step2-lbl">Em Atendimento</span>
+                        <span class="subtab-step-time" id="subtab-step2-time">--:--</span>
                       </div>
-                      <div class="subtab-step-val" id="subtab-dest-address">6391 Elgin St. Celina, UK</div>
+                      <div class="subtab-step-val" id="subtab-dest-address">Destino da rota em andamento</div>
                     </div>
                   </div>
 
-                  <!-- Passo 3: Payment Method -->
+                  <!-- Passo 3: Finalização do Atendimento -->
                   <div class="subtab-timeline-step">
                     <div class="subtab-step-left">
-                      <div class="subtab-step-badge badge-gray">
-                        <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i>
+                      <div class="subtab-step-badge badge-gray" id="subtab-step3-badge">
+                        <i data-lucide="credit-card" id="subtab-step3-icon" style="width: 16px; height: 16px;"></i>
                       </div>
                     </div>
                     <div class="subtab-step-main">
                       <div class="subtab-step-header">
-                        <span class="subtab-step-lbl">Payment Method</span>
-                        <span class="subtab-step-time" id="subtab-step3-time">22 May 4:15 PM</span>
+                        <span class="subtab-step-lbl" id="subtab-step3-lbl">Fim do Atendimento</span>
+                        <span class="subtab-step-time" id="subtab-step3-time">--:--</span>
                       </div>
-                      <div class="subtab-step-val" id="subtab-payment-desc">Cash on Delivery</div>
+                      <div class="subtab-step-val" id="subtab-payment-desc">Pendente</div>
                     </div>
                   </div>
                 </div>
@@ -1679,6 +1748,9 @@ window.Rastreamento = {
       // If this user is selected to view trail -> accumulate points and redraw live trail
       if (this.selectedUserId === data.userId && data.newPoints && data.newPoints.length > 0) {
         this._appendLiveTrailPoints(data.userId, data.newPoints);
+        if (window.innerWidth < 1024) {
+          this.drawMobileReferenceRoute(data.userId);
+        }
       }
     });
 
@@ -1689,7 +1761,11 @@ window.Rastreamento = {
       if (atividade.data === selectedDate) {
         this.fetchClientInfo(atividade.padeiroId, selectedDate);
         if (this.selectedUserId === atividade.padeiroId) {
-          this.loadTimeline(selectedDate);
+          if (window.innerWidth < 1024) {
+            this.drawMobileReferenceRoute(atividade.padeiroId);
+          } else {
+            this.loadTimeline(selectedDate);
+          }
         }
       }
     });
@@ -1971,6 +2047,11 @@ window.Rastreamento = {
     const rootEl = document.querySelector('.mac-rastreamento-root');
     if (rootEl) {
       rootEl.classList.remove('mobile-view-detail');
+      rootEl.classList.remove('mobile-subtab-minimized');
+    }
+    const iconEl = document.getElementById('subtab-minimize-icon');
+    if (iconEl) {
+      iconEl.setAttribute('data-lucide', 'chevron-down');
     }
     if (this._subtabRouteGroup) {
       this._subtabRouteGroup.clearLayers();
@@ -1979,6 +2060,28 @@ window.Rastreamento = {
     setTimeout(() => {
       if (this.map) this.map.invalidateSize();
     }, 150);
+  },
+
+  toggleMinimizeMobileSubtab(e) {
+    if (e) e.stopPropagation();
+    const rootEl = document.querySelector('.mac-rastreamento-root');
+    if (!rootEl) return;
+    const isMin = rootEl.classList.toggle('mobile-subtab-minimized');
+    const iconEl = document.getElementById('subtab-minimize-icon');
+    if (iconEl) {
+      iconEl.setAttribute('data-lucide', isMin ? 'chevron-up' : 'chevron-down');
+    }
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize();
+    }, 250);
+  },
+
+  onSubtabHeaderClick(e) {
+    const rootEl = document.querySelector('.mac-rastreamento-root');
+    if (rootEl && rootEl.classList.contains('mobile-subtab-minimized')) {
+      this.toggleMinimizeMobileSubtab(e);
+    }
   },
 
   viewBakerFullDetails() {
@@ -1992,36 +2095,112 @@ window.Rastreamento = {
     }
   },
 
-  drawMobileReferenceRoute(userId) {
+  async drawMobileReferenceRoute(userId) {
     if (!this.map) return;
     if (!this._subtabRouteGroup) {
       this._subtabRouteGroup = L.featureGroup().addTo(this.map);
     }
     this._subtabRouteGroup.clearLayers();
 
-    let center = [-23.5505, -46.6333];
-    const marker = this.markers[userId];
-    if (marker) {
-      center = [marker.getLatLng().lat, marker.getLatLng().lng];
-    } else if (this.allPadeiros) {
-      const baker = this.allPadeiros.find(p => p.id === userId);
-      if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
-        center = [baker.coords.lat, baker.coords.lng];
+    const today = new Date().toISOString().split('T')[0];
+    let points = [];
+
+    // 1. Tentar pegar pontos ao vivo da sessão corrente via socket
+    if (this.liveTrailPoints[userId] && this.liveTrailPoints[userId].length > 0) {
+      points = this.liveTrailPoints[userId].map(p => ({
+        lat: Number(p.lat),
+        lng: Number(p.lng),
+        timestamp: p.timestamp || p.recorded_at
+      }));
+    }
+
+    // 2. Se não houver pontos em memória, buscar trilha do backend para a data de hoje
+    if (points.length === 0) {
+      try {
+        const data = await API.get(`/api/tracking/trail/${userId}?date=${today}`);
+        if (data && data.sessions && Array.isArray(data.sessions)) {
+          data.sessions.forEach(sess => {
+            if (sess.points && Array.isArray(sess.points)) {
+              sess.points.forEach(p => {
+                if (p.lat && p.lng) {
+                  points.push({ lat: Number(p.lat), lng: Number(p.lng), timestamp: p.timestamp });
+                }
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar trilha de hoje:', err);
       }
     }
 
-    const [lat, lng] = center;
-    // Coordenadas que formam exatamente o trajeto da Imagem 2
-    const routeCoords = [
-      [lat - 0.0070, lng - 0.0045], // Ponto 1 (Casa / Home)
-      [lat - 0.0052, lng - 0.0045],
-      [lat - 0.0052, lng - 0.0016],
-      [lat - 0.0018, lng - 0.0016],
-      [lat - 0.0016, lng + 0.0014],
-      [lat, lng],                   // Ponto 2 (Posição Atual com pill '20 min')
-      [lat + 0.0048, lng + 0.0014],
-      [lat + 0.0072, lng + 0.0032]  // Ponto 3 (Pin de Destino)
-    ];
+    // 3. Se ainda não houver pontos de GPS direto, verificar se há pontos na timeline das atividades de hoje
+    if (points.length === 0) {
+      try {
+        const atividades = await API.get(`/api/atividades?padeiroId=${userId}&data=${today}`);
+        if (atividades && Array.isArray(atividades)) {
+          atividades.forEach(act => {
+            if (act.latitude && act.longitude) {
+              points.push({ lat: Number(act.latitude), lng: Number(act.longitude), timestamp: act.inicioEm });
+            }
+            if (Array.isArray(act.timeline)) {
+              act.timeline.forEach(ev => {
+                if (ev.lat && ev.lng) {
+                  points.push({ lat: Number(ev.lat), lng: Number(ev.lng), timestamp: ev.timestamp });
+                }
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Erro ao buscar coordenadas nas atividades de hoje:', err);
+      }
+    }
+
+    // Ordenar pontos cronologicamente
+    if (points.length > 1) {
+      points.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+    }
+
+    let routeCoords = [];
+    let startPoint = null;
+    let endPoint = null;
+    let currentPoint = null;
+
+    if (points.length >= 2) {
+      // DADOS REAIS DE HOJE ENCONTRADOS!
+      routeCoords = points.map(p => [p.lat, p.lng]);
+      startPoint = routeCoords[0];
+      currentPoint = routeCoords[routeCoords.length - 1];
+      endPoint = routeCoords[routeCoords.length - 1];
+    } else {
+      // Fallback gracioso caso não haja histórico de GPS registrado hoje ainda
+      let center = [-23.5505, -46.6333];
+      const marker = this.markers[userId];
+      if (marker) {
+        center = [marker.getLatLng().lat, marker.getLatLng().lng];
+      } else if (this.allPadeiros) {
+        const baker = this.allPadeiros.find(p => p.id === userId);
+        if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
+          center = [baker.coords.lat, baker.coords.lng];
+        }
+      }
+
+      const [lat, lng] = center;
+      routeCoords = [
+        [lat - 0.0070, lng - 0.0045],
+        [lat - 0.0052, lng - 0.0045],
+        [lat - 0.0052, lng - 0.0016],
+        [lat - 0.0018, lng - 0.0016],
+        [lat - 0.0016, lng + 0.0014],
+        [lat, lng],
+        [lat + 0.0048, lng + 0.0014],
+        [lat + 0.0072, lng + 0.0032]
+      ];
+      startPoint = routeCoords[0];
+      currentPoint = [lat, lng];
+      endPoint = routeCoords[routeCoords.length - 1];
+    }
 
     // Polilinha Roxa (#5C67F5) idêntica à Imagem 2
     const polyline = L.polyline(routeCoords, {
@@ -2033,57 +2212,65 @@ window.Rastreamento = {
     });
     this._subtabRouteGroup.addLayer(polyline);
 
-    // Marcador 1: Casa (Origem)
-    const homeIcon = L.divIcon({
-      className: 'subtab-map-marker-home',
-      html: `
-        <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
-          <i data-lucide="home" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-    const homeMarker = L.marker(routeCoords[0], { icon: homeIcon });
-    this._subtabRouteGroup.addLayer(homeMarker);
-
-    // Marcador 2: Entregador com pill '20 min'
-    const waypointIcon = L.divIcon({
-      className: 'subtab-map-marker-waypoint',
-      html: `
-        <div style="display: flex; align-items: center; gap: 8px; transform: translate(-10px, -14px);">
-          <div style="width: 18px; height: 18px; background: #5C67F5; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
-          <div style="background: #EEF2FF; color: #4338CA; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(92, 103, 245, 0.2); white-space: nowrap; border: 1px solid rgba(92, 103, 245, 0.25); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-            20 min
+    // Marcador 1: Origem (Casa / Home)
+    if (startPoint) {
+      const homeIcon = L.divIcon({
+        className: 'subtab-map-marker-home',
+        html: `
+          <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
+            <i data-lucide="home" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
           </div>
-        </div>
-      `,
-      iconSize: [80, 28],
-      iconAnchor: [9, 14]
-    });
-    const waypointMarker = L.marker([lat, lng], { icon: waypointIcon });
-    this._subtabRouteGroup.addLayer(waypointMarker);
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      const homeMarker = L.marker(startPoint, { icon: homeIcon });
+      this._subtabRouteGroup.addLayer(homeMarker);
+    }
 
-    // Marcador 3: Pin (Destino)
-    const destIcon = L.divIcon({
-      className: 'subtab-map-marker-dest',
-      html: `
-        <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
-          <i data-lucide="map-pin" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-    const destMarker = L.marker(routeCoords[routeCoords.length - 1], { icon: destIcon });
-    this._subtabRouteGroup.addLayer(destMarker);
+    // Marcador 2: Posição do Entregador com badge pill
+    if (currentPoint) {
+      const waypointIcon = L.divIcon({
+        className: 'subtab-map-marker-waypoint',
+        html: `
+          <div style="display: flex; align-items: center; gap: 8px; transform: translate(-10px, -14px);">
+            <div style="width: 18px; height: 18px; background: #5C67F5; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
+            <div style="background: #EEF2FF; color: #4338CA; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(92, 103, 245, 0.2); white-space: nowrap; border: 1px solid rgba(92, 103, 245, 0.25); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              ${points.length >= 2 ? 'Em Rota' : '20 min'}
+            </div>
+          </div>
+        `,
+        iconSize: [80, 28],
+        iconAnchor: [9, 14]
+      });
+      const waypointMarker = L.marker(currentPoint, { icon: waypointIcon });
+      this._subtabRouteGroup.addLayer(waypointMarker);
+    }
 
-    // Enquadra a visão do mapa suavemente na rota
+    // Marcador 3: Destino (Pin) se diferente do ponto inicial
+    if (endPoint && (endPoint[0] !== startPoint[0] || endPoint[1] !== startPoint[1])) {
+      const destIcon = L.divIcon({
+        className: 'subtab-map-marker-dest',
+        html: `
+          <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
+            <i data-lucide="map-pin" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      const destMarker = L.marker(endPoint, { icon: destIcon });
+      this._subtabRouteGroup.addLayer(destMarker);
+    }
+
+    // Enquadra a visão do mapa suavemente
     try {
       this.map.fitBounds(this._subtabRouteGroup.getBounds().pad(0.2), { animate: true });
     } catch (e) {
-      this.map.setView([lat, lng], 15);
+      if (currentPoint) this.map.setView(currentPoint, 15);
     }
+
+    if (window.lucide) lucide.createIcons();
   },
 
   callCurrentBaker() {
@@ -2147,7 +2334,10 @@ window.Rastreamento = {
         const rootEl = document.querySelector('.mac-rastreamento-root');
         if (rootEl) {
           rootEl.classList.add('mobile-view-detail');
+          rootEl.classList.remove('mobile-subtab-minimized');
         }
+        const minIcon = document.getElementById('subtab-minimize-icon');
+        if (minIcon) minIcon.setAttribute('data-lucide', 'chevron-down');
 
         // Guarda o padeiro ativo
         const padeiro = (this.allPadeiros || []).find(p => p.id === userId);
@@ -2170,7 +2360,7 @@ window.Rastreamento = {
           }
         }
 
-        // Desenha a rota de referência na sub-aba do mobile (Imagem 2)
+        // Desenha a rota com dados reais de hoje na sub-aba mobile
         this.drawMobileReferenceRoute(userId);
 
         // Rola até o topo
@@ -2287,22 +2477,126 @@ window.Rastreamento = {
       if (bcpEtapa) bcpEtapa.innerText = etapaAtual;
       if (bcpLocal) bcpLocal.innerText = locStr;
 
-      // Atualiza os elementos da Sub-aba Mobile (Imagem 2)
-      const subtabClientName = document.getElementById('subtab-client-name');
-      const subtabDestAddress = document.getElementById('subtab-dest-address');
-      const subtabPaymentDesc = document.getElementById('subtab-payment-desc');
+      // Atualiza os elementos da Sub-aba Mobile com as ETAPAS REAIS (Início, Meio e Fim)
+      const subtabStep1Title = document.getElementById('subtab-step1-title');
       const subtabStep1Time = document.getElementById('subtab-step1-time');
+      const subtabStep1Sub = document.getElementById('subtab-step1-sub');
+      const subtabStep1Badge = document.getElementById('subtab-step1-badge');
+      const subtabStep1Line = document.getElementById('subtab-step1-line');
+
+      const subtabShipperLbl = document.getElementById('subtab-shipper-lbl');
+      const subtabClientName = document.getElementById('subtab-client-name');
+
+      const subtabStep2Lbl = document.getElementById('subtab-step2-lbl');
       const subtabStep2Time = document.getElementById('subtab-step2-time');
+      const subtabDestAddress = document.getElementById('subtab-dest-address');
+      const subtabStep2Badge = document.getElementById('subtab-step2-badge');
+      const subtabStep2Line = document.getElementById('subtab-step2-line');
+
+      const subtabStep3Lbl = document.getElementById('subtab-step3-lbl');
       const subtabStep3Time = document.getElementById('subtab-step3-time');
+      const subtabPaymentDesc = document.getElementById('subtab-payment-desc');
+      const subtabStep3Badge = document.getElementById('subtab-step3-badge');
+      const subtabStep3Icon = document.getElementById('subtab-step3-icon');
 
-      const nowTimeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const ultimaAtividade = (atividades && atividades.length > 0) ? atividades[atividades.length - 1] : null;
 
-      if (subtabClientName) subtabClientName.innerText = clienteAtual;
-      if (subtabDestAddress) subtabDestAddress.innerText = destinoStr !== 'Não info.' ? destinoStr : 'Destino da rota em andamento';
-      if (subtabPaymentDesc) subtabPaymentDesc.innerText = etapaAtual !== '--' ? `Etapa: ${etapaAtual}` : 'Produção Programada';
-      if (subtabStep1Time) subtabStep1Time.innerText = `Hoje • ${nowTimeStr}`;
-      if (subtabStep2Time) subtabStep2Time.innerText = `Previsão: ${nowTimeStr}`;
-      if (subtabStep3Time) subtabStep3Time.innerText = nowTimeStr;
+      if (ultimaAtividade) {
+        // 1. INÍCIO DO ATENDIMENTO (a partir do momento que o padeiro iniciou)
+        if (subtabStep1Title) subtabStep1Title.innerText = 'Início do Atendimento';
+        if (ultimaAtividade.inicioEm) {
+          const inicioDate = new Date(ultimaAtividade.inicioEm);
+          const inicioTimeStr = inicioDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const inicioDateStr = inicioDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+          if (subtabStep1Time) subtabStep1Time.innerText = `${inicioDateStr} ${inicioTimeStr}`;
+
+          const diffMins = Math.floor((Date.now() - inicioDate.getTime()) / 60000);
+          if (subtabStep1Sub) {
+            if (ultimaAtividade.status === 'finalizada') {
+              subtabStep1Sub.innerText = `Iniciado às ${inicioTimeStr}`;
+            } else if (diffMins < 1) {
+              subtabStep1Sub.innerText = 'Iniciado agora mesmo';
+            } else if (diffMins < 60) {
+              subtabStep1Sub.innerText = `Iniciado há ${diffMins} minutos`;
+            } else {
+              const h = Math.floor(diffMins / 60);
+              const m = diffMins % 60;
+              subtabStep1Sub.innerText = `Iniciado há ${h}h ${m}m atrás`;
+            }
+          }
+        } else {
+          if (subtabStep1Time) subtabStep1Time.innerText = 'Em andamento';
+          if (subtabStep1Sub) subtabStep1Sub.innerText = 'Atendimento iniciado';
+        }
+
+        // Card do Cliente / Shipper
+        if (subtabShipperLbl) subtabShipperLbl.innerText = 'Cliente em Atendimento';
+        if (subtabClientName) subtabClientName.innerText = ultimaAtividade.clienteNome || clienteAtual || 'Cliente';
+
+        // 2. MEIO DO ATENDIMENTO (Em atendimento / produção / rota)
+        if (subtabStep2Lbl) subtabStep2Lbl.innerText = ultimaAtividade.status === 'finalizada' ? 'Produção / Rota Realizada' : 'Em Atendimento / Produção';
+        if (subtabDestAddress) subtabDestAddress.innerText = destinoStr !== 'Não info.' ? destinoStr : (ultimaAtividade.endereco || 'Endereço do atendimento');
+
+        if (ultimaAtividade.timeline && ultimaAtividade.timeline.length > 0) {
+          const lastEv = ultimaAtividade.timeline[ultimaAtividade.timeline.length - 1];
+          const evTime = new Date(lastEv.timestamp);
+          if (subtabStep2Time) subtabStep2Time.innerText = !isNaN(evTime) ? evTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Em andamento';
+        } else {
+          if (subtabStep2Time) subtabStep2Time.innerText = ultimaAtividade.status === 'finalizada' ? 'Concluído' : 'Em andamento';
+        }
+
+        // 3. FIM DO ATENDIMENTO (quando finalizado pelo padeiro / sistema)
+        if (subtabStep3Lbl) subtabStep3Lbl.innerText = 'Fim do Atendimento';
+        if (ultimaAtividade.status === 'finalizada') {
+          const fimTime = ultimaAtividade.terminadoEm || ultimaAtividade.fimEm || ultimaAtividade.atualizadoEm;
+          const fimDate = fimTime ? new Date(fimTime) : new Date();
+          const fimTimeStr = fimDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const fimDateStr = fimDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+          if (subtabStep3Time) subtabStep3Time.innerText = `${fimDateStr} ${fimTimeStr}`;
+          if (subtabPaymentDesc) subtabPaymentDesc.innerText = 'Atendimento Finalizado com Sucesso';
+          if (subtabStep3Badge) {
+            subtabStep3Badge.className = 'subtab-step-badge badge-green';
+            subtabStep3Badge.innerHTML = '<i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>';
+          }
+          if (subtabStep2Line) {
+            subtabStep2Line.className = 'subtab-step-line line-green';
+          }
+        } else {
+          if (subtabStep3Time) subtabStep3Time.innerText = 'Em andamento';
+          if (subtabPaymentDesc) subtabPaymentDesc.innerText = 'Aguardando finalização do atendimento';
+          if (subtabStep3Badge) {
+            subtabStep3Badge.className = 'subtab-step-badge badge-gray';
+            subtabStep3Badge.innerHTML = '<i data-lucide="clock" style="width: 16px; height: 16px;"></i>';
+          }
+          if (subtabStep2Line) {
+            subtabStep2Line.className = 'subtab-step-line line-gray';
+          }
+        }
+      } else {
+        // Fallback quando não há atividade hoje
+        if (subtabStep1Title) subtabStep1Title.innerText = 'Início do Atendimento';
+        if (subtabStep1Time) subtabStep1Time.innerText = 'Pendente';
+        if (subtabStep1Sub) subtabStep1Sub.innerText = 'Aguardando início pelo padeiro';
+
+        if (subtabShipperLbl) subtabShipperLbl.innerText = 'Próximo Cliente';
+        if (subtabClientName) subtabClientName.innerText = (clienteAtual && clienteAtual !== 'Sem atividades hoje') ? clienteAtual : 'Aguardando agendamento';
+
+        if (subtabStep2Lbl) subtabStep2Lbl.innerText = 'Previsão de Rota';
+        if (subtabStep2Time) subtabStep2Time.innerText = 'Pendente';
+        if (subtabDestAddress) subtabDestAddress.innerText = destinoStr !== 'Não info.' ? destinoStr : 'Aguardando início da rota';
+
+        if (subtabStep3Lbl) subtabStep3Lbl.innerText = 'Fim do Atendimento';
+        if (subtabStep3Time) subtabStep3Time.innerText = 'Pendente';
+        if (subtabPaymentDesc) subtabPaymentDesc.innerText = 'Aguardando início do atendimento';
+        if (subtabStep3Badge) {
+          subtabStep3Badge.className = 'subtab-step-badge badge-gray';
+          subtabStep3Badge.innerHTML = '<i data-lucide="clock" style="width: 16px; height: 16px;"></i>';
+        }
+        if (subtabStep2Line) {
+          subtabStep2Line.className = 'subtab-step-line line-gray';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
       
       if (this.bcpInterval) clearInterval(this.bcpInterval);
       const updateRestante = () => {
@@ -2357,8 +2651,11 @@ window.Rastreamento = {
   focusPadeiro(userId) {
     const marker = this.markers[userId];
     if (marker) {
-      this.map.setView(marker.getLatLng(), 16);
-      marker.openPopup();
+      const isMobile = window.innerWidth < 1024;
+      this.map.setView(marker.getLatLng(), isMobile ? 15 : 16);
+      if (!isMobile) {
+        marker.openPopup();
+      }
     }
   },
 
