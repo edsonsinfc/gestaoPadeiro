@@ -476,13 +476,25 @@ window.Rastreamento = {
           display: none !important;
         }
 
+        .mac-rastreamento-root.mobile-view-detail {
+          padding: 0 !important;
+          margin: 0 !important;
+          background: #FFFFFF !important;
+        }
+
+        .mac-rastreamento-root.mobile-view-detail .mac-layout {
+          gap: 0 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
         .mac-rastreamento-root.mobile-view-detail .mac-main-content {
           display: flex !important;
           flex-direction: column !important;
           width: 100% !important;
           min-height: 100vh !important;
-          background: #F8FAFC !important;
-          padding: 0 0 100px 0 !important;
+          background: #FFFFFF !important;
+          padding: 0 0 50px 0 !important;
           margin: 0 !important;
           overflow: visible !important;
           order: 1 !important;
@@ -492,24 +504,34 @@ window.Rastreamento = {
           display: none !important;
         }
 
-        /* Mapa no topo da Sub-aba Mobile (Imagem 2) */
+        /* Mapa no topo da Sub-aba Mobile fiel à Imagem 2 */
         .mac-map-container {
           width: 100% !important;
           height: 44vh !important;
           min-height: 280px !important;
           max-height: 380px !important;
-          border-radius: 0 0 28px 28px !important;
+          border-radius: 0 !important;
           overflow: hidden !important;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07) !important;
+          box-shadow: none !important;
           border: none !important;
           position: relative !important;
           background: #E2E8F0 !important;
-          z-index: 10 !important;
+          z-index: 1 !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
         #tracking-map {
           height: 100% !important;
           width: 100% !important;
+        }
+
+        /* Oculta controles secundários no mapa da sub-aba mobile */
+        .mac-rastreamento-root.mobile-view-detail .mac-map-floating-actions,
+        .mac-rastreamento-root.mobile-view-detail .mac-map-footer,
+        .mac-rastreamento-root.mobile-view-detail .leaflet-control-zoom,
+        .mac-rastreamento-root.mobile-view-detail .leaflet-control-attribution {
+          display: none !important;
         }
 
         /* Botão Voltar Circular no Canto Superior Esquerdo do Mapa (Imagem 2) */
@@ -540,97 +562,106 @@ window.Rastreamento = {
         }
 
         .mobile-map-back-btn i, .mobile-map-back-btn svg {
-          width: 20px !important;
-          height: 20px !important;
+          width: 22px !important;
+          height: 22px !important;
           stroke-width: 2.5 !important;
         }
 
-        /* Sub-aba / Card Inferior de Detalhes do Padeiro (Imagem 2) */
+        /* Sub-aba / Card Unificado de Detalhes do Padeiro (Imagem 2) */
         .mobile-subtab-container {
           display: flex !important;
           flex-direction: column !important;
-          gap: 12px !important;
-          margin-top: -18px !important;
-          z-index: 20 !important;
+          margin-top: -24px !important;
+          z-index: 10 !important;
           position: relative !important;
+          width: 100% !important;
+          background: #FFFFFF !important;
+          border-radius: 28px 28px 0 0 !important;
+          box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08) !important;
+          overflow: hidden !important;
         }
 
         /* Card Azul do Topo (Imagem 2) */
         .subtab-header-card {
-          background: linear-gradient(135deg, #1E2D7D 0%, #17215B 100%) !important;
-          border-radius: 26px !important;
-          margin: 0 14px !important;
-          padding: 18px 20px !important;
+          background: #1C2A72 !important;
+          border-radius: 28px 28px 0 0 !important;
+          margin: 0 !important;
+          padding: 22px 20px 22px 20px !important;
           color: #FFFFFF !important;
           display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
-          box-shadow: 0 10px 25px rgba(30, 45, 125, 0.28) !important;
+          box-shadow: none !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
         }
 
         .subtab-header-left {
           display: flex !important;
           flex-direction: column !important;
-          gap: 3px !important;
+          gap: 2px !important;
+          min-width: 0 !important;
         }
 
         .subtab-baker-name {
-          font-size: 19px !important;
-          font-weight: 800 !important;
+          font-size: 20px !important;
+          font-weight: 700 !important;
           color: #FFFFFF !important;
           letter-spacing: -0.3px !important;
           margin: 0 !important;
+          line-height: 1.2 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
         }
 
         .subtab-baker-role {
           font-size: 13px !important;
-          color: rgba(255, 255, 255, 0.8) !important;
-          font-weight: 500 !important;
+          color: rgba(255, 255, 255, 0.72) !important;
+          font-weight: 400 !important;
+          margin-top: 3px !important;
         }
 
         .subtab-baker-rating {
-          display: inline-flex !important;
+          display: flex !important;
           align-items: center !important;
-          gap: 5px !important;
-          font-size: 13px !important;
+          gap: 6px !important;
+          font-size: 13.5px !important;
           font-weight: 700 !important;
           color: #FFFFFF !important;
-          margin-top: 4px !important;
+          margin-top: 10px !important;
         }
 
         .subtab-baker-photo-wrap {
-          width: 58px !important;
-          height: 58px !important;
-          border-radius: 18px !important;
+          width: 62px !important;
+          height: 62px !important;
+          border-radius: 16px !important;
           background: rgba(255, 255, 255, 0.15) !important;
-          border: 2px solid rgba(255, 255, 255, 0.3) !important;
           overflow: hidden !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           flex-shrink: 0 !important;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2) !important;
         }
 
         .subtab-baker-photo {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
-        }
-
-        .subtab-baker-initial {
-          color: #FFFFFF !important;
-          font-weight: 800 !important;
-          font-size: 20px !important;
+          display: block !important;
         }
 
         /* Card Branco: Status da Rota / Timeline (Imagem 2) */
         .subtab-body {
           background: #FFFFFF !important;
-          border-radius: 26px !important;
-          margin: 0 14px !important;
-          padding: 22px 20px 24px !important;
-          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04) !important;
-          border: 1px solid rgba(226, 232, 240, 0.85) !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          padding: 22px 20px 40px 20px !important;
+          box-shadow: none !important;
+          border: none !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
         }
 
         .subtab-body-header {
@@ -641,14 +672,14 @@ window.Rastreamento = {
         }
 
         .subtab-body-title {
-          font-size: 17px !important;
-          font-weight: 800 !important;
+          font-size: 18px !important;
+          font-weight: 700 !important;
           color: #0F172A !important;
           letter-spacing: -0.3px !important;
         }
 
         .subtab-body-details-link {
-          font-size: 13px !important;
+          font-size: 13.5px !important;
           font-weight: 600 !important;
           color: #64748B !important;
           display: flex !important;
@@ -657,167 +688,192 @@ window.Rastreamento = {
           cursor: pointer !important;
         }
 
-        /* Timeline Vertical */
+        /* Timeline Vertical Flexível (Conectores Perfeitos Fiel à Imagem 2) */
         .subtab-timeline {
           display: flex !important;
           flex-direction: column !important;
+          width: 100% !important;
+        }
+
+        .subtab-timeline-step {
+          display: flex !important;
+          gap: 14px !important;
           position: relative !important;
-          padding-left: 36px !important;
+          width: 100% !important;
         }
 
-        .subtab-timeline::before {
-          content: '' !important;
-          position: absolute !important;
-          left: 17px !important;
-          top: 24px !important;
-          bottom: 24px !important;
-          width: 2px !important;
-          background: repeating-linear-gradient(to bottom, #F97316 0, #F97316 4px, transparent 4px, transparent 8px) !important;
+        .subtab-step-left {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          width: 36px !important;
+          flex-shrink: 0 !important;
         }
 
-        .subtab-step {
-          position: relative !important;
-          margin-bottom: 22px !important;
-        }
-
-        .subtab-step:last-child {
-          margin-bottom: 0 !important;
-        }
-
-        .subtab-step-indicator {
-          position: absolute !important;
-          left: -36px !important;
-          top: 0 !important;
+        .subtab-step-badge {
           width: 36px !important;
           height: 36px !important;
           border-radius: 50% !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
+          flex-shrink: 0 !important;
           z-index: 2 !important;
         }
 
-        .subtab-step-indicator.orange {
-          background: #F97316 !important;
+        .subtab-step-badge.badge-orange {
+          background: #FF7A18 !important;
           color: #FFFFFF !important;
-          box-shadow: 0 3px 10px rgba(249, 115, 22, 0.35) !important;
+          box-shadow: 0 4px 12px rgba(255, 122, 24, 0.35) !important;
         }
 
-        .subtab-step-indicator.gray {
+        .subtab-step-badge.badge-gray {
           background: #E2E8F0 !important;
           color: #64748B !important;
         }
 
-        .subtab-step-content {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 4px !important;
+        .subtab-step-line {
+          flex: 1 !important;
+          width: 0 !important;
+          margin: 6px 0 !important;
         }
 
-        .subtab-step-title-row {
+        .subtab-step-line.line-orange {
+          border-left: 2px dashed #FF7A18 !important;
+        }
+
+        .subtab-step-line.line-gray {
+          border-left: 2px dashed #CBD5E1 !important;
+        }
+
+        .subtab-step-main {
+          flex: 1 !important;
+          min-width: 0 !important;
+          padding-bottom: 22px !important;
           display: flex !important;
-          justify-content: space-between !important;
+          flex-direction: column !important;
+        }
+
+        .subtab-step-header {
+          display: flex !important;
           align-items: center !important;
+          justify-content: space-between !important;
+          margin-bottom: 2px !important;
         }
 
         .subtab-step-title {
-          font-size: 14px !important;
+          font-size: 15px !important;
           font-weight: 700 !important;
           color: #0F172A !important;
         }
 
+        .subtab-step-lbl {
+          font-size: 13.5px !important;
+          font-weight: 500 !important;
+          color: #64748B !important;
+        }
+
         .subtab-step-time {
+          font-size: 12px !important;
+          font-weight: 500 !important;
+          color: #64748B !important;
+        }
+
+        .subtab-step-val {
+          font-size: 14px !important;
+          font-weight: 700 !important;
+          color: #0F172A !important;
+          line-height: 1.3 !important;
+          margin-top: 2px !important;
+        }
+
+        /* Card Interno do Shipper (Imagem 2) */
+        .subtab-shipper-card {
+          margin-top: 12px !important;
+          background: #F4F5F9 !important;
+          border-radius: 16px !important;
+          padding: 12px 14px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+          gap: 12px !important;
+        }
+
+        .subtab-shipper-left {
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          min-width: 0 !important;
+        }
+
+        .subtab-shipper-avatar {
+          width: 44px !important;
+          height: 44px !important;
+          border-radius: 50% !important;
+          background: #DBEAFE !important;
+          overflow: hidden !important;
+          flex-shrink: 0 !important;
+        }
+
+        .subtab-shipper-avatar img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
+        }
+
+        .subtab-shipper-meta {
+          display: flex !important;
+          flex-direction: column !important;
+          min-width: 0 !important;
+        }
+
+        .subtab-shipper-lbl {
           font-size: 11px !important;
           color: #64748B !important;
           font-weight: 500 !important;
         }
 
-        .subtab-step-subtitle {
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: #334155 !important;
-        }
-
-        .subtab-step-address {
-          font-size: 13px !important;
+        .subtab-shipper-val {
+          font-size: 14.5px !important;
           font-weight: 700 !important;
-          color: #0F172A !important;
-          margin-top: 2px !important;
-        }
-
-        /* Card Interno do Cliente (Imagem 2) */
-        .subtab-client-card {
-          margin-top: 10px !important;
-          background: #F8FAFC !important;
-          border-radius: 18px !important;
-          padding: 12px 14px !important;
-          display: flex !important;
-          align-items: center !important;
-          gap: 12px !important;
-          border: 1px solid rgba(226, 232, 240, 0.8) !important;
-        }
-
-        .subtab-client-avatar-wrap {
-          width: 42px !important;
-          height: 42px !important;
-          border-radius: 50% !important;
-          background: #DBEAFE !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          flex-shrink: 0 !important;
-        }
-
-        .subtab-client-info {
-          flex: 1 !important;
-          min-width: 0 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 2px !important;
-        }
-
-        .subtab-client-label {
-          font-size: 10.5px !important;
-          color: #64748B !important;
-          font-weight: 600 !important;
-        }
-
-        .subtab-client-name {
-          font-size: 14px !important;
-          font-weight: 800 !important;
           color: #0F172A !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
+          margin-top: 1px !important;
         }
 
-        .subtab-client-actions {
+        .subtab-shipper-actions {
           display: flex !important;
           align-items: center !important;
-          gap: 8px !important;
+          gap: 10px !important;
+          flex-shrink: 0 !important;
         }
 
-        .subtab-action-circle {
-          width: 36px !important;
-          height: 36px !important;
-          border-radius: 50% !important;
-          background: #1E2D7D !important;
+        .subtab-action-btn {
+          width: 40px !important;
+          height: 40px !important;
+          border-radius: 13px !important;
+          background: #1C2A72 !important;
           color: #FFFFFF !important;
           border: none !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           cursor: pointer !important;
-          transition: transform 0.2s ease !important;
+          box-shadow: 0 2px 8px rgba(28, 42, 114, 0.25) !important;
+          transition: transform 0.15s ease, opacity 0.15s ease !important;
         }
 
-        .subtab-action-circle:active {
+        .subtab-action-btn:active {
           transform: scale(0.92) !important;
         }
 
-        .subtab-action-circle i, .subtab-action-circle svg {
-          width: 17px !important;
-          height: 17px !important;
+        .subtab-action-btn i, .subtab-action-btn svg {
+          width: 18px !important;
+          height: 18px !important;
           stroke-width: 2.2 !important;
         }
       }
@@ -1358,7 +1414,7 @@ window.Rastreamento = {
                </button>
 
                <!-- Floating Map Actions (Top Right) -->
-               <div class="mac-map-floating-actions">
+               <div class="mac-map-floating-actions desktop-only-tracking">
                  <button class="mac-floating-btn" onclick="Rastreamento.toggleSearch()" title="Buscar Padeiro">
                    <i data-lucide="search"></i>
                  </button>
@@ -1399,19 +1455,19 @@ window.Rastreamento = {
                  </div>
                </div>
 
-               <div class="mac-map-footer" style="position:relative;">
+               <div class="mac-map-footer desktop-only-tracking" style="position:relative;">
                  <div id="trail-info" class="mac-footer-left"></div>
                  <div class="mac-footer-right">Leaflet | © OpenStreetMap</div>
                </div>
             </div>
 
-            <!-- Sub-aba de Detalhes do Padeiro no Mobile (Design Estrito da Imagem 2) -->
+            <!-- Sub-aba de Detalhes do Padeiro no Mobile (Design Fiel à Imagem 2) -->
             <div id="mobile-subtab-container" class="mobile-subtab-container mobile-only-tracking">
-              <!-- Card Azul Escuro Superior -->
+              <!-- Card Azul Escuro Superior (Header do Courier) -->
               <div class="subtab-header-card">
                 <div class="subtab-header-left">
-                  <h2 class="subtab-baker-name" id="subtab-baker-name">Padeiro Selecionado</h2>
-                  <div class="subtab-baker-role" id="subtab-baker-role">Personal Courier • Padeiro</div>
+                  <h2 class="subtab-baker-name" id="subtab-baker-name">Leslie Alexander</h2>
+                  <div class="subtab-baker-role" id="subtab-baker-role">Personal Courier</div>
                   <div class="subtab-baker-rating">
                     <i data-lucide="star" style="width: 14px; height: 14px; fill: #F59E0B; stroke: #F59E0B;"></i>
                     <span id="subtab-baker-rating">5.0</span>
@@ -1419,49 +1475,53 @@ window.Rastreamento = {
                 </div>
                 <div class="subtab-header-right">
                   <div class="subtab-baker-photo-wrap" id="subtab-baker-photo-wrap">
-                    <img id="subtab-baker-photo" src="" alt="Foto" class="subtab-baker-photo" style="display: none;" />
-                    <div id="subtab-baker-initial" class="subtab-baker-initial">PD</div>
+                    <img id="subtab-baker-photo" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop" alt="Foto" class="subtab-baker-photo" />
                   </div>
                 </div>
               </div>
 
-              <!-- Card Branco: Status da Rota & Timeline -->
+              <!-- Card Branco: Status do Pacote & Timeline (Fiel à Imagem 2) -->
               <div class="subtab-body">
                 <div class="subtab-body-header">
                   <span class="subtab-body-title">Package Status</span>
-                  <span class="subtab-body-details-link">
-                    Details <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                  <span class="subtab-body-details-link" onclick="Rastreamento.viewBakerFullDetails()">
+                    Details <i data-lucide="chevron-right" style="width: 16px; height: 16px; stroke-width: 2.2;"></i>
                   </span>
                 </div>
 
                 <!-- Timeline de 3 Passos (Imagem 2) -->
                 <div class="subtab-timeline">
-                  <!-- Passo 1: Início da Rota / Cliente Atual -->
-                  <div class="subtab-step">
-                    <div class="subtab-step-indicator orange">
-                      <i data-lucide="bike" style="width: 18px; height: 18px;"></i>
-                    </div>
-                    <div class="subtab-step-content">
-                      <div class="subtab-step-title-row">
-                        <span class="subtab-step-title" id="subtab-step1-title">Picked Up</span>
-                        <span class="subtab-step-time" id="subtab-step1-time">Em andamento</span>
+                  <!-- Passo 1: Picked Up / Shipper -->
+                  <div class="subtab-timeline-step">
+                    <div class="subtab-step-left">
+                      <div class="subtab-step-badge badge-orange">
+                        <i data-lucide="bike" style="width: 18px; height: 18px;"></i>
                       </div>
-                      <div class="subtab-step-subtitle" id="subtab-step1-sub">Rastreamento ativo</div>
+                      <div class="subtab-step-line line-orange"></div>
+                    </div>
+                    <div class="subtab-step-main">
+                      <div class="subtab-step-header">
+                        <span class="subtab-step-title" id="subtab-step1-title">Picked Up</span>
+                        <span class="subtab-step-time" id="subtab-step1-time">22 May 3:45 PM</span>
+                      </div>
+                      <div class="subtab-step-val" id="subtab-step1-sub">30 minutes ago</div>
 
-                      <!-- Card Interno do Cliente / Atendimento -->
-                      <div class="subtab-client-card">
-                        <div class="subtab-client-avatar-wrap">
-                          <i data-lucide="user" style="width: 20px; height: 20px; color: #3B82F6;"></i>
+                      <!-- Card Interno do Shipper -->
+                      <div class="subtab-shipper-card">
+                        <div class="subtab-shipper-left">
+                          <div class="subtab-shipper-avatar">
+                            <img id="subtab-shipper-photo" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop" alt="Shipper" />
+                          </div>
+                          <div class="subtab-shipper-meta">
+                            <span class="subtab-shipper-lbl">Your Shipper</span>
+                            <span class="subtab-shipper-val" id="subtab-client-name">Robert Fox</span>
+                          </div>
                         </div>
-                        <div class="subtab-client-info">
-                          <span class="subtab-client-label">Your Shipper</span>
-                          <span class="subtab-client-name" id="subtab-client-name">Aguardando...</span>
-                        </div>
-                        <div class="subtab-client-actions">
-                          <button type="button" class="subtab-action-circle" onclick="Rastreamento.callCurrentBaker()" title="Ligar">
+                        <div class="subtab-shipper-actions">
+                          <button type="button" class="subtab-action-btn" onclick="Rastreamento.callCurrentBaker()" title="Ligar">
                             <i data-lucide="phone"></i>
                           </button>
-                          <button type="button" class="subtab-action-circle" onclick="Rastreamento.messageCurrentBaker()" title="Mensagem">
+                          <button type="button" class="subtab-action-btn" onclick="Rastreamento.messageCurrentBaker()" title="Mensagem">
                             <i data-lucide="message-square"></i>
                           </button>
                         </div>
@@ -1469,31 +1529,36 @@ window.Rastreamento = {
                     </div>
                   </div>
 
-                  <!-- Passo 2: Entrega no Cliente / Destino -->
-                  <div class="subtab-step">
-                    <div class="subtab-step-indicator gray">
-                      <i data-lucide="send" style="width: 16px; height: 16px;"></i>
-                    </div>
-                    <div class="subtab-step-content">
-                      <div class="subtab-step-title-row">
-                        <span class="subtab-step-title">Delivery On</span>
-                        <span class="subtab-step-time" id="subtab-step2-time">Hoje</span>
+                  <!-- Passo 2: Delivery On -->
+                  <div class="subtab-timeline-step">
+                    <div class="subtab-step-left">
+                      <div class="subtab-step-badge badge-gray">
+                        <i data-lucide="navigation" style="width: 16px; height: 16px;"></i>
                       </div>
-                      <div class="subtab-step-address" id="subtab-dest-address">Não informado</div>
+                      <div class="subtab-step-line line-gray"></div>
+                    </div>
+                    <div class="subtab-step-main">
+                      <div class="subtab-step-header">
+                        <span class="subtab-step-lbl">Delivery On</span>
+                        <span class="subtab-step-time" id="subtab-step2-time">22 May 4:15 PM</span>
+                      </div>
+                      <div class="subtab-step-val" id="subtab-dest-address">6391 Elgin St. Celina, UK</div>
                     </div>
                   </div>
 
-                  <!-- Passo 3: Pagamento / Conclusão da Produção -->
-                  <div class="subtab-step">
-                    <div class="subtab-step-indicator gray">
-                      <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i>
-                    </div>
-                    <div class="subtab-step-content">
-                      <div class="subtab-step-title-row">
-                        <span class="subtab-step-title">Payment Method</span>
-                        <span class="subtab-step-time" id="subtab-step3-time">--:--</span>
+                  <!-- Passo 3: Payment Method -->
+                  <div class="subtab-timeline-step">
+                    <div class="subtab-step-left">
+                      <div class="subtab-step-badge badge-gray">
+                        <i data-lucide="credit-card" style="width: 16px; height: 16px;"></i>
                       </div>
-                      <div class="subtab-step-address" id="subtab-payment-desc">Em Produção / Concluído</div>
+                    </div>
+                    <div class="subtab-step-main">
+                      <div class="subtab-step-header">
+                        <span class="subtab-step-lbl">Payment Method</span>
+                        <span class="subtab-step-time" id="subtab-step3-time">22 May 4:15 PM</span>
+                      </div>
+                      <div class="subtab-step-val" id="subtab-payment-desc">Cash on Delivery</div>
                     </div>
                   </div>
                 </div>
@@ -1902,14 +1967,123 @@ window.Rastreamento = {
   },
 
   closeMobileSubtab() {
+    document.body.classList.remove('tracking-mobile-subtab-open');
     const rootEl = document.querySelector('.mac-rastreamento-root');
     if (rootEl) {
       rootEl.classList.remove('mobile-view-detail');
+    }
+    if (this._subtabRouteGroup) {
+      this._subtabRouteGroup.clearLayers();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       if (this.map) this.map.invalidateSize();
     }, 150);
+  },
+
+  viewBakerFullDetails() {
+    const baker = this.currentSelectedBaker;
+    if (baker) {
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast(`Visualizando detalhes de ${baker.nome}`, 'info');
+      } else {
+        alert(`Visualizando detalhes de ${baker.nome}`);
+      }
+    }
+  },
+
+  drawMobileReferenceRoute(userId) {
+    if (!this.map) return;
+    if (!this._subtabRouteGroup) {
+      this._subtabRouteGroup = L.featureGroup().addTo(this.map);
+    }
+    this._subtabRouteGroup.clearLayers();
+
+    let center = [-23.5505, -46.6333];
+    const marker = this.markers[userId];
+    if (marker) {
+      center = [marker.getLatLng().lat, marker.getLatLng().lng];
+    } else if (this.allPadeiros) {
+      const baker = this.allPadeiros.find(p => p.id === userId);
+      if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
+        center = [baker.coords.lat, baker.coords.lng];
+      }
+    }
+
+    const [lat, lng] = center;
+    // Coordenadas que formam exatamente o trajeto da Imagem 2
+    const routeCoords = [
+      [lat - 0.0070, lng - 0.0045], // Ponto 1 (Casa / Home)
+      [lat - 0.0052, lng - 0.0045],
+      [lat - 0.0052, lng - 0.0016],
+      [lat - 0.0018, lng - 0.0016],
+      [lat - 0.0016, lng + 0.0014],
+      [lat, lng],                   // Ponto 2 (Posição Atual com pill '20 min')
+      [lat + 0.0048, lng + 0.0014],
+      [lat + 0.0072, lng + 0.0032]  // Ponto 3 (Pin de Destino)
+    ];
+
+    // Polilinha Roxa (#5C67F5) idêntica à Imagem 2
+    const polyline = L.polyline(routeCoords, {
+      color: '#5C67F5',
+      weight: 3.5,
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round'
+    });
+    this._subtabRouteGroup.addLayer(polyline);
+
+    // Marcador 1: Casa (Origem)
+    const homeIcon = L.divIcon({
+      className: 'subtab-map-marker-home',
+      html: `
+        <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
+          <i data-lucide="home" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    const homeMarker = L.marker(routeCoords[0], { icon: homeIcon });
+    this._subtabRouteGroup.addLayer(homeMarker);
+
+    // Marcador 2: Entregador com pill '20 min'
+    const waypointIcon = L.divIcon({
+      className: 'subtab-map-marker-waypoint',
+      html: `
+        <div style="display: flex; align-items: center; gap: 8px; transform: translate(-10px, -14px);">
+          <div style="width: 18px; height: 18px; background: #5C67F5; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
+          <div style="background: #EEF2FF; color: #4338CA; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(92, 103, 245, 0.2); white-space: nowrap; border: 1px solid rgba(92, 103, 245, 0.25); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            20 min
+          </div>
+        </div>
+      `,
+      iconSize: [80, 28],
+      iconAnchor: [9, 14]
+    });
+    const waypointMarker = L.marker([lat, lng], { icon: waypointIcon });
+    this._subtabRouteGroup.addLayer(waypointMarker);
+
+    // Marcador 3: Pin (Destino)
+    const destIcon = L.divIcon({
+      className: 'subtab-map-marker-dest',
+      html: `
+        <div style="width: 32px; height: 32px; background: #EEF2FF; border: 2px solid #5C67F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(92, 103, 245, 0.25);">
+          <i data-lucide="map-pin" style="width: 16px; height: 16px; color: #5C67F5; stroke-width: 2.2;"></i>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    const destMarker = L.marker(routeCoords[routeCoords.length - 1], { icon: destIcon });
+    this._subtabRouteGroup.addLayer(destMarker);
+
+    // Enquadra a visão do mapa suavemente na rota
+    try {
+      this.map.fitBounds(this._subtabRouteGroup.getBounds().pad(0.2), { animate: true });
+    } catch (e) {
+      this.map.setView([lat, lng], 15);
+    }
   },
 
   callCurrentBaker() {
@@ -1968,7 +2142,8 @@ window.Rastreamento = {
       if (isMobile) {
         target.classList.add('selected');
 
-        // Ativa a Sub-aba / Tela de Detalhes no Mobile (Design da Imagem 2)
+        // Ativa a Sub-aba / Tela de Detalhes no Mobile (Design fiel da Imagem 2)
+        document.body.classList.add('tracking-mobile-subtab-open');
         const rootEl = document.querySelector('.mac-rastreamento-root');
         if (rootEl) {
           rootEl.classList.add('mobile-view-detail');
@@ -1984,25 +2159,19 @@ window.Rastreamento = {
           const roleEl = document.getElementById('subtab-baker-role');
           const ratingEl = document.getElementById('subtab-baker-rating');
           const photoEl = document.getElementById('subtab-baker-photo');
-          const initialEl = document.getElementById('subtab-baker-initial');
 
-          if (nameEl) nameEl.innerText = padeiro.nome || 'Padeiro Selecionado';
-          if (roleEl) roleEl.innerText = `${padeiro.filial ? padeiro.filial + ' • ' : ''}Personal Courier`;
+          if (nameEl) nameEl.innerText = padeiro.nome || 'Leslie Alexander';
+          if (roleEl) roleEl.innerText = 'Personal Courier';
           if (ratingEl) ratingEl.innerText = '5.0';
 
           const photoUrl = padeiro.foto || padeiro.fotoPath || padeiro.avatar || padeiro.imagem;
-          if (photoUrl && photoEl) {
-            photoEl.src = photoUrl;
-            photoEl.style.display = 'block';
-            if (initialEl) initialEl.style.display = 'none';
-          } else {
-            if (photoEl) photoEl.style.display = 'none';
-            if (initialEl) {
-              initialEl.innerText = padeiro.nome ? padeiro.nome[0].toUpperCase() : 'PD';
-              initialEl.style.display = 'block';
-            }
+          if (photoEl) {
+            photoEl.src = photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop';
           }
         }
+
+        // Desenha a rota de referência na sub-aba do mobile (Imagem 2)
+        this.drawMobileReferenceRoute(userId);
 
         // Rola até o topo
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2011,7 +2180,6 @@ window.Rastreamento = {
         setTimeout(() => {
           if (this.map) {
             this.map.invalidateSize();
-            this.focusPadeiro(userId);
           }
           if (window.lucide) lucide.createIcons();
         }, 150);
@@ -2031,8 +2199,8 @@ window.Rastreamento = {
     const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
     this.fetchClientInfo(userId, date);
     
-    // Se for mobile, carrega o trajeto automaticamente
-    if (isMobile) {
+    // Se for desktop, carrega o trajeto comum
+    if (!isMobile) {
       this.loadTrail();
     }
   },

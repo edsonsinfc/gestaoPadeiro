@@ -266,6 +266,6 @@ exports.getPendingEmails = (req, res) => {
 
 exports.getGoogleConfig = (req, res) => {
   res.json({
-    clientId: GOOGLE_CLIENT_ID || '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com'
+    clientId: GOOGLE_CLIENT_ID || '222151940219-hv5np976c30anjd5p04abssp75rtmesp.apps.googleusercontent.com'
   });
 };

@@ -333,7 +333,7 @@ const Auth = {
       }
 
       // Obter Client ID dinamicamente do servidor ou usar fallback
-      let clientId = window.GOOGLE_CLIENT_ID || '222151940219-ithbdoleku13oqpo58qaglbmtddq1m02.apps.googleusercontent.com';
+      let clientId = window.GOOGLE_CLIENT_ID || '222151940219-hv5np976c30anjd5p04abssp75rtmesp.apps.googleusercontent.com';
       try {
         if (typeof API !== 'undefined' && typeof API.get === 'function') {
           const cfg = await API.get('/api/auth/google-config').catch(() => null);

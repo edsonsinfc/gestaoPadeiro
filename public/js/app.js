@@ -225,6 +225,7 @@ const App = {
     const isManagement = ['admin', 'gestor', 'gestor_geral', 'gestor_regional', 'master_gestor'].includes(user.role);
 
     const body = document.body;
+    body.classList.remove('tracking-mobile-subtab-open');
     if (isManagement) {
       body.classList.add('user-is-management');
       body.classList.remove('user-is-padeiro');
