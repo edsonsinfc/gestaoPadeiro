@@ -668,7 +668,13 @@ const OfflineManager = {
                   PadeiroAgenda.render();
                 }
               } else if (App.currentRoute === 'padeiro-atividade') {
-                if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+                const hasActiveData = typeof PadeiroFlow !== 'undefined' && (
+                  PadeiroFlow.isTakingPhoto ||
+                  (PadeiroFlow.selectedFiles && PadeiroFlow.selectedFiles.length > 0) ||
+                  (PadeiroFlow.selectedFotosBase64 && PadeiroFlow.selectedFotosBase64.length > 0) ||
+                  (PadeiroFlow.cartItems && Object.keys(PadeiroFlow.cartItems).length > 0)
+                );
+                if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && !hasActiveData && typeof PadeiroFlow.renderStep === 'function') {
                   console.log('🔄 Recarregando o seletor de tarefas (passo 0) após restabelecer conexão online...');
                   PadeiroFlow.renderStep();
                 }
@@ -920,8 +926,16 @@ const OfflineManager = {
         if (App.currentRoute !== 'padeiro-atividade') {
           App.renderPage(App.currentRoute);
         } else if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
-          console.log('🔄 Recarregando o seletor de tarefas (passo 0) após sincronização offline...');
-          PadeiroFlow.renderStep();
+          const hasActiveData = (
+            PadeiroFlow.isTakingPhoto ||
+            (PadeiroFlow.selectedFiles && PadeiroFlow.selectedFiles.length > 0) ||
+            (PadeiroFlow.selectedFotosBase64 && PadeiroFlow.selectedFotosBase64.length > 0) ||
+            (PadeiroFlow.cartItems && Object.keys(PadeiroFlow.cartItems).length > 0)
+          );
+          if (!hasActiveData) {
+            console.log('🔄 Recarregando o seletor de tarefas (passo 0) após sincronização offline...');
+            PadeiroFlow.renderStep();
+          }
         }
       }
     }

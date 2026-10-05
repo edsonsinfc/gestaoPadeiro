@@ -140,9 +140,14 @@ const App = {
         }
       }
       if (this.currentRoute === 'padeiro-atividade') {
-        if (typeof PadeiroFlow !== 'undefined' && (!PadeiroFlow.activity || !PadeiroFlow.activity.id || PadeiroFlow.currentStep === 0)) {
-          console.log('⚡ [App Lifecycle] Re-sincronizando PadeiroFlow imediatamente...');
-          PadeiroFlow.render();
+        if (typeof PadeiroFlow !== 'undefined') {
+          const isFlowMounted = !!document.getElementById('kg-items') || !!document.getElementById('flow-cliente') || !!document.getElementById('flow-wizard');
+          if (isFlowMounted || PadeiroFlow.isTakingPhoto || (PadeiroFlow.activity && (PadeiroFlow.activity.id || PadeiroFlow.activity.clienteId))) {
+            console.log('⚡ [App Lifecycle] PadeiroFlow ativo na tela. Mantendo estado.');
+          } else {
+            console.log('⚡ [App Lifecycle] Sincronizando PadeiroFlow inicial...');
+            PadeiroFlow.render();
+          }
         }
       } else if (this.currentRoute === 'padeiro-agenda') {
         if (typeof PadeiroAgenda !== 'undefined' && typeof PadeiroAgenda.render === 'function') {

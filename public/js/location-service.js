@@ -58,12 +58,14 @@ const LocationService = {
         if (isMyTask || isGeneralUpdate || isStaff) {
           console.log('⚡ [Socket] Atualização de agenda relevante! Sincronizando tela em tempo real...');
           
-          // Se estiver na tela de registro de atividade (padeiro-atividade), recarrega imediatamente!
+          // Se estiver na tela de registro de atividade (padeiro-atividade), recarrega se ainda não estiver montada
           if (typeof App !== 'undefined' && App.currentRoute === 'padeiro-atividade') {
             if (typeof PadeiroFlow !== 'undefined') {
-              // Se não tiver iniciado produção ativa (está na tela vazia ou no passo inicial), recarrega já!
-              if (!PadeiroFlow.activity || !PadeiroFlow.activity.id || PadeiroFlow.currentStep === 0) {
-                console.log('⚡ [Socket] Executando PadeiroFlow.render() imediatamente!');
+              const isFlowMounted = !!document.getElementById('kg-items') || !!document.getElementById('flow-cliente') || !!document.getElementById('flow-wizard');
+              if (isFlowMounted || PadeiroFlow.isTakingPhoto || (PadeiroFlow.activity && (PadeiroFlow.activity.id || PadeiroFlow.activity.clienteId))) {
+                // Não reinicia se o usuário estiver ativo na produção ou tirando fotos
+              } else {
+                console.log('⚡ [Socket] Executando PadeiroFlow.render() inicial...');
                 PadeiroFlow.render();
               }
             }

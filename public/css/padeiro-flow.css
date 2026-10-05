@@ -1819,4 +1819,11 @@ body.pf-tutorial-active .pf-tutorial-tooltip {
   }
 }
 
+/* Garantia de visibilidade do Toast sobre qualquer modal */
+#toast-container,
+.toast-container {
+  z-index: 100000000 !important;
+}
+
+
 

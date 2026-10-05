@@ -446,7 +446,7 @@ const PadeiroFlow = {
     }
     this.pendingPreviousResume = null;
     this.pendingResume = null;
-    localStorage.removeItem('brago_padeiro_draft');
+    this.clearDraftLocally();
     await this.render();
   },
 
@@ -552,7 +552,7 @@ const PadeiroFlow = {
     this.backgroundUploadPromise = null;
     this.backgroundSignaturePromise = null;
     this.currentStep = 0;
-    localStorage.removeItem('brago_padeiro_draft');
+    this.clearDraftLocally();
     await this.render();
   },
 
@@ -1194,42 +1194,70 @@ const PadeiroFlow = {
 
     const staticInput = document.getElementById('camera-input-static');
     
-    // Normal Flow (no crash) - async compression
+    // Normal Flow (no crash) - visualização instantânea (0ms) e compressão em segundo plano
     staticInput.onchange = async (e) => {
+      PadeiroFlow.isTakingPhoto = true;
       const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-      
-      if (typeof Components !== 'undefined' && Components.toast) {
-        Components.toast('Otimizando fotos...', 'info', 2000);
+      if (files.length === 0) {
+        PadeiroFlow.isTakingPhoto = false;
+        return;
       }
       
-      const compressedFiles = await Promise.all(
-        files.map(async (f) => {
-          try {
-            return await PadeiroFlow.compressImage(f);
-          } catch (err) {
-            console.error('Erro ao comprimir imagem, usando original:', err);
-            return f;
-          }
-        })
-      );
-      
-      this.selectedFiles = this.selectedFiles || [];
-      this.selectedFotosBase64 = this.selectedFotosBase64 || [];
-      compressedFiles.forEach(f => {
-        this.selectedFiles.push(f);
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const b64 = ev.target.result;
-          PadeiroFlow.renderPhotoPreviewBase64(b64, f.name);
-          this.selectedFotosBase64.push({ name: f.name, data: b64, type: f.type });
-          PadeiroFlow.saveDraftLocally();
-        };
-        reader.readAsDataURL(f);
-      });
-      
+      PadeiroFlow.selectedFiles = PadeiroFlow.selectedFiles || [];
+      PadeiroFlow.selectedFotosBase64 = PadeiroFlow.selectedFotosBase64 || [];
+
+      // 1. Renderização INSTANTÂNEA no grid para resposta imediata ao usuário (zero delay)
+      const pendingItems = [];
+      for (const f of files) {
+        const uniqueId = `foto_${Date.now()}_${Math.random().toString(36).substr(2, 6)}.jpg`;
+        let instantUrl = '';
+        try {
+          instantUrl = URL.createObjectURL(f);
+        } catch (objErr) {
+          instantUrl = '';
+        }
+        if (instantUrl) {
+          PadeiroFlow.renderPhotoPreviewBase64(instantUrl, uniqueId, true);
+        }
+        pendingItems.push({ file: f, uniqueId, instantUrl });
+      }
+
+      // 2. Liberar o input imediatamente para que a próxima foto possa ser tirada sem travas
       e.target.value = '';
-      this.saveDraftLocally();
+
+      // 3. Processamento assíncrono em segundo plano (compressão e Base64)
+      for (const item of pendingItems) {
+        try {
+          let compressed = item.file;
+          try {
+            compressed = await PadeiroFlow.compressImage(item.file);
+          } catch (compErr) {
+            console.warn('[PadeiroFlow] Usando foto original sem compressão:', compErr);
+          }
+
+          const b64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target.result);
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(compressed);
+          });
+
+          if (b64) {
+            PadeiroFlow.selectedFiles.push(compressed);
+            PadeiroFlow.selectedFotosBase64.push({ name: item.uniqueId, data: b64, type: compressed.type || 'image/jpeg' });
+            PadeiroFlow.renderPhotoPreviewBase64(b64, item.uniqueId, false);
+          }
+        } catch (procErr) {
+          console.error('[PadeiroFlow] Erro ao processar foto:', procErr);
+        } finally {
+          if (item.instantUrl) {
+            try { URL.revokeObjectURL(item.instantUrl); } catch (e) {}
+          }
+        }
+      }
+
+      PadeiroFlow.saveDraftLocally();
+      PadeiroFlow.isTakingPhoto = false;
     };
 
     // Crash Recovery Flow: Check if OS restored files after OOM kill
@@ -1272,8 +1300,8 @@ const PadeiroFlow = {
       }, 100);
     }
 
-    // Launch onboarding tutorial (only once)
-    setTimeout(() => this.startTutorial(), 800);
+    // Tutorial sob demanda: nunca disparado automaticamente no fluxo de produção real
+    // para evitar que simulações sobrescrevam ou limpem os produtos reais do padeiro
   },
 
   filterProducts(query) {
@@ -1721,7 +1749,15 @@ const PadeiroFlow = {
                 <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
                   <div class="pf-ios-qty-wrap">
                     <div class="pf-ios-qty-btn" onclick="PadeiroFlow.changeCartItemQty('${id}', -1)" style="cursor: pointer; color: #1f4cff;">-</div>
-                    <input type="text" class="pf-ios-qty-val" value="${item.v}" readonly>
+                    <input type="text" 
+                           inputmode="decimal"
+                           class="pf-ios-qty-val" 
+                           id="pf-qty-input-${id}"
+                           value="${item.v}" 
+                           onfocus="this.select()"
+                           oninput="PadeiroFlow.updateCartItemQty('${id}', this.value)"
+                           onchange="PadeiroFlow.updateCartItemQty('${id}', this.value)"
+                           style="width: 52px; text-align: center; font-weight: 700; border: none; background: transparent; font-size: 15px; outline: none; color: #1e293b;">
                     <div class="pf-ios-qty-btn" onclick="PadeiroFlow.changeCartItemQty('${id}', 1)" style="cursor: pointer; color: #1f4cff;">+</div>
                   </div>
                   <select class="pf-ios-unit-select" onchange="PadeiroFlow.changeCartItemUnit('${id}', this.value)" style="margin-top: 4px; padding: 2px 6px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 4px; color: #1f4cff; font-weight: 800; background: transparent; outline: none; text-transform: uppercase;">
@@ -1817,6 +1853,8 @@ const PadeiroFlow = {
   closeCartModal() {
     const overlay = document.getElementById('pf-cart-modal-overlay');
     if (overlay) overlay.classList.remove('active');
+    this.calculateTotals();
+    this.saveDraftLocally();
   },
 
   removeCartItem(id) {
@@ -1825,6 +1863,32 @@ const PadeiroFlow = {
     this.calculateTotals();
     this.saveDraftLocally();
     this.openCartModal(); // Refresh modal
+  },
+
+  updateCartItemQty(id, val) {
+    this.cartItems = this.cartItems || {};
+    if (!this.cartItems[id]) return;
+
+    const parsed = parseFloat(String(val).replace(',', '.'));
+    if (!isNaN(parsed) && parsed >= 0) {
+      this.cartItems[id].v = parsed;
+    } else if (val === '') {
+      this.cartItems[id].v = 0;
+    }
+    this.calculateTotals();
+    this.saveDraftLocally();
+
+    const totalKgEl = document.querySelector('.pf-ios-total-row span:last-child');
+    if (totalKgEl) {
+      let totalKg = 0;
+      Object.keys(this.cartItems).forEach(k => {
+        const it = this.cartItems[k];
+        if (it.un === 'KG' || it.un === 'L') {
+          totalKg += parseFloat(String(it.v).replace(',', '.')) || 0;
+        }
+      });
+      totalKgEl.innerText = totalKg > 0 ? `${totalKg.toFixed(2).replace('.', ',')} KG` : '--';
+    }
   },
 
   changeCartItemQty(id, delta) {
@@ -1841,7 +1905,23 @@ const PadeiroFlow = {
     this.cartItems[id].v = parseFloat(val.toFixed(2));
     this.calculateTotals();
     this.saveDraftLocally();
-    this.openCartModal(); // Refresh modal
+
+    const inputEl = document.getElementById(`pf-qty-input-${id}`);
+    if (inputEl) {
+      inputEl.value = this.cartItems[id].v;
+    }
+
+    const totalKgEl = document.querySelector('.pf-ios-total-row span:last-child');
+    if (totalKgEl) {
+      let totalKg = 0;
+      Object.keys(this.cartItems).forEach(k => {
+        const it = this.cartItems[k];
+        if (it.un === 'KG' || it.un === 'L') {
+          totalKg += parseFloat(String(it.v).replace(',', '.')) || 0;
+        }
+      });
+      totalKgEl.innerText = totalKg > 0 ? `${totalKg.toFixed(2).replace('.', ',')} KG` : '--';
+    }
   },
 
 
@@ -1976,7 +2056,15 @@ const PadeiroFlow = {
   addKgRow() {},
   removeKgRow() {},
 
+  clearDraftLocally() {
+    localStorage.removeItem('brago_padeiro_draft');
+    if (typeof OfflineManager !== 'undefined' && OfflineManager.cacheData) {
+      OfflineManager.cacheData('brago_padeiro_draft_photos', []).catch(() => {});
+    }
+  },
+
   async triggerCamera() {
+    PadeiroFlow.isTakingPhoto = true;
     this.saveDraftLocally();
     
     const isCapacitor = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
@@ -1998,13 +2086,23 @@ const PadeiroFlow = {
           const response = await fetch(image.webPath);
           const blob = await response.blob();
           
-          const filename = `foto_${Date.now()}.jpg`;
+          const filename = `foto_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.jpg`;
           const file = new File([blob], filename, { type: 'image/jpeg' });
           
-          // Converter para Data URL (Base64) para renderizar a miniatura na hora
+          // Pré-visualização instantânea (0ms)
+          let instantUrl = '';
+          try {
+            instantUrl = URL.createObjectURL(blob);
+          } catch(e) {}
+          if (instantUrl) {
+            this.renderPhotoPreviewBase64(instantUrl, filename, true);
+          }
+
+          // Converter para Data URL (Base64) de forma não-bloqueante
           const dataUrl = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve('');
             reader.readAsDataURL(blob);
           });
 
@@ -2014,9 +2112,12 @@ const PadeiroFlow = {
           this.selectedFiles.push(file);
           this.selectedFotosBase64.push({ name: filename, data: dataUrl, type: 'image/jpeg' });
           
-          this.renderPhotoPreviewBase64(dataUrl, filename);
+          this.renderPhotoPreviewBase64(dataUrl, filename, false);
+          if (instantUrl) {
+            try { URL.revokeObjectURL(instantUrl); } catch(e) {}
+          }
           this.saveDraftLocally();
-          console.log('[Câmera Nativa] Foto tirada e comprimida com sucesso!');
+          console.log('[Câmera Nativa] Foto tirada e salva com sucesso!');
           return;
         } catch (err) {
           if (err.message && (err.message.includes('User cancelled') || err.message.includes('cancelled'))) {
@@ -2024,12 +2125,27 @@ const PadeiroFlow = {
             return;
           }
           console.error('[Câmera Nativa] Erro ao tirar foto nativa:', err);
+        } finally {
+          PadeiroFlow.isTakingPhoto = false;
         }
       }
     }
 
     const staticInput = document.getElementById('camera-input-static');
-    if (staticInput) staticInput.click();
+    if (staticInput) {
+      staticInput.value = '';
+      staticInput.click();
+      
+      // Fallback: se o usuário abrir e fechar a câmera sem tirar foto, resetar flag após retorno
+      const resetFlagOnCancel = () => {
+        setTimeout(() => {
+          if (PadeiroFlow.isTakingPhoto && (!staticInput.files || staticInput.files.length === 0)) {
+            PadeiroFlow.isTakingPhoto = false;
+          }
+        }, 1500);
+      };
+      window.addEventListener('focus', resetFlagOnCancel, { once: true });
+    }
   },
 
   async handleRestoredPhoto(photoData) {
@@ -2042,48 +2158,27 @@ const PadeiroFlow = {
       const response = await fetch(photoData.webPath);
       const blob = await response.blob();
       
-      const filename = `foto_restored_${Date.now()}.jpg`;
+      const filename = `foto_restored_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.jpg`;
       const file = new File([blob], filename, { type: 'image/jpeg' });
       
       const dataUrl = await new Promise((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => resolve('');
         reader.readAsDataURL(blob);
       });
-
-      // Se o draft ainda não foi restaurado na memória, vamos ler do localStorage primeiro
-      // para não perder os produtos que estavam salvos!
-      const draftStr = localStorage.getItem('brago_padeiro_draft');
-      if (draftStr && (!this.cartItems || Object.keys(this.cartItems).length === 0)) {
-        try {
-          const draft = JSON.parse(draftStr);
-          this.cartItems = {};
-          if (draft.items) {
-            draft.items.forEach(item => {
-              this.cartItems[item.id] = { v: item.v, un: item.un };
-            });
-          }
-          if (draft.fotosBase64) {
-            this.selectedFotosBase64 = draft.fotosBase64;
-            this.selectedFiles = draft.fotosBase64.map(b64 => this.dataURLtoFile(b64.data, b64.name, b64.type));
-          }
-        } catch(e) {
-          console.warn("Erro ao pré-restaurar rascunho em handleRestoredPhoto", e);
-        }
-      }
 
       this.selectedFiles = this.selectedFiles || [];
       this.selectedFotosBase64 = this.selectedFotosBase64 || [];
       
       // Evitar duplicados
-      if (!this.selectedFotosBase64.some(f => f.data === dataUrl)) {
+      if (!this.selectedFotosBase64.some(f => f.data === dataUrl || f.name === filename)) {
         this.selectedFiles.push(file);
         this.selectedFotosBase64.push({ name: filename, data: dataUrl, type: 'image/jpeg' });
         
-        // Se estiver no step de produção e o grid de fotos estiver visível no DOM
         const grid = document.getElementById('foto-preview-grid');
         if (grid) {
-          this.renderPhotoPreviewBase64(dataUrl, filename);
+          this.renderPhotoPreviewBase64(dataUrl, filename, false);
         }
         
         this.saveDraftLocally();
@@ -2104,39 +2199,80 @@ const PadeiroFlow = {
       v: this.cartItems[id].v,
       un: this.cartItems[id].un === 'L' ? 'KG' : this.cartItems[id].un
     }));
-    const draft = { totalKg, items, fotosBase64: this.selectedFotosBase64 || [] };
+
+    const fotos = this.selectedFotosBase64 || [];
+    const draft = { totalKg, items };
+
+    // 1. Tentar salvar metadados e fotos no localStorage
     try {
-      localStorage.setItem('brago_padeiro_draft', JSON.stringify(draft));
+      localStorage.setItem('brago_padeiro_draft', JSON.stringify({ ...draft, fotosBase64: fotos }));
     } catch(e) {
-      console.warn("localStorage quota excedida, salvando sem fotos", e);
-      const draftNoFotos = { totalKg, items, fotosBase64: [] };
-      localStorage.setItem('brago_padeiro_draft', JSON.stringify(draftNoFotos));
+      console.warn("[PadeiroFlow Draft] Quota do localStorage excedida. Salvando metadados no localStorage e fotos no IndexedDB.");
+      try {
+        localStorage.setItem('brago_padeiro_draft', JSON.stringify({ ...draft, fotosBase64: [] }));
+      } catch(e2) {}
+    }
+
+    // 2. SEMPRE salvar cópia de segurança em IndexedDB (sem limite de 5MB do localStorage)
+    if (typeof OfflineManager !== 'undefined' && OfflineManager.cacheData) {
+      OfflineManager.cacheData('brago_padeiro_draft_photos', fotos).catch(err => {
+        console.warn('[PadeiroFlow Draft] Erro ao salvar fotos no IndexedDB:', err);
+      });
     }
   },
 
-  restoreDraftLocally() {
+  async restoreDraftLocally() {
     const draftStr = localStorage.getItem('brago_padeiro_draft');
-    if (!draftStr) return;
-    try {
-      const draft = JSON.parse(draftStr);
-      this.cartItems = {};
-      
-      if (draft.items && draft.items.length > 0) {
-        draft.items.forEach(item => {
-          this.cartItems[item.id] = { v: item.v, un: item.un };
-        });
+    let draft = null;
+    if (draftStr) {
+      try {
+        draft = JSON.parse(draftStr);
+        if (!this.cartItems || Object.keys(this.cartItems).length === 0) {
+          this.cartItems = {};
+          if (draft.items && draft.items.length > 0) {
+            draft.items.forEach(item => {
+              this.cartItems[item.id] = { v: item.v, un: item.un };
+            });
+          }
+        }
+      } catch(e) {}
+    }
+
+    // Preservar estritamente fotos já presentes na memória RAM! Nunca sobrescrever dados em memória com array vazio
+    this.selectedFotosBase64 = this.selectedFotosBase64 || [];
+    this.selectedFiles = this.selectedFiles || [];
+
+    if (this.selectedFotosBase64.length === 0) {
+      let fotosToRestore = [];
+      if (draft && draft.fotosBase64 && draft.fotosBase64.length > 0) {
+        fotosToRestore = draft.fotosBase64;
+      } else if (typeof OfflineManager !== 'undefined' && OfflineManager.getCachedData) {
+        try {
+          const idbPhotos = await OfflineManager.getCachedData('brago_padeiro_draft_photos');
+          if (Array.isArray(idbPhotos) && idbPhotos.length > 0) {
+            fotosToRestore = idbPhotos;
+          }
+        } catch(e) {}
       }
-      
-      if (draft.fotosBase64 && draft.fotosBase64.length > 0) {
-        this.selectedFotosBase64 = draft.fotosBase64;
-        this.selectedFiles = draft.fotosBase64.map(b64 => this.dataURLtoFile(b64.data, b64.name, b64.type));
+
+      if (fotosToRestore.length > 0 && this.selectedFotosBase64.length === 0) {
+        this.selectedFotosBase64 = fotosToRestore;
+        this.selectedFiles = fotosToRestore.map(b64 => this.dataURLtoFile(b64.data, b64.name, b64.type));
+        
+        const grid = document.getElementById('foto-preview-grid');
+        if (grid) {
+          fotosToRestore.forEach(b64 => {
+            this.renderPhotoPreviewBase64(b64.data, b64.name, false);
+          });
+        }
       }
-      
-      this.calculateTotals();
-    } catch(e) {}
+    }
+
+    this.calculateTotals();
   },
 
   dataURLtoFile(dataurl, filename, mimeType) {
+    if (!dataurl || typeof dataurl !== 'string') return null;
     let arr = dataurl.split(','),
         mime = mimeType || (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg',
         bstr = atob(arr[1]), 
@@ -2148,20 +2284,46 @@ const PadeiroFlow = {
     return new File([u8arr], filename, {type:mime});
   },
 
-  renderPhotoPreviewBase64(dataUrl, fileName) {
+  renderPhotoPreviewBase64(dataUrl, fileName, isTemporary = false) {
     const grid = document.getElementById('foto-preview-grid');
+    if (!grid) return;
+    
+    // Desduplicação estrita: se a foto já existe no grid, apenas atualiza imagem e remove loader
+    const existing = grid.querySelector(`[data-photoname="${fileName}"]`);
+    if (existing) {
+      const img = existing.querySelector('img');
+      if (img && dataUrl) img.src = dataUrl;
+      const loader = existing.querySelector('.photo-compressing-badge');
+      if (loader && !isTemporary) loader.remove();
+      return;
+    }
+
     const slot = document.createElement('div');
     slot.className = 'photo-preview-slot fade-in';
-    slot.innerHTML = `<img src="${dataUrl}"><button class="remove-photo" onclick="PadeiroFlow.removePhoto(this,'${fileName}')"><i data-lucide="x"></i></button>`;
+    slot.setAttribute('data-photoname', fileName);
+    slot.style.position = 'relative';
+
+    const loadingBadge = isTemporary
+      ? `<div class="photo-compressing-badge" style="position:absolute; bottom:4px; left:4px; right:4px; background:rgba(0,0,0,0.65); color:#fff; font-size:9px; border-radius:4px; text-align:center; padding:2px 0; font-weight:600; pointer-events:none;">Otimizando...</div>`
+      : '';
+
+    slot.innerHTML = `
+      <img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+      ${loadingBadge}
+      <button type="button" class="remove-photo" onclick="PadeiroFlow.removePhoto(this,'${fileName}')">
+        <i data-lucide="x"></i>
+      </button>
+    `;
     grid.insertBefore(slot, grid.lastElementChild);
     Components.renderIcons();
   },
 
   removePhoto(btn, name) {
-    this.selectedFiles = this.selectedFiles.filter(f => f.name !== name);
-    this.selectedFotosBase64 = (this.selectedFotosBase64 || []).filter(f => f.name !== name);
+    this.selectedFiles = (this.selectedFiles || []).filter(f => f && f.name !== name);
+    this.selectedFotosBase64 = (this.selectedFotosBase64 || []).filter(f => f && f.name !== name);
     this.saveDraftLocally();
-    btn.closest('.photo-preview-slot').remove();
+    const slot = btn ? btn.closest('.photo-preview-slot') : document.querySelector(`[data-photoname="${name}"]`);
+    if (slot) slot.remove();
   },
 
   compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.6) {
@@ -2229,6 +2391,26 @@ const PadeiroFlow = {
     const items = [];
     let totalKg = 0;
 
+    // 1. Sincronizar imediatamente os valores dos inputs do modal (caso o usuário tenha digitado e clicado em avançar direto)
+    document.querySelectorAll('.pf-ios-card').forEach(card => {
+      const input = card.querySelector('.pf-ios-qty-val');
+      const select = card.querySelector('.pf-ios-unit-select');
+      const removeBtn = card.querySelector('.pf-ios-remove');
+      if (input && removeBtn) {
+        const match = (removeBtn.getAttribute('onclick') || '').match(/removeCartItem\('([^']+)'\)/);
+        if (match && match[1]) {
+          const id = match[1];
+          const parsed = parseFloat(String(input.value).replace(',', '.'));
+          if (!isNaN(parsed) && parsed > 0) {
+            this.cartItems = this.cartItems || {};
+            this.cartItems[id] = this.cartItems[id] || {};
+            this.cartItems[id].v = parsed;
+            if (select) this.cartItems[id].un = select.value;
+          }
+        }
+      }
+    });
+
     if (this.cartItems) {
       Object.keys(this.cartItems).forEach(id => {
         const item = this.cartItems[id];
@@ -2275,7 +2457,15 @@ const PadeiroFlow = {
       return;
     }
 
-    if (items.length === 0) { Components.toast('Informe a quantidade de pelo menos um produto.', 'error'); return; }
+    if (items.length === 0) {
+      const hasCart = this.cartItems && Object.keys(this.cartItems).length > 0;
+      if (hasCart) {
+        Components.toast('Informe a quantidade de pelo menos um produto (maior que zero).', 'error');
+      } else {
+        Components.toast('Adicione pelo menos um produto ao carrinho antes de avançar.', 'error');
+      }
+      return;
+    }
 
     if (this.selectedFiles.length === 0 && (!this.activity.fotos || this.activity.fotos.length === 0)) {
       Components.showAlert(
@@ -2336,7 +2526,7 @@ const PadeiroFlow = {
         Components.toast('Fotos enviadas com sucesso!', 'success');
       }
 
-      localStorage.removeItem('brago_padeiro_draft');
+      this.clearDraftLocally();
       await this.captureTimelineEvent('Fim da Produção');
       await this.updateActivity();
       
@@ -2670,7 +2860,7 @@ const PadeiroFlow = {
     }
     
     // Limpar o rascunho e referências de retomada
-    localStorage.removeItem('brago_padeiro_draft');
+    this.clearDraftLocally();
     this.pendingResume = null;
     this.pendingPreviousResume = null;
 
@@ -3144,7 +3334,13 @@ const PushService = {
                       PadeiroAgenda.render();
                     }
                   } else if (App.currentRoute === 'padeiro-atividade') {
-                    if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && typeof PadeiroFlow.renderStep === 'function') {
+                    const hasActiveData = typeof PadeiroFlow !== 'undefined' && (
+                      PadeiroFlow.isTakingPhoto ||
+                      (PadeiroFlow.selectedFiles && PadeiroFlow.selectedFiles.length > 0) ||
+                      (PadeiroFlow.selectedFotosBase64 && PadeiroFlow.selectedFotosBase64.length > 0) ||
+                      (PadeiroFlow.cartItems && Object.keys(PadeiroFlow.cartItems).length > 0)
+                    );
+                    if (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.currentStep === 0 && !hasActiveData && typeof PadeiroFlow.renderStep === 'function') {
                       console.log('🔄 Recarregando o seletor de tarefas (passo 0) após receber push nativo...');
                       PadeiroFlow.renderStep();
                     }

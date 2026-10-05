@@ -675,6 +675,113 @@ const BiaActions = {
       titulo: lastAction.titulo || 'Escala',
       tipo: lastAction.tipo
     };
+  },
+
+  /**
+   * AÇÃO: Executar Agendamento Avulso solicitado diretamente pelo Gestor
+   * Suporta criação direta ou substituição de agendamento existente no dia
+   */
+  async executarAgendamentoAvulso(actionData) {
+    if (!actionData || !actionData.padeiro || !actionData.cliente || !actionData.data) {
+      throw new Error('Dados incompletos para efetuar o agendamento avulso.');
+    }
+
+    const payload = {
+      padeiroId: actionData.padeiro.id,
+      padeiroNome: actionData.padeiro.nome,
+      codTec: actionData.padeiro.codTec || '',
+      clienteId: actionData.cliente.id,
+      clienteNome: actionData.cliente.nome,
+      data: actionData.data,
+      horario: actionData.horario || '08:00',
+      horarioFim: actionData.horarioFim || '17:00',
+      status: 'pendente',
+      observacao: actionData.observacao || `Ajuste Pontual Gestor (Bia IA) - ${actionData.diaNome || actionData.data}`
+    };
+
+    let tarefaId = null;
+
+    if (actionData.substituicao && actionData.tarefaIdExistente) {
+      try {
+        const res = await API.put(`/api/cronograma/${actionData.tarefaIdExistente}`, payload);
+        tarefaId = res?.id || res?._id || actionData.tarefaIdExistente;
+      } catch (putErr) {
+        // Fallback: remove o anterior e cria o novo
+        await API.delete(`/api/cronograma/${actionData.tarefaIdExistente}`).catch(() => {});
+        const postRes = await API.post('/api/cronograma', payload);
+        tarefaId = postRes?.id || postRes?._id || postRes?.tarefa?.id || postRes?.tarefa?._id;
+      }
+    } else {
+      const postRes = await API.post('/api/cronograma', payload);
+      tarefaId = postRes?.id || postRes?._id || postRes?.tarefa?.id || postRes?.tarefa?._id;
+    }
+
+    // Registrar no histórico para permitir reversão se necessário
+    if (tarefaId) {
+      this.recordAction({
+        id: 'bia_single_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        tipo: 'agendamento_avulso',
+        titulo: `${actionData.padeiro.nome} ➔ ${actionData.cliente.nome}`,
+        descricao: `${actionData.diaNome || ''} (${actionData.data})`,
+        tarefasCriadasIds: [tarefaId],
+        totalTarefas: 1
+      });
+    }
+
+    // Sincronizar visualização do Cronograma
+    if (typeof Cronograma !== 'undefined' && typeof Cronograma.render === 'function') {
+      try {
+        await Cronograma.render();
+      } catch (e) {
+        console.warn('[BIA] Falha ao recarregar render do Cronograma:', e);
+      }
+    }
+
+    return {
+      sucesso: true,
+      tarefaId,
+      payload,
+      substituicao: !!actionData.substituicao
+    };
+  },
+
+  /**
+   * AÇÃO: Executar Remoção Avulsa de Agendamentos solicitada pelo Gestor
+   */
+  async executarRemocaoAvulsa(actionData) {
+    if (!actionData || !actionData.tarefas || actionData.tarefas.length === 0) {
+      throw new Error('Nenhuma tarefa especificada para remoção.');
+    }
+
+    let removidas = 0;
+    const ids = [];
+
+    for (const t of actionData.tarefas) {
+      const id = t.id || t._id;
+      if (id) {
+        try {
+          await API.delete(`/api/cronograma/${id}`);
+          removidas++;
+          ids.push(id);
+        } catch (e) {
+          console.warn(`[BIA] Falha ao remover tarefa ${id}:`, e);
+        }
+      }
+    }
+
+    if (typeof Cronograma !== 'undefined' && typeof Cronograma.render === 'function') {
+      try {
+        await Cronograma.render();
+      } catch (e) {}
+    }
+
+    return {
+      sucesso: true,
+      removidas,
+      total: actionData.tarefas.length,
+      ids
+    };
   }
 };
 

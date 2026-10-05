@@ -255,6 +255,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         await this.handleEscalaPadraoAnterior(response.actionData);
       } else if (response.action === 'desfazer_alteracoes') {
         await this.handleDesfazerUltimaAcao();
+      } else if (response.action === 'agendar_avulso') {
+        await this.handleAgendarAvulso(response.actionData);
+      } else if (response.action === 'remover_avulso') {
+        await this.handleRemoverAvulso(response.actionData);
       }
 
     } catch (err) {
@@ -373,6 +377,205 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           btn.disabled = false;
           btn.innerHTML = 'Erro ao desfazer. Tentar novamente';
           console.error('[BIA] Erro ao desfazer:', err);
+        }
+      });
+    }
+  },
+
+  /**
+   * Trata o agendamento avulso solicitado diretamente pelo Gestor com Card de Confirmação
+   */
+  async handleAgendarAvulso(actionData) {
+    if (!actionData || !actionData.padeiro || !actionData.cliente) {
+      return;
+    }
+
+    const body = document.getElementById('bia-messages-body');
+    if (!body) return;
+
+    const card = document.createElement('div');
+    card.className = 'bia-action-card';
+    const cardId = 'card-single-exec-' + Date.now();
+
+    const subtAlertHtml = actionData.substituicao
+      ? `<div class="bia-substitution-alert">
+          <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0;"></i>
+          <span>Substitui agendamento existente em <strong>${actionData.tarefaExistenteCliente || 'outro cliente'}</strong></span>
+        </div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="bia-card-top">
+        <span class="bia-card-title">
+          <i data-lucide="calendar-check" style="width: 15px; height: 15px; color: #1E4BFF;"></i> Ajuste Pontual de Escala
+        </span>
+        <span class="bia-card-badge" style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF;">1 Agendamento</span>
+      </div>
+      <div class="bia-card-desc">
+        Confirme a alocação pontual do padeiro abaixo para gravação direta no Cronograma do sistema:
+      </div>
+
+      ${subtAlertHtml}
+
+      <div class="bia-single-action-grid">
+        <div class="bia-grid-cell">
+          <span class="bia-cell-label">Padeiro</span>
+          <span class="bia-cell-value" title="${actionData.padeiro.nome}">${actionData.padeiro.nome}</span>
+        </div>
+        <div class="bia-grid-cell">
+          <span class="bia-cell-label">Cliente / Loja</span>
+          <span class="bia-cell-value" title="${actionData.cliente.nome}">${actionData.cliente.nome}</span>
+        </div>
+        <div class="bia-grid-cell">
+          <span class="bia-cell-label">Data</span>
+          <span class="bia-cell-value">${actionData.diaNome || ''} (${actionData.dataBr || actionData.data})</span>
+        </div>
+        <div class="bia-grid-cell">
+          <span class="bia-cell-label">Horário</span>
+          <span class="bia-cell-value">${actionData.horario || '08:00'} às ${actionData.horarioFim || '17:00'}</span>
+        </div>
+      </div>
+
+      <button id="${cardId}" class="bia-btn-apply">
+        <i data-lucide="check-circle-2" style="width: 15px; height: 15px;"></i> Confirmar e Gravar no Cronograma
+      </button>
+    `;
+
+    body.appendChild(card);
+    if (window.lucide) lucide.createIcons();
+    this.scrollToBottom();
+
+    const btn = document.getElementById(cardId);
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:rotate 0.8s linear infinite;"></span> Salvando no Cronograma...`;
+
+        try {
+          const res = await BiaActions.executarAgendamentoAvulso(actionData);
+
+          btn.style.background = '#34C759';
+          btn.innerHTML = `<i data-lucide="check" style="width:15px;height:15px;"></i> Agendamento Gravado com Sucesso!`;
+          if (window.lucide) lucide.createIcons();
+
+          if (typeof Components !== 'undefined' && Components.toast) {
+            Components.toast(`Agendamento de ${actionData.padeiro.nome} confirmado!`, 'success');
+          }
+
+          this.addBiaMessage(`Pronto! O agendamento de **${actionData.padeiro.nome}** no cliente **${actionData.cliente.nome}** para **${actionData.diaNome} (${actionData.dataBr || actionData.data})** foi gravado no Cronograma.`);
+
+          // Botão para desfazer
+          const undoContainer = document.createElement('div');
+          undoContainer.style.marginTop = '10px';
+          undoContainer.innerHTML = `
+            <button id="btn-undo-single-${cardId}" class="bia-btn-undo-secondary">
+              <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i> Desfazer esta alteração
+            </button>
+          `;
+          card.appendChild(undoContainer);
+          if (window.lucide) lucide.createIcons();
+
+          const undoBtn = document.getElementById(`btn-undo-single-${cardId}`);
+          if (undoBtn) {
+            undoBtn.addEventListener('click', async () => {
+              undoBtn.disabled = true;
+              undoBtn.innerHTML = `Desfazendo...`;
+              const undoRes = await BiaActions.desfazerUltimaAcao();
+              if (undoRes.sucesso) {
+                undoBtn.style.color = '#34C759';
+                undoBtn.style.borderColor = 'rgba(52, 199, 89, 0.3)';
+                undoBtn.style.background = 'rgba(52, 199, 89, 0.08)';
+                undoBtn.innerHTML = `<i data-lucide="check" style="width:13px;height:13px;"></i> Agendamento desfeito com sucesso`;
+                if (window.lucide) lucide.createIcons();
+                if (typeof Components !== 'undefined' && Components.toast) {
+                  Components.toast('Agendamento desfeito com sucesso.', 'info');
+                }
+                BiaUI.addBiaMessage('A alteração pontual foi cancelada e o cronograma foi atualizado.');
+              } else {
+                undoBtn.disabled = false;
+                undoBtn.innerHTML = undoRes.mensagem || 'Não foi possível desfazer';
+              }
+            });
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.style.background = '#FF3B30';
+          btn.innerHTML = `Erro ao salvar. Tentar novamente`;
+          console.error('[BIA] Falha ao agendar avulso:', err);
+        }
+      });
+    }
+  },
+
+  /**
+   * Trata a remoção pontual solicitada pelo Gestor com Card de Confirmação
+   */
+  async handleRemoverAvulso(actionData) {
+    if (!actionData || !actionData.tarefas || actionData.tarefas.length === 0) {
+      return;
+    }
+
+    const body = document.getElementById('bia-messages-body');
+    if (!body) return;
+
+    const card = document.createElement('div');
+    card.className = 'bia-action-card bia-undo-card';
+    const cardId = 'card-remove-exec-' + Date.now();
+
+    const tarefasHtml = actionData.tarefas.map(t => `
+      <div class="bia-preview-item">
+        <div><strong style="color:#111827;">${t.diaNome || t.data}</strong>: ${t.padeiroNome}</div>
+        <div style="color:#FF3B30; font-weight:600;"><i data-lucide="x" style="width:12px;height:12px;"></i> ${t.clienteNome}</div>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="bia-card-top">
+        <span class="bia-card-title" style="color: #FF3B30;">
+          <i data-lucide="trash-2" style="width: 15px; height: 15px; color: #FF3B30;"></i> Remover da Escala
+        </span>
+        <span class="bia-card-badge" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30;">${actionData.tarefas.length} Tarefa(s)</span>
+      </div>
+      <div class="bia-card-desc">
+        Confirme a remoção dos seguintes agendamentos do Cronograma:
+      </div>
+
+      <div class="bia-card-preview-list">
+        ${tarefasHtml}
+      </div>
+
+      <button id="${cardId}" class="bia-btn-undo-confirm">
+        <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Confirmar Remoção do Cronograma
+      </button>
+    `;
+
+    body.appendChild(card);
+    if (window.lucide) lucide.createIcons();
+    this.scrollToBottom();
+
+    const btn = document.getElementById(cardId);
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:rotate 0.8s linear infinite;"></span> Excluindo agendamentos...`;
+
+        try {
+          const res = await BiaActions.executarRemocaoAvulsa(actionData);
+          if (res.sucesso) {
+            btn.style.background = '#34C759';
+            btn.innerHTML = `<i data-lucide="check" style="width:15px;height:15px;"></i> ${res.removidas} Tarefas Removidas com Sucesso!`;
+            if (window.lucide) lucide.createIcons();
+
+            if (typeof Components !== 'undefined' && Components.toast) {
+              Components.toast(`${res.removidas} agendamento(s) removido(s) do cronograma.`, 'info');
+            }
+
+            this.addBiaMessage(`Os agendamentos foram removidos do Cronograma com sucesso.`);
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = 'Erro ao remover. Tentar novamente';
+          console.error('[BIA] Falha ao remover agendamento:', err);
         }
       });
     }

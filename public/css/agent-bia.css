@@ -584,6 +584,55 @@
   transform: none;
 }
 
+/* ─── Single Action Card (Comandos Avulsos do Gestor) ─────────── */
+.bia-single-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.bia-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bia-cell-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.bia-cell-value {
+  font-size: 12.5px;
+  color: #0F172A;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bia-substitution-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
 /* ─── Responsividade Mobile ────────────────────────────────────────────── */
 @media (max-width: 500px) {
   .bia-modal-overlay {

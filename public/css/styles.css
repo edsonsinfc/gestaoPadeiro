@@ -1880,7 +1880,7 @@ tr:hover .row-actions {
   position: fixed;
   top: 24px;
   right: 24px;
-  z-index: 9999;
+  z-index: 100000000 !important;
   display: flex;
   flex-direction: column;
   gap: 12px;

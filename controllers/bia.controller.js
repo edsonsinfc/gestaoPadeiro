@@ -5,6 +5,7 @@
 
 const fetch = globalThis.fetch || require('node-fetch');
 const db = require('../data/db-adapter');
+const BiaCommands = require('../public/js/modules/agent-bia/bia.commands');
 
 // Lista de modelos Gemini suportados em ordem de preferência
 const GEMINI_MODELS = [
@@ -166,6 +167,18 @@ function gerarRespostaLocal(userMessage, context = {}) {
   const clientesAtivos = context.clientesAtivos || [];
   const cronograma = context.cronogramaHistorico || [];
   const atividades = context.atividades || [];
+
+  // 0. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
+  if (BiaCommands) {
+    const comando = BiaCommands.processarComando(userMessage, context);
+    if (comando) {
+      return {
+        text: comando.text,
+        action: comando.action,
+        actionData: comando.actionData
+      };
+    }
+  }
 
   // 1. Desfazer / Reverter
   if (
@@ -582,6 +595,19 @@ exports.chat = async (req, res) => {
 
   // Carrega e enriquece contexto operacional completo em tempo real do banco de dados
   const enrichedContext = await carregarContextoBancoSeNecessario(context);
+
+  // 1. Prioridade Absoluta: Módulo Especializado de Comandos Avulsos do Gestor
+  if (BiaCommands && BiaCommands.isGestorCommand(normalizarTexto(message))) {
+    const comando = BiaCommands.processarComando(message, enrichedContext);
+    if (comando) {
+      return res.json({
+        text: comando.text,
+        action: comando.action,
+        actionData: comando.actionData,
+        source: 'gestor_commands_module'
+      });
+    }
+  }
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY || '';
 
