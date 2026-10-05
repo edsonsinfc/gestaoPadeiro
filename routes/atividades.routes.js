@@ -6,6 +6,7 @@ const { authMiddleware, adminOnly } = require('../middleware/auth');
 router.get('/', authMiddleware, ctrl.listAtividades);
 router.post('/', authMiddleware, ctrl.createAtividade);
 router.put('/:id', authMiddleware, ctrl.updateAtividade);
+router.delete('/:id', authMiddleware, ctrl.deleteAtividade);
 router.delete('/reset/all', authMiddleware, adminOnly, ctrl.resetAllAtividades);
 
 module.exports = router;

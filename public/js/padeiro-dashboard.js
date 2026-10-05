@@ -110,7 +110,7 @@ const PadeiroDashboard = {
               </div>
               <button class="pd-cta-btn" onclick="App.navigate('padeiro-atividade')">
                 <div class="pd-cta-icon"><i data-lucide="play" style="width:20px;height:20px"></i></div>
-                <span>${minhasAtividades.some(a => a.status !== 'finalizada' && a.data === new Date(hoje.getTime() - (hoje.getTimezoneOffset() * 60000)).toISOString().slice(0, 10)) ? 'Continuar Atividade' : 'Iniciar Atividade'}</span>
+                <span>${minhasAtividades.some(a => a.status === 'em_andamento' && a.data === new Date(hoje.getTime() - (hoje.getTimezoneOffset() * 60000)).toISOString().slice(0, 10)) ? 'Continuar Atividade' : 'Iniciar Atividade'}</span>
                 <i data-lucide="arrow-right" style="width:18px;height:18px;opacity:0.7"></i>
               </button>
             </div>

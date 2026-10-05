@@ -83,11 +83,25 @@ exports.createAtividade = async (req, res) => {
     const existing = await Atividade.findOne({
       padeiroId: padeiroIds.length === 1 ? req.user.id : { $in: padeiroIds },
       clienteId,
-      data: today,
+      data: req.body.data || today,
       status: 'em_andamento'
     });
     if (existing) {
       return res.json(existing);
+    }
+
+    // Se já existe atividade finalizada hoje para este cliente e NÃO é início forçado/avulso, evita falso positivo/duplicação
+    if (!req.body.forceStart) {
+      const alreadyFinished = await Atividade.findOne({
+        padeiroId: padeiroIds.length === 1 ? req.user.id : { $in: padeiroIds },
+        clienteId,
+        data: req.body.data || today,
+        status: 'finalizada'
+      });
+      if (alreadyFinished) {
+        console.log(`[Atividades] Cliente ${clienteId} já possui atividade finalizada hoje para o padeiro ${req.user.id}. Evitando recriação de em_andamento.`);
+        return res.json(alreadyFinished);
+      }
     }
 
     let tempoMinimoMinutos = 0;
@@ -242,6 +256,27 @@ exports.updateAtividade = async (req, res) => {
             }
           }
         }
+
+        // Limpa qualquer outra atividade em_andamento duplicada deste mesmo padeiro e cliente na mesma data
+        try {
+          const duplicateInProgress = await Atividade.find({
+            padeiroId: atividade.padeiroId,
+            clienteId: atividade.clienteId,
+            data: atividade.data,
+            status: 'em_andamento'
+          });
+          for (const dup of duplicateInProgress) {
+            if (dup.id !== atividade.id) {
+              await Atividade.findByIdAndUpdate(dup.id, {
+                status: 'finalizada',
+                fimEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString()
+              });
+            }
+          }
+        } catch (dupErr) {
+          console.warn('Aviso ao sincronizar duplicatas de atividade:', dupErr);
+        }
       } catch (cronoErr) {
         console.error('Erro ao sincronizar status concluído no cronograma:', cronoErr);
       }
@@ -256,5 +291,21 @@ exports.updateAtividade = async (req, res) => {
   } catch (e) {
     console.error("Erro ao atualizar atividade:", e);
     res.status(400).json({ error: 'Erro ao salvar dados da atividade', details: e.message });
+  }
+};
+
+exports.deleteAtividade = async (req, res) => {
+  try {
+    const atividade = await Atividade.findById(req.params.id);
+    if (!atividade) return res.status(404).json({ error: 'Atividade não encontrada' });
+
+    if (req.user.role === 'padeiro' && atividade.padeiroId !== req.user.id) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    await Atividade.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Atividade removida com sucesso' });
+  } catch (e) {
+    res.status(500).json({ error: 'Erro ao remover atividade: ' + e.message });
   }
 };

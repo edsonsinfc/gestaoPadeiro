@@ -103,6 +103,59 @@ async function carregarContextoBancoSeNecessario(context = {}) {
 }
 
 /**
+ * Extrai o padeiro mencionado na mensagem do usuário com alta precisão
+ */
+function extrairPadeiroDaMensagem(norm, padeirosAtivos = []) {
+  if (!norm || !padeirosAtivos || padeirosAtivos.length === 0) return null;
+
+  for (const p of padeirosAtivos) {
+    const pNomeNorm = normalizarTexto(p.nome);
+    if (!pNomeNorm) continue;
+
+    // Se o nome completo estiver na mensagem
+    if (norm.includes(pNomeNorm)) {
+      return p;
+    }
+
+    // Se o código técnico estiver na mensagem
+    if (p.codTec && norm.includes(String(p.codTec))) {
+      return p;
+    }
+
+    // Partes significativas do nome
+    const partes = pNomeNorm.split(/\s+/).filter(w => 
+      w.length > 2 && !['de', 'da', 'do', 'dos', 'das', 'e', 'silva', 'santos', 'sousa', 'souza', 'oliveira', 'padeiro', 'teste'].includes(w)
+    );
+
+    // Nome composto (ex: Daniel Mendes, Ana Joana, Samara Aparecida)
+    if (partes.length >= 2) {
+      const primeiroEUltimo = `${partes[0]} ${partes[partes.length - 1]}`;
+      const doisPrimeiros = `${partes[0]} ${partes[1]}`;
+      if (norm.includes(primeiroEUltimo) || norm.includes(doisPrimeiros)) {
+        return p;
+      }
+    }
+
+    // Primeiro nome único
+    if (partes.length >= 1 && partes[0].length >= 4) {
+      const primeiroNome = partes[0];
+      const regexPalavra = new RegExp(`\\b${primeiroNome}\\b`, 'i');
+      if (regexPalavra.test(norm)) {
+        const coincidentes = padeirosAtivos.filter(other => {
+          const oNorm = normalizarTexto(other.nome);
+          return oNorm.startsWith(primeiroNome + ' ') || oNorm === primeiroNome;
+        });
+        if (coincidentes.length === 1) {
+          return p;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Motor de Inteligência e Processamento de Linguagem Natural Local da Bia
  */
 function gerarRespostaLocal(userMessage, context = {}) {
@@ -112,6 +165,7 @@ function gerarRespostaLocal(userMessage, context = {}) {
   const padeirosAtivos = context.padeirosAtivos || [];
   const clientesAtivos = context.clientesAtivos || [];
   const cronograma = context.cronogramaHistorico || [];
+  const atividades = context.atividades || [];
 
   // 1. Desfazer / Reverter
   if (
@@ -134,53 +188,135 @@ function gerarRespostaLocal(userMessage, context = {}) {
     };
   }
 
-  // 2. Escala Padrão Habitual
-  if (
-    norm.includes('padrao') ||
+  // 2. DETECÇÃO DE PEDIDO DE ESCALA (Habitual, Específica de Padeiro ou Alta Performance)
+  const isEscalaRequest = (
+    norm.includes('escala') ||
+    norm.includes('escalar') ||
     norm.includes('habitual') ||
-    norm.includes('anterior') ||
+    norm.includes('padrao') ||
     norm.includes('rotina') ||
     norm.includes('costume') ||
-    norm.includes('repetir escala') ||
-    norm.includes('replicar escala') ||
-    norm.includes('o que ja faziam') ||
-    norm.includes('igual antes')
-  ) {
-    return {
-      text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas desde Junho/2026. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual**.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
-      action: 'escala_padrao_anterior',
-      actionData: {
-        action: 'escala_padrao_anterior',
-        descricao: 'Escala replicando padrão anterior habitual desde Junho/2026',
-        confirmar: true
-      }
-    };
-  }
-
-  // 3. Escala Alta Performance ou Solicitação Geral de Escala
-  if (
-    norm.includes('alta performance') ||
-    norm.includes('performance') ||
+    norm.includes('agendar') ||
+    norm.includes('programar')
+  ) && (
+    norm.includes('gerar') ||
+    norm.includes('criar') ||
+    norm.includes('fazer') ||
+    norm.includes('faca') ||
+    norm.includes('crie') ||
+    norm.includes('monte') ||
+    norm.includes('montar') ||
+    norm.includes('habitual') ||
+    norm.includes('padrao') ||
+    norm.includes('anterior') ||
+    norm.includes('rotina') ||
+    norm.includes('repetir') ||
+    norm.includes('replicar') ||
     norm.includes('otimizada') ||
-    norm.includes('gerar escala') ||
-    norm.includes('montar escala') ||
-    norm.includes('criar escala') ||
-    norm.includes('fazer escala') ||
-    norm.includes('crie uma escala') ||
-    norm.includes('criar uma escala') ||
-    norm.includes('escala da semana') ||
-    norm.includes('nova escala') ||
-    norm.includes('distribuir padeiros')
-  ) {
-    return {
-      text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
-      action: 'escala_alta_performance',
-      actionData: {
-        action: 'escala_alta_performance',
-        descricao: 'Escala de alta performance para a semana',
-        confirmar: true
+    norm.includes('performance') ||
+    norm.includes('escala')
+  );
+
+  if (isEscalaRequest) {
+    let padeiroAlvo = extrairPadeiroDaMensagem(norm, padeirosAtivos);
+
+    // Se o usuário pediu "teste gerando a escala de um padeiro" ou "escala de um padeiro"
+    if (!padeiroAlvo && (norm.includes('de um padeiro') || norm.includes('do padeiro') || (norm.includes('teste') && norm.includes('padeiro')))) {
+      // Seleciona o padeiro ativo com maior histórico consolidado
+      const contagemHistorico = {};
+      cronograma.forEach(c => { if (c.padeiroId) contagemHistorico[c.padeiroId] = (contagemHistorico[c.padeiroId] || 0) + 1; });
+      atividades.forEach(a => { if (a.padeiroId) contagemHistorico[a.padeiroId] = (contagemHistorico[a.padeiroId] || 0) + 1; });
+      const topPadeiroId = Object.entries(contagemHistorico).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (topPadeiroId) {
+        padeiroAlvo = padeirosAtivos.find(p => p.id === topPadeiroId);
       }
-    };
+    }
+
+    const querHabitual = (
+      norm.includes('padrao') ||
+      norm.includes('habitual') ||
+      norm.includes('anterior') ||
+      norm.includes('rotina') ||
+      norm.includes('costume') ||
+      norm.includes('repetir') ||
+      norm.includes('replicar') ||
+      norm.includes('o que ja fazia') ||
+      norm.includes('igual antes')
+    );
+
+    // CASO A: Escala para Padeiro Específico
+    if (padeiroAlvo) {
+      const historicoPadeiro = (cronograma || []).filter(c =>
+        c.padeiroId === padeiroAlvo.id ||
+        (c.codTec && String(c.codTec) === String(padeiroAlvo.codTec)) ||
+        normalizarTexto(c.padeiroNome) === normalizarTexto(padeiroAlvo.nome)
+      ).concat(
+        (atividades || []).filter(a =>
+          a.padeiroId === padeiroAlvo.id ||
+          (a.codTec && String(a.codTec) === String(padeiroAlvo.codTec)) ||
+          normalizarTexto(a.padeiroNome) === normalizarTexto(padeiroAlvo.nome)
+        )
+      );
+
+      const prefereHabitual = querHabitual || (historicoPadeiro.length > 0 && !norm.includes('alta performance') && !norm.includes('otimizada'));
+
+      if (prefereHabitual) {
+        if (historicoPadeiro.length > 0) {
+          return {
+            text: `Entendido! Analisei o histórico operacional do padeiro **${padeiroAlvo.nome}** (${historicoPadeiro.length} atendimentos registrados). Mapeei os clientes mais frequentes para cada dia da semana dele e preparei a proposta da **Escala Padrão Habitual** individualizada.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+            action: 'escala_padrao_anterior',
+            actionData: {
+              action: 'escala_padrao_anterior',
+              padeiroId: padeiroAlvo.id,
+              padeiroNome: padeiroAlvo.nome,
+              descricao: `Escala habitual individual para ${padeiroAlvo.nome}`,
+              confirmar: true
+            }
+          };
+        } else {
+          return {
+            text: `O padeiro **${padeiroAlvo.nome}** ainda não possui histórico de escalas ou atendimentos registrados no sistema para que eu possa identificar uma rotina habitual.\n\nPara ele, você pode:\n* 📅 Iniciar o cronograma agendando clientes manualmente.\n* ⚡ Me pedir uma escala otimizada: *"Bia, crie uma escala de alta performance para ${padeiroAlvo.nome}"* (vou alocar clientes disponíveis de maior volume).`,
+            action: null,
+            actionData: null
+          };
+        }
+      } else {
+        return {
+          text: `Com certeza! Preparei uma proposta de **Escala de Alta Performance** individual para o padeiro **${padeiroAlvo.nome}**, priorizando clientes ativos de alta demanda para esta semana.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+          action: 'escala_alta_performance',
+          actionData: {
+            action: 'escala_alta_performance',
+            padeiroId: padeiroAlvo.id,
+            padeiroNome: padeiroAlvo.nome,
+            descricao: `Escala de alta performance para ${padeiroAlvo.nome}`,
+            confirmar: true
+          }
+        };
+      }
+    }
+
+    // CASO B: Escala Geral para Toda a Equipe
+    if (querHabitual) {
+      return {
+        text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual** da equipe.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+        action: 'escala_padrao_anterior',
+        actionData: {
+          action: 'escala_padrao_anterior',
+          descricao: 'Escala replicando padrão anterior habitual da equipe',
+          confirmar: true
+        }
+      };
+    } else {
+      return {
+        text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+        action: 'escala_alta_performance',
+        actionData: {
+          action: 'escala_alta_performance',
+          descricao: 'Escala de alta performance para a semana',
+          confirmar: true
+        }
+      };
+    }
   }
 
   // 4. Agenda / Tarefas de Hoje ("O que temos pra hoje?", "Quem trabalha hoje?", "Agenda hoje", "Hoje")
@@ -459,6 +595,8 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
 \`\`\`json
 {
   "action": "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "nenhuma",
+  "padeiroId": "ID do padeiro se solicitado individualmente, ou null",
+  "padeiroNome": "Nome do padeiro se individual, ou null",
   "descricao": "Resumo da ação",
   "confirmar": true
 }
@@ -511,7 +649,15 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
                 cleanText = rawText.replace(/```json[\s\S]*?```/g, '').trim();
               }
 
-              if (!action) {
+              if (action && actionData) {
+                if (!actionData.padeiroId) {
+                  const pIdentificado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
+                  if (pIdentificado) {
+                    actionData.padeiroId = pIdentificado.id;
+                    actionData.padeiroNome = pIdentificado.nome;
+                  }
+                }
+              } else {
                 const local = gerarRespostaLocal(message, enrichedContext);
                 if (local.action) {
                   action = local.action;

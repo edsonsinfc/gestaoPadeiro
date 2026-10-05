@@ -35,10 +35,48 @@ const PadeiroFlow = {
 
     const today = this.getTodayLocal();
 
-    // 1. Verificar se há atividade em andamento
+    // 1. Buscar atividades e agenda antecipadamente para evitar falsos positivos
+    let atividades = [];
+    let atividadesHoje = [];
     try {
-      const atividades = await API.get('/api/atividades');
-      const em = (atividades || []).find(a => a.status === 'em_andamento');
+      atividades = await API.get('/api/atividades');
+      if (!Array.isArray(atividades)) atividades = [];
+      atividadesHoje = atividades.filter(a => ((a.data || '').split('T')[0]) === today);
+    } catch(e) {
+      console.warn('Erro ao carregar atividades:', e);
+    }
+    this.atividadesHoje = atividadesHoje;
+    const atividadesFinalizadasHoje = atividadesHoje.filter(a => a.status === 'finalizada');
+
+    // Verificar se há atividade em andamento
+    try {
+      let em = atividades.find(a => a.status === 'em_andamento');
+
+      // Falso positivo 1: A atividade em andamento pertence a cliente já finalizado hoje
+      if (em && atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(em.clienteId))) {
+        console.warn('[PadeiroFlow] Atividade em andamento pertence a cliente já finalizado hoje. Limpando falso positivo...');
+        try {
+          await API.put(`/api/atividades/${em.id || em._id}`, { status: 'finalizada', fimEm: new Date().toISOString() });
+        } catch (e) {}
+        em = null;
+      }
+
+      // Falso positivo 2: Rascunho vazio de dia anterior abandonado
+      if (em && em.data !== today) {
+        const isEmptyDraft = (!em.kgItens || em.kgItens.length === 0) && 
+                             (!em.fotos || em.fotos.length === 0) && 
+                             (!em.kgTotal || parseFloat(em.kgTotal) === 0);
+        if (isEmptyDraft) {
+          console.log('[PadeiroFlow] Descartando rascunho vazio de data anterior:', em.id, em.data);
+          try {
+            await API.delete(`/api/atividades/${em.id || em._id}`).catch(() => 
+              API.put(`/api/atividades/${em.id || em._id}`, { status: 'cancelada' })
+            );
+          } catch (e) {}
+          em = null;
+        }
+      }
+
       if (em) {
         if (em.data === today) {
           if (prefill && prefill.clienteId && String(prefill.clienteId) !== String(em.clienteId)) {
@@ -60,7 +98,6 @@ const PadeiroFlow = {
     // 2. Buscar agenda do usuário e atividades de hoje
     const me = (typeof API !== 'undefined' && typeof API.getUser === 'function' ? API.getUser() : null) || {};
     let todasTarefasHoje = [];
-    let atividadesHoje = [];
 
     try {
       const agenda = await API.get('/api/cronograma/agenda');
@@ -73,18 +110,12 @@ const PadeiroFlow = {
       console.warn('Erro ao buscar agenda:', e);
     }
 
-    try {
-      const atividades = await API.get('/api/atividades');
-      atividadesHoje = (atividades || []).filter(a => ((a.data || '').split('T')[0]) === today);
-    } catch(e) {}
-
-    const atividadesFinalizadasHoje = atividadesHoje.filter(a => a.status === 'finalizada');
-
-    // Tarefas pendentes do dia (não concluídas e não vinculadas a atividade já finalizada hoje)
+    // Tarefas pendentes do dia (não concluídas e não vinculadas a atividade já finalizada hoje por cronogramaId OU clienteId)
     const tarefasPendentes = todasTarefasHoje.filter(t => {
       if (t.status === 'concluida') return false;
       const jaFinalizada = atividadesFinalizadasHoje.some(act => 
-        (act.cronogramaId && (act.cronogramaId === t.id || act.cronogramaId === t._id))
+        (act.cronogramaId && (String(act.cronogramaId) === String(t.id) || String(act.cronogramaId) === String(t._id))) ||
+        (act.clienteId && String(act.clienteId) === String(t.clienteId))
       );
       return !jaFinalizada;
     });
@@ -120,9 +151,12 @@ const PadeiroFlow = {
       }
     }
 
-    // Auto-inicia atividade no backend se já houver cliente definido
+    // Auto-inicia atividade no backend APENAS se o cliente ainda NÃO tiver sido finalizado hoje
     if (this.activity.clienteId) {
-      await this.ensureActivityStarted();
+      const jaFinalizada = atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(this.activity.clienteId));
+      if (!jaFinalizada) {
+        await this.ensureActivityStarted();
+      }
     }
 
     App.routeData = {};
@@ -387,12 +421,33 @@ const PadeiroFlow = {
           <button class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.confirmResumePrevious()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);">
             <i data-lucide="play" style="width:18px;height:18px"></i> Retomar e Finalizar Atividade
           </button>
-          <button class="pf-btn-ghost" onclick="App.navigate('padeiro-inicio')" style="margin-top: 12px;">
+          <button class="pf-btn-ghost pf-btn-full" onclick="PadeiroFlow.discardPendingPrevious('${em.id || em._id}')" style="margin-top: 10px; color: #ef4444; border: 1.5px solid #fca5a5; background: #fff5f5; border-radius: 12px; font-weight: 700; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+            <i data-lucide="trash-2" style="width:16px;height:16px"></i> Descartar Atividade Não Concluída
+          </button>
+          <button class="pf-btn-ghost" onclick="App.navigate('padeiro-inicio')" style="margin-top: 10px;">
             <i data-lucide="calendar" style="width:16px;height:16px;margin-right:6px;"></i> Voltar para a Agenda
           </button>
         </div>
       </div>`;
     Components.renderIcons();
+  },
+
+  async discardPendingPrevious(activityId) {
+    if (!activityId) return;
+    try {
+      await API.delete(`/api/atividades/${activityId}`).catch(() => 
+        API.put(`/api/atividades/${activityId}`, { status: 'cancelada' })
+      );
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Atividade anterior descartada com sucesso.', 'info');
+      }
+    } catch (e) {
+      console.warn('Erro ao descartar atividade anterior:', e);
+    }
+    this.pendingPreviousResume = null;
+    this.pendingResume = null;
+    localStorage.removeItem('brago_padeiro_draft');
+    await this.render();
   },
 
   async confirmResumePrevious() {
@@ -726,6 +781,12 @@ const PadeiroFlow = {
 
       if (!clienteId) return;
 
+      // Se este cliente já possui atividade finalizada hoje e não é início forçado, aborta
+      if (!this.activity.forceStart && (this.atividadesHoje || []).some(a => String(a.clienteId) === String(clienteId) && a.status === 'finalizada')) {
+        console.warn('[PadeiroFlow] Cliente já possui atividade finalizada hoje. Ignorando criação duplicada.');
+        return;
+      }
+
       const body = { 
         id: clientGeneratedId,
         clienteId: clienteId, 
@@ -741,6 +802,13 @@ const PadeiroFlow = {
 
       const a = await API.post('/api/atividades', body);
       
+      if (a && a.status === 'finalizada' && !this.activity.forceStart) {
+        console.warn('[PadeiroFlow] Atividade retornada pelo servidor já está finalizada. Abortando criação duplicada.');
+        this.activity = {};
+        await this.render();
+        return;
+      }
+
       if (a && a.offline) {
         this.activity = {
           ...body,

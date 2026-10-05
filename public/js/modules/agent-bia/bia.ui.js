@@ -250,9 +250,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
       // 4. Executar ação correspondente se detectada
       if (response.action === 'escala_alta_performance') {
-        await this.handleEscalaAltaPerformance();
+        await this.handleEscalaAltaPerformance(response.actionData);
       } else if (response.action === 'escala_padrao_anterior') {
-        await this.handleEscalaPadraoAnterior();
+        await this.handleEscalaPadraoAnterior(response.actionData);
       } else if (response.action === 'desfazer_alteracoes') {
         await this.handleDesfazerUltimaAcao();
       }
@@ -269,11 +269,15 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   /**
    * Trata a geração da Escala de Alta Performance com Card Interativo
    */
-  async handleEscalaAltaPerformance() {
+  async handleEscalaAltaPerformance(actionData = null) {
     this.showTypingIndicator();
     try {
-      const escala = await BiaActions.criarEscalaAltaPerformance();
+      const escala = await BiaActions.criarEscalaAltaPerformance(null, actionData);
       this.removeTypingIndicator();
+      if (!escala || !escala.tarefas || escala.tarefas.length === 0) {
+        this.addBiaMessage(escala?.descricao || 'Não foram encontradas atividades suficientes para gerar esta escala no momento.');
+        return;
+      }
       this.lastPreparedScale = escala;
       this.renderActionCard(escala);
     } catch (e) {
@@ -285,11 +289,15 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   /**
    * Trata a geração da Escala no Padrão Anterior com Card Interativo
    */
-  async handleEscalaPadraoAnterior() {
+  async handleEscalaPadraoAnterior(actionData = null) {
     this.showTypingIndicator();
     try {
-      const escala = await BiaActions.criarEscalaPadraoAnterior();
+      const escala = await BiaActions.criarEscalaPadraoAnterior(null, actionData);
       this.removeTypingIndicator();
+      if (!escala || !escala.tarefas || escala.tarefas.length === 0) {
+        this.addBiaMessage(escala?.descricao || 'Não encontrei histórico suficiente de rotina para este padrão de escala.');
+        return;
+      }
       this.lastPreparedScale = escala;
       this.renderActionCard(escala);
     } catch (e) {

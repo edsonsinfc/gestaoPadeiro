@@ -490,16 +490,25 @@ const PadeiroAgenda = {
     // Check if there is already an activity in progress
     try {
       const atividades = await API.get('/api/atividades');
-      const emAndamento = atividades.find(a => a.status === 'em_andamento');
+      const today = (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.getTodayLocal) ? PadeiroFlow.getTodayLocal() : new Date().toISOString().split('T')[0];
+      const emAndamento = (atividades || []).find(a => a.status === 'em_andamento');
       if (emAndamento) {
-        const today = new Date().toISOString().split('T')[0];
-        if (emAndamento.data !== today) {
-          Components.toast('Você possui uma atividade pendente de finalização!', 'warning');
-          App.navigate('padeiro-atividade');
-          return;
-        }
-        
-        if (emAndamento.clienteId !== clienteId) {
+        // Se a atividade em andamento pertence a um cliente já finalizado hoje, ignora (falso positivo)
+        const jaFinalizadaHoje = (atividades || []).some(a => 
+          a.status === 'finalizada' && 
+          String(a.clienteId) === String(emAndamento.clienteId) &&
+          (a.data === today || (a.data || '').startsWith(today))
+        );
+        if (jaFinalizadaHoje) {
+          // Falso positivo resolvido
+        } else if (emAndamento.data !== today) {
+          const isEmpty = (!emAndamento.kgItens || emAndamento.kgItens.length === 0) && (!emAndamento.fotos || emAndamento.fotos.length === 0);
+          if (!isEmpty) {
+            Components.toast('Você possui uma atividade anterior pendente de finalização!', 'warning');
+            App.navigate('padeiro-atividade');
+            return;
+          }
+        } else if (String(emAndamento.clienteId) !== String(clienteId)) {
           if (!confirm('Você já tem uma atividade em andamento. Deseja iniciar outra?')) return;
         }
       }
