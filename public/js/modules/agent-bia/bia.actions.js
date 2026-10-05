@@ -326,19 +326,24 @@ const BiaActions = {
           return (cNomeNorm && cNomeNorm === rCliNorm) || (cFantNorm && cFantNorm === rCliNorm);
         });
         if (!cAtivo) {
-          const rCliTokens = rCliNorm.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 3 && !['panificadora', 'padaria', 'supermercado', 'mercado', 'ltda', 'comercio'].includes(w));
+          // Só associa se houver correspondência exata de todos os tokens distintivos (sem falsos positivos)
+          const stopWords = ['panificadora', 'padaria', 'supermercado', 'mercado', 'ltda', 'comercio', 'de', 'da', 'do', 'dos', 'das', 'e'];
+          const rCliTokens = rCliNorm.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 3 && !stopWords.includes(w));
           if (rCliTokens.length > 0) {
             let melhor = null;
-            let maxHits = 0;
             for (const cli of (clientesAtivos || [])) {
-              const cTexto = this.normalizeStr(cli.nome) + ' ' + this.normalizeStr(cli.nomeFantasia) + ' ' + this.normalizeStr(cli.bairro) + ' ' + this.normalizeStr(cli.endereco);
-              const hits = rCliTokens.filter(tok => cTexto.includes(tok)).length;
-              if (hits > maxHits) {
-                maxHits = hits;
+              const cNome = (this.normalizeStr(cli.nomeFantasia) || this.normalizeStr(cli.nome));
+              const cTokens = cNome.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 3 && !stopWords.includes(w));
+              // Todos os tokens distintivos devem bater bilateralmente
+              const allMatch = rCliTokens.length > 0 && cTokens.length > 0 &&
+                rCliTokens.every(t => cTokens.includes(t)) &&
+                cTokens.every(t => rCliTokens.includes(t));
+              if (allMatch) {
                 melhor = cli;
+                break;
               }
             }
-            if (melhor && maxHits > 0) {
+            if (melhor) {
               cAtivo = melhor;
             }
           }
