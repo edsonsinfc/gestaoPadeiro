@@ -93,11 +93,13 @@ const BiaActions = {
   getWeekDates(offset = 0) {
     const dates = [];
     const now = new Date();
-    now.setDate(now.getDate() + (offset * 7));
-    const day = now.getDay();
+    // Garante meio-dia (12:00:00) para evitar desvio de fuso horário / UTC
+    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+    base.setDate(base.getDate() + (offset * 7));
+    const day = base.getDay();
     const diffToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() + diffToMonday);
+    const monday = new Date(base);
+    monday.setDate(base.getDate() + diffToMonday);
 
     for (let i = 0; i < 6; i++) {
       const d = new Date(monday);
@@ -142,12 +144,12 @@ const BiaActions = {
     const weekDates = this.getWeekDates(weekOffset);
     const diasSemanaNomes = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-    // Filtra tarefas já existentes na semana para não gerar conflito duplicado no mesmo dia
+    // Filtra tarefas já existentes na semana
     const weekDatesIso = weekDates.map(d => d.toISOString().split('T')[0]);
-    const tarefasExistentes = (cronogramaHistorico || []).filter(t => weekDatesIso.includes(t.data));
-    const ocupadosMap = new Set();
+    const tarefasExistentes = (cronogramaHistorico || []).filter(t => t && weekDatesIso.includes(t.data));
+    const mapaTarefasExistentes = new Map();
     tarefasExistentes.forEach(t => {
-      ocupadosMap.add(`${t.data}_${t.padeiroId}`);
+      mapaTarefasExistentes.set(`${t.data}_${t.padeiroId}`, t);
     });
 
     const novasTarefas = [];
@@ -160,17 +162,9 @@ const BiaActions = {
       const diaNome = diasSemanaNomes[diaIdx];
       const clientesUsadosNoDia = new Set();
 
-      // Marcar clientes já agendados nesse dia para evitar colisão
-      tarefasExistentes.filter(t => t.data === dateStr).forEach(t => {
-        if (t.clienteId) clientesUsadosNoDia.add(t.clienteId);
-      });
-
       for (let pIdx = 0; pIdx < padeirosParaEscalar.length; pIdx++) {
         const padeiro = padeirosParaEscalar[pIdx];
-
-        if (ocupadosMap.has(`${dateStr}_${padeiro.id}`)) {
-          continue;
-        }
+        const tarefaExistente = mapaTarefasExistentes.get(`${dateStr}_${padeiro.id}`);
 
         let clienteEscolhido = null;
         let buscaIdx = 0;
@@ -193,6 +187,9 @@ const BiaActions = {
         if (clienteEscolhido) {
           const prodKg = (padeiro.totalKg || 0).toFixed(0);
           const cliKg = (clienteEscolhido.totalKg || 0).toFixed(0);
+          const isSubstituicao = Boolean(tarefaExistente && String(tarefaExistente.clienteId) !== String(clienteEscolhido.id));
+          const isMesmaLoja = Boolean(tarefaExistente && String(tarefaExistente.clienteId) === String(clienteEscolhido.id));
+
           novasTarefas.push({
             padeiroId: padeiro.id,
             padeiroNome: padeiro.nome,
@@ -204,16 +201,37 @@ const BiaActions = {
             horario: '08:00',
             horarioFim: '17:00',
             status: 'pendente',
-            observacao: `Escala Alta Performance (Bia IA) - ${padeiro.nome} (${prodKg}kg) no cliente ${clienteEscolhido.nomeFantasia || clienteEscolhido.nome} (${cliKg}kg)`
+            substituicao: isSubstituicao,
+            jaAgendado: isMesmaLoja,
+            lojaAnterior: isSubstituicao ? (tarefaExistente.clienteNome || 'Loja anterior') : null,
+            tarefaExistenteId: tarefaExistente?.id || tarefaExistente?._id || null,
+            observacao: isSubstituicao
+              ? `Escala Alta Performance (Bia IA) - Substituindo ${tarefaExistente.clienteNome}`
+              : isMesmaLoja
+                ? `Escala Alta Performance (Bia IA) - Em conformidade com cronograma`
+                : `Escala Alta Performance (Bia IA) - ${padeiro.nome} (${prodKg}kg) no cliente ${clienteEscolhido.nomeFantasia || clienteEscolhido.nome} (${cliKg}kg)`
           });
         }
       }
     }
 
+    const subCount = novasTarefas.filter(t => t.substituicao).length;
+    const jaAgendadasCount = novasTarefas.filter(t => t.jaAgendado).length;
+    const novasCount = novasTarefas.filter(t => !t.substituicao && !t.jaAgendado).length;
+
+    let descInfo = `(${novasTarefas.length} atendimentos sugeridos)`;
+    if (tarefasExistentes.length > 0) {
+      if (jaAgendadasCount === novasTarefas.length) {
+        descInfo = `(${novasTarefas.length} atendimentos verificados em conformidade com o cronograma)`;
+      } else {
+        descInfo = `(${novasTarefas.length} atendimentos calculados: ${novasCount} novos, ${subCount} atualizações)`;
+      }
+    }
+
     const titulo = padeiroAlvo ? `Escala de Alta Performance - ${padeiroAlvo.nome}` : 'Escala de Alta Performance';
     const descricao = padeiroAlvo
-      ? `Alocação otimizada individual para ${padeiroAlvo.nome} nos clientes de maior demanda (${novasTarefas.length} atendimentos sugeridos).`
-      : `Cruzamento de ${rankingPadeiros.length} padeiros de alta produção com os clientes de maior volume (${novasTarefas.length} atendimentos sugeridos).`;
+      ? `Alocação otimizada individual para ${padeiroAlvo.nome} nos clientes de maior demanda ${descInfo}.`
+      : `Cruzamento de ${rankingPadeiros.length} padeiros de alta produção com os clientes de maior volume ${descInfo}.`;
 
     return {
       tipo: 'alta_performance',
@@ -437,10 +455,12 @@ const BiaActions = {
       };
     }
 
-    // Mapear tarefas já agendadas nesta semana para não duplicar padeiro
+    // Mapear tarefas já agendadas nesta semana para identificar status e substituições
     const tarefasExistentes = (cronogramaHistorico || []).filter(t => t && weekDatesIso.includes(t.data));
-    const ocupadosMap = new Set();
-    tarefasExistentes.forEach(t => ocupadosMap.add(`${t.data}_${t.padeiroId}`));
+    const mapaTarefasExistentes = new Map();
+    tarefasExistentes.forEach(t => {
+      mapaTarefasExistentes.set(`${t.data}_${t.padeiroId}`, t);
+    });
 
     const novasTarefas = [];
 
@@ -451,9 +471,7 @@ const BiaActions = {
       const dayOfWeek = diaIdx + 1;
 
       for (const padeiro of padeirosParaEscalar) {
-        if (ocupadosMap.has(`${dateStr}_${padeiro.id}`)) {
-          continue;
-        }
+        const tarefaExistente = mapaTarefasExistentes.get(`${dateStr}_${padeiro.id}`);
 
         let targetClienteId = null;
         let countVisitas = 0;
@@ -491,6 +509,9 @@ const BiaActions = {
         if (targetClienteId) {
           const clienteObj = (clientesAtivos || []).find(c => c.id === targetClienteId) || mapaClientesHistorico[targetClienteId];
           if (clienteObj) {
+            const isSubstituicao = Boolean(tarefaExistente && String(tarefaExistente.clienteId) !== String(clienteObj.id));
+            const isMesmaLoja = Boolean(tarefaExistente && String(tarefaExistente.clienteId) === String(clienteObj.id));
+
             novasTarefas.push({
               padeiroId: padeiro.id,
               padeiroNome: padeiro.nome,
@@ -502,17 +523,38 @@ const BiaActions = {
               horario: '08:00',
               horarioFim: '17:00',
               status: 'pendente',
-              observacao: `Escala Padrão Habitual (Bia IA) - Histórico: ${countVisitas}x visitas no dia/loja`
+              substituicao: isSubstituicao,
+              jaAgendado: isMesmaLoja,
+              lojaAnterior: isSubstituicao ? (tarefaExistente.clienteNome || 'Loja anterior') : null,
+              tarefaExistenteId: tarefaExistente?.id || tarefaExistente?._id || null,
+              observacao: isSubstituicao
+                ? `Escala Padrão Habitual (Bia IA) - Substituindo ${tarefaExistente.clienteNome}`
+                : isMesmaLoja
+                  ? `Escala Padrão Habitual (Bia IA) - Confirmado habitual`
+                  : `Escala Padrão Habitual (Bia IA) - Histórico: ${countVisitas}x visitas no dia/loja`
             });
           }
         }
       }
     }
 
+    const subCount = novasTarefas.filter(t => t.substituicao).length;
+    const jaAgendadasCount = novasTarefas.filter(t => t.jaAgendado).length;
+    const novasCount = novasTarefas.filter(t => !t.substituicao && !t.jaAgendado).length;
+
+    let descInfo = `(${novasTarefas.length} atendimentos sugeridos)`;
+    if (tarefasExistentes.length > 0) {
+      if (jaAgendadasCount === novasTarefas.length) {
+        descInfo = `(${novasTarefas.length} atendimentos verificados em conformidade com o cronograma)`;
+      } else {
+        descInfo = `(${novasTarefas.length} atendimentos calculados: ${novasCount} novos, ${subCount} substituições)`;
+      }
+    }
+
     const titulo = padeiroAlvo ? `Escala Habitual - ${padeiroAlvo.nome}` : 'Escala no Padrão Anterior Habitual';
     const descricao = padeiroAlvo
-      ? `Replicado o padrão habitual de ${padeiroAlvo.nome} com base no histórico real (${novasTarefas.length} atendimentos sugeridos).`
-      : `Replicado o padrão habitual da equipe com base no histórico real (${novasTarefas.length} atendimentos sugeridos).`;
+      ? `Replicado o padrão habitual de ${padeiroAlvo.nome} com base no histórico real ${descInfo}.`
+      : `Replicado o padrão habitual da equipe com base no histórico real ${descInfo}.`;
 
     return {
       tipo: 'padrao_anterior',
@@ -573,21 +615,46 @@ const BiaActions = {
 
     for (let i = 0; i < tarefas.length; i++) {
       const t = tarefas[i];
-      try {
-        const res = await API.post('/api/cronograma', {
-          padeiroId: t.padeiroId,
-          padeiroNome: t.padeiroNome,
-          codTec: t.codTec || '',
-          clienteId: t.clienteId,
-          clienteNome: t.clienteNome,
-          data: t.data,
-          horario: t.horario || '08:00',
-          horarioFim: t.horarioFim || '17:00',
-          status: 'pendente',
-          observacao: t.observacao || 'Escala gerada pela Bia'
-        });
+      // Se a tarefa já está agendada exatamente na mesma loja e dia, apenas contabiliza
+      if (t.jaAgendado) {
+        criadas++;
+        if (typeof onProgress === 'function') onProgress(criadas, total);
+        continue;
+      }
 
-        const createdId = res?.id || res?._id || res?.tarefa?.id || res?.tarefa?._id;
+      try {
+        let res = null;
+        // Se for substituição de uma tarefa existente no mesmo dia, atualiza a tarefa existente
+        if (t.substituicao && t.tarefaExistenteId) {
+          try {
+            res = await API.put(`/api/cronograma/${t.tarefaExistenteId}`, {
+              clienteId: t.clienteId,
+              clienteNome: t.clienteNome,
+              horario: t.horario || '08:00',
+              horarioFim: t.horarioFim || '17:00',
+              observacao: t.observacao || 'Escala atualizada pela Bia IA'
+            });
+          } catch (putErr) {
+            console.warn('[BIA] Falha ao atualizar via PUT, tentando POST novo:', putErr);
+          }
+        }
+
+        if (!res) {
+          res = await API.post('/api/cronograma', {
+            padeiroId: t.padeiroId,
+            padeiroNome: t.padeiroNome,
+            codTec: t.codTec || '',
+            clienteId: t.clienteId,
+            clienteNome: t.clienteNome,
+            data: t.data,
+            horario: t.horario || '08:00',
+            horarioFim: t.horarioFim || '17:00',
+            status: 'pendente',
+            observacao: t.observacao || 'Escala gerada pela Bia'
+          });
+        }
+
+        const createdId = res?.id || res?._id || res?.tarefa?.id || res?.tarefa?._id || t.tarefaExistenteId;
         if (createdId) {
           createdIds.push(createdId);
         }
@@ -597,7 +664,7 @@ const BiaActions = {
           onProgress(criadas, total);
         }
       } catch (err) {
-        console.warn('[BIA] Falha ao criar tarefa individual:', err);
+        console.warn('[BIA] Falha ao criar/atualizar tarefa individual:', err);
       }
     }
 

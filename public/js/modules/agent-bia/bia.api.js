@@ -382,7 +382,101 @@ const BiaAPI = {
       };
     }
 
-    // 7. Consulta sobre Padeiro Específico
+    // 7. Rankings Operacionais (Avaliados antes de buscas nominais individuais)
+    const isRankingClientes = (
+      norm.includes('top cliente') ||
+      norm.includes('top clientes') ||
+      norm.includes('top loja') ||
+      norm.includes('top lojas') ||
+      norm.includes('maiores clientes') ||
+      norm.includes('maior cliente') ||
+      norm.includes('maiores lojas') ||
+      norm.includes('maior loja') ||
+      norm.includes('ranking cliente') ||
+      norm.includes('ranking clientes') ||
+      norm.includes('ranking de cliente') ||
+      norm.includes('ranking de clientes') ||
+      norm.includes('ranking loja') ||
+      norm.includes('ranking lojas') ||
+      norm.includes('ranking de loja') ||
+      norm.includes('ranking de lojas') ||
+      norm.includes('clientes com mais') ||
+      norm.includes('clientes com maior') ||
+      norm.includes('lojas com mais') ||
+      norm.includes('lojas com maior') ||
+      norm.includes('quem compra mais') ||
+      norm.includes('quem recebe mais') ||
+      (norm.includes('cliente') && (norm.includes('volume') || norm.includes('demanda') || norm.includes('producao')))
+    );
+
+    const isRankingPadeiros = (
+      norm.includes('top padeiro') ||
+      norm.includes('top padeiros') ||
+      norm.includes('ranking padeiro') ||
+      norm.includes('ranking padeiros') ||
+      norm.includes('ranking de padeiro') ||
+      norm.includes('ranking de padeiros') ||
+      norm.includes('mais producao') ||
+      norm.includes('maior producao') ||
+      norm.includes('maiores producoes') ||
+      norm.includes('mais produzem') ||
+      norm.includes('mais produziu') ||
+      norm.includes('produz mais') ||
+      norm.includes('quem produz mais') ||
+      norm.includes('mais produtivo') ||
+      norm.includes('mais produtivos') ||
+      norm.includes('produtividade') ||
+      norm.includes('ranking de producao') ||
+      norm.includes('melhores padeiros') ||
+      (norm.includes('padeiro') && (norm.includes('producao') || norm.includes('ranking') || norm.includes('top') || norm.includes('produz') || norm.includes('volume')))
+    );
+
+    const isRankingGeral = !isRankingClientes && !isRankingPadeiros && (
+      norm === 'ranking' ||
+      norm === 'ver ranking' ||
+      norm.includes('ranking geral') ||
+      norm.includes('quadro de lideres') ||
+      norm.includes('desempenho geral')
+    );
+
+    if (isRankingClientes) {
+      if (rankingClientes.length > 0) {
+        const listaC = rankingClientes.slice(0, 5).map((c, idx) => {
+          const kg = (c.totalKg || 0).toFixed(0);
+          return `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${kg} kg (${c.totalVisitas || 0} atendimentos)`;
+        }).join('\n');
+
+        return {
+          text: `Aqui está o ranking atual dos clientes com maior demanda e volume:\n\n${listaC}\n\nPara otimizar o atendimento com base nesses clientes, solicite: *"Bia, crie uma escala de alta performance"*.`,
+          action: null
+        };
+      }
+    }
+
+    if (isRankingPadeiros) {
+      if (rankingPadeiros.length > 0) {
+        const listaP = rankingPadeiros.slice(0, 5).map((p, idx) => {
+          const kg = (p.totalKg || 0).toFixed(0);
+          return `* **${idx + 1}º ${p.nome}**: ${kg} kg (${p.totalAtividades || 0} visitas)`;
+        }).join('\n');
+
+        return {
+          text: `Aqui está o ranking atual de produtividade dos padeiros:\n\n${listaP}\n\nPara otimizar o atendimento com base nesses números, peça: *"Bia, crie uma escala de alta performance"*.`,
+          action: null
+        };
+      }
+    }
+
+    if (isRankingGeral) {
+      const listaP = rankingPadeiros.slice(0, 3).map((p, idx) => `* **${idx + 1}º ${p.nome}**: ${(p.totalKg || 0).toFixed(0)} kg (${p.totalAtividades || 0} visitas)`).join('\n');
+      const listaC = rankingClientes.slice(0, 3).map((c, idx) => `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${(c.totalKg || 0).toFixed(0)} kg (${c.totalVisitas || 0} atendimentos)`).join('\n');
+      return {
+        text: `Aqui está o resumo geral de rankings da operação:\n\n👨‍🍳 **Top Padeiros (Produção):**\n${listaP || '*(Sem dados)*'}\n\n🏪 **Top Clientes (Volume):**\n${listaC || '*(Sem dados)*'}\n\nPara alocar os melhores padeiros nessas lojas, peça: *"Bia, crie uma escala de alta performance"*.`,
+        action: null
+      };
+    }
+
+    // 8. Consulta sobre Padeiro Específico
     let padeiroEncontrado = null;
     for (const p of padeirosAtivos) {
       const pNomeNorm = this.normalizeText(p.nome);
@@ -418,7 +512,7 @@ const BiaAPI = {
       };
     }
 
-    // 8. Consulta sobre Cliente Específico
+    // 9. Consulta sobre Cliente Específico
     let clienteEncontrado = null;
     for (const c of clientesAtivos) {
       const cNomeNorm = this.normalizeText(c.nome);
@@ -456,30 +550,6 @@ const BiaAPI = {
         text: `Cliente **${c.nomeFantasia || c.nome}**:\n* **Razão Social**: ${c.nome}\n* **Bairro/Região**: ${c.bairro || 'Brasília/DF'}\n* **Volume Recebido**: ${kg} kg (${visitas} atendimentos)${visitasTexto}`,
         action: null
       };
-    }
-
-    // 9. Ranking e Produtividade
-    if (
-      norm.includes('ranking') ||
-      norm.includes('produz mais') ||
-      norm.includes('produtividade') ||
-      norm.includes('mais produtivo') ||
-      norm.includes('top padeiro') ||
-      norm.includes('maiores clientes') ||
-      norm.includes('volume') ||
-      norm.includes('demanda')
-    ) {
-      if (rankingPadeiros.length > 0) {
-        const listaP = rankingPadeiros.slice(0, 5).map((p, idx) => {
-          const kg = (p.totalKg || 0).toFixed(0);
-          return `* **${idx + 1}º ${p.nome}**: ${kg} kg (${p.totalAtividades || 0} visitas)`;
-        }).join('\n');
-
-        return {
-          text: `Aqui está o ranking atual de produtividade dos padeiros:\n\n${listaP}\n\nPara otimizar o atendimento com base nesses números, peça: *"Bia, crie uma escala de alta performance"*.`,
-          action: null
-        };
-      }
     }
 
     // 10. Saudações e Cumprimentos
@@ -692,4 +762,7 @@ const BiaAPI = {
 
 if (typeof window !== 'undefined') {
   window.BiaAPI = BiaAPI;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = BiaAPI;
 }
