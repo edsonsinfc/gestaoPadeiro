@@ -25,6 +25,32 @@ const BiaCommands = {
   },
 
   /**
+   * Calcula a distância de Levenshtein entre duas palavras para tolerância a erros de digitação (typos)
+   */
+  levenshtein(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  },
+
+  /**
    * Formata data ISO (YYYY-MM-DD) para formato curto brasileiro (DD/MM)
    */
   formatarDataBr(iso) {
@@ -136,6 +162,21 @@ const BiaCommands = {
             return oNorm.startsWith(partes[0] + ' ') || oNorm === partes[0];
           }).length;
           if (matchCount === 1) return p;
+        }
+      }
+    }
+
+    // Fuzzy matching para erros de digitação leves em nomes de padeiros (ex: "igor" -> "ygor", "cide" -> "cides")
+    const palavrasNorm = norm.split(/\s+/).filter(w => w.length >= 3 && !['cliente', 'padeiro', 'para', 'colocar', 'coloque', 'atenda'].includes(w));
+    for (const p of padeirosAtivos) {
+      const pNomeNorm = this.normalizeText(p.nome);
+      const primeiroNome = pNomeNorm.split(/\s+/)[0];
+      if (primeiroNome && primeiroNome.length >= 3) {
+        for (const palavra of palavrasNorm) {
+          const maxDiff = primeiroNome.length >= 6 ? 2 : 1;
+          if (this.levenshtein(palavra, primeiroNome) <= maxDiff) {
+            return p;
+          }
         }
       }
     }
@@ -257,6 +298,39 @@ const BiaCommands = {
         nome: melhorCli.nomeFantasia || melhorCli.nome,
         nomeFantasia: melhorCli.nomeFantasia || melhorCli.nome,
         origem: 'clientes_ativos_tokens'
+      };
+    }
+
+    // 5. Tolerância a Erros de Digitação (Fuzzy Matching para typos como "venza" -> "veneza")
+    const stopWordsGerais = ['colocar', 'coloque', 'preciso', 'atenda', 'cliente', 'padeiro', 'para', 'quinta', 'feira', 'segunda', 'terca', 'quarta', 'sexta', 'sabado', 'domingo', 'amanha', 'hoje', 'pela', 'pelo', 'com', 'sem', 'vai'];
+    const palavrasMensagem = norm.split(/[\s\-\/\(\)\,\.]+/).filter(w => w.length >= 4 && !stopWordsGerais.includes(w));
+
+    let melhorFuzzyCli = null;
+    let menorDistancia = 999;
+
+    for (const cli of clientesAtivos) {
+      const cNome = this.normalizeText(cli.nomeFantasia || cli.nome);
+      const stopWords = ['panificadora', 'padaria', 'supermercado', 'mercado', 'ltda', 'comercio', 'de', 'da', 'do', 'dos', 'das', 'e'];
+      const tokens = cNome.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 4 && !stopWords.includes(w));
+
+      for (const tok of tokens) {
+        for (const palavraMsg of palavrasMensagem) {
+          const maxDiff = tok.length >= 7 ? 2 : 1;
+          const dist = this.levenshtein(palavraMsg, tok);
+          if (dist <= maxDiff && dist < menorDistancia) {
+            menorDistancia = dist;
+            melhorFuzzyCli = cli;
+          }
+        }
+      }
+    }
+
+    if (melhorFuzzyCli && menorDistancia <= 2) {
+      return {
+        id: melhorFuzzyCli.id,
+        nome: melhorFuzzyCli.nomeFantasia || melhorFuzzyCli.nome,
+        nomeFantasia: melhorFuzzyCli.nomeFantasia || melhorFuzzyCli.nome,
+        origem: 'clientes_ativos_fuzzy'
       };
     }
 
