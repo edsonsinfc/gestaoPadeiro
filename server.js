@@ -78,20 +78,89 @@ app.use('/storage/:type/:filename', async (req, res, next) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Rota de download direto do APK com headers nativos para Android
-app.get(['/download/apk', '/SmartGestor.apk'], (req, res) => {
-  const possiblePaths = [
-    path.join(__dirname, 'SmartGestor.apk'),
-    path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk'),
-    path.join(__dirname, 'public', 'SmartGestor.apk')
-  ];
-  const apkPath = possiblePaths.find(p => fs.existsSync(p));
-  if (apkPath) {
-    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-    res.setHeader('Content-Disposition', 'attachment; filename="SmartGestor.apk"');
-    return res.sendFile(apkPath);
+// ============================================================
+// APK DOWNLOAD & GITHUB RELEASE RESOLVER
+// ============================================================
+let githubReleaseCache = {
+  data: null,
+  timestamp: 0
+};
+
+async function resolveLatestApkDownloadUrl() {
+  const now = Date.now();
+  if (githubReleaseCache.data?.url && (now - githubReleaseCache.timestamp < 5 * 60 * 1000)) {
+    return githubReleaseCache.data.url;
   }
-  return res.redirect('https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk');
+  try {
+    const ghRes = await fetch('https://api.github.com/repos/edsonsinfc/gestaoPadeiro/releases/latest', {
+      headers: {
+        'User-Agent': 'SmartGestor-App',
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (ghRes.ok) {
+      const release = await ghRes.json();
+      const rawTag = release.tag_name || '1.0.0';
+      const cleanVersion = rawTag.replace(/^v/i, '');
+      const apkAsset = release.assets?.find(a => a.name === 'SmartGestor.apk') || release.assets?.find(a => a.name && a.name.toLowerCase().endsWith('.apk'));
+      const downloadUrl = apkAsset?.browser_download_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+      githubReleaseCache = {
+        data: {
+          version: cleanVersion,
+          url: downloadUrl,
+          mandatory: false,
+          notes: release.body || 'Nova atualização disponível com melhorias e correções.',
+          releaseUrl: release.html_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest'
+        },
+        timestamp: now
+      };
+      return downloadUrl;
+    }
+  } catch (err) {
+    console.warn('[APK Route] Falha ao consultar GitHub Releases:', err.message);
+  }
+  return githubReleaseCache.data?.url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+}
+
+// Rota universal de download do APK (PWA e Navegadores)
+app.get(['/download/apk', '/SmartGestor.apk', '/smartgestor.apk'], async (req, res, next) => {
+  try {
+    const possiblePaths = [
+      path.join(__dirname, 'SmartGestor.apk'),
+      path.join(__dirname, 'smartgestor.apk'),
+      path.join(__dirname, 'public', 'SmartGestor.apk'),
+      path.join(__dirname, 'public', 'smartgestor.apk'),
+      path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk'),
+      path.join(__dirname, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk')
+    ];
+    const apkPath = possiblePaths.find(p => fs.existsSync(p));
+    if (apkPath) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment; filename="SmartGestor.apk"');
+      return res.sendFile(apkPath);
+    }
+
+    if (typeof googleDriveService !== 'undefined' && googleDriveService.isEnabled()) {
+      try {
+        let fileId = await googleDriveService.findFileByName('SmartGestor.apk');
+        if (!fileId) fileId = await googleDriveService.findFileByName('smartgestor.apk');
+        if (fileId) {
+          const { stream } = await googleDriveService.getFileStream(fileId);
+          res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+          res.setHeader('Content-Disposition', 'attachment; filename="SmartGestor.apk"');
+          return stream.pipe(res);
+        }
+      } catch (gErr) {
+        console.warn('[APK Download] Google Drive fallback falhou:', gErr.message);
+      }
+    }
+
+    // Busca o asset APK real do GitHub Releases e redireciona (garantindo que nunca caia em 404)
+    const targetUrl = await resolveLatestApkDownloadUrl();
+    return res.redirect(targetUrl);
+  } catch (error) {
+    next(error);
+  }
 });
 
 
@@ -261,111 +330,24 @@ app.get('/api/foto-produto/:codigo', async (req, res) => {
   return res.status(500).json({ error: 'Erro ao baixar foto' });
 });
 
-// Servir o arquivo APK compilado automaticamente
-app.get(['/smartgestor.apk', '/SmartGestor.apk'], async (req, res, next) => {
-  try {
-    // 1. Tenta buscar na pasta public (onde fica em produção/Hostinger)
-    let apkPath = path.join(__dirname, 'public', 'smartgestor.apk');
-    if (fs.existsSync(apkPath)) {
-      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-      res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
-      return res.sendFile(apkPath);
-    }
-
-    // 2. Fallback para a pasta de build do Android (desenvolvimento local)
-    apkPath = path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk');
-    if (fs.existsSync(apkPath)) {
-      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-      res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
-      return res.sendFile(apkPath);
-    }
-
-    // 3. Fallback para o Google Drive
-    if (googleDriveService.isEnabled()) {
-      try {
-        console.log('[APK Download] Procurando SmartGestor.apk no Google Drive...');
-        let fileId = await googleDriveService.findFileByName('SmartGestor.apk');
-        if (!fileId) {
-          fileId = await googleDriveService.findFileByName('smartgestor.apk');
-        }
-
-        if (fileId) {
-          console.log(`[APK Download] Servindo SmartGestor.apk do Google Drive (ID: ${fileId})`);
-          const { stream } = await googleDriveService.getFileStream(fileId);
-          
-          res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-          res.setHeader('Content-Disposition', 'attachment; filename=SmartGestor.apk');
-          return stream.pipe(res);
-        }
-      } catch (err) {
-        console.error('❌ [APK Download] Erro ao buscar APK no Google Drive:', err.message);
-      }
-    }
-
-    res.status(404).send('Arquivo APK não encontrado.');
-  } catch (error) {
-    next(error);
-  }
-});
-
 // ============================================================
 // API ROUTES
 // ============================================================
 app.get('/api/ping', (req, res) => res.json({ pong: true }));
-// Cache em memória para consulta do GitHub Releases (evita rate limits da API pública)
-let githubReleaseCache = {
-  data: null,
-  timestamp: 0
-};
 
 app.get('/api/app-version', async (req, res) => {
-  const now = Date.now();
-  if (githubReleaseCache.data && (now - githubReleaseCache.timestamp < 5 * 60 * 1000)) {
+  const downloadUrl = await resolveLatestApkDownloadUrl();
+  if (githubReleaseCache.data) {
     return res.json(githubReleaseCache.data);
   }
 
   let versionInfo = {
     version: '1.0.0',
-    url: 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk',
+    url: downloadUrl || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk',
     mandatory: false,
     notes: 'Versão oficial do aplicativo Smart Gestor.',
     releaseUrl: 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest'
   };
-
-  try {
-    const ghRes = await fetch('https://api.github.com/repos/edsonsinfc/gestaoPadeiro/releases/latest', {
-      headers: {
-        'User-Agent': 'SmartGestor-App',
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-
-    if (ghRes.ok) {
-      const release = await ghRes.json();
-      const rawTag = release.tag_name || '1.0.0';
-      const cleanVersion = rawTag.replace(/^v/i, '');
-      const apkAsset = release.assets?.find(a => a.name && a.name.toLowerCase().endsWith('.apk'));
-      const downloadUrl = apkAsset?.browser_download_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
-
-      versionInfo = {
-        version: cleanVersion,
-        url: downloadUrl,
-        mandatory: false,
-        notes: release.body || 'Nova atualização disponível com melhorias e correções.',
-        releaseUrl: release.html_url || 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest'
-      };
-
-      githubReleaseCache = {
-        data: versionInfo,
-        timestamp: now
-      };
-
-      console.log(`[Version Check] 🚀 GitHub Release encontrada: v${cleanVersion}`);
-      return res.json(versionInfo);
-    }
-  } catch (ghErr) {
-    console.warn('[Version Check] Falha ao consultar GitHub Releases, tentando fallback:', ghErr.message);
-  }
 
   try {
     if (googleDriveService.isEnabled()) {

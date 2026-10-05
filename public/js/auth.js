@@ -94,7 +94,7 @@ const Auth = {
     if (typeof App !== 'undefined' && typeof App.downloadApk === 'function') {
       App.downloadApk();
     } else {
-      const downloadUrl = 'https://github.com/edsonsinfc/gestaoPadeiro/releases/latest/download/SmartGestor.apk';
+      const downloadUrl = `${window.location.origin}/download/apk`;
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = 'SmartGestor.apk';
