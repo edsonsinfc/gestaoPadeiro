@@ -292,21 +292,72 @@ const BiaCommands = {
   },
 
   /**
-   * Detecta se a mensagem é um comando operacional do gestor
+   * Detecta se a mensagem é um comando operacional avulso do gestor
+   * Ignora solicitações de desfazer, escalas gerais em lote ou conversas normais
    */
   isGestorCommand(message) {
     if (!message) return false;
     const norm = this.normalizeText(message);
 
-    const triggers = [
-      'preciso que', 'quero que', 'favor', 'coloque', 'coloca', 'escala', 'escalar',
-      'agenda', 'agendar', 'atenda', 'atender', 'vai atender', 'vai para', 'vai pro',
-      'muda', 'mudar', 'altera', 'alterar', 'troca', 'trocar', 'tira', 'tirar',
-      'remove', 'remover', 'cancela', 'cancelar', 'apaga', 'apagar', 'desescala',
-      'folga', 'onde vai', 'onde o', 'onde a', 'quem atende', 'quem vai', 'qual a escala'
+    // 1. Excluir comandos de Desfazer / Reverter
+    const isDesfazer = (
+      norm.includes('desfazer') ||
+      norm.includes('desfaca') ||
+      norm.includes('reverter') ||
+      norm.includes('voltar atras') ||
+      norm.includes('cancelar escala') ||
+      norm.includes('apagar escala') ||
+      norm.includes('remover escala')
+    );
+    if (isDesfazer) return false;
+
+    // 2. Excluir comandos de Escala Geral em Lote
+    const isEscalaEmLote = (
+      norm.includes('alta performance') ||
+      norm.includes('habitual') ||
+      norm.includes('padrao') ||
+      norm.includes('gerar escala') ||
+      norm.includes('criar escala') ||
+      norm.includes('fazer escala') ||
+      norm.includes('faca a escala') ||
+      norm.includes('crie a escala') ||
+      norm.includes('montar escala') ||
+      norm.includes('monte a escala') ||
+      norm.includes('nova escala')
+    );
+    if (isEscalaEmLote) return false;
+
+    // 3. Excluir saudações, panorama e consultas gerais
+    if (
+      norm === 'oi' || norm === 'ola' || norm.startsWith('oi ') || norm.startsWith('ola ') ||
+      norm.includes('bom dia') || norm.includes('boa tarde') || norm.includes('boa noite') ||
+      norm.includes('resumo') || norm.includes('panorama') || norm.includes('ranking') ||
+      norm.includes('ajuda') || norm.includes('quem e voce') || norm.includes('como funciona')
+    ) {
+      return false;
+    }
+
+    // 4. Triggers precisos de comandos avulsos/pontuais
+    const triggersAvulsos = [
+      'preciso que', 'quero que', 'coloque', 'coloca', 'bote', 'bota',
+      'atenda', 'atender', 'vai atender', 'vai para', 'vai pro',
+      'troca', 'trocar', 'altera', 'alterar', 'muda', 'mudar',
+      'tira o', 'tira a', 'tirar o', 'tirar a', 'remove o', 'remove a',
+      'remover o', 'remover a', 'cancela o', 'cancela a', 'cancelar o', 'cancelar a',
+      'desescala', 'folga do', 'folga da',
+      'onde vai', 'onde o', 'onde a', 'quem atende', 'quem vai', 'qual a escala do'
     ];
 
-    return triggers.some(t => norm.includes(t));
+    const temTrigger = triggersAvulsos.some(t => norm.includes(t));
+    if (temTrigger) return true;
+
+    // 5. Ou se a frase contém dias da semana e termos de agendamento específico
+    const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'amanha'];
+    const temDia = dias.some(d => norm.includes(d));
+    const verbosAcao = ['atenda', 'atender', 'colocar', 'coloca', 'vai', 'agendar', 'agenda'];
+    const temAcao = verbosAcao.some(v => norm.includes(v));
+
+    return temDia && temAcao;
   },
 
   /**
@@ -314,6 +365,33 @@ const BiaCommands = {
    */
   processarComando(userMessage, context = {}, options = {}) {
     const norm = this.normalizeText(userMessage);
+
+    // Ignora se for desfazer ou escala em lote
+    const isDesfazer = (
+      norm.includes('desfazer') ||
+      norm.includes('desfaca') ||
+      norm.includes('reverter') ||
+      norm.includes('voltar atras') ||
+      norm.includes('cancelar escala') ||
+      norm.includes('apagar escala') ||
+      norm.includes('remover escala')
+    );
+    if (isDesfazer) return null;
+
+    const isEscalaEmLote = (
+      norm.includes('alta performance') ||
+      norm.includes('habitual') ||
+      norm.includes('padrao') ||
+      norm.includes('gerar escala') ||
+      norm.includes('criar escala') ||
+      norm.includes('fazer escala') ||
+      norm.includes('faca a escala') ||
+      norm.includes('crie a escala') ||
+      norm.includes('montar escala') ||
+      norm.includes('monte a escala')
+    );
+    if (isEscalaEmLote) return null;
+
     const padeirosAtivos = context.padeirosAtivos || [];
     const clientesAtivos = context.clientesAtivos || [];
     const cronogramaHistorico = context.cronogramaHistorico || [];
@@ -462,14 +540,19 @@ const BiaCommands = {
     }
 
     // 5. Caso: Comando incompleto (orienta o gestor de forma clara)
-    if (this.isGestorCommand(norm)) {
-      const faltantes = [];
-      if (!padeiro) faltantes.push('o **nome do padeiro**');
-      if (!diaInfo) faltantes.push('o **dia da semana** (ex: segunda, terça...)');
-      if (!cliente) faltantes.push('o **nome do cliente/loja**');
-
+    // SÓ DEVE DISPARAR se houver elementos suficientes com intenção clara de agendar
+    if (padeiro && diaInfo && !cliente) {
       return {
-        text: `Entendi que você deseja fazer um ajuste pontual na escala, mas para eu montar o agendamento certinho, preciso que você me informe ${faltantes.join(' e ')}.\n\nExemplo: *"Preciso que na segunda o Cides atenda o Veneza"* ou *"Coloca o Daniel na quarta no Big Box"*.\n\nPoderia reformular indicando esses dados?`,
+        text: `Identifiquei o padeiro **${padeiro.nome}** e o dia **${diaInfo.diaNome}-feira**, mas faltou indicar qual **cliente ou loja** ele deve atender.\n\nExemplo: *"Preciso que na ${diaInfo.diaNome} o ${padeiro.nome.split(' ')[0]} atenda o Veneza"*.\n\nQual loja deseja agendar para ele?`,
+        action: null,
+        actionData: null,
+        tipo: 'comando_incompleto'
+      };
+    }
+
+    if (padeiro && cliente && !diaInfo) {
+      return {
+        text: `Identifiquei o padeiro **${padeiro.nome}** e a loja **${cliente.nomeFantasia || cliente.nome}**, mas para qual **dia da semana** você gostaria de agendá-lo?`,
         action: null,
         actionData: null,
         tipo: 'comando_incompleto'

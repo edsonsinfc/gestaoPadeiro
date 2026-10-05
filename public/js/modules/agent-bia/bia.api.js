@@ -159,7 +159,7 @@ const BiaAPI = {
     // 1.5. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
     if (typeof BiaCommands !== 'undefined') {
       const comando = BiaCommands.processarComando(userMessage, ctx);
-      if (comando) {
+      if (comando && comando.action) {
         return comando;
       }
     }

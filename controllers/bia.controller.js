@@ -168,19 +168,7 @@ function gerarRespostaLocal(userMessage, context = {}) {
   const cronograma = context.cronogramaHistorico || [];
   const atividades = context.atividades || [];
 
-  // 0. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
-  if (BiaCommands) {
-    const comando = BiaCommands.processarComando(userMessage, context);
-    if (comando) {
-      return {
-        text: comando.text,
-        action: comando.action,
-        actionData: comando.actionData
-      };
-    }
-  }
-
-  // 1. Desfazer / Reverter
+  // 0. DESFAZER / REVERTER (Prioridade Absoluta)
   if (
     norm.includes('desfazer') ||
     norm.includes('desfaca') ||
@@ -199,6 +187,18 @@ function gerarRespostaLocal(userMessage, context = {}) {
         confirmar: true
       }
     };
+  }
+
+  // 1. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
+  if (BiaCommands) {
+    const comando = BiaCommands.processarComando(userMessage, context);
+    if (comando) {
+      return {
+        text: comando.text,
+        action: comando.action,
+        actionData: comando.actionData
+      };
+    }
   }
 
   // 2. DETECÇÃO DE PEDIDO DE ESCALA (Habitual, Específica de Padeiro ou Alta Performance)
@@ -596,10 +596,34 @@ exports.chat = async (req, res) => {
   // Carrega e enriquece contexto operacional completo em tempo real do banco de dados
   const enrichedContext = await carregarContextoBancoSeNecessario(context);
 
-  // 1. Prioridade Absoluta: Módulo Especializado de Comandos Avulsos do Gestor
-  if (BiaCommands && BiaCommands.isGestorCommand(normalizarTexto(message))) {
+  const norm = normalizarTexto(message);
+
+  // 0. DESFAZER / REVERTER (Prioridade Absoluta)
+  if (
+    norm.includes('desfazer') ||
+    norm.includes('desfaca') ||
+    norm.includes('reverter') ||
+    norm.includes('voltar atras') ||
+    norm.includes('cancelar escala') ||
+    norm.includes('apagar escala') ||
+    norm.includes('remover escala')
+  ) {
+    return res.json({
+      text: 'Localizei os registros das últimas ações geradas no cronograma. Deseja reverter as alterações recentes criadas pela Bia?',
+      action: 'desfazer_alteracoes',
+      actionData: {
+        action: 'desfazer_alteracoes',
+        descricao: 'Reverter última escala gerada',
+        confirmar: true
+      },
+      source: 'desfazer_engine'
+    });
+  }
+
+  // 1. Módulo Especializado de Comandos Avulsos do Gestor (apenas comandos pontuais executáveis)
+  if (BiaCommands && BiaCommands.isGestorCommand(norm)) {
     const comando = BiaCommands.processarComando(message, enrichedContext);
-    if (comando) {
+    if (comando && comando.action) {
       return res.json({
         text: comando.text,
         action: comando.action,
