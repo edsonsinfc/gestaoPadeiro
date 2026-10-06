@@ -26,7 +26,7 @@ var safeGetLocalStorage = window.safeGetLocalStorage;
 var safeSetLocalStorage = window.safeSetLocalStorage;
 
 const App = {
-  APP_VERSION: '1.0.0',
+  APP_VERSION: '1.0.26',
   currentRoute: 'login',
   async init() {
     // === PRIORITY 1: Renderizar a tela IMEDIATAMENTE ===
@@ -1108,7 +1108,26 @@ const App = {
       if (info && info.version) {
         console.log(`[Update Check] Versão atual: v${this.APP_VERSION} | Versão remota: v${info.version}`);
         if (this.isVersionNewer(this.APP_VERSION, info.version)) {
-          this.showUpdateModal(info);
+          // 1. Trava anti-loop: respeita dispensa do usuário (por 2 horas) se não for manual nem obrigatória
+          const dismissedUntil = parseInt(safeGetLocalStorage('apk_update_dismissed_until') || '0', 10);
+          if (!manual && dismissedUntil && Date.now() < dismissedUntil && !info.mandatory) {
+            console.log('[Update Check] Atualização adiada pelo usuário até:', new Date(dismissedUntil).toLocaleTimeString());
+            return;
+          }
+
+          // 2. Trava anti-loop de repetição de download:
+          // Se o instalador já foi disparado para esta exata versão nos últimos 15 minutos e a versão nativa não mudou,
+          // NÃO disparar download automático repetitivo em segundo plano. Permite o usuário usar o app!
+          const lastTarget = safeGetLocalStorage('apk_last_install_target');
+          const lastTime = parseInt(safeGetLocalStorage('apk_last_install_time') || '0', 10);
+          const hasRecentAttempt = (lastTarget === info.version) && (Date.now() - lastTime < 15 * 60 * 1000);
+          const shouldAutoStart = !hasRecentAttempt;
+
+          if (hasRecentAttempt) {
+            console.warn(`[Update Check] Tentativa recente de instalação detectada para v${info.version}. Auto-download desativado para evitar loop.`);
+          }
+
+          this.showUpdateModal(info, shouldAutoStart);
         } else if (manual) {
           if (typeof Components !== 'undefined' && Components.toast) {
             Components.toast(`Seu Smart Gestor já está na versão mais recente (v${this.APP_VERSION})! ✨`, 'success');
@@ -1137,6 +1156,13 @@ const App = {
     return false;
   },
 
+  dismissApkUpdateModal() {
+    // Adia por 2 horas para não perturbar em foreground/resume repetidamente
+    safeSetLocalStorage('apk_update_dismissed_until', (Date.now() + 2 * 60 * 60 * 1000).toString());
+    const m = document.getElementById('apk-update-modal');
+    if (m) m.remove();
+  },
+
   showUpdateModal(info, autoStart = true) {
     if (this._isDownloadingApk) {
       console.log('[Update Check] Modal de update não substituído pois download está ativo.');
@@ -1159,12 +1185,12 @@ const App = {
     modal.style.zIndex = '99999';
 
     const closeBtn = isMandatory
-      ? '' // Obrigatória: sem botão de fechar
-      : `<button onclick="document.getElementById('apk-update-modal').remove()" style="position: absolute; top: 14px; right: 14px; background: transparent; border: none; font-size: 20px; color: var(--text-tertiary); cursor: pointer; padding: 4px;">✕</button>`;
+      ? ''
+      : `<button onclick="App.dismissApkUpdateModal()" style="position: absolute; top: 14px; right: 14px; background: transparent; border: none; font-size: 20px; color: var(--text-tertiary); cursor: pointer; padding: 4px;">✕</button>`;
 
     const skipBtn = isMandatory
-      ? '' // Obrigatória: sem botão de pular
-      : `<button class="pf-btn-ghost pf-btn-full" onclick="document.getElementById('apk-update-modal').remove()" style="font-size: 12px; color: var(--text-tertiary);">Lembrar Mais Tarde</button>`;
+      ? ''
+      : `<button class="pf-btn-ghost pf-btn-full" onclick="App.dismissApkUpdateModal()" style="font-size: 13px; color: var(--text-tertiary); margin-top: 6px; cursor: pointer;">Lembrar Mais Tarde</button>`;
 
     modal.innerHTML = `
       <div class="pf-modal-ios" style="max-width:340px; margin:auto; border-radius:24px; padding:24px; text-align:center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); background: var(--surface-bg); position: relative;">
@@ -1179,20 +1205,25 @@ const App = {
         </p>
 
         ${hasNativeUpdater ? `
-          <div style="background: #e2e8f0; border-radius: 12px; height: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
+          <div id="apk-progress-wrapper" style="${autoStart ? '' : 'display:none;'} background: #e2e8f0; border-radius: 12px; height: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
             <div id="apk-download-bar" style="background: linear-gradient(90deg, #1E4BFF, #60A5FA); width: 0%; height: 100%; border-radius: 12px; transition: width 0.2s ease;"></div>
           </div>
-          <div id="apk-download-text" style="font-size: 13px; font-weight: 700; color: #1E4BFF; margin-bottom: 16px;">
+          <div id="apk-download-text" style="${autoStart ? '' : 'display:none;'} font-size: 13px; font-weight: 700; color: #1E4BFF; margin-bottom: 16px;">
             Preparando download...
           </div>
         ` : ''}
 
         <div id="apk-update-action-container">
-          ${hasNativeUpdater ? `
+          ${hasNativeUpdater ? (autoStart ? `
             <p style="font-size: 12px; color: var(--text-tertiary); margin: 0 0 12px 0; line-height: 1.4;">O instalador abrirá automaticamente ao concluir.</p>
             ${skipBtn}
           ` : `
-            <button id="apk-direct-download-btn" onclick="App.forceOpenApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none;">
+            <button id="apk-start-install-btn" onclick="document.getElementById('apk-progress-wrapper').style.display='block'; document.getElementById('apk-download-text').style.display='block'; this.style.display='none'; App.downloadApkUpdate('${absoluteUrl}', '${info.version}');" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none; background: #1E4BFF; color: #fff;">
+              <i data-lucide="download" style="width:18px;height:18px"></i> Instalar Atualização Agora
+            </button>
+            ${skipBtn}
+          `) : `
+            <button id="apk-direct-download-btn" onclick="App.forceOpenApkDownload('${absoluteUrl}')" class="pf-btn-primary pf-btn-full" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 700; border-radius: 14px; margin-bottom: 10px; cursor: pointer; border: none; background: #1E4BFF; color: #fff;">
               <i data-lucide="download" style="width:18px;height:18px"></i> Baixar Atualização (APK)
             </button>
             ${skipBtn}
@@ -1208,8 +1239,7 @@ const App = {
 
     if (autoStart && hasNativeUpdater) {
       this.downloadApkUpdate(absoluteUrl, info.version);
-    } else if (!hasNativeUpdater && isCapacitor) {
-      // APK Capacitor mas SEM plugin nativo: dispara download direto automaticamente
+    } else if (!hasNativeUpdater && isCapacitor && autoStart) {
       console.log('[Update Check] ApkUpdater não disponível, disparando download direto via sistema...');
       setTimeout(() => this.forceOpenApkDownload(absoluteUrl), 800);
     }
@@ -1325,6 +1355,8 @@ const App = {
         downloadStarted = true;
         cleanup();
         console.log('[Update Check] Instalador disparado!');
+        safeSetLocalStorage('apk_last_install_target', version);
+        safeSetLocalStorage('apk_last_install_time', Date.now().toString());
         if (progressText) { progressText.style.color = '#10b981'; progressText.textContent = 'Download concluído! Abrindo instalador...'; }
         if (progressBar) progressBar.style.width = '100%';
         setTimeout(() => { const m = document.getElementById('apk-update-modal'); if (m) m.remove(); }, 5000);
