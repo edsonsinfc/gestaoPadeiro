@@ -796,7 +796,10 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                     actionData = parsed;
                   }
                 } catch (e) {}
-                cleanText = rawText.replace(/```json[\s\S]*?```/g, '').trim();
+                cleanText = rawText.replace(/```(?:json)?[\s\S]*?(?:```|$)/gi, '').trim();
+                if (!cleanText && actionData && actionData.descricao) {
+                  cleanText = actionData.descricao;
+                }
               }
 
               // Se a ação for agendar avulso ou ajuste de padeiro, complementa os dados
