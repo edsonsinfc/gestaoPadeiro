@@ -658,17 +658,30 @@
   color: #FFFFFF;
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s;
+  touch-action: manipulation;
+  transition: transform 0.15s, background-color 0.15s;
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.35);
+}
+
+.bia-btn-stop-listening svg {
+  pointer-events: none;
 }
 
 .bia-btn-stop-listening:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
+}
+
+.bia-btn-stop-listening:active {
+  transform: scale(0.92);
+  background: #E0352B;
 }
 
 .bia-btn-send {

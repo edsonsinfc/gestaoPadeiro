@@ -141,8 +141,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
               <span class="bia-wave-bar"></span><span class="bia-wave-bar"></span><span class="bia-wave-bar"></span><span class="bia-wave-bar"></span>
             </div>
             <span class="bia-listening-text" id="bia-listening-text">Ouvindo... fale seu comando</span>
-            <button type="button" class="bia-btn-stop-listening" id="bia-btn-stop-listening" title="Parar">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="2"/></svg>
+            <button type="button" class="bia-btn-stop-listening" id="bia-btn-stop-listening" title="Parar e Enviar" aria-label="Parar gravação">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
             </button>
           </div>
           <form id="bia-input-form" class="bia-input-box" onsubmit="event.preventDefault();">
@@ -204,7 +204,17 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     const micBtn = document.getElementById('bia-btn-mic');
     const stopBtn = document.getElementById('bia-btn-stop-listening');
     if (micBtn) micBtn.addEventListener('click', () => this.toggleVoice());
-    if (stopBtn) stopBtn.addEventListener('click', () => this.stopVoice());
+    if (stopBtn) {
+      const handleStop = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        this.stopVoice();
+      };
+      stopBtn.addEventListener('click', handleStop);
+      stopBtn.addEventListener('touchend', handleStop);
+    }
 
     // Chips
     document.querySelectorAll('.bia-chip').forEach(chip => {
@@ -240,6 +250,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
   closeModal() {
     this.stopVoice();
+    this.setListeningUI(false);
     const overlay = document.getElementById('bia-modal-overlay');
     if (overlay) {
       overlay.classList.remove('active');
@@ -248,10 +259,12 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   /**
-   * Entrada por voz (Web Speech API, pt-BR). Ao finalizar a fala, envia o comando automaticamente.
+   * Entrada por voz (Capacitor Speech Recognition no Android / Web Speech API no navegador).
+   * Ao finalizar a fala ou clicar em parar, envia o comando automaticamente para a Bia.
    */
   isListening: false,
   recognition: null,
+  nativeStop: null,
 
   toggleVoice() {
     if (this.isListening) this.stopVoice();
@@ -273,36 +286,98 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         return;
       }
 
-      let lastText = '';
-      let finished = false;
-      const finish = async () => {
-        if (finished) return;
-        finished = true;
+      let capturedText = '';
+      let isFinalizing = false;
+      let finalizeTimer = null;
+      let maxDurationTimer = null;
+
+      const finishAndSubmit = async (reason = 'auto') => {
+        if (isFinalizing) return;
+        isFinalizing = true;
+
+        if (finalizeTimer) { clearTimeout(finalizeTimer); finalizeTimer = null; }
+        if (maxDurationTimer) { clearTimeout(maxDurationTimer); maxDurationTimer = null; }
+        this.nativeStop = null;
+
+        // Fecha a UI de escuta imediatamente
         this.setListeningUI(false);
-        try { await NativeSR.removeAllListeners(); } catch (e) {}
-        const text = lastText.trim();
+
+        // Envia parada nativa com tolerância a falhas
+        try { NativeSR.stop(); } catch (e) {}
+
+        // Aguarda breve intervalo para limpar listeners sem bloquear o fluxo
+        setTimeout(async () => {
+          try { await NativeSR.removeAllListeners(); } catch (e) {}
+        }, 300);
+
+        // Obtém o texto capturado ou que ficou no input
+        const text = (capturedText || (input ? input.value : '') || '').trim();
         if (input) input.value = '';
-        if (text) this.handleUserSubmit(text);
+
+        if (text) {
+          console.log('[BIA Voice] Enviando comando capturado (' + reason + '):', text);
+          this.handleUserSubmit(text);
+        } else if (reason === 'manual_stop') {
+          console.log('[BIA Voice] Microfone parado sem texto detectado.');
+        }
       };
 
-      await NativeSR.removeAllListeners();
+      // Limpa listeners antigos
+      try { await NativeSR.removeAllListeners(); } catch (e) {}
+
+      // Listener de resultados parciais e finais
       await NativeSR.addListener('partialResults', (d) => {
-        if (d && d.matches && d.matches[0]) {
-          lastText = d.matches[0];
-          if (input) input.value = lastText;
+        if (d && d.matches && d.matches.length > 0) {
+          const match = d.matches[0];
+          if (match && match.trim()) {
+            capturedText = match.trim();
+            if (input) input.value = capturedText;
+          }
         }
       });
+
+      // Listener de estado de escuta do Android (ex: fim da fala / silêncio)
       await NativeSR.addListener('listeningState', (d) => {
-        if (d && d.status === 'stopped') finish();
+        if (d && d.status === 'stopped') {
+          if (!isFinalizing) {
+            this.setListeningUI(true, 'Processando áudio...');
+            if (finalizeTimer) clearTimeout(finalizeTimer);
+            // Aguarda 350ms para garantir chegada do onResults final do Android antes de submeter
+            finalizeTimer = setTimeout(() => {
+              finishAndSubmit('end_of_speech');
+            }, 350);
+          }
+        }
       });
 
-      this.nativeFinish = finish;
-      this.setListeningUI(true);
+      // Função chamada ao clicar no botão de parar
+      this.nativeStop = () => {
+        if (isFinalizing) return;
+        // Atualiza a interface na hora: feedback imediato ao usuário
+        this.setListeningUI(true, 'Finalizando áudio...');
+        try { NativeSR.stop(); } catch (e) {}
+        // Aguarda 250ms para receber o último resultado do reconhecimento e envia
+        setTimeout(() => {
+          finishAndSubmit('manual_stop');
+        }, 250);
+      };
+
+      this.setListeningUI(true, 'Ouvindo... fale seu comando');
+
+      // Watchdog de segurança: 20 segundos máximos de escuta contínua
+      maxDurationTimer = setTimeout(() => {
+        if (!isFinalizing) finishAndSubmit('timeout');
+      }, 20000);
+
       const res = await NativeSR.start({ language: 'pt-BR', maxResults: 1, partialResults: true, popup: false });
-      if (res && res.matches && res.matches[0]) lastText = res.matches[0];
+      if (res && res.matches && res.matches[0]) {
+        capturedText = res.matches[0];
+        if (input) input.value = capturedText;
+      }
     } catch (err) {
       console.warn('[BIA] Voz nativa falhou:', err);
       this.setListeningUI(false);
+      this.nativeStop = null;
       this.addBiaMessage('Não consegui acessar o microfone. Digite o comando.');
     }
   },
@@ -329,7 +404,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     this.recognition = rec;
     let finalText = '';
 
-    rec.onstart = () => this.setListeningUI(true);
+    rec.onstart = () => this.setListeningUI(true, 'Ouvindo... fale seu comando');
     rec.onresult = (e) => {
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -359,23 +434,37 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   stopVoice() {
-    const NativeSR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-    if (NativeSR && this.isListening) {
-      Promise.resolve(NativeSR.stop()).catch(() => {}).then(() => { if (this.nativeFinish) this.nativeFinish(); });
+    if (!this.isListening) {
+      this.setListeningUI(false);
       return;
     }
-    if (this.recognition) {
-      try { this.recognition.stop(); } catch (e) {}
+
+    if (this.nativeStop) {
+      this.nativeStop();
+      return;
     }
+
+    if (this.recognition) {
+      this.setListeningUI(false);
+      try { this.recognition.stop(); } catch (e) {}
+      return;
+    }
+
+    this.setListeningUI(false);
   },
 
-  setListeningUI(on) {
+  setListeningUI(on, statusText = null) {
     this.isListening = on;
     const mic = document.getElementById('bia-btn-mic');
     const ind = document.getElementById('bia-listening-indicator');
+    const textEl = document.getElementById('bia-listening-text');
     const box = document.getElementById('bia-input-form');
     if (mic) mic.classList.toggle('listening', on);
-    if (ind) ind.style.display = on ? 'flex' : 'none';
+    if (ind) {
+      ind.style.display = on ? 'flex' : 'none';
+      if (textEl && statusText) textEl.textContent = statusText;
+      else if (textEl) textEl.textContent = 'Ouvindo... fale seu comando';
+    }
     if (box) box.classList.toggle('bia-listening', on);
   },
 
