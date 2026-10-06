@@ -640,8 +640,8 @@ const BiaAPI = {
   /**
    * Envia uma mensagem do usuário com fallback em camadas (Servidor -> Gemini Direto -> Motor Local)
    */
-  async sendMessage(userMessage) {
-    if (!userMessage || !userMessage.trim()) {
+  async sendMessage(userMessage, options = {}) {
+    if ((!userMessage || !userMessage.trim()) && (!options || !options.audio)) {
       throw new Error('Mensagem vazia.');
     }
 
@@ -656,28 +656,36 @@ const BiaAPI = {
     }
 
     // Adicionar mensagem ao histórico local
-    this.conversationHistory.push({
-      role: 'user',
-      parts: [{ text: userMessage }]
-    });
+    if (userMessage && userMessage.trim()) {
+      this.conversationHistory.push({
+        role: 'user',
+        parts: [{ text: userMessage }]
+      });
+    }
 
     let result = null;
 
     // CAMADA 1: Chamar endpoint backend seguro /api/bia/chat
     try {
       if (typeof API !== 'undefined' && typeof API.post === 'function') {
-        const serverRes = await API.post(BIA_CONFIG.serverChatEndpoint || '/api/bia/chat', {
-          message: userMessage,
+        const payload = {
+          message: userMessage || '',
           history: this.conversationHistory,
           context: systemContext
-        });
+        };
+        if (options && options.audio) {
+          payload.audio = options.audio;
+          payload.mimeType = options.mimeType || 'audio/webm';
+        }
+        const serverRes = await API.post(BIA_CONFIG.serverChatEndpoint || '/api/bia/chat', payload);
 
-        if (serverRes && (serverRes.text || serverRes.action)) {
+        if (serverRes && (serverRes.text || serverRes.action || serverRes.transcricao)) {
           result = {
             text: serverRes.text,
             action: serverRes.action,
             actionData: serverRes.actionData,
             pensamento: serverRes.pensamento || null,
+            transcricao: serverRes.transcricao || null,
             modelUsed: serverRes.model || serverRes.source || 'server'
           };
         }

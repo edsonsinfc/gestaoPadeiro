@@ -153,7 +153,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
               placeholder="Digite ou toque no microfone e fale..." 
               autocomplete="off"
             />
-            <button type="button" id="bia-btn-mic" class="bia-btn-mic" title="Falar com a Bia" aria-label="Falar com a Bia">
+            <button type="button" id="bia-btn-mic" class="bia-btn-mic" title="Segure para falar" aria-label="Segure para falar">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
             </button>
             <button type="submit" id="bia-btn-send" class="bia-btn-send" title="Enviar">
@@ -202,18 +202,22 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
 
     const micBtn = document.getElementById('bia-btn-mic');
-    const stopBtn = document.getElementById('bia-btn-stop-listening');
-    if (micBtn) micBtn.addEventListener('click', () => this.toggleVoice());
-    if (stopBtn) {
-      const handleStop = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        this.stopVoice();
+    if (micBtn) {
+      // Push-to-Talk: segura = grava, solta = envia
+      const onPressStart = (e) => {
+        e.preventDefault();
+        this.startPTT();
       };
-      stopBtn.addEventListener('click', handleStop);
-      stopBtn.addEventListener('touchend', handleStop);
+      const onPressEnd = (e) => {
+        e.preventDefault();
+        this.stopPTT();
+      };
+      micBtn.addEventListener('pointerdown', onPressStart);
+      micBtn.addEventListener('pointerup', onPressEnd);
+      micBtn.addEventListener('pointerleave', onPressEnd);
+      micBtn.addEventListener('touchstart', onPressStart, { passive: false });
+      micBtn.addEventListener('touchend', onPressEnd, { passive: false });
+      micBtn.addEventListener('touchcancel', onPressEnd, { passive: false });
     }
 
     // Chips
@@ -259,17 +263,133 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   /**
-   * Entrada por voz (Capacitor Speech Recognition no Android / Web Speech API no navegador).
-   * Ao finalizar a fala ou clicar em parar, envia o comando automaticamente para a Bia.
+   * Push-to-Talk via MediaRecorder.
+   * Segure o botão para gravar; solte para enviar o áudio à Bia via Gemini.
    */
   isListening: false,
-  recognition: null,
-  nativeStop: null,
+  _pttMediaRecorder: null,
+  _pttChunks: [],
+  _pttStream: null,
+  _pttActive: false,
 
-  toggleVoice() {
-    if (this.isListening) this.stopVoice();
-    else this.startVoice();
+  async startPTT() {
+    if (this._pttActive || this.isProcessing) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      this._pttStream = stream;
+      this._pttChunks = [];
+
+      // Seleciona o melhor mimeType suportado
+      const mimeType = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+        'audio/mp4',
+        ''
+      ].find(t => t === '' || MediaRecorder.isTypeSupported(t)) || '';
+
+      const options = mimeType ? { mimeType } : {};
+      const recorder = new MediaRecorder(stream, options);
+      this._pttMediaRecorder = recorder;
+      this._pttActive = true;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) this._pttChunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        // Para as faixas do microfone
+        if (this._pttStream) {
+          this._pttStream.getTracks().forEach(t => t.stop());
+          this._pttStream = null;
+        }
+        this._pttActive = false;
+        this.setListeningUI(false);
+
+        if (this._pttChunks.length === 0) {
+          console.warn('[BIA PTT] Nenhum dado de áudio capturado.');
+          return;
+        }
+
+        const blob = new Blob(this._pttChunks, { type: recorder.mimeType || 'audio/webm' });
+        this._pttChunks = [];
+
+        if (blob.size < 500) {
+          console.warn('[BIA PTT] Áudio muito curto, ignorando.');
+          return;
+        }
+
+        // Converte para Base64
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result; // data:audio/webm;base64,<data>
+            const b64 = result.split(',')[1];
+            resolve(b64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        const resolvedMime = recorder.mimeType || 'audio/webm';
+        console.log('[BIA PTT] Enviando áudio para transcrição, tamanho (bytes):', blob.size, 'mime:', resolvedMime);
+
+        this.showTypingIndicator();
+        this.addUserMessage('🎙️ Áudio enviado...');
+
+        this.isProcessing = true;
+        try {
+          const response = await BiaAPI.sendMessage(null, { audio: base64, mimeType: resolvedMime });
+          this.removeTypingIndicator();
+          this.addBiaMessage(response.text, { pensamento: response.pensamento });
+
+          if (response.action === 'escala_alta_performance') {
+            await this.handleEscalaAltaPerformance(response.actionData);
+          } else if (response.action === 'escala_padrao_anterior') {
+            await this.handleEscalaPadraoAnterior(response.actionData);
+          } else if (response.action === 'desfazer_alteracoes') {
+            await this.handleDesfazerUltimaAcao();
+          } else if (response.action === 'agendar_avulso') {
+            await this.handleAgendarAvulso(response.actionData);
+          } else if (response.action === 'remover_avulso') {
+            await this.handleRemoverAvulso(response.actionData);
+          }
+        } catch (err) {
+          this.removeTypingIndicator();
+          console.error('[BIA PTT] Erro ao processar áudio:', err);
+          this.addBiaMessage(`⚠️ Não consegui processar o áudio: ${err.message || 'Tente novamente.'}`);
+        } finally {
+          this.isProcessing = false;
+        }
+      };
+
+      recorder.start();
+      this.setListeningUI(true, 'Gravando... solte para enviar');
+    } catch (err) {
+      this._pttActive = false;
+      this.setListeningUI(false);
+      console.error('[BIA PTT] Erro ao acessar microfone:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        this.addBiaMessage('Permissão do microfone negada. Libere o microfone nas configurações do app.');
+      } else {
+        this.addBiaMessage('Não consegui acessar o microfone. Digite o comando.');
+      }
+    }
   },
+
+  stopPTT() {
+    if (!this._pttActive) return;
+    if (this._pttMediaRecorder && this._pttMediaRecorder.state !== 'inactive') {
+      this.setListeningUI(true, 'Processando...');
+      try { this._pttMediaRecorder.stop(); } catch (e) { console.warn('[BIA PTT] Erro ao parar gravação:', e); }
+    }
+  },
+
+  // Mantidos como compat stubs para não quebrar refs externas
+  toggleVoice() {},
+  startVoice() {},
+  stopVoice() { this.stopPTT(); },
 
   async startNativeVoice(NativeSR) {
     const input = document.getElementById('bia-input-field');
@@ -459,11 +579,14 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     const ind = document.getElementById('bia-listening-indicator');
     const textEl = document.getElementById('bia-listening-text');
     const box = document.getElementById('bia-input-form');
-    if (mic) mic.classList.toggle('listening', on);
+    if (mic) {
+      mic.classList.toggle('listening', on);
+      mic.classList.toggle('ptt-recording', on && this._pttActive);
+    }
     if (ind) {
       ind.style.display = on ? 'flex' : 'none';
       if (textEl && statusText) textEl.textContent = statusText;
-      else if (textEl) textEl.textContent = 'Ouvindo... fale seu comando';
+      else if (textEl) textEl.textContent = 'Gravando... solte para enviar';
     }
     if (box) box.classList.toggle('bia-listening', on);
   },

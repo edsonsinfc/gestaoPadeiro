@@ -807,16 +807,76 @@ function gerarRespostaLocal(userMessage, context = {}) {
  * Endpoint de Chat da Bia: POST /api/bia/chat
  */
 exports.chat = async (req, res) => {
-  const { message, history = [], context = {} } = req.body;
+  const { message, audio, mimeType, history = [], context = {} } = req.body;
 
-  if (!message || !message.trim()) {
-    return res.status(400).json({ error: 'Mensagem vazia.' });
+  let effectiveMessage = (message || '').trim();
+  let transcricaoAudio = null;
+
+  // Se recebemos áudio gravado (Base64)
+  if (audio && typeof audio === 'string') {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+    if (apiKey) {
+      for (const model of GEMINI_MODELS) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const gRes = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: mimeType || 'audio/webm',
+                      data: audio
+                    }
+                  },
+                  {
+                    text: 'Transcreva este áudio com precisão em português. Retorne APENAS a transcrição textual pura e direta do que foi falado pelo usuário, sem aspas, sem pontuações desnecessárias e sem qualquer introdução ou comentário.'
+                  }
+                ]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 250
+              }
+            })
+          });
+
+          if (gRes.ok) {
+            const data = await gRes.json();
+            const transcript = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (transcript) {
+              transcricaoAudio = transcript.replace(/^["']|["']$/g, '').trim();
+              effectiveMessage = transcricaoAudio;
+              console.log('[BIA Audio] Transcrição de áudio pelo Gemini bem-sucedida:', transcricaoAudio);
+              break;
+            }
+          }
+        } catch (mErr) {
+          console.warn(`[BIA Audio] Modelo ${model} falhou ao transcrever:`, mErr.message);
+        }
+      }
+    }
+  }
+
+  if (!effectiveMessage) {
+    return res.status(400).json({ error: 'Nenhum comando de voz ou texto detectado.' });
   }
 
   // Carrega e enriquece contexto operacional completo em tempo real do banco de dados (respeitando filial e filtrando contas teste)
   const enrichedContext = await carregarContextoBancoSeNecessario(context, req.user);
 
-  const norm = normalizarTexto(message);
+  const norm = normalizarTexto(effectiveMessage);
+
+  // Helper para resposta com transcrição inclusa
+  const responder = (dados) => {
+    if (transcricaoAudio && !dados.transcricao) {
+      dados.transcricao = transcricaoAudio;
+    }
+    return res.json(dados);
+  };
 
   // 0. DESFAZER / REVERTER (Prioridade Absoluta)
   if (
@@ -828,7 +888,7 @@ exports.chat = async (req, res) => {
     norm.includes('apagar escala') ||
     norm.includes('remover escala')
   ) {
-    return res.json({
+    return responder({
       text: 'Localizei os registros das últimas ações geradas no cronograma. Deseja reverter as alterações recentes criadas pela Bia?',
       action: 'desfazer_alteracoes',
       actionData: {
@@ -842,9 +902,9 @@ exports.chat = async (req, res) => {
 
   // 1. Módulo Especializado de Comandos Avulsos do Gestor (apenas comandos pontuais executáveis)
   if (BiaCommands && BiaCommands.isGestorCommand(norm)) {
-    const comando = BiaCommands.processarComando(message, enrichedContext);
+    const comando = BiaCommands.processarComando(effectiveMessage, enrichedContext);
     if (comando && comando.action) {
-      return res.json({
+      return responder({
         text: comando.text,
         action: comando.action,
         actionData: comando.actionData,
@@ -1049,10 +1109,10 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
               }
 
               if (!pensamento) {
-                pensamento = construirCaminhoPensamento(message, enrichedContext, { action, actionData, descricao: cleanText });
+                pensamento = construirCaminhoPensamento(effectiveMessage, enrichedContext, { action, actionData, descricao: cleanText });
               }
 
-              return res.json({
+              return responder({
                 text: cleanText,
                 action,
                 actionData,
@@ -1072,9 +1132,9 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
   }
 
   // Motor Operacional Inteligente Local da Bia
-  const localResponse = gerarRespostaLocal(message, enrichedContext);
-  const localPensamento = localResponse.pensamento || construirCaminhoPensamento(message, enrichedContext, localResponse);
-  return res.json({
+  const localResponse = gerarRespostaLocal(effectiveMessage, enrichedContext);
+  const localPensamento = localResponse.pensamento || construirCaminhoPensamento(effectiveMessage, enrichedContext, localResponse);
+  return responder({
     text: localResponse.text,
     action: localResponse.action,
     actionData: localResponse.actionData,
