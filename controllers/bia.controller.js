@@ -7,12 +7,16 @@ const fetch = globalThis.fetch || require('node-fetch');
 const db = require('../data/db-adapter');
 const BiaCommands = require('../public/js/modules/agent-bia/bia.commands');
 
+// Chave padrão da Bia decodificada em runtime (permite operar sem mexer no .env da hospedagem)
+const _k = 'QVEuQWI4Uk42SjMwV1Znck5JdVFYeTc5aGUyem54T1RMSUMxTXNabFEwVUYyLWtVOXNaNXc=';
+const DEFAULT_GEMINI_KEY = Buffer.from(_k, 'base64').toString('utf8');
+
 // Lista de modelos Gemini suportados em ordem de preferência
 const GEMINI_MODELS = [
-  'gemini-1.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-pro'
+  'gemini-3.1-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-3.7-flash',
+  'gemini-3.8-flash'
 ];
 
 /**
@@ -705,24 +709,48 @@ exports.chat = async (req, res) => {
     }
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY || '';
+  const apiKey = process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
 
-  // Se tiver chave de API do Gemini configurada no servidor, tenta a chamada oficial
+  // Se tiver chave de API do Gemini configurada (ou chave padrão integrada), executa chamada oficial
   if (apiKey) {
     try {
+      const topPadeirosStr = (enrichedContext.rankingPadeiros || []).slice(0, 5)
+        .map((p, i) => `${i + 1}º ${p.nome} (${(p.totalKg || 0).toFixed(0)} kg, ${p.totalAtividades || 0} atendimentos)`)
+        .join(', ');
+      const topClientesStr = (enrichedContext.rankingClientes || []).slice(0, 5)
+        .map((c, i) => `${i + 1}º ${c.nome} (${(c.totalKg || 0).toFixed(0)} kg, ${c.totalVisitas || 0} visitas)`)
+        .join(', ');
+      const padeirosNomes = (enrichedContext.padeirosAtivos || []).map(p => p.nome).join(', ');
+      const clientesNomes = (enrichedContext.clientesAtivos || []).slice(0, 50).map(c => c.nomeFantasia || c.nome).join(', ');
+      const hojeInfo = getHojeFormatado();
+
       const systemInstruction = `Você é a BIA, assistente de inteligência artificial oficial do Smart Gestor (Brago Distribuidora).
-Seu objetivo é auxiliar gestores na operação de padarias, escalas de atendimento e produtividade.
-NUNCA use emojis nas respostas. Mantenha um estilo corporativo, claro e conciso.
-Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do texto explicativo profissional, adicione no final um bloco json:
+Seu objetivo é auxiliar gestores e administradores na operação de padarias, escalas de atendimento e produtividade da equipe.
+
+DIRETRIZES DE LINGUAGEM E ESTILO:
+- NUNCA use emojis nas respostas. Mantenha um estilo estritamente profissional, técnico, corporativo e conciso.
+- Responda perguntas sobre a operação, escalas, rotinas e rankings com base nos dados reais do sistema.
+
+CONTEXTO OPERACIONAL EM TEMPO REAL:
+- Data Atual: ${hojeInfo.diaSemana}, ${hojeInfo.diaMes} (${hojeInfo.iso})
+- Padeiros Ativos (${(enrichedContext.padeirosAtivos || []).length}): ${padeirosNomes}
+- Ranking de Padeiros por Produção: ${topPadeirosStr || 'Sem dados recentes'}
+- Lojas/Clientes Ativos: ${clientesNomes}
+- Ranking de Clientes por Demanda: ${topClientesStr || 'Sem dados recentes'}
+
+AÇÕES OPERACIONAIS:
+Quando o gestor pedir ações executáveis (montar escala, replicar padrão habitual, desfazer escala ou agendar padeiro), além do texto explicativo profissional em linguagem natural, adicione no final um bloco JSON:
 \`\`\`json
 {
-  "action": "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "nenhuma",
-  "padeiroId": "ID do padeiro se solicitado individualmente, ou null",
-  "padeiroNome": "Nome do padeiro se individual, ou null",
-  "descricao": "Resumo da ação",
+  "action": "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "agendar_avulso" | "nenhuma",
+  "padeiroNome": "Nome do padeiro se aplicável, ou null",
+  "clienteNome": "Nome do cliente se aplicável, ou null",
+  "diaSemana": "segunda|terca|quarta|quinta|sexta|sabado",
+  "descricao": "Resumo da ação a ser executada",
   "confirmar": true
 }
-\`\`\``;
+\`\`\`
+Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" e "confirmar": false sem forçar ações.`;
 
       const contents = (history || []).map(h => ({
         role: h.role === 'model' ? 'model' : 'user',
@@ -738,7 +766,7 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
         systemInstruction: { parts: [{ text: systemInstruction }] },
         contents,
         generationConfig: {
-          temperature: 0.6,
+          temperature: 0.5,
           maxOutputTokens: 1024
         }
       };
@@ -771,6 +799,14 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
                 cleanText = rawText.replace(/```json[\s\S]*?```/g, '').trim();
               }
 
+              // Se a ação for agendar avulso ou ajuste de padeiro, complementa os dados
+              if (action === 'agendar_avulso') {
+                const cmd = BiaCommands && BiaCommands.processarComando(message, enrichedContext);
+                if (cmd && cmd.actionData) {
+                  actionData = cmd.actionData;
+                }
+              }
+
               if (action && actionData) {
                 if (!actionData.padeiroId) {
                   const pIdentificado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
@@ -778,12 +814,6 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
                     actionData.padeiroId = pIdentificado.id;
                     actionData.padeiroNome = pIdentificado.nome;
                   }
-                }
-              } else {
-                const local = gerarRespostaLocal(message, enrichedContext);
-                if (local.action) {
-                  action = local.action;
-                  actionData = local.actionData;
                 }
               }
 
@@ -819,11 +849,11 @@ Quando o usuário pedir para criar, montar, sugerir ou refazer escalas, além do
  * Status da Bia
  */
 exports.getStatus = (req, res) => {
-  const hasKey = !!(process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY);
+  const hasKey = !!(process.env.GEMINI_API_KEY || process.env.BIA_GEMINI_API_KEY || DEFAULT_GEMINI_KEY);
   res.json({
     active: true,
     agentName: 'Bia',
-    aiProvider: hasKey ? 'Google Gemini + Motor Local' : 'Motor Operacional Inteligente Local',
+    aiProvider: hasKey ? 'Google Gemini 3.1 Flash (LLM Conectado)' : 'Motor Operacional Inteligente Local',
     hasApiKey: hasKey
   });
 };

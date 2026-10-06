@@ -441,7 +441,7 @@ window.Rastreamento = {
         }
 
         .mobile-track-status-pill.offline {
-          color: #F59E0B !important;
+          color: #64748B !important;
         }
 
         .mobile-status-dot {
@@ -457,7 +457,7 @@ window.Rastreamento = {
         }
 
         .mobile-status-dot.inactive {
-          background: #F59E0B !important;
+          background: #94A3B8 !important;
         }
 
         .sidebar-filial-header {
@@ -1918,14 +1918,30 @@ window.Rastreamento = {
 
     // Map locations by userId for fast lookup
     const locMap = new Map();
-    locations.forEach(loc => locMap.set(loc.userId, loc));
+    const tenMin = 10 * 60 * 1000;
+    const now = Date.now();
+    locations.forEach(loc => {
+      if (loc && loc.userId) {
+        locMap.set(loc.userId, loc);
+      }
+    });
 
-    // Avoid DOM recreation if the online users haven't changed
-    const onlineIds = Array.from(locMap.keys()).sort().join(',');
-    if (this._lastOnlineIds === onlineIds) {
+    const onlineIdsSet = new Set();
+    locMap.forEach((loc, uId) => {
+      if (loc && loc.lastUpdate) {
+        const updateTime = new Date(loc.lastUpdate).getTime();
+        if (!isNaN(updateTime) && (now - updateTime < tenMin)) {
+          onlineIdsSet.add(uId);
+        }
+      }
+    });
+
+    // Avoid DOM recreation if the online users haven't changed and selected hasn't changed
+    const cacheKey = Array.from(onlineIdsSet).sort().join(',') + `|sel:${this.selectedUserId || ''}`;
+    if (this._lastOnlineIds === cacheKey) {
       return;
     }
-    this._lastOnlineIds = onlineIds;
+    this._lastOnlineIds = cacheKey;
 
     const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF2D55'];
     const isMobile = window.innerWidth < 1024;
@@ -1961,7 +1977,7 @@ window.Rastreamento = {
         globalIdx++;
 
         const loc = locMap.get(padeiro.id);
-        const isOnline = !!loc;
+        const isOnline = onlineIdsSet.has(padeiro.id);
         
         if (isMobile) {
           const displayCod = padeiro.codTec ? padeiro.codTec : padeiro.id.substring(0, 6).toUpperCase();
@@ -1985,7 +2001,7 @@ window.Rastreamento = {
               </div>
               <div class="mobile-track-status-pill ${isOnline ? 'online' : 'offline'}">
                 <span class="mobile-status-dot ${isOnline ? 'active' : 'inactive'}"></span>
-                <span>${isOnline ? 'Em Rota' : 'Pendente'}</span>
+                <span>${isOnline ? 'Em Rota' : 'Inativo'}</span>
               </div>
             </div>
           `;
@@ -2030,7 +2046,7 @@ window.Rastreamento = {
                 </div>
                 <div class="track-info-col">
                   <span class="track-info-label">Status</span>
-                  <span class="track-info-value">${isOnline ? 'Em Rota' : 'Inativo'}</span>
+                  <span class="track-info-value" style="${isOnline ? 'color: #10B981; font-weight: 600;' : ''}">${isOnline ? 'Em Rota' : 'Inativo'}</span>
                 </div>
                 <div class="track-info-col">
                   <span class="track-info-label">Data</span>
@@ -2174,11 +2190,7 @@ window.Rastreamento = {
     // 2. Se não houver pontos em memória, buscar trilha do backend para hoje
     if (points.length === 0) {
       try {
-        let data = await API.get(`/api/tracking/trail/${userId}?date=${today}`);
-        // Se a data de hoje ainda não tiver pontos registrados, busca a trilha real mais recente
-        if (!data || !data.sessions || data.sessions.length === 0) {
-          data = await API.get(`/api/tracking/trail/${userId}`);
-        }
+        const data = await API.get(`/api/tracking/trail/${userId}?date=${today}`);
         if (data && data.sessions && Array.isArray(data.sessions)) {
           data.sessions.forEach(sess => {
             if (sess.points && Array.isArray(sess.points)) {
@@ -2237,11 +2249,19 @@ window.Rastreamento = {
       }
     });
 
+    let isOnline = false;
+    if (this.latestLocations && Array.isArray(this.latestLocations)) {
+      const loc = this.latestLocations.find(l => l && l.userId === userId);
+      if (loc && loc.lastUpdate && (Date.now() - new Date(loc.lastUpdate).getTime() < 10 * 60 * 1000)) {
+        isOnline = true;
+      }
+    }
+
     let routeCoords = [];
     let startPoint = null;
     let endPoint = null;
     let currentPoint = null;
-    let durationMinsText = 'Em Rota';
+    let durationMinsText = isOnline ? 'Em Rota' : 'Inativo';
 
     if (cleanPoints.length >= 2) {
       // DADOS REAIS DE GPS OBTIDOS COM SUCESSO!

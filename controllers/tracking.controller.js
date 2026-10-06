@@ -29,10 +29,8 @@ const TrackingController = {
           userId,
           timestamp: { $gte: startOfDay, $lte: endOfDay }
         }).sort({ timestamp: 1 });
-      }
-
-      // If no points found for requested date (or date omitted), fallback to most recent date with real points
-      if (!points || points.length === 0) {
+      } else {
+        // Se nenhuma data foi especificada, busca o dia mais recente que possui registros reais
         const latestPoints = await HistoricoLocalizacao.find({ userId }).sort({ timestamp: -1 }).limit(1);
         const latestPoint = latestPoints && latestPoints[0] ? latestPoints[0] : null;
         if (latestPoint && latestPoint.timestamp) {
@@ -44,31 +42,6 @@ const TrackingController = {
             userId,
             timestamp: { $gte: startOfFallback, $lte: endOfFallback }
           }).sort({ timestamp: 1 });
-        }
-      }
-
-      // If all points for that day have identical coordinates (stationary),
-      // collect the most recent distinct coordinates across history to show actual trajectory
-      if (points && points.length > 0) {
-        const uniqueCoords = new Set(points.map(p => `${Number(p.lat).toFixed(4)},${Number(p.lng).toFixed(4)}`));
-        if (uniqueCoords.size < 2) {
-          const recentPoints = await HistoricoLocalizacao.find({ userId })
-            .sort({ timestamp: -1 })
-            .limit(200);
-
-          const distinctHistorical = [];
-          const seen = new Set();
-          for (const pt of recentPoints) {
-            const key = `${Number(pt.lat).toFixed(4)},${Number(pt.lng).toFixed(4)}`;
-            if (!seen.has(key)) {
-              seen.add(key);
-              distinctHistorical.push(pt);
-            }
-          }
-          if (distinctHistorical.length >= 2) {
-            distinctHistorical.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            points = distinctHistorical;
-          }
         }
       }
 
