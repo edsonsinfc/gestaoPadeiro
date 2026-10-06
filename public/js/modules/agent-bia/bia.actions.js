@@ -10,14 +10,20 @@ const BiaActions = {
   async getSystemContext() {
     try {
       // 1. Averiguação completa e prioritária de todas as escalas e dados no banco da Hostinger
-      let serverCtx = null;
-      try {
-        serverCtx = await API.get('/api/bia/context');
-      } catch (e) {
-        // Fallback para rotas padrão caso o endpoint ainda não esteja deployado
-      }
+      const [serverCtx, stats] = await Promise.all([
+        API.get('/api/bia/context').catch(() => null),
+        API.get('/api/stats').catch(() => null)
+      ]);
 
       if (serverCtx && Array.isArray(serverCtx.cronogramaHistorico) && serverCtx.cronogramaHistorico.length > 0) {
+        if (stats && Array.isArray(stats.rankingClientes) && stats.rankingClientes.length > 0) {
+          serverCtx.rankingClientes = stats.rankingClientes.map(c => ({
+            ...c,
+            nome: (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim(),
+            nomeFantasia: c.nomeFantasia || c.nome,
+            totalVisitas: c.totalAtendimentos || c.totalVisitas || 0
+          }));
+        }
         return serverCtx;
       }
 
@@ -57,31 +63,18 @@ const BiaActions = {
       const rankingPadeiros = Object.values(producaoPadeiroMap)
         .sort((a, b) => b.totalKg - a.totalKg);
 
-      // 2. Calcular volume de consumo total por cliente (Kg + L)
-      const volumeClienteMap = {};
-      clientesAtivos.forEach(c => {
-        volumeClienteMap[c.id] = {
-          id: c.id,
-          nome: c.nomeFantasia || c.nome,
-          razaoSocial: c.nome || '',
-          bairro: c.bairro || '',
-          filial: c.filial || '',
-          totalKg: 0,
-          totalVisitas: 0
-        };
-      });
-
-      atividadesFinalizadas.forEach(a => {
-        const cId = a.clienteId;
-        if (cId && volumeClienteMap[cId]) {
-          const kg = (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
-          volumeClienteMap[cId].totalKg += kg;
-          volumeClienteMap[cId].totalVisitas++;
-        }
-      });
-
-      const rankingClientes = Object.values(volumeClienteMap)
-        .sort((a, b) => b.totalKg - a.totalKg || b.totalVisitas - a.totalVisitas);
+      // 2. Calcular volume de consumo total por cliente (Kg + L) com reconciliação inteligente
+      let rankingClientes = [];
+      if (stats && Array.isArray(stats.rankingClientes) && stats.rankingClientes.length > 0) {
+        rankingClientes = stats.rankingClientes.map(c => ({
+          ...c,
+          nome: (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim(),
+          nomeFantasia: c.nomeFantasia || c.nome,
+          totalVisitas: c.totalAtendimentos || c.totalVisitas || 0
+        }));
+      } else {
+        rankingClientes = this.calcularRankingClientesInteligente(clientesAtivos, atividadesFinalizadas);
+      }
 
       return {
         padeirosAtivos,
@@ -881,6 +874,93 @@ const BiaActions = {
       total: actionData.tarefas.length,
       ids
     };
+  },
+
+  /**
+   * Reconciliação inteligente do ranking de clientes por ID, Razão Social e Nome Fantasia
+   */
+  calcularRankingClientesInteligente(clientes = [], atividades = []) {
+    const norm = (txt) => (txt || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const ativsFinalizadas = (atividades || []).filter(a => a.status === 'finalizada' || (parseFloat(a.kgTotal) > 0 || parseFloat(a.lTotal) > 0));
+
+    const clientePorId = new Map();
+    const clientesLista = [];
+
+    (clientes || []).forEach(c => {
+      if (!c) return;
+      const cIdStr = String(c.id || c._id || '');
+      if (cIdStr) clientePorId.set(cIdStr, c);
+
+      const n = norm(c.nome || '');
+      const nf = norm(c.nomeFantasia || '');
+      clientesLista.push({ c, idStr: cIdStr, nomeNorm: n, nomeFantasiaNorm: nf });
+    });
+
+    function resolverClienteAtivo(a) {
+      if (a.clienteId && clientePorId.has(String(a.clienteId))) {
+        return clientePorId.get(String(a.clienteId));
+      }
+      const aNomeNorm = norm(a.clienteNome || '');
+      if (!aNomeNorm) return null;
+
+      for (const item of clientesLista) {
+        if ((item.nomeFantasiaNorm && item.nomeFantasiaNorm === aNomeNorm) ||
+            (item.nomeNorm && item.nomeNorm === aNomeNorm)) {
+          return item.c;
+        }
+      }
+
+      for (const item of clientesLista) {
+        if (item.nomeFantasiaNorm && (aNomeNorm.includes(item.nomeFantasiaNorm) || item.nomeFantasiaNorm.includes(aNomeNorm))) {
+          return item.c;
+        }
+        if (item.nomeNorm && (aNomeNorm.includes(item.nomeNorm) || item.nomeNorm.includes(aNomeNorm))) {
+          return item.c;
+        }
+      }
+
+      return null;
+    }
+
+    const agrupamentoMap = new Map();
+
+    ativsFinalizadas.forEach(a => {
+      const cliAtivo = resolverClienteAtivo(a);
+      let chaveGrupo;
+      if (cliAtivo) {
+        chaveGrupo = 'cli_' + (cliAtivo.id || cliAtivo._id);
+      } else {
+        const aNomeNorm = norm(a.clienteNome || '');
+        chaveGrupo = aNomeNorm ? 'nome_' + aNomeNorm : 'id_' + a.clienteId;
+      }
+      if (!chaveGrupo || chaveGrupo === 'nome_') return;
+
+      if (!agrupamentoMap.has(chaveGrupo)) {
+        const nomeBruto = cliAtivo?.nomeFantasia || cliAtivo?.nome || a.clienteNome || 'Cliente';
+        const nomeAmigavel = String(nomeBruto).split(' - ')[0].replace(/[\s-]+$/, '').trim();
+
+        agrupamentoMap.set(chaveGrupo, {
+          id: cliAtivo?.id || a.clienteId,
+          nome: nomeAmigavel,
+          nomeFantasia: cliAtivo?.nomeFantasia || nomeAmigavel,
+          razaoSocial: cliAtivo?.nome || a.clienteNome || '',
+          bairro: cliAtivo?.bairro || '',
+          filial: cliAtivo?.filial || '',
+          totalKg: 0,
+          totalVisitas: 0,
+          totalAtendimentos: 0
+        });
+      }
+
+      const reg = agrupamentoMap.get(chaveGrupo);
+      const kg = (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
+      reg.totalKg += kg;
+      reg.totalVisitas++;
+      reg.totalAtendimentos++;
+    });
+
+    return Array.from(agrupamentoMap.values())
+      .sort((a, b) => (b.totalKg - a.totalKg) || (b.totalVisitas - a.totalVisitas));
   }
 };
 

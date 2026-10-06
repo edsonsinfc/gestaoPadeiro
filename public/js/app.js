@@ -132,7 +132,12 @@ const App = {
   },
 
   setupForegroundSync() {
+    let lastResumeTime = 0;
     const handleResume = () => {
+      const now = Date.now();
+      if (now - lastResumeTime < 2500) return;
+      lastResumeTime = now;
+
       console.log('⚡ [App Lifecycle] App ativo em primeiro plano. Verificando conexão e agenda...');
       if (typeof LocationService !== 'undefined' && LocationService.socket) {
         if (!LocationService.socket.connected) {

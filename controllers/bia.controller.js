@@ -57,6 +57,102 @@ function getAmanhaFormatado() {
 }
 
 /**
+ * Calcula o ranking de clientes por volume (Kg + L) e atendimentos com reconciliação inteligente:
+ * - Vincula por ID, Nome Fantasia ou Razão Social (case/accent insensitive)
+ * - Agrupa atividades históricas mesmo que o cliente tenha sido excluído e recriado com novo ID
+ * - Prioriza o Nome Fantasia / Apelido comercial para exibição (ex: VAREJAO em vez de COMERCIAL DE ALIMENTOS FARTU)
+ */
+function calcularRankingClientesInteligente(clientes = [], atividades = []) {
+  const ativsFinalizadas = (atividades || []).filter(a => a.status === 'finalizada' || (parseFloat(a.kgTotal) > 0 || parseFloat(a.lTotal) > 0));
+
+  const clientePorId = new Map();
+  const clientesLista = [];
+
+  (clientes || []).forEach(c => {
+    if (!c) return;
+    const cIdStr = String(c.id || c._id || '');
+    if (cIdStr) clientePorId.set(cIdStr, c);
+    
+    const n = normalizarTexto(c.nome || '');
+    const nf = normalizarTexto(c.nomeFantasia || '');
+    clientesLista.push({
+      c,
+      idStr: cIdStr,
+      nomeNorm: n,
+      nomeFantasiaNorm: nf
+    });
+  });
+
+  function resolverClienteAtivo(a) {
+    if (a.clienteId && clientePorId.has(String(a.clienteId))) {
+      return clientePorId.get(String(a.clienteId));
+    }
+    const aNomeNorm = normalizarTexto(a.clienteNome || '');
+    if (!aNomeNorm) return null;
+
+    // 1. Busca exata por nome fantasia ou razão social
+    for (const item of clientesLista) {
+      if ((item.nomeFantasiaNorm && item.nomeFantasiaNorm === aNomeNorm) ||
+          (item.nomeNorm && item.nomeNorm === aNomeNorm)) {
+        return item.c;
+      }
+    }
+
+    // 2. Busca parcial (ex: "Big Box - Asa Sul" casa com "Big Box")
+    for (const item of clientesLista) {
+      if (item.nomeFantasiaNorm && (aNomeNorm.includes(item.nomeFantasiaNorm) || item.nomeFantasiaNorm.includes(aNomeNorm))) {
+        return item.c;
+      }
+      if (item.nomeNorm && (aNomeNorm.includes(item.nomeNorm) || item.nomeNorm.includes(aNomeNorm))) {
+        return item.c;
+      }
+    }
+
+    return null;
+  }
+
+  const agrupamentoMap = new Map();
+
+  ativsFinalizadas.forEach(a => {
+    const cliAtivo = resolverClienteAtivo(a);
+    let chaveGrupo;
+    if (cliAtivo) {
+      chaveGrupo = 'cli_' + (cliAtivo.id || cliAtivo._id);
+    } else {
+      const aNomeNorm = normalizarTexto(a.clienteNome || '');
+      chaveGrupo = aNomeNorm ? 'nome_' + aNomeNorm : 'id_' + a.clienteId;
+    }
+    if (!chaveGrupo || chaveGrupo === 'nome_') return;
+
+    if (!agrupamentoMap.has(chaveGrupo)) {
+      const nomeBruto = cliAtivo?.nomeFantasia || cliAtivo?.nome || a.clienteNome || 'Cliente';
+      const nomeAmigavel = String(nomeBruto).split(' - ')[0].replace(/[\s-]+$/, '').trim();
+
+      agrupamentoMap.set(chaveGrupo, {
+        id: cliAtivo?.id || a.clienteId,
+        nome: nomeAmigavel,
+        nomeFantasia: cliAtivo?.nomeFantasia || nomeAmigavel,
+        razaoSocial: cliAtivo?.nome || a.clienteNome || '',
+        bairro: cliAtivo?.bairro || '',
+        filial: cliAtivo?.filial || '',
+        totalKg: 0,
+        totalVisitas: 0,
+        totalAtendimentos: 0
+      });
+    }
+
+    const reg = agrupamentoMap.get(chaveGrupo);
+    const kg = (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
+    reg.totalKg += kg;
+    reg.totalVisitas++;
+    reg.totalAtendimentos++;
+  });
+
+  return Array.from(agrupamentoMap.values())
+    .sort((a, b) => (b.totalKg - a.totalKg) || (b.totalVisitas - a.totalVisitas));
+}
+
+/**
  * Garante que o contexto operacional contenha os dados mais recentes do banco
  */
 async function carregarContextoBancoSeNecessario(context = {}) {
@@ -90,19 +186,8 @@ async function carregarContextoBancoSeNecessario(context = {}) {
       ctx.rankingPadeiros = Object.values(prodMap).sort((a, b) => b.totalKg - a.totalKg);
     }
 
-    if (!ctx.rankingClientes || ctx.rankingClientes.length === 0) {
-      const cliMap = {};
-      (ctx.clientesAtivos || []).forEach(c => {
-        cliMap[c.id] = { ...c, totalKg: 0, totalVisitas: 0 };
-      });
-      (ctx.atividades || []).forEach(a => {
-        if (a.clienteId && cliMap[a.clienteId]) {
-          cliMap[a.clienteId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
-          cliMap[a.clienteId].totalVisitas++;
-        }
-      });
-      ctx.rankingClientes = Object.values(cliMap).sort((a, b) => b.totalKg - a.totalKg);
-    }
+    // Calcula ou reconstrói o ranking de clientes com reconciliação inteligente por nome/ID histórico
+    ctx.rankingClientes = calcularRankingClientesInteligente(ctx.clientesAtivos, ctx.atividades);
   } catch (err) {
     console.warn('[BIA Controller] Falha ao enriquecer contexto:', err.message);
   }
@@ -524,7 +609,9 @@ function gerarRespostaLocal(userMessage, context = {}) {
     if (rankingClientes.length > 0) {
       const listaC = rankingClientes.slice(0, 5).map((c, idx) => {
         const kg = (c.totalKg || 0).toFixed(0);
-        return `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${kg} kg (${c.totalVisitas || 0} atendimentos)`;
+        const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+        const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+        return `* **${idx + 1}º ${nomeLimpo}**: ${kg} kg (${visitas} atendimentos)`;
       }).join('\n');
 
       return {
@@ -552,7 +639,11 @@ function gerarRespostaLocal(userMessage, context = {}) {
 
   if (isRankingGeral) {
     const listaP = rankingPadeiros.slice(0, 3).map((p, idx) => `* **${idx + 1}º ${p.nome}**: ${(p.totalKg || 0).toFixed(0)} kg (${p.totalAtividades || 0} visitas)`).join('\n');
-    const listaC = rankingClientes.slice(0, 3).map((c, idx) => `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${(c.totalKg || 0).toFixed(0)} kg (${c.totalVisitas || 0} atendimentos)`).join('\n');
+    const listaC = rankingClientes.slice(0, 3).map((c, idx) => {
+      const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+      const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+      return `* **${idx + 1}º ${nomeLimpo}**: ${(c.totalKg || 0).toFixed(0)} kg (${visitas} atendimentos)`;
+    }).join('\n');
     return {
       text: `Aqui está o resumo geral de rankings da operação:\n\n👨‍🍳 **Top Padeiros (Produção):**\n${listaP || '*(Sem dados)*'}\n\n🏪 **Top Clientes (Volume):**\n${listaC || '*(Sem dados)*'}\n\nPara alocar os melhores padeiros nessas lojas, peça: *"Bia, crie uma escala de alta performance"*.`,
       action: null,
@@ -752,7 +843,11 @@ exports.chat = async (req, res) => {
         .map((p, i) => `${i + 1}º ${p.nome} (${(p.totalKg || 0).toFixed(0)} kg, ${p.totalAtividades || 0} atendimentos)`)
         .join(', ');
       const topClientesStr = (enrichedContext.rankingClientes || []).slice(0, 5)
-        .map((c, i) => `${i + 1}º ${c.nome} (${(c.totalKg || 0).toFixed(0)} kg, ${c.totalVisitas || 0} visitas)`)
+        .map((c, i) => {
+          const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+          const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+          return `${i + 1}º ${nomeLimpo} (${(c.totalKg || 0).toFixed(0)} kg, ${visitas} visitas)`;
+        })
         .join(', ');
       const padeirosNomes = (enrichedContext.padeirosAtivos || []).map(p => p.nome).join(', ');
       const clientesNomes = (enrichedContext.clientesAtivos || []).slice(0, 50).map(c => c.nomeFantasia || c.nome).join(', ');

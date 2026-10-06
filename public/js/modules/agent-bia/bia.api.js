@@ -23,7 +23,11 @@ const BiaAPI = {
       .join(', ');
 
     const topClientes = (ctx.rankingClientes || []).slice(0, 5)
-      .map((c, i) => `${i + 1}º ${c.nome} (${(c.totalKg || 0).toFixed(0)} kg, ${c.totalVisitas || 0} visitas)`)
+      .map((c, i) => {
+        const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+        const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+        return `${i + 1}º ${nomeLimpo} (${(c.totalKg || 0).toFixed(0)} kg, ${visitas} visitas)`;
+      })
       .join(', ');
 
     const user = (typeof API !== 'undefined' && API.getUser && API.getUser()) || {};
@@ -443,7 +447,9 @@ const BiaAPI = {
       if (rankingClientes.length > 0) {
         const listaC = rankingClientes.slice(0, 5).map((c, idx) => {
           const kg = (c.totalKg || 0).toFixed(0);
-          return `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${kg} kg (${c.totalVisitas || 0} atendimentos)`;
+          const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+          const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+          return `* **${idx + 1}º ${nomeLimpo}**: ${kg} kg (${visitas} atendimentos)`;
         }).join('\n');
 
         return {
@@ -469,7 +475,11 @@ const BiaAPI = {
 
     if (isRankingGeral) {
       const listaP = rankingPadeiros.slice(0, 3).map((p, idx) => `* **${idx + 1}º ${p.nome}**: ${(p.totalKg || 0).toFixed(0)} kg (${p.totalAtividades || 0} visitas)`).join('\n');
-      const listaC = rankingClientes.slice(0, 3).map((c, idx) => `* **${idx + 1}º ${c.nomeFantasia || c.nome}**: ${(c.totalKg || 0).toFixed(0)} kg (${c.totalVisitas || 0} atendimentos)`).join('\n');
+      const listaC = rankingClientes.slice(0, 3).map((c, idx) => {
+        const nomeLimpo = (c.nomeFantasia || c.nome || '').split(' - ')[0].replace(/[\s-]+$/, '').trim();
+        const visitas = c.totalVisitas || c.totalAtendimentos || 0;
+        return `* **${idx + 1}º ${nomeLimpo}**: ${(c.totalKg || 0).toFixed(0)} kg (${visitas} atendimentos)`;
+      }).join('\n');
       return {
         text: `Aqui está o resumo geral de rankings da operação:\n\n👨‍🍳 **Top Padeiros (Produção):**\n${listaP || '*(Sem dados)*'}\n\n🏪 **Top Clientes (Volume):**\n${listaC || '*(Sem dados)*'}\n\nPara alocar os melhores padeiros nessas lojas, peça: *"Bia, crie uma escala de alta performance"*.`,
         action: null
