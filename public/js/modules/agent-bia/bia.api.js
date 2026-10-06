@@ -5,12 +5,17 @@
 
 const BiaAPI = {
   conversationHistory: [],
+  pendingCommand: null,
 
   /**
    * Limpa o histórico da conversa
    */
   clearHistory() {
     this.conversationHistory = [];
+    this.pendingCommand = null;
+    if (typeof BiaCommands !== 'undefined') {
+      BiaCommands.pendingCommand = null;
+    }
   },
 
   /**
@@ -130,7 +135,7 @@ const BiaAPI = {
   /**
    * Gera uma resposta local inteligente e assertiva sem precisar de chaves externas
    */
-  generateLocalFallback(userMessage, ctx = {}) {
+  generateLocalFallback(userMessage, ctx = {}, options = {}) {
     const norm = this.normalizeText(userMessage);
     const rankingPadeiros = ctx.rankingPadeiros || [];
     const rankingClientes = ctx.rankingClientes || [];
@@ -160,10 +165,16 @@ const BiaAPI = {
       };
     }
 
-    // 1.5. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
+    // 1.5. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções com suporte a multi-turno)
     if (typeof BiaCommands !== 'undefined') {
-      const comando = BiaCommands.processarComando(userMessage, ctx);
-      if (comando && comando.action) {
+      const activePending = options.pendingCommand !== undefined ? options.pendingCommand : this.pendingCommand;
+      const comando = BiaCommands.processarComando(userMessage, ctx, { pendingCommand: activePending, history: this.conversationHistory });
+      if (comando) {
+        if (comando.pendingCommand !== undefined) {
+          this.pendingCommand = comando.pendingCommand;
+        } else if (comando.action === 'agendar_avulso') {
+          this.pendingCommand = null;
+        }
         return comando;
       }
     }
@@ -736,10 +747,12 @@ const BiaAPI = {
     // CAMADA 1: Chamar endpoint backend seguro /api/bia/chat
     try {
       if (typeof API !== 'undefined' && typeof API.post === 'function') {
+        const activePending = options.pendingCommand !== undefined ? options.pendingCommand : this.pendingCommand;
         const payload = {
           message: userMessage || '',
           history: this.conversationHistory,
-          context: systemContext
+          context: systemContext,
+          pendingCommand: activePending || null
         };
         if (options && options.audio) {
           payload.audio = options.audio;
@@ -748,10 +761,19 @@ const BiaAPI = {
         const serverRes = await API.post(BIA_CONFIG.serverChatEndpoint || '/api/bia/chat', payload);
 
         if (serverRes && (serverRes.text || serverRes.action || serverRes.transcricao)) {
+          if (serverRes.pendingCommand !== undefined) {
+            this.pendingCommand = serverRes.pendingCommand;
+          } else if (serverRes.actionData?.pendingCommand !== undefined) {
+            this.pendingCommand = serverRes.actionData.pendingCommand;
+          } else if (serverRes.action === 'agendar_avulso') {
+            this.pendingCommand = null;
+          }
+
           result = {
             text: serverRes.text,
             action: serverRes.action,
             actionData: serverRes.actionData,
+            pendingCommand: this.pendingCommand,
             pensamento: serverRes.pensamento || null,
             transcricao: serverRes.transcricao || null,
             modelUsed: serverRes.model || serverRes.source || 'server'
@@ -807,11 +829,19 @@ const BiaAPI = {
 
     // CAMADA 3: Motor Local Inteligente (Garante 100% de disponibilidade, nunca falha)
     if (!result) {
-      const local = this.generateLocalFallback(userMessage, systemContext);
+      const activePending = options.pendingCommand !== undefined ? options.pendingCommand : this.pendingCommand;
+      const local = this.generateLocalFallback(userMessage, systemContext, { pendingCommand: activePending });
+      if (local.pendingCommand !== undefined) {
+        this.pendingCommand = local.pendingCommand;
+      } else if (local.action === 'agendar_avulso') {
+        this.pendingCommand = null;
+      }
+
       result = {
         text: local.text,
         action: local.action,
         actionData: local.actionData,
+        pendingCommand: this.pendingCommand,
         pensamento: local.pensamento || this.construirCaminhoPensamento(userMessage, systemContext, local),
         modelUsed: 'local_engine'
       };

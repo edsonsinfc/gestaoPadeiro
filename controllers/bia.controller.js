@@ -315,7 +315,7 @@ function construirCaminhoPensamento(userMessage, context = {}, decisao = {}) {
 /**
  * Motor de Inteligência e Processamento de Linguagem Natural Local da Bia
  */
-function gerarRespostaLocal(userMessage, context = {}) {
+function gerarRespostaLocal(userMessage, context = {}, options = {}) {
   const norm = normalizarTexto(userMessage);
   const rankingPadeiros = context.rankingPadeiros || [];
   const rankingClientes = context.rankingClientes || [];
@@ -345,14 +345,16 @@ function gerarRespostaLocal(userMessage, context = {}) {
     };
   }
 
-  // 1. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções)
+  // 1. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções com suporte a multi-turno)
   if (BiaCommands) {
-    const comando = BiaCommands.processarComando(userMessage, context);
+    const pendingCmd = options.pendingCommand || context.pendingCommand || null;
+    const comando = BiaCommands.processarComando(userMessage, context, { pendingCommand: pendingCmd, history: options.history });
     if (comando) {
       return {
         text: comando.text,
         action: comando.action,
-        actionData: comando.actionData
+        actionData: comando.actionData,
+        pendingCommand: comando.pendingCommand !== undefined ? comando.pendingCommand : null
       };
     }
   }
@@ -812,7 +814,8 @@ function gerarRespostaLocal(userMessage, context = {}) {
  * Endpoint de Chat da Bia: POST /api/bia/chat
  */
 exports.chat = async (req, res) => {
-  const { message, audio, mimeType, history = [], context = {} } = req.body;
+  const { message, audio, mimeType, history = [], context = {}, pendingCommand: bodyPendingCommand } = req.body;
+  const pendingCommand = bodyPendingCommand || context?.pendingCommand || null;
 
   let effectiveMessage = (message || '').trim();
   let transcricaoAudio = null;
@@ -955,14 +958,15 @@ exports.chat = async (req, res) => {
     });
   }
 
-  // 1. Módulo Especializado de Comandos Avulsos do Gestor (apenas comandos pontuais executáveis)
-  if (BiaCommands && BiaCommands.isGestorCommand(norm)) {
-    const comando = BiaCommands.processarComando(effectiveMessage, enrichedContext);
-    if (comando && comando.action) {
+  // 1. Módulo Especializado de Comandos Avulsos do Gestor (apenas comandos pontuais executáveis ou com pendência de dados)
+  if (BiaCommands && (BiaCommands.isGestorCommand(norm, pendingCommand) || pendingCommand)) {
+    const comando = BiaCommands.processarComando(effectiveMessage, enrichedContext, { pendingCommand, history });
+    if (comando) {
       return responder({
         text: comando.text,
         action: comando.action,
         actionData: comando.actionData,
+        pendingCommand: comando.pendingCommand !== undefined ? comando.pendingCommand : null,
         source: 'gestor_commands_module'
       });
     }
@@ -1124,7 +1128,7 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
 
               // Se a ação for agendar avulso ou ajuste de padeiro, complementa os dados
               if (action === 'agendar_avulso') {
-                const cmd = BiaCommands && BiaCommands.processarComando(message, enrichedContext);
+                const cmd = BiaCommands && BiaCommands.processarComando(message, enrichedContext, { pendingCommand, history });
                 if (cmd && cmd.actionData) {
                   actionData = cmd.actionData;
                 }
@@ -1187,12 +1191,13 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
   }
 
   // Motor Operacional Inteligente Local da Bia
-  const localResponse = gerarRespostaLocal(effectiveMessage, enrichedContext);
+  const localResponse = gerarRespostaLocal(effectiveMessage, enrichedContext, { pendingCommand, history });
   const localPensamento = localResponse.pensamento || construirCaminhoPensamento(effectiveMessage, enrichedContext, localResponse);
   return responder({
     text: localResponse.text,
     action: localResponse.action,
     actionData: localResponse.actionData,
+    pendingCommand: localResponse.pendingCommand !== undefined ? localResponse.pendingCommand : null,
     pensamento: localPensamento,
     source: 'local_engine'
   });

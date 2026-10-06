@@ -420,11 +420,13 @@ const BiaCommands = {
     return { horario, horarioFim };
   },
 
+  pendingCommand: null,
+
   /**
    * Detecta se a mensagem é um comando operacional avulso do gestor
    * Ignora solicitações de desfazer, escalas gerais em lote ou conversas normais
    */
-  isGestorCommand(message) {
+  isGestorCommand(message, pendingCommand = null) {
     if (!message) return false;
     const norm = this.normalizeText(message);
 
@@ -456,7 +458,13 @@ const BiaCommands = {
     );
     if (isEscalaEmLote) return false;
 
-    // 3. Excluir saudações, panorama e consultas gerais
+    // Se temos um comando pendente aguardando dados complementares:
+    const activePending = pendingCommand || this.pendingCommand;
+    if (activePending) {
+      return true;
+    }
+
+    // 3. Excluir saudações, panorama e consultas gerais quando não há pendência
     if (
       norm === 'oi' || norm === 'ola' || norm.startsWith('oi ') || norm.startsWith('ola ') ||
       norm.includes('bom dia') || norm.includes('boa tarde') || norm.includes('boa noite') ||
@@ -490,7 +498,157 @@ const BiaCommands = {
   },
 
   /**
-   * Processador principal de comandos avulsos do gestor
+   * Constrói a resposta e o payload estruturado para Agendamento Avulso no Cronograma
+   */
+  montarRespostaAgendamentoAvulso({ padeiro, clientes, diaInfo, horario = '08:00', horarioFim = '17:00', cronogramaHistorico = [] }) {
+    if (!padeiro || !diaInfo || !clientes || clientes.length === 0) return null;
+
+    const tarefasExistentesDia = (cronogramaHistorico || []).filter(t => t.data === diaInfo.data && t.padeiroId === padeiro.id);
+    const tarefaExistente = tarefasExistentesDia.length > 0 ? tarefasExistentesDia[0] : null;
+    const isSubstituicao = !!tarefaExistente && clientes.length === 1;
+    const lojaAnterior = tarefaExistente ? (tarefaExistente.clienteNome || 'outro cliente') : null;
+
+    const tarefasGeradas = clientes.map((cli, idx) => {
+      let hIni = horario;
+      let hFim = horarioFim;
+      if (clientes.length === 2) {
+        hIni = idx === 0 ? '08:00' : '13:00';
+        hFim = idx === 0 ? '12:00' : '17:00';
+      } else if (clientes.length > 2) {
+        const horaBase = 8 + (idx * 3);
+        hIni = `${String(horaBase).padStart(2, '0')}:00`;
+        hFim = `${String(horaBase + 3).padStart(2, '0')}:00`;
+      }
+
+      const cNome = cli.nomeFantasia || cli.nome;
+      return {
+        padeiroId: padeiro.id,
+        padeiroNome: padeiro.nome,
+        codTec: padeiro.codTec || '',
+        clienteId: cli.id,
+        clienteNome: cNome,
+        data: diaInfo.data,
+        diaNome: diaInfo.diaNome,
+        horario: hIni,
+        horarioFim: hFim,
+        status: 'pendente',
+        observacao: `Ajuste pontual via Bia IA (${diaInfo.diaNome})`
+      };
+    });
+
+    let msgIntro = '';
+    if (clientes.length > 1) {
+      const listaLojas = tarefasGeradas.map(t => `* **${t.horario} às ${t.horarioFim}:** **${t.clienteNome}**`).join('\n');
+      msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})** com os atendimentos para **${padeiro.nome}**:\n\n${listaLojas}\n\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
+    } else {
+      msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para atender a sua solicitação:\n\n` +
+        `* **Padeiro:** ${padeiro.nome} (COD ${padeiro.codTec || '—'})\n` +
+        `* **Loja / Cliente:** **${clientes[0].nomeFantasia || clientes[0].nome}**\n` +
+        `* **Data:** **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})**\n` +
+        `* **Horário:** ${horario} às ${horarioFim}\n`;
+
+      if (isSubstituicao) {
+        msgIntro += `\n*(Esta alteração substituirá o agendamento anterior em **${lojaAnterior}**)*\n`;
+      }
+      msgIntro += `\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
+    }
+
+    const nomesDesc = clientes.map(c => c.nomeFantasia || c.nome).join(' e ');
+
+    return {
+      text: msgIntro,
+      action: 'agendar_avulso',
+      actionData: {
+        action: 'agendar_avulso',
+        substituicao: isSubstituicao,
+        tarefaIdExistente: tarefaExistente?.id || null,
+        tarefaExistenteCliente: lojaAnterior,
+        lojaAnterior,
+        padeiro: {
+          id: padeiro.id,
+          nome: padeiro.nome,
+          codTec: padeiro.codTec || ''
+        },
+        cliente: {
+          id: clientes[0].id,
+          nome: clientes[0].nomeFantasia || clientes[0].nome
+        },
+        clientes: clientes.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
+        tarefas: tarefasGeradas,
+        data: diaInfo.data,
+        diaNome: diaInfo.diaNome,
+        dataBr: this.formatarDataBr(diaInfo.data),
+        horario,
+        horarioFim,
+        observacao: `Ajuste pontual do gestor via Bia IA`,
+        tarefa: tarefasGeradas[0],
+        descricao: `Agendar ${padeiro.nome.split(' ')[0]} em ${nomesDesc} (${diaInfo.diaNome})`,
+        confirmar: true
+      },
+      tipo: 'agendar_avulso',
+      pendingCommand: null
+    };
+  },
+
+  /**
+   * Reconstitui comando pendente do histórico de mensagens caso não tenha sido enviado no estado
+   */
+  reconstruirComandoPendenteDoHistorico(history, { padeirosAtivos = [], clientesAtivos = [], cronogramaHistorico = [], weekOffset = 0 }) {
+    if (!Array.isArray(history) || history.length < 2) return null;
+
+    const ultimas = history.slice(-4);
+    for (let i = ultimas.length - 1; i >= 0; i--) {
+      const msg = ultimas[i];
+      const txt = (msg.parts && msg.parts[0]?.text) || msg.text || '';
+      const isPerguntaBia = msg.role === 'model' && (
+        txt.includes('qual dia da semana') ||
+        txt.includes('qual cliente ou loja') ||
+        txt.includes('qual padeiro') ||
+        txt.includes('Identifiquei o padeiro')
+      );
+
+      if (isPerguntaBia && i > 0) {
+        const prevUser = ultimas[i - 1];
+        const prevTxt = (prevUser.parts && prevUser.parts[0]?.text) || prevUser.text || '';
+        if (prevTxt) {
+          const prevNorm = this.normalizeText(prevTxt);
+          const p = this.extrairPadeiro(prevNorm, padeirosAtivos);
+          const clis = this.extrairClientes(prevNorm, clientesAtivos, cronogramaHistorico, p);
+          const d = this.extrairDiaEData(prevNorm, weekOffset);
+          const { horario, horarioFim } = this.extrairHorarios(prevNorm);
+
+          if (p && clis.length > 0 && !d) {
+            return {
+              action: 'agendar_avulso',
+              padeiro: { id: p.id, nome: p.nome, codTec: p.codTec || '' },
+              cliente: { id: clis[0].id, nome: clis[0].nomeFantasia || clis[0].nome },
+              clientes: clis.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
+              diaInfo: null,
+              horario,
+              horarioFim,
+              missing: 'dia'
+            };
+          }
+          if (p && d && clis.length === 0) {
+            return {
+              action: 'agendar_avulso',
+              padeiro: { id: p.id, nome: p.nome, codTec: p.codTec || '' },
+              cliente: null,
+              clientes: [],
+              diaInfo: d,
+              horario,
+              horarioFim,
+              missing: 'cliente'
+            };
+          }
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Processador principal de comandos avulsos do gestor com suporte a preenchimento de lacunas (slot-filling)
    */
   processarComando(userMessage, context = {}, options = {}) {
     const norm = this.normalizeText(userMessage);
@@ -519,13 +677,121 @@ const BiaCommands = {
       norm.includes('montar escala') ||
       norm.includes('monte a escala')
     );
-    if (isEscalaEmLote) return null;
+    if (isEscalaEmLote) {
+      this.pendingCommand = null;
+      return null;
+    }
 
     const padeirosAtivos = context.padeirosAtivos || [];
     const clientesAtivos = context.clientesAtivos || [];
     const cronogramaHistorico = context.cronogramaHistorico || [];
     const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || options.weekOffset || 0;
 
+    // Recupera comando pendente (options, context, this ou reconstrução do histórico)
+    let pending = options.pendingCommand || context.pendingCommand || this.pendingCommand || null;
+    if (!pending && (context.history || options.history)) {
+      pending = this.reconstruirComandoPendenteDoHistorico(context.history || options.history, {
+        padeirosAtivos,
+        clientesAtivos,
+        cronogramaHistorico,
+        weekOffset
+      });
+    }
+
+    // SE HÁ UM COMANDO PENDENTE EM ANDAMENTO (Turno 2+):
+    if (pending) {
+      // 1. Cancelamento explícito pelo gestor
+      const isCancela = (
+        norm === 'cancela' || norm === 'cancelar' || norm === 'esquece' ||
+        norm.includes('nao precisa') || norm.includes('deixa pra la') ||
+        norm.includes('nao quero mais') || norm.includes('cancelar agendamento')
+      );
+      if (isCancela) {
+        this.pendingCommand = null;
+        return {
+          text: 'Entendido, o agendamento foi cancelado. Se precisar de outra escala, alteração ou consulta, estou à disposição!',
+          action: null,
+          actionData: null,
+          pendingCommand: null,
+          tipo: 'cancelado'
+        };
+      }
+
+      // 2. Extrai novos dados fornecidos nesta resposta
+      const diaEncontrado = this.extrairDiaEData(norm, weekOffset);
+      const padeiroEncontrado = this.extrairPadeiro(norm, padeirosAtivos);
+      const clientesEncontrados = this.extrairClientes(norm, clientesAtivos, cronogramaHistorico, pending.padeiro || padeiroEncontrado);
+      const horariosEncontrados = this.extrairHorarios(norm);
+
+      // Preenche lacuna do DIA
+      if (!pending.diaInfo && diaEncontrado) {
+        pending.diaInfo = diaEncontrado;
+      }
+      // Preenche lacuna da LOJA / CLIENTE
+      if ((!pending.clientes || pending.clientes.length === 0) && clientesEncontrados.length > 0) {
+        pending.clientes = clientesEncontrados;
+        pending.cliente = clientesEncontrados[0];
+      } else if (clientesEncontrados.length > 0) {
+        pending.clientes = clientesEncontrados;
+        pending.cliente = clientesEncontrados[0];
+      }
+      // Preenche lacuna do PADEIRO
+      if (!pending.padeiro && padeiroEncontrado) {
+        pending.padeiro = { id: padeiroEncontrado.id, nome: padeiroEncontrado.nome, codTec: padeiroEncontrado.codTec || '' };
+      }
+
+      // Atualiza horários se fornecidos
+      if (norm.includes(' as ') || norm.includes(' das ') || norm.includes(':')) {
+        pending.horario = horariosEncontrados.horario;
+        pending.horarioFim = horariosEncontrados.horarioFim;
+      }
+
+      // Verifica se todos os elementos essenciais foram preenchidos
+      const temPadeiro = !!pending.padeiro;
+      const temCliente = (pending.clientes && pending.clientes.length > 0) || !!pending.cliente;
+      const temDia = !!pending.diaInfo;
+
+      if (temPadeiro && temCliente && temDia) {
+        const fullPadeiro = padeirosAtivos.find(p => p.id === pending.padeiro.id) || pending.padeiro;
+        const fullClientes = (pending.clientes && pending.clientes.length > 0) ? pending.clientes : [pending.cliente];
+
+        this.pendingCommand = null;
+        return this.montarRespostaAgendamentoAvulso({
+          padeiro: fullPadeiro,
+          clientes: fullClientes,
+          diaInfo: pending.diaInfo,
+          horario: pending.horario || '08:00',
+          horarioFim: pending.horarioFim || '17:00',
+          cronogramaHistorico
+        });
+      }
+
+      // Se ainda falta algum dado, reorienta de forma inteligente
+      if (temPadeiro && !temDia) {
+        this.pendingCommand = pending;
+        const cliNome = pending.clientes?.[0]?.nomeFantasia || pending.clientes?.[0]?.nome || pending.cliente?.nome || 'o cliente';
+        return {
+          text: `Identifiquei o padeiro **${pending.padeiro.nome}** e a loja **${cliNome}**, mas para qual **dia da semana** (ex: *na sexta*, *amanhã*, *terça*) você gostaria de agendá-lo?`,
+          action: 'comando_incompleto',
+          actionData: { pendingCommand: pending },
+          pendingCommand: pending,
+          tipo: 'comando_incompleto'
+        };
+      }
+
+      if (temPadeiro && !temCliente) {
+        this.pendingCommand = pending;
+        return {
+          text: `Identifiquei o padeiro **${pending.padeiro.nome}** para **${pending.diaInfo.diaNome}-feira**, mas qual **cliente ou loja** ele deve atender?`,
+          action: 'comando_incompleto',
+          actionData: { pendingCommand: pending },
+          pendingCommand: pending,
+          tipo: 'comando_incompleto'
+        };
+      }
+    }
+
+    // PROCESSAMENTO DE NOVO COMANDO (Turno 1):
     const diaInfo = this.extrairDiaEData(norm, weekOffset);
     const padeiro = this.extrairPadeiro(norm, padeirosAtivos);
     const clientes = this.extrairClientes(norm, clientesAtivos, cronogramaHistorico, padeiro);
@@ -604,111 +870,79 @@ const BiaCommands = {
       }
     }
 
-    // 4. Caso Principal: Agendamento / Alocação Avulsa (Suporta 1 ou Múltiplos Clientes)
-    // Ex: "Preciso que na terça o cides atenda o cliente venza junto com um outro cliente big box"
+    // 4. Caso Principal: Agendamento / Alocação Avulsa Completa (Padeiro + Dia + Lojas)
     if (padeiro && diaInfo && clientes.length > 0) {
-      const tarefasExistentesDia = (cronogramaHistorico || []).filter(t => t.data === diaInfo.data && t.padeiroId === padeiro.id);
-      const tarefaExistente = tarefasExistentesDia.length > 0 ? tarefasExistentesDia[0] : null;
-      const isSubstituicao = !!tarefaExistente && clientes.length === 1;
-      const lojaAnterior = tarefaExistente ? (tarefaExistente.clienteNome || 'outro cliente') : null;
-
-      const tarefasGeradas = clientes.map((cli, idx) => {
-        let hIni = horario;
-        let hFim = horarioFim;
-        if (clientes.length === 2) {
-          hIni = idx === 0 ? '08:00' : '13:00';
-          hFim = idx === 0 ? '12:00' : '17:00';
-        } else if (clientes.length > 2) {
-          const horaBase = 8 + (idx * 3);
-          hIni = `${String(horaBase).padStart(2, '0')}:00`;
-          hFim = `${String(horaBase + 3).padStart(2, '0')}:00`;
-        }
-
-        const cNome = cli.nomeFantasia || cli.nome;
-        return {
-          padeiroId: padeiro.id,
-          padeiroNome: padeiro.nome,
-          codTec: padeiro.codTec || '',
-          clienteId: cli.id,
-          clienteNome: cNome,
-          data: diaInfo.data,
-          diaNome: diaInfo.diaNome,
-          horario: hIni,
-          horarioFim: hFim,
-          status: 'pendente',
-          observacao: `Ajuste pontual via Bia IA (${diaInfo.diaNome})`
-        };
+      this.pendingCommand = null;
+      return this.montarRespostaAgendamentoAvulso({
+        padeiro,
+        clientes,
+        diaInfo,
+        horario,
+        horarioFim,
+        cronogramaHistorico
       });
-
-      let msgIntro = '';
-      if (clientes.length > 1) {
-        const listaLojas = tarefasGeradas.map(t => `* **${t.horario} às ${t.horarioFim}:** **${t.clienteNome}**`).join('\n');
-        msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})** com os atendimentos para **${padeiro.nome}**:\n\n${listaLojas}\n\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
-      } else {
-        msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para atender a sua solicitação:\n\n` +
-          `* **Padeiro:** ${padeiro.nome} (COD ${padeiro.codTec || '—'})\n` +
-          `* **Loja / Cliente:** **${clientes[0].nomeFantasia || clientes[0].nome}**\n` +
-          `* **Data:** **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})**\n` +
-          `* **Horário:** ${horario} às ${horarioFim}\n`;
-
-        if (isSubstituicao) {
-          msgIntro += `\n*(Esta alteração substituirá o agendamento anterior em **${lojaAnterior}**)*\n`;
-        }
-        msgIntro += `\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
-      }
-
-      const nomesDesc = clientes.map(c => c.nomeFantasia || c.nome).join(' e ');
-
-      return {
-        text: msgIntro,
-        action: 'agendar_avulso',
-        actionData: {
-          action: 'agendar_avulso',
-          substituicao: isSubstituicao,
-          tarefaIdExistente: tarefaExistente?.id || null,
-          tarefaExistenteCliente: lojaAnterior,
-          lojaAnterior,
-          padeiro: {
-            id: padeiro.id,
-            nome: padeiro.nome,
-            codTec: padeiro.codTec || ''
-          },
-          cliente: {
-            id: clientes[0].id,
-            nome: clientes[0].nomeFantasia || clientes[0].nome
-          },
-          clientes: clientes.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
-          tarefas: tarefasGeradas,
-          data: diaInfo.data,
-          diaNome: diaInfo.diaNome,
-          dataBr: this.formatarDataBr(diaInfo.data),
-          horario,
-          horarioFim,
-          observacao: `Ajuste pontual do gestor via Bia IA`,
-          tarefa: tarefasGeradas[0],
-          descricao: `Agendar ${padeiro.nome.split(' ')[0]} em ${nomesDesc} (${diaInfo.diaNome})`,
-          confirmar: true
-        },
-        tipo: 'agendar_avulso'
-      };
     }
 
-    // 5. Caso: Comando incompleto (orienta o gestor de forma clara)
-    // SÓ DEVE DISPARAR se houver elementos suficientes com intenção clara de agendar
+    // 5. Caso: Comando incompleto (grava pendingCommand e solicita o dado faltante de forma clara)
     if (padeiro && diaInfo && !cliente) {
+      const pendingCmd = {
+        action: 'agendar_avulso',
+        padeiro: { id: padeiro.id, nome: padeiro.nome, codTec: padeiro.codTec || '' },
+        clientes: [],
+        cliente: null,
+        diaInfo,
+        horario,
+        horarioFim,
+        missing: 'cliente'
+      };
+      this.pendingCommand = pendingCmd;
       return {
-        text: `Identifiquei o padeiro **${padeiro.nome}** e o dia **${diaInfo.diaNome}-feira**, mas faltou indicar qual **cliente ou loja** ele deve atender.\n\nExemplo: *"Preciso que na ${diaInfo.diaNome} o ${padeiro.nome.split(' ')[0]} atenda o Veneza"*.\n\nQual loja deseja agendar para ele?`,
-        action: null,
-        actionData: null,
+        text: `Identifiquei o padeiro **${padeiro.nome}** e o dia **${diaInfo.diaNome}-feira**, mas faltou indicar qual **cliente ou loja** ele deve atender.\n\nQual loja deseja agendar para ele? (Ex: *"Veneza"*, *"Big Box"*)`,
+        action: 'comando_incompleto',
+        actionData: { pendingCommand: pendingCmd },
+        pendingCommand: pendingCmd,
         tipo: 'comando_incompleto'
       };
     }
 
     if (padeiro && cliente && !diaInfo) {
+      const pendingCmd = {
+        action: 'agendar_avulso',
+        padeiro: { id: padeiro.id, nome: padeiro.nome, codTec: padeiro.codTec || '' },
+        cliente: { id: cliente.id, nome: cliente.nomeFantasia || cliente.nome },
+        clientes: clientes.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
+        diaInfo: null,
+        horario,
+        horarioFim,
+        missing: 'dia'
+      };
+      this.pendingCommand = pendingCmd;
       return {
-        text: `Identifiquei o padeiro **${padeiro.nome}** e a loja **${cliente.nomeFantasia || cliente.nome}**, mas para qual **dia da semana** você gostaria de agendá-lo?`,
-        action: null,
-        actionData: null,
+        text: `Identifiquei o padeiro **${padeiro.nome}** e a loja **${cliente.nomeFantasia || cliente.nome}**, mas para qual **dia da semana** você gostaria de agendá-lo? (Ex: *"na sexta"*, *"amanhã"*, *"terça"*)`,
+        action: 'comando_incompleto',
+        actionData: { pendingCommand: pendingCmd },
+        pendingCommand: pendingCmd,
+        tipo: 'comando_incompleto'
+      };
+    }
+
+    if (!padeiro && cliente && diaInfo && (norm.includes('coloque') || norm.includes('coloca') || norm.includes('agende') || norm.includes('atender') || norm.includes('atenda'))) {
+      const pendingCmd = {
+        action: 'agendar_avulso',
+        padeiro: null,
+        cliente: { id: cliente.id, nome: cliente.nomeFantasia || cliente.nome },
+        clientes: clientes.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
+        diaInfo,
+        horario,
+        horarioFim,
+        missing: 'padeiro'
+      };
+      this.pendingCommand = pendingCmd;
+      return {
+        text: `Identifiquei a loja **${cliente.nomeFantasia || cliente.nome}** na **${diaInfo.diaNome}-feira**, mas qual **padeiro** da equipe você gostaria de agendar?`,
+        action: 'comando_incompleto',
+        actionData: { pendingCommand: pendingCmd },
+        pendingCommand: pendingCmd,
         tipo: 'comando_incompleto'
       };
     }

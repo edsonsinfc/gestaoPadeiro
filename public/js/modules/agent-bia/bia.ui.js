@@ -185,6 +185,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         if (typeof BiaAPI !== 'undefined') BiaAPI.clearHistory();
+        this.pendingCommand = null;
+        if (typeof BiaCommands !== 'undefined') BiaCommands.pendingCommand = null;
         const body = document.getElementById('bia-messages-body');
         if (body) body.innerHTML = '';
         this.addBiaMessage('Histórico reiniciado. O que faremos agora?');
@@ -609,6 +611,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     if (box) box.classList.toggle('bia-listening', on);
   },
 
+  pendingCommand: null,
+
   /**
    * Envia a mensagem do usuário e processa resposta e ações da IA
    */
@@ -622,8 +626,17 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
     try {
       // 2. Chamar o serviço de IA da Bia
-      const response = await BiaAPI.sendMessage(message);
+      const response = await BiaAPI.sendMessage(message, { pendingCommand: this.pendingCommand });
       this.removeTypingIndicator();
+
+      // Sincronizar estado de comando pendente (multi-turno)
+      if (response.pendingCommand !== undefined) {
+        this.pendingCommand = response.pendingCommand;
+      } else if (response.actionData?.pendingCommand !== undefined) {
+        this.pendingCommand = response.actionData.pendingCommand;
+      } else if (response.action === 'agendar_avulso') {
+        this.pendingCommand = null;
+      }
 
       // 3. Exibir balão da Bia com Caminho de Pensamento
       this.addBiaMessage(response.text, { pensamento: response.pensamento });
