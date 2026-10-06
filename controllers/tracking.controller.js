@@ -6,6 +6,33 @@ const { HistoricoLocalizacao, Localizacao } = require('../data/db-adapter');
 
 const TrackingController = {
   /**
+   * Get last known locations for all bakers (or filial)
+   * GET /api/tracking/locations
+   */
+  async getLocations(req, res) {
+    try {
+      const user = req.user;
+      let query = {};
+      if (user.role === 'gestor' && user.filial && user.filial !== 'null') {
+        query.filial = Array.isArray(user.filial) ? { $in: user.filial } : user.filial;
+      }
+      const locations = await Localizacao.find(query);
+      const formatted = (locations || []).map(loc => ({
+        userId: loc.userId,
+        userName: loc.userName,
+        filial: loc.filial,
+        coords: { lat: Number(loc.lat), lng: Number(loc.lng), accuracy: loc.accuracy },
+        lastUpdate: loc.lastUpdate,
+        fromHistory: true
+      }));
+      res.json(formatted);
+    } catch (e) {
+      console.error('Error fetching locations:', e);
+      res.status(500).json({ error: 'Erro ao buscar localizações' });
+    }
+  },
+
+  /**
    * Get trail for a user on a specific date
    * GET /api/tracking/trail/:userId?date=YYYY-MM-DD
    */

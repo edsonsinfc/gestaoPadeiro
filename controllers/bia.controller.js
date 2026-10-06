@@ -63,43 +63,45 @@ async function carregarContextoBancoSeNecessario(context = {}) {
   const ctx = { ...context };
   try {
     if (!ctx.padeirosAtivos || ctx.padeirosAtivos.length === 0 || !ctx.cronogramaHistorico) {
-      const padeiros = await db.Padeiro.find({ ativo: 1 });
-      const clientes = await db.Cliente.find({ ativo: 1 });
-      const cronos = await db.Cronograma.find({});
-      const ativs = await db.Atividade.find({});
+      const [padeiros, clientes, cronos, ativs] = await Promise.all([
+        db.Padeiro.find({ deletado: { $ne: 1 } }),
+        db.Cliente.find({}),
+        db.Cronograma.find({}),
+        db.Atividade.find({})
+      ]);
 
       ctx.padeirosAtivos = padeiros || [];
       ctx.clientesAtivos = clientes || [];
       ctx.cronogramaHistorico = cronos || [];
       ctx.atividades = ativs || [];
+    }
 
-      if (!ctx.rankingPadeiros || ctx.rankingPadeiros.length === 0) {
-        const prodMap = {};
-        ctx.padeirosAtivos.forEach(p => {
-          prodMap[p.id] = { ...p, totalKg: 0, totalAtividades: 0 };
-        });
-        (ctx.atividades || []).forEach(a => {
-          if (a.padeiroId && prodMap[a.padeiroId]) {
-            prodMap[a.padeiroId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
-            prodMap[a.padeiroId].totalAtividades++;
-          }
-        });
-        ctx.rankingPadeiros = Object.values(prodMap).sort((a, b) => b.totalKg - a.totalKg);
-      }
+    if (!ctx.rankingPadeiros || ctx.rankingPadeiros.length === 0) {
+      const prodMap = {};
+      (ctx.padeirosAtivos || []).forEach(p => {
+        prodMap[p.id] = { ...p, totalKg: 0, totalAtividades: 0 };
+      });
+      (ctx.atividades || []).forEach(a => {
+        if (a.padeiroId && prodMap[a.padeiroId]) {
+          prodMap[a.padeiroId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
+          prodMap[a.padeiroId].totalAtividades++;
+        }
+      });
+      ctx.rankingPadeiros = Object.values(prodMap).sort((a, b) => b.totalKg - a.totalKg);
+    }
 
-      if (!ctx.rankingClientes || ctx.rankingClientes.length === 0) {
-        const cliMap = {};
-        ctx.clientesAtivos.forEach(c => {
-          cliMap[c.id] = { ...c, totalKg: 0, totalVisitas: 0 };
-        });
-        (ctx.atividades || []).forEach(a => {
-          if (a.clienteId && cliMap[a.clienteId]) {
-            cliMap[a.clienteId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
-            cliMap[a.clienteId].totalVisitas++;
-          }
-        });
-        ctx.rankingClientes = Object.values(cliMap).sort((a, b) => b.totalKg - a.totalKg);
-      }
+    if (!ctx.rankingClientes || ctx.rankingClientes.length === 0) {
+      const cliMap = {};
+      (ctx.clientesAtivos || []).forEach(c => {
+        cliMap[c.id] = { ...c, totalKg: 0, totalVisitas: 0 };
+      });
+      (ctx.atividades || []).forEach(a => {
+        if (a.clienteId && cliMap[a.clienteId]) {
+          cliMap[a.clienteId].totalKg += (parseFloat(a.kgTotal) || 0) + (parseFloat(a.lTotal) || 0);
+          cliMap[a.clienteId].totalVisitas++;
+        }
+      });
+      ctx.rankingClientes = Object.values(cliMap).sort((a, b) => b.totalKg - a.totalKg);
     }
   } catch (err) {
     console.warn('[BIA Controller] Falha ao enriquecer contexto:', err.message);
@@ -859,4 +861,31 @@ exports.getStatus = (req, res) => {
     aiProvider: hasKey ? 'Google Gemini 3.1 Flash (LLM Conectado)' : 'Motor Operacional Inteligente Local',
     hasApiKey: hasKey
   });
+};
+
+/**
+ * Contexto Operacional Completo: GET /api/bia/context
+ * Averigua todas as escalas históricas, padeiros, clientes e atendimentos no banco da Hostinger
+ */
+exports.getContext = async (req, res) => {
+  try {
+    const [padeiros, clientes, cronogramas, atividades] = await Promise.all([
+      db.Padeiro.find({ deletado: { $ne: 1 } }),
+      db.Cliente.find({}),
+      db.Cronograma.find({}),
+      db.Atividade.find({})
+    ]);
+
+    const enriched = await carregarContextoBancoSeNecessario({
+      padeirosAtivos: padeiros || [],
+      clientesAtivos: clientes || [],
+      cronogramaHistorico: cronogramas || [],
+      atividades: atividades || []
+    });
+
+    res.json(enriched);
+  } catch (err) {
+    console.error('[BIA] Erro ao carregar contexto completo da Hostinger:', err);
+    res.status(500).json({ error: 'Erro ao carregar contexto operacional.' });
+  }
 };

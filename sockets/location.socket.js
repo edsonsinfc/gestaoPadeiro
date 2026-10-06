@@ -5,59 +5,36 @@ const activeLocations = new Map();
 
 const TEN_MINUTES_MS = 10 * 60 * 1000;
 
-function pruneStaleLocations() {
-  const cutoff = Date.now() - TEN_MINUTES_MS;
-  for (const [userId, loc] of activeLocations.entries()) {
-    const time = loc.lastUpdate ? new Date(loc.lastUpdate).getTime() : 0;
-    if (isNaN(time) || time < cutoff) {
-      activeLocations.delete(userId);
-    }
-  }
-}
-
-function getActiveLocationsList() {
-  pruneStaleLocations();
+function getAllLocationsList() {
   return Array.from(activeLocations.values());
 }
 
 async function initLocationSocket(io) {
   ioInstance = io;
   
-  // Load ONLY recent active locations (< 10 min) from DB at startup
+  // Load last known locations from DB at startup so map shows the last known point of each baker
   try {
-    const tenMinAgoStr = new Date(Date.now() - TEN_MINUTES_MS).toISOString();
     const savedLocations = await Localizacao.find();
     savedLocations.forEach(loc => {
-      if (loc.lastUpdate && loc.lastUpdate >= tenMinAgoStr) {
-        activeLocations.set(loc.userId, {
-          userId: loc.userId,
-          userName: loc.userName,
-          filial: loc.filial,
-          coords: { lat: loc.lat, lng: loc.lng, accuracy: loc.accuracy },
-          lastUpdate: loc.lastUpdate,
-          fromHistory: true
-        });
-      }
+      activeLocations.set(loc.userId, {
+        userId: loc.userId,
+        userName: loc.userName,
+        filial: loc.filial,
+        coords: { lat: Number(loc.lat), lng: Number(loc.lng), accuracy: loc.accuracy },
+        lastUpdate: loc.lastUpdate,
+        fromHistory: true
+      });
     });
-    console.log(`📍 Carregadas ${activeLocations.size} localizações ativas recentes (<10 min) do banco.`);
+    console.log(`📍 Carregadas ${activeLocations.size} localizações salvas (últimos pontos conhecidos) do banco.`);
   } catch (e) {
     console.error("Erro ao carregar localizações do banco:", e);
   }
 
-  // Periodic pruning of stale locations every 60s
-  setInterval(() => {
-    const beforeCount = activeLocations.size;
-    pruneStaleLocations();
-    if (activeLocations.size !== beforeCount && ioInstance) {
-      ioInstance.emit('location-broadcast', Array.from(activeLocations.values()));
-    }
-  }, 60 * 1000);
-
   io.on('connection', (socket) => {
     console.log(`📡 Novo cliente conectado: ${socket.id}`);
     
-    // Always emit current fresh active locations (empty array if no one is online)
-    socket.emit('location-broadcast', getActiveLocationsList());
+    // Always emit all known locations (so the map always displays the last known point)
+    socket.emit('location-broadcast', getAllLocationsList());
 
     socket.on('update-location', async (data) => {
       if (!data.userId) return;
@@ -95,7 +72,7 @@ async function initLocationSocket(io) {
         console.error("Erro ao salvar localização no banco:", e);
       }
       
-      io.emit('location-broadcast', getActiveLocationsList());
+      io.emit('location-broadcast', getAllLocationsList());
     });
 
     socket.on('timeline-event', async (data) => {
@@ -122,13 +99,13 @@ async function initLocationSocket(io) {
       let changed = false;
       for (const [userId, loc] of activeLocations.entries()) {
         if (loc.socketId === socket.id) {
-          activeLocations.delete(userId);
+          loc.socketId = null;
           changed = true;
           break;
         }
       }
       if (changed && ioInstance) {
-        ioInstance.emit('location-broadcast', getActiveLocationsList());
+        ioInstance.emit('location-broadcast', getAllLocationsList());
       }
     });
   });
@@ -177,7 +154,7 @@ async function updateActiveLocation(data) {
   }
 
   if (ioInstance) {
-    ioInstance.emit('location-broadcast', getActiveLocationsList());
+    ioInstance.emit('location-broadcast', getAllLocationsList());
   }
 }
 
@@ -200,7 +177,7 @@ async function syncActiveLocation(data) {
   activeLocations.set(data.userId, locationData);
 
   if (ioInstance) {
-    ioInstance.emit('location-broadcast', getActiveLocationsList());
+    ioInstance.emit('location-broadcast', getAllLocationsList());
     ioInstance.emit('location-broadcast-single', {
       userId: data.userId,
       userName: data.userName,

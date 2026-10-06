@@ -16,15 +16,31 @@ window.Rastreamento = {
   async render() {
     document.body.classList.remove('tracking-mobile-subtab-open');
     if (this.bcpInterval) clearInterval(this.bcpInterval);
+    this._lastOnlineIds = null; // Sempre invalida cache ao renderizar tela nova
+    this.selectedUserId = null;
     const container = document.getElementById('page-container');
     
     // Fetch all active padeiros to populate select dropdown
     let padeiros = [];
     try {
       padeiros = await API.get('/api/padeiros');
-      this.allPadeiros = padeiros;
+      if (Array.isArray(padeiros) && padeiros.length > 0) {
+        this.allPadeiros = padeiros;
+        try {
+          safeSetLocalStorage('brago_cached_padeiros', JSON.stringify(padeiros));
+        } catch (e) {}
+      }
     } catch (e) {
       console.error('Erro ao buscar padeiros:', e);
+    }
+
+    if (!this.allPadeiros || this.allPadeiros.length === 0) {
+      const cached = safeGetLocalStorage('brago_cached_padeiros');
+      if (cached) {
+        try {
+          this.allPadeiros = JSON.parse(cached);
+        } catch (e) {}
+      }
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -1785,11 +1801,19 @@ window.Rastreamento = {
     // Event with batch of points (emitted during offline sync or real-time batch)
     this.socket.on('location-broadcast-single', (data) => {
       const user = API.getUser();
-      if (user.role === 'gestor' && user.filial && data.filial !== user.filial) return;
+      if (user && user.role === 'gestor' && user.filial && data.filial !== user.filial) return;
 
-      // Update the user's marker and sidebar status
+      // Update the user's marker and merge into latestLocations
+      if (!this.latestLocations) this.latestLocations = [];
+      const idx = this.latestLocations.findIndex(l => l && l.userId === data.userId);
+      if (idx >= 0) {
+        this.latestLocations[idx] = data;
+      } else {
+        this.latestLocations.push(data);
+      }
+
       this.updateMarkers([data]);
-      this.updateList([data]);
+      this.updateList(this.latestLocations);
 
       // If this user is selected to view trail -> accumulate points and redraw live trail
       if (this.selectedUserId === data.userId && data.newPoints && data.newPoints.length > 0) {
@@ -1910,9 +1934,28 @@ window.Rastreamento = {
       locations = this.latestLocations || [];
     }
 
+    if (!this.allPadeiros || this.allPadeiros.length === 0) {
+      const cached = safeGetLocalStorage('brago_cached_padeiros');
+      if (cached) {
+        try {
+          this.allPadeiros = JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+
     const padeirosToRender = this.allPadeiros || [];
     if (padeirosToRender.length === 0) {
-      list.innerHTML = '<div style="padding: 12px 20px; font-size: 13px; color: var(--mac-tertiary);">Nenhum padeiro cadastrado.</div>';
+      // Tenta buscar da API caso ainda não tenha sido populado
+      API.get('/api/padeiros').then(p => {
+        if (Array.isArray(p) && p.length > 0) {
+          this.allPadeiros = p;
+          try { safeSetLocalStorage('brago_cached_padeiros', JSON.stringify(p)); } catch (e) {}
+          this._lastOnlineIds = null;
+          this.updateList();
+        }
+      }).catch(() => {});
+
+      list.innerHTML = '<div style="padding: 12px 20px; font-size: 13px; color: var(--mac-tertiary);">Carregando padeiros...</div>';
       return;
     }
 
@@ -1936,9 +1979,10 @@ window.Rastreamento = {
       }
     });
 
-    // Avoid DOM recreation if the online users haven't changed and selected hasn't changed
+    // Evita recriar o DOM APENAS se a lista já contiver itens desenhados E o estado online não mudou
     const cacheKey = Array.from(onlineIdsSet).sort().join(',') + `|sel:${this.selectedUserId || ''}`;
-    if (this._lastOnlineIds === cacheKey) {
+    const hasRenderedItems = list.children.length > 0 && list.querySelector('.mac-track-item') !== null;
+    if (hasRenderedItems && this._lastOnlineIds === cacheKey) {
       return;
     }
     this._lastOnlineIds = cacheKey;

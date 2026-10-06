@@ -16,6 +16,7 @@ router.post('/sync', TrackingController.syncTracking);
 // Admin/manager only routes
 router.use(adminOnly);
 
+router.get('/locations', TrackingController.getLocations);
 router.get('/trail/:userId', TrackingController.getTrail);
 router.delete('/trail/:userId', TrackingController.resetUserTracking);
 router.delete('/reset/all', TrackingController.resetAllTracking);
