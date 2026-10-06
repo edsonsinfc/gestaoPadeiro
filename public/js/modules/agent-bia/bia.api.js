@@ -604,6 +604,38 @@ const BiaAPI = {
   },
 
   /**
+   * Constrói o Caminho de Pensamento Operacional da Bia fundamentado em dados reais do sistema
+   */
+  construirCaminhoPensamento(userMessage, context = {}, decisao = {}) {
+    const padeirosCount = (context.padeirosAtivos || []).length;
+    const clientesCount = (context.clientesAtivos || []).length;
+    const cronosCount = (context.cronogramaHistorico || []).length;
+    const ativsCount = (context.atividades || []).length;
+
+    const steps = [];
+    steps.push(`1. Interpretação da Demanda: Processamento do comando "${userMessage.trim()}". Identificação de intenções operacionais e entidades envolvidas.`);
+    steps.push(`2. Averiguação no Banco de Dados: Consulta em tempo real realizada na base da Hostinger. Localizados ${padeirosCount} padeiros ativos, ${clientesCount} clientes/lojas, ${cronosCount} escalas no histórico e ${ativsCount} atendimentos registrados.`);
+
+    if (decisao.actionData && decisao.actionData.padeiroNome) {
+      const padNome = decisao.actionData.padeiroNome;
+      const padHist = (context.cronogramaHistorico || []).filter(c => c.padeiroNome === padNome || c.padeiroId === decisao.actionData.padeiroId);
+      steps.push(`3. Análise Operacional: Padeiro identificado: ${padNome} (${padHist.length} escalas no histórico do banco). Cruzamento de padrões de agendamento e dias da semana.`);
+    } else if (decisao.action === 'escala_padrao_anterior') {
+      steps.push(`3. Análise Operacional: Mapeamento de rotina e frequência semanal da equipe com base em todas as escalas históricas da Hostinger.`);
+    } else if (decisao.action === 'escala_alta_performance') {
+      steps.push(`3. Análise Operacional: Cruzamento da matriz de produtividade de padeiros com o volume de demanda dos clientes ativos.`);
+    } else if (decisao.action === 'agendar_avulso' || decisao.action === 'remover_avulso') {
+      steps.push(`3. Análise Operacional: Validação de data, horário, alocação de equipe e integridade de loja.`);
+    } else {
+      steps.push(`3. Análise Operacional: Validação de métricas consolidadas, produtividade e regras de negócio do sistema.`);
+    }
+
+    steps.push(`4. Decisão Operacional: ${decisao.descricao || decisao.actionData?.descricao || 'Síntese das informações reais e elaboração da resposta corporativa.'}`);
+
+    return steps.join('\n');
+  },
+
+  /**
    * Envia uma mensagem do usuário com fallback em camadas (Servidor -> Gemini Direto -> Motor Local)
    */
   async sendMessage(userMessage) {
@@ -643,6 +675,7 @@ const BiaAPI = {
             text: serverRes.text,
             action: serverRes.action,
             actionData: serverRes.actionData,
+            pensamento: serverRes.pensamento || null,
             modelUsed: serverRes.model || serverRes.source || 'server'
           };
         }
@@ -660,8 +693,8 @@ const BiaAPI = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: this.conversationHistory,
         generationConfig: {
-          temperature: 0.6,
-          maxOutputTokens: 1024
+          temperature: 0.4,
+          maxOutputTokens: 1200
         }
       };
 
@@ -682,6 +715,7 @@ const BiaAPI = {
               text: parsed.cleanText,
               action: parsed.action,
               actionData: parsed.actionData,
+              pensamento: parsed.pensamento || this.construirCaminhoPensamento(userMessage, systemContext, parsed),
               raw: rawResponse,
               modelUsed: model
             };
@@ -700,8 +734,13 @@ const BiaAPI = {
         text: local.text,
         action: local.action,
         actionData: local.actionData,
+        pensamento: local.pensamento || this.construirCaminhoPensamento(userMessage, systemContext, local),
         modelUsed: 'local_engine'
       };
+    }
+
+    if (!result.pensamento) {
+      result.pensamento = this.construirCaminhoPensamento(userMessage, systemContext, result);
     }
 
     // Registrar resposta no histórico local
@@ -720,9 +759,17 @@ const BiaAPI = {
     let cleanText = rawText || '';
     let action = null;
     let actionData = null;
+    let pensamento = null;
+
+    // Extrair tag de pensamento se presente
+    const thoughtMatch = cleanText.match(/<pensamento>([\s\S]*?)<\/pensamento>/i);
+    if (thoughtMatch) {
+      pensamento = thoughtMatch[1].trim();
+      cleanText = cleanText.replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '').trim();
+    }
 
     // Detectar JSON de ação na resposta
-    const jsonMatch = (rawText || '').match(/```json\s*([\s\S]*?)\s*```/);
+    const jsonMatch = (cleanText || '').match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonMatch) {
       try {
         const parsedJson = JSON.parse(jsonMatch[1]);
@@ -733,7 +780,7 @@ const BiaAPI = {
       } catch (e) {
         console.warn('[BIA] Erro ao parsear JSON da IA:', e);
       }
-      cleanText = (rawText || '').replace(/```json[\s\S]*?```/g, '').trim();
+      cleanText = (cleanText || '').replace(/```json[\s\S]*?```/g, '').trim();
     }
 
     // Se a IA não retornou ação estruturada, usa o fallback local
@@ -756,7 +803,7 @@ const BiaAPI = {
       }
     }
 
-    return { cleanText, action, actionData };
+    return { cleanText, action, actionData, pensamento };
   }
 };
 

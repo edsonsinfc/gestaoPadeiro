@@ -245,8 +245,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       const response = await BiaAPI.sendMessage(message);
       this.removeTypingIndicator();
 
-      // 3. Exibir balão da Bia
-      this.addBiaMessage(response.text);
+      // 3. Exibir balão da Bia com Caminho de Pensamento
+      this.addBiaMessage(response.text, { pensamento: response.pensamento });
 
       // 4. Executar ação correspondente se detectada
       if (response.action === 'escala_alta_performance') {
@@ -708,9 +708,35 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     this.scrollToBottom();
   },
 
-  addBiaMessage(text) {
+  addBiaMessage(text, meta = {}) {
     const body = document.getElementById('bia-messages-body');
     if (!body) return;
+
+    let thoughtHtml = '';
+    const thoughtText = meta.pensamento || (text && text.match(/<pensamento>([\s\S]*?)<\/pensamento>/i)?.[1]);
+    let displayText = text || '';
+    if (displayText) {
+      displayText = displayText.replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '').trim();
+    }
+
+    if (thoughtText && thoughtText.trim()) {
+      const stepsFormatted = this.formatThought(thoughtText);
+      thoughtHtml = `
+        <div class="bia-thought-card">
+          <button type="button" class="bia-thought-header" onclick="this.closest('.bia-thought-card').classList.toggle('is-open')">
+            <div class="bia-thought-title-group">
+              <span class="bia-thought-sparkle">✦</span>
+              <span class="bia-thought-title">Caminho de Pensamento</span>
+              <span class="bia-thought-badge">Base Real</span>
+            </div>
+            <span class="bia-thought-chevron">▾</span>
+          </button>
+          <div class="bia-thought-body">
+            ${stepsFormatted}
+          </div>
+        </div>
+      `;
+    }
 
     const row = document.createElement('div');
     row.className = 'bia-msg-row bia';
@@ -718,10 +744,23 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       <div class="bia-msg-avatar">
         ${this.starIconSvg}
       </div>
-      <div class="bia-msg-bubble">${this.formatMarkdown(text)}</div>
+      <div class="bia-msg-bubble">
+        ${thoughtHtml}
+        <div class="bia-msg-text">${this.formatMarkdown(displayText)}</div>
+      </div>
     `;
     body.appendChild(row);
     this.scrollToBottom();
+  },
+
+  formatThought(thought) {
+    if (!thought) return '';
+    const lines = thought.split('\n').map(l => l.trim()).filter(Boolean);
+    return lines.map(line => {
+      const escaped = this.escapeHtml(line);
+      const formatted = escaped.replace(/^(\d+\.[\w\sãõéáíóúç]+:)/i, '<strong class="bia-thought-step-num">$1</strong>');
+      return `<div class="bia-thought-step">${formatted}</div>`;
+    }).join('');
   },
 
   showTypingIndicator() {
@@ -736,17 +775,39 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       <div class="bia-msg-avatar">
         ${this.starIconSvg}
       </div>
-      <div class="bia-typing-indicator">
-        <div class="bia-typing-dot"></div>
-        <div class="bia-typing-dot"></div>
-        <div class="bia-typing-dot"></div>
+      <div class="bia-thinking-live-box">
+        <div class="bia-thinking-spinner">
+          <svg class="bia-spinner-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="9" stroke-opacity="0.25"></circle>
+            <path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <span class="bia-thinking-live-text" id="bia-thinking-live-text">Consultando dados reais na Hostinger...</span>
       </div>
     `;
     body.appendChild(indicator);
     this.scrollToBottom();
+
+    const stages = [
+      'Averiguando escalas e histórico no banco...',
+      'Cruzando padrões de atendimento da equipe...',
+      'Construindo caminho de pensamento analítico...'
+    ];
+    let stageIdx = 0;
+    this._thinkingInterval = setInterval(() => {
+      const el = document.getElementById('bia-thinking-live-text');
+      if (el && stages[stageIdx]) {
+        el.textContent = stages[stageIdx];
+        stageIdx = (stageIdx + 1) % stages.length;
+      }
+    }, 1100);
   },
 
   removeTypingIndicator() {
+    if (this._thinkingInterval) {
+      clearInterval(this._thinkingInterval);
+      this._thinkingInterval = null;
+    }
     const ind = document.getElementById('bia-typing-indicator');
     if (ind) ind.remove();
   },

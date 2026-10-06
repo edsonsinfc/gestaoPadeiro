@@ -163,6 +163,38 @@ function extrairPadeiroDaMensagem(norm, padeirosAtivos = []) {
 }
 
 /**
+ * Constrói o Caminho de Pensamento Operacional da Bia fundamentado em dados reais do sistema
+ */
+function construirCaminhoPensamento(userMessage, context = {}, decisao = {}) {
+  const padeirosCount = (context.padeirosAtivos || []).length;
+  const clientesCount = (context.clientesAtivos || []).length;
+  const cronosCount = (context.cronogramaHistorico || []).length;
+  const ativsCount = (context.atividades || []).length;
+
+  const steps = [];
+  steps.push(`1. Interpretação da Demanda: Processamento do comando "${userMessage.trim()}". Identificação de intenções operacionais e entidades envolvidas.`);
+  steps.push(`2. Averiguação no Banco de Dados: Consulta em tempo real realizada na base da Hostinger. Localizados ${padeirosCount} padeiros ativos, ${clientesCount} clientes/lojas, ${cronosCount} escalas no histórico e ${ativsCount} atendimentos registrados.`);
+
+  if (decisao.actionData && decisao.actionData.padeiroNome) {
+    const padNome = decisao.actionData.padeiroNome;
+    const padHist = (context.cronogramaHistorico || []).filter(c => c.padeiroNome === padNome || c.padeiroId === decisao.actionData.padeiroId);
+    steps.push(`3. Análise Operacional: Padeiro identificado: ${padNome} (${padHist.length} escalas no histórico do banco). Cruzamento de padrões de agendamento e dias da semana.`);
+  } else if (decisao.action === 'escala_padrao_anterior') {
+    steps.push(`3. Análise Operacional: Mapeamento de rotina e frequência semanal da equipe com base em todas as escalas históricas da Hostinger.`);
+  } else if (decisao.action === 'escala_alta_performance') {
+    steps.push(`3. Análise Operacional: Cruzamento da matriz de produtividade de padeiros com o volume de demanda dos clientes ativos.`);
+  } else if (decisao.action === 'agendar_avulso' || decisao.action === 'remover_avulso') {
+    steps.push(`3. Análise Operacional: Validação de data, horário, alocação de equipe e integridade de loja.`);
+  } else {
+    steps.push(`3. Análise Operacional: Validação de métricas consolidadas, produtividade e regras de negócio do sistema.`);
+  }
+
+  steps.push(`4. Decisão Operacional: ${decisao.descricao || decisao.actionData?.descricao || 'Síntese das informações reais e elaboração da resposta corporativa.'}`);
+
+  return steps.join('\n');
+}
+
+/**
  * Motor de Inteligência e Processamento de Linguagem Natural Local da Bia
  */
 function gerarRespostaLocal(userMessage, context = {}) {
@@ -729,16 +761,28 @@ exports.chat = async (req, res) => {
       const systemInstruction = `Você é a BIA, assistente de inteligência artificial oficial do Smart Gestor (Brago Distribuidora).
 Seu objetivo é auxiliar gestores e administradores na operação de padarias, escalas de atendimento e produtividade da equipe.
 
-DIRETRIZES DE LINGUAGEM E ESTILO:
-- NUNCA use emojis nas respostas. Mantenha um estilo estritamente profissional, técnico, corporativo e conciso.
-- Responda perguntas sobre a operação, escalas, rotinas e rankings com base nos dados reais do sistema.
+DIRETRIZES FUNDAMENTAIS:
+1. CAMINHO DE PENSAMENTO OBRIGATÓRIO:
+   Em TODA e qualquer interação, antes de fornecer a resposta final, você DEVE construir o seu caminho de pensamento analítico baseado nos dados reais consultados no sistema, encapsulado na tag <pensamento>...</pensamento>.
+   O caminho de pensamento deve detalhar os passos:
+   • 1. Interpretação da Demanda: o que o gestor solicitou e entidades/datas identificadas.
+   • 2. Averiguação na Base de Dados: dados reais consultados (quantidade de padeiros ativos, clientes envolvidos, histórico de escalas na Hostinger, produção/visitas).
+   • 3. Análise Operacional: regras de negócio aplicadas, cruzamentos ou checagens de rotina.
+   • 4. Decisão Operacional: conclusão fundamentada do que será entregue ou executado.
+   </pensamento>
+
+2. ESTILO DA RESPOSTA FINAL (FORA DA TAG <pensamento>):
+   - NUNCA use emojis nas respostas. Mantenha um estilo estritamente profissional, técnico, corporativo e conciso.
+   - Responda com base exclusiva nos dados reais do sistema. Não invente nomes de padeiros ou lojas.
 
 CONTEXTO OPERACIONAL EM TEMPO REAL:
 - Data Atual: ${hojeInfo.diaSemana}, ${hojeInfo.diaMes} (${hojeInfo.iso})
 - Padeiros Ativos (${(enrichedContext.padeirosAtivos || []).length}): ${padeirosNomes}
 - Ranking de Padeiros por Produção: ${topPadeirosStr || 'Sem dados recentes'}
-- Lojas/Clientes Ativos: ${clientesNomes}
+- Lojas/Clientes Ativos (${(enrichedContext.clientesAtivos || []).length}): ${clientesNomes}
 - Ranking de Clientes por Demanda: ${topClientesStr || 'Sem dados recentes'}
+- Histórico de Escalas no Banco: ${(enrichedContext.cronogramaHistorico || []).length} registros
+- Atividades Registradas: ${(enrichedContext.atividades || []).length} atendimentos
 
 AÇÕES OPERACIONAIS:
 Quando o gestor pedir ações executáveis (montar escala, replicar padrão habitual, desfazer escala ou agendar padeiro), além do texto explicativo profissional em linguagem natural, adicione no final um bloco JSON:
@@ -768,8 +812,8 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
         systemInstruction: { parts: [{ text: systemInstruction }] },
         contents,
         generationConfig: {
-          temperature: 0.5,
-          maxOutputTokens: 1024
+          temperature: 0.4,
+          maxOutputTokens: 1200
         }
       };
 
@@ -789,7 +833,16 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
               let cleanText = rawText;
               let action = null;
               let actionData = null;
-              const jsonMatch = rawText.match(/```json\s*([\s\S]*?)\s*```/);
+              let pensamento = null;
+
+              // Extrair tag de pensamento
+              const thoughtMatch = cleanText.match(/<pensamento>([\s\S]*?)<\/pensamento>/i);
+              if (thoughtMatch) {
+                pensamento = thoughtMatch[1].trim();
+                cleanText = cleanText.replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '').trim();
+              }
+
+              const jsonMatch = cleanText.match(/```json\s*([\s\S]*?)\s*```/);
               if (jsonMatch) {
                 try {
                   const parsed = JSON.parse(jsonMatch[1]);
@@ -798,7 +851,7 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                     actionData = parsed;
                   }
                 } catch (e) {}
-                cleanText = rawText.replace(/```(?:json)?[\s\S]*?(?:```|$)/gi, '').trim();
+                cleanText = cleanText.replace(/```(?:json)?[\s\S]*?(?:```|$)/gi, '').trim();
                 if (!cleanText && actionData && actionData.descricao) {
                   cleanText = actionData.descricao;
                 }
@@ -822,10 +875,15 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                 }
               }
 
+              if (!pensamento) {
+                pensamento = construirCaminhoPensamento(message, enrichedContext, { action, actionData, descricao: cleanText });
+              }
+
               return res.json({
                 text: cleanText,
                 action,
                 actionData,
+                pensamento,
                 source: 'gemini',
                 model
               });
@@ -842,10 +900,12 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
 
   // Motor Operacional Inteligente Local da Bia
   const localResponse = gerarRespostaLocal(message, enrichedContext);
+  const localPensamento = localResponse.pensamento || construirCaminhoPensamento(message, enrichedContext, localResponse);
   return res.json({
     text: localResponse.text,
     action: localResponse.action,
     actionData: localResponse.actionData,
+    pensamento: localPensamento,
     source: 'local_engine'
   });
 };

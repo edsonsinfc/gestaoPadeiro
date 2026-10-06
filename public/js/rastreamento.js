@@ -1735,6 +1735,24 @@ window.Rastreamento = {
       lucide.createIcons();
       this.initMap();
       this.updateList([]); // Initially populate sidebar with offline bakers
+      
+      // Carregar imediatamente via HTTP os últimos pontos conhecidos de todos os padeiros
+      API.get('/api/tracking/locations').then(locations => {
+        if (Array.isArray(locations) && locations.length > 0) {
+          const user = API.getUser();
+          let filtered = locations;
+          if (user && user.role === 'gestor' && user.filial && user.filial !== 'null') {
+            const userFilial = Array.isArray(user.filial) ? user.filial : [user.filial];
+            filtered = locations.filter(loc => userFilial.includes(loc.filial));
+          }
+          this.latestLocations = filtered;
+          this.updateMarkers(filtered);
+          this.updateList(filtered);
+        }
+      }).catch(err => {
+        console.warn('Erro ao carregar localizações via HTTP:', err);
+      });
+
       this.initSocket();
       
       // Forçar atualização do tamanho do mapa após transição do flexbox
@@ -1872,7 +1890,10 @@ window.Rastreamento = {
   },
 
   updateMarkers(locations) {
+    if (!this.map || !Array.isArray(locations)) return;
+
     locations.forEach(loc => {
+      if (!loc || !loc.coords || loc.coords.lat == null || loc.coords.lng == null) return;
       const { userId, userName, coords, lastUpdate } = loc;
       
       const isOnline = lastUpdate && (new Date().getTime() - new Date(lastUpdate).getTime() < 10 * 60 * 1000);
@@ -1895,30 +1916,52 @@ window.Rastreamento = {
         popupAnchor: [0, -42]
       });
 
+      let dataFormatada = 'Sem sinal recente';
+      if (lastUpdate) {
+        const dt = new Date(lastUpdate);
+        if (!isNaN(dt.getTime())) {
+          const isToday = dt.toDateString() === new Date().toDateString();
+          dataFormatada = isToday 
+            ? `Hoje às ${dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` 
+            : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+      }
+      const statusBadge = isOnline 
+        ? '<span style="color:#10B981;font-weight:700;">● Em Rota (Online)</span>' 
+        : '<span style="color:#64748B;font-weight:700;">● Inativo (Último ponto)</span>';
+
+      const popupHtml = `
+        <div class="map-popup" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 170px; padding: 4px;">
+          <strong style="font-size: 14px; color: #0F172A; display: block; margin-bottom: 4px;">${userName}</strong>
+          <div style="font-size: 12px; margin-bottom: 2px;">${statusBadge}</div>
+          <div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">Sinal: ${dataFormatada}</div>
+          <div style="font-size: 11px; color: #94A3B8; margin-bottom: 8px;">Precisão: ${Math.round(coords.accuracy || 0)}m</div>
+          <button class="map-popup-btn" style="width: 100%; padding: 6px 10px; background: #1E4BFF; color: #FFF; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;" onclick="Rastreamento.selectActiveItem('${userId}')">Ver Detalhes</button>
+        </div>
+      `;
+
       if (this.markers[userId]) {
         // Update existing marker
         this.markers[userId].setLatLng([coords.lat, coords.lng]);
         this.markers[userId].setIcon(customIcon);
+        this.markers[userId].setPopupContent(popupHtml);
       } else {
         // Create new marker
         const marker = L.marker([coords.lat, coords.lng], { icon: customIcon }).addTo(this.map);
-        marker.bindPopup(`
-          <div class="map-popup">
-            <strong>${userName}</strong><br>
-            <span>Último sinal: ${new Date(lastUpdate).toLocaleTimeString()}</span><br>
-            <small>Precisão: ${Math.round(coords.accuracy)}m</small>
-            <button class="map-popup-btn" onclick="Rastreamento.selectUserForTrail('${userId}')">Ver Trajeto do Dia</button>
-          </div>
-        `);
+        marker.bindPopup(popupHtml);
         this.markers[userId] = marker;
       }
     });
 
     // Auto-zoom to fit markers if it's the first update
-    if (!this._initialZoomDone && locations.length > 0) {
-      const group = new L.featureGroup(Object.values(this.markers));
-      this.map.fitBounds(group.getBounds().pad(0.1));
-      this._initialZoomDone = true;
+    if (!this._initialZoomDone && Object.keys(this.markers).length > 0) {
+      try {
+        const group = new L.featureGroup(Object.values(this.markers));
+        if (group.getBounds().isValid()) {
+          this.map.fitBounds(group.getBounds().pad(0.1));
+          this._initialZoomDone = true;
+        }
+      } catch (e) {}
     }
   },
 
@@ -2274,6 +2317,37 @@ window.Rastreamento = {
       }
     }
 
+    // 4. Se não houver atividades ou trilha para hoje, buscar o ÚLTIMO PONTO CONHECIDO do padeiro
+    if (points.length === 0) {
+      let lastKnown = null;
+      if (this.latestLocations && Array.isArray(this.latestLocations)) {
+        const loc = this.latestLocations.find(l => l && l.userId === userId);
+        if (loc && loc.coords && loc.coords.lat != null && loc.coords.lng != null) {
+          lastKnown = { lat: Number(loc.coords.lat), lng: Number(loc.coords.lng), timestamp: loc.lastUpdate, isLastKnown: true };
+        }
+      }
+      if (!lastKnown && this.markers[userId]) {
+        const ll = this.markers[userId].getLatLng();
+        lastKnown = { lat: ll.lat, lng: ll.lng, isLastKnown: true };
+      }
+      if (!lastKnown) {
+        try {
+          const hist = await API.get(`/api/tracking/trail/${userId}`);
+          if (hist && hist.sessions && hist.sessions.length > 0) {
+            const lastSession = hist.sessions[hist.sessions.length - 1];
+            if (lastSession.points && lastSession.points.length > 0) {
+              const lp = lastSession.points[lastSession.points.length - 1];
+              lastKnown = { lat: Number(lp.lat), lng: Number(lp.lng), timestamp: lp.timestamp, isLastKnown: true };
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (lastKnown) {
+        points.push(lastKnown);
+      }
+    }
+
     // Ordenar pontos cronologicamente
     if (points.length > 1) {
       points.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
@@ -2346,12 +2420,14 @@ window.Rastreamento = {
       currentPoint = [pt.lat, pt.lng];
       startPoint = currentPoint;
       endPoint = currentPoint;
+      durationMinsText = isOnline ? 'Em Rota' : 'Último Ponto';
     } else if (this.allPadeiros) {
       const baker = this.allPadeiros.find(p => p.id === userId);
       if (baker && baker.coords && baker.coords.lat && baker.coords.lng) {
         currentPoint = [baker.coords.lat, baker.coords.lng];
         startPoint = currentPoint;
         endPoint = currentPoint;
+        durationMinsText = isOnline ? 'Em Rota' : 'Último Ponto';
       }
     }
 
@@ -2383,20 +2459,27 @@ window.Rastreamento = {
       this._subtabRouteGroup.addLayer(homeMarker);
     }
 
-    // Marcador 2: Posição do Entregador com badge pill real
+    // Marcador 2: Posição do Entregador com badge pill real (Último Ponto ou Em Rota)
     if (currentPoint) {
+      const isSoloPoint = routeCoords.length < 2;
+      const pillText = isSoloPoint ? (isOnline ? 'Em Rota (Online)' : 'Último Ponto') : durationMinsText;
+      const dotColor = isOnline ? '#10B981' : (isSoloPoint ? '#64748B' : '#5C67F5');
+      const badgeBg = isOnline ? '#ECFDF5' : (isSoloPoint ? '#F1F5F9' : '#EEF2FF');
+      const badgeText = isOnline ? '#047857' : (isSoloPoint ? '#475569' : '#4338CA');
+      const badgeBorder = isOnline ? 'rgba(16, 185, 129, 0.3)' : (isSoloPoint ? 'rgba(100, 116, 139, 0.3)' : 'rgba(92, 103, 245, 0.25)');
+
       const waypointIcon = L.divIcon({
         className: 'subtab-map-marker-waypoint',
         html: `
           <div style="display: flex; align-items: center; gap: 8px; transform: translate(-10px, -14px);">
-            <div style="width: 18px; height: 18px; background: #5C67F5; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
-            <div style="background: #EEF2FF; color: #4338CA; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(92, 103, 245, 0.2); white-space: nowrap; border: 1px solid rgba(92, 103, 245, 0.25); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              ${durationMinsText}
+            <div style="width: 20px; height: 20px; background: ${dotColor}; border: 3px solid #FFFFFF; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.35);"></div>
+            <div style="background: ${badgeBg}; color: ${badgeText}; font-size: 11px; font-weight: 750; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); white-space: nowrap; border: 1px solid ${badgeBorder}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              ${pillText}
             </div>
           </div>
         `,
-        iconSize: [80, 28],
-        iconAnchor: [9, 14]
+        iconSize: [110, 28],
+        iconAnchor: [10, 14]
       });
       const waypointMarker = L.marker(currentPoint, { icon: waypointIcon });
       this._subtabRouteGroup.addLayer(waypointMarker);
@@ -2817,11 +2900,21 @@ window.Rastreamento = {
   },
 
   focusPadeiro(userId) {
+    let latlng = null;
     const marker = this.markers[userId];
     if (marker) {
+      latlng = marker.getLatLng();
+    } else if (this.latestLocations && Array.isArray(this.latestLocations)) {
+      const loc = this.latestLocations.find(l => l && l.userId === userId);
+      if (loc && loc.coords && loc.coords.lat != null && loc.coords.lng != null) {
+        latlng = [Number(loc.coords.lat), Number(loc.coords.lng)];
+      }
+    }
+    
+    if (latlng && this.map) {
       const isMobile = window.innerWidth < 1024;
-      this.map.setView(marker.getLatLng(), isMobile ? 15 : 16);
-      if (!isMobile) {
+      this.map.setView(latlng, isMobile ? 15 : 16);
+      if (!isMobile && marker) {
         marker.openPopup();
       }
     }
@@ -2921,8 +3014,9 @@ window.Rastreamento = {
       this.clearTrail();
 
       if (!data.sessions || data.sessions.length === 0) {
-        Components.toast('Nenhum trajeto registrado para este dia', 'info');
-        if (infoEl) infoEl.innerHTML = 'Sem dados para esta data.';
+        Components.toast('Nenhum trajeto nesta data. Exibindo último ponto registrado.', 'info');
+        if (infoEl) infoEl.innerHTML = 'Sem trajeto para esta data.';
+        this.focusPadeiro(this.selectedUserId);
         return;
       }
 

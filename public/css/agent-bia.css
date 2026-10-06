@@ -633,6 +633,170 @@
   font-weight: 500;
 }
 
+/* ─── Caminho de Pensamento Analítico (Chain of Thought - Apple HIG) ── */
+.bia-thought-card {
+  background: rgba(30, 75, 255, 0.04);
+  border: 1px solid rgba(30, 75, 255, 0.15);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bia-thought-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.bia-thought-header:hover {
+  background: rgba(30, 75, 255, 0.06);
+}
+
+.bia-thought-title-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.bia-thought-sparkle {
+  color: #1E4BFF;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.bia-thought-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1E3A8A;
+  letter-spacing: 0.2px;
+}
+
+.bia-thought-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.bia-thought-chevron {
+  font-size: 13px;
+  color: #64748B;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-block;
+  line-height: 1;
+}
+
+.bia-thought-card.is-open .bia-thought-chevron {
+  transform: rotate(180deg);
+}
+
+.bia-thought-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0 12px;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, padding 0.2s ease;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #334155;
+  border-top: 1px solid transparent;
+}
+
+.bia-thought-card.is-open .bia-thought-body {
+  max-height: 380px;
+  overflow-y: auto;
+  opacity: 1;
+  padding: 10px 12px 12px 12px;
+  border-top: 1px solid rgba(30, 75, 255, 0.08);
+}
+
+.bia-thought-step {
+  margin-bottom: 6px;
+  position: relative;
+  padding-left: 12px;
+  word-break: break-word;
+}
+
+.bia-thought-step:last-child {
+  margin-bottom: 0;
+}
+
+.bia-thought-step::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #1E4BFF;
+  font-weight: bold;
+}
+
+.bia-thought-step-num {
+  color: #1E3A8A;
+  font-weight: 700;
+}
+
+/* ─── Live Thinking Capsule (Indicador de Pensamento em Tempo Real) ──── */
+.bia-thinking-live-box {
+  background: rgba(30, 75, 255, 0.07);
+  border: 1px solid rgba(30, 75, 255, 0.18);
+  border-radius: 14px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1E4BFF;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(30, 75, 255, 0.06);
+  animation: biaThinkingPulse 2s infinite ease-in-out;
+}
+
+@keyframes biaThinkingPulse {
+  0%, 100% { background: rgba(30, 75, 255, 0.06); }
+  50% { background: rgba(30, 75, 255, 0.12); }
+}
+
+.bia-thinking-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.bia-spinner-svg {
+  animation: biaSpin 0.9s linear infinite;
+}
+
+@keyframes biaSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.bia-thinking-live-text {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #1E4BFF;
+  white-space: nowrap;
+}
+
 /* ─── Responsividade Mobile ────────────────────────────────────────────── */
 @media (max-width: 500px) {
   .bia-modal-overlay {

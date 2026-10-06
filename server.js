@@ -128,8 +128,6 @@ app.get(['/download/apk', '/SmartGestor.apk', '/smartgestor.apk'], async (req, r
     const possiblePaths = [
       path.join(__dirname, 'SmartGestor.apk'),
       path.join(__dirname, 'smartgestor.apk'),
-      path.join(__dirname, 'public', 'SmartGestor.apk'),
-      path.join(__dirname, 'public', 'smartgestor.apk'),
       path.join(__dirname, 'android', 'app', 'release', 'SmartGestor.apk'),
       path.join(__dirname, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk')
     ];
