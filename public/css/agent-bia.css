@@ -560,10 +560,10 @@
   padding: 8px 0;
 }
 
-/* Botão de Microfone de Voz Apple HIG */
+/* Botão de Microfone de Voz Apple HIG (Otimizado para Toque e Push-to-Talk) */
 .bia-btn-mic {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(30, 75, 255, 0.08);
   border: none;
@@ -572,9 +572,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
   position: relative;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .bia-btn-mic:hover {
@@ -582,29 +586,40 @@
   transform: scale(1.05);
 }
 
-.bia-btn-mic:active {
-  transform: scale(0.92);
+.bia-btn-mic:active,
+.bia-btn-mic.holding {
+  transform: scale(1.15) !important;
+  background: linear-gradient(135deg, #FF1A35 0%, #D80027 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 0 6px rgba(255, 26, 53, 0.35), 0 6px 18px rgba(255, 26, 53, 0.5) !important;
 }
 
 /* Microfone Ativo / Ouvindo (Pulse Efeito Siri / Apple Intelligence) */
 .bia-btn-mic.listening {
   background: linear-gradient(135deg, #FF3B30 0%, #FF2D55 100%);
   color: #FFFFFF;
-  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.2), 0 4px 12px rgba(255, 59, 48, 0.4);
-  animation: biaMicPulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.25), 0 4px 14px rgba(255, 59, 48, 0.45);
+  animation: biaMicPulse 1.2s ease-in-out infinite;
+}
+
+.bia-btn-mic.recording-locked {
+  background: linear-gradient(135deg, #FF3B30 0%, #FF9500 100%);
+  color: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.3), 0 4px 14px rgba(255, 149, 0, 0.45);
+  animation: biaMicPulse 1.1s ease-in-out infinite;
 }
 
 @keyframes biaMicPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5), 0 4px 12px rgba(255, 59, 48, 0.3);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6), 0 4px 12px rgba(255, 59, 48, 0.35);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(255, 59, 48, 0), 0 6px 16px rgba(255, 59, 48, 0.5);
-    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(255, 59, 48, 0), 0 6px 18px rgba(255, 59, 48, 0.55);
+    transform: scale(1.09);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0), 0 4px 12px rgba(255, 59, 48, 0.3);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0), 0 4px 12px rgba(255, 59, 48, 0.35);
     transform: scale(1);
   }
 }

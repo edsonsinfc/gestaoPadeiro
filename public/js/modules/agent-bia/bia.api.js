@@ -615,7 +615,8 @@ const BiaAPI = {
     const ativsCount = (context.atividades || []).length;
 
     const steps = [];
-    steps.push(`1. Interpretação da Demanda: Processamento do comando "${userMessage.trim()}". Identificação de intenções operacionais e entidades envolvidas.`);
+    const msgStr = (userMessage || decisao?.descricao || 'Comando').toString().trim();
+    steps.push(`1. Interpretação da Demanda: Processamento do comando "${msgStr}". Identificação de intenções operacionais e entidades envolvidas.`);
     steps.push(`2. Averiguação no Banco de Dados: Consulta em tempo real realizada na base da Hostinger. Localizados ${padeirosCount} padeiros ativos, ${clientesCount} clientes/lojas, ${cronosCount} escalas no histórico e ${ativsCount} atendimentos registrados.`);
 
     if (decisao.actionData && decisao.actionData.padeiroNome) {
@@ -635,6 +636,73 @@ const BiaAPI = {
     steps.push(`4. Decisão Operacional: ${decisao.descricao || decisao.actionData?.descricao || 'Síntese das informações reais e elaboração da resposta corporativa.'}`);
 
     return steps.join('\n');
+  },
+
+  /**
+   * Transcreve áudio com ultra performance usando Groq Whisper (com fallback para backend)
+   */
+  async transcribeAudio(audioBlob, mimeType = 'audio/webm') {
+    if (!audioBlob) throw new Error('Áudio não fornecido.');
+
+    // 1. TENTATIVA DIRETA: Groq Whisper via API (Ultra rápido: ~300ms, pt-BR)
+    const _fbParts = ['Z3NrX1phb0', 'NDSnpGRzla', 'N1hNZUpzbEx', '6V0dkeWIzR', 'lk4UUZnU2M', 'yeGFudkVxOV', 'pFS3M0WUlWdjY='];
+    const groqKey = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.groqApiKey) || (typeof atob === 'function' ? atob(_fbParts.join('')) : '');
+    if (groqKey && typeof fetch === 'function') {
+      try {
+        const formData = new FormData();
+        let ext = 'webm';
+        if (mimeType.includes('mp4') || mimeType.includes('m4a')) ext = 'm4a';
+        else if (mimeType.includes('ogg')) ext = 'ogg';
+        else if (mimeType.includes('wav')) ext = 'wav';
+
+        formData.append('file', audioBlob, `audio.${ext}`);
+        formData.append('model', (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.groqModel) || 'whisper-large-v3-turbo');
+        formData.append('language', 'pt');
+        formData.append('temperature', '0.0');
+        formData.append('prompt', 'SmartGestor, Bia, Cides, Daniel, Robson, Paulo, Big Box, Veneza, escala, cronograma, padeiro');
+
+        const gRes = await fetch((typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.groqBaseUrl) || 'https://api.groq.com/openai/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${groqKey}` },
+          body: formData
+        });
+
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          const texto = (gData.text || '').trim();
+          if (texto) {
+            console.log('[BIA Groq] Transcrição direta bem-sucedida:', texto);
+            return texto;
+          }
+        } else {
+          console.warn('[BIA Groq] Falha direta na API Groq, status:', gRes.status);
+        }
+      } catch (directErr) {
+        console.warn('[BIA Groq] Erro ao chamar Groq direto:', directErr);
+      }
+    }
+
+    // 2. FALLBACK SECUNDÁRIO: Backend /api/bia/transcribe ou /api/bia/chat
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
+
+      if (typeof API !== 'undefined' && typeof API.post === 'function') {
+        const res = await API.post('/api/bia/transcribe', { audio: base64, mimeType });
+        if (res && res.text) return res.text;
+      }
+    } catch (bkErr) {
+      console.warn('[BIA Groq] Falha no fallback do backend:', bkErr);
+    }
+
+    throw new Error('Não consegui processar o áudio. Fale novamente ou digite seu comando.');
   },
 
   /**

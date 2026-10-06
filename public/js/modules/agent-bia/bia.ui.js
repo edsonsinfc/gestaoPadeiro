@@ -202,22 +202,135 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
 
     const micBtn = document.getElementById('bia-btn-mic');
+    const stopBtn = document.getElementById('bia-btn-stop-listening');
+
     if (micBtn) {
-      // Push-to-Talk: segura = grava, solta = envia
-      const onPressStart = (e) => {
+      micBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      const onPointerDown = (e) => {
         e.preventDefault();
-        this.startPTT();
+        e.stopPropagation();
+
+        // Se já estava gravando travado (modo toque livre): toque no mic para e envia!
+        if (this._voiceActive && this._voiceLocked) {
+          this.stopVoiceRecordingAndSend('tap_stop');
+          return;
+        }
+
+        if (this.isProcessing) return;
+
+        try {
+          micBtn.setPointerCapture(e.pointerId);
+          this._voicePointerId = e.pointerId;
+        } catch (err) {}
+
+        this._voiceStartX = e.clientX;
+        this._voiceStartY = e.clientY;
+        this._voiceCancelGesture = false;
+        this._voicePressTime = Date.now();
+        this._voiceIsHolding = false;
+
+        // Feedback tátil instantâneo
+        if (navigator.vibrate) try { navigator.vibrate(35); } catch (vErr) {}
+
+        micBtn.classList.add('holding');
+
+        // Dispara a gravação imediatamente
+        this.startVoiceRecording();
+
+        // Se o usuário continuar segurando por mais de 350ms, confirma modo push-to-talk
+        if (this._holdCheckTimer) clearTimeout(this._holdCheckTimer);
+        this._holdCheckTimer = setTimeout(() => {
+          if (this._voicePointerId !== null) {
+            this._voiceIsHolding = true;
+            this.setListeningUI(true, 'Gravando... Solte para enviar');
+          }
+        }, 350);
       };
-      const onPressEnd = (e) => {
-        e.preventDefault();
-        this.stopPTT();
+
+      const onPointerMove = (e) => {
+        if (this._voicePointerId === null || !this._voiceActive) return;
+        const diffX = e.clientX - this._voiceStartX;
+        if (diffX < -65) {
+          if (!this._voiceCancelGesture) {
+            this._voiceCancelGesture = true;
+            this.setListeningUI(true, 'Solte para cancelar ❌');
+          }
+        } else if (this._voiceCancelGesture) {
+          this._voiceCancelGesture = false;
+          this.setListeningUI(true, this._voiceIsHolding ? 'Gravando... Solte para enviar' : 'Ouvindo...');
+        }
       };
-      micBtn.addEventListener('pointerdown', onPressStart);
-      micBtn.addEventListener('pointerup', onPressEnd);
-      micBtn.addEventListener('pointerleave', onPressEnd);
-      micBtn.addEventListener('touchstart', onPressStart, { passive: false });
-      micBtn.addEventListener('touchend', onPressEnd, { passive: false });
-      micBtn.addEventListener('touchcancel', onPressEnd, { passive: false });
+
+      const onPointerUp = (e) => {
+        if (this._holdCheckTimer) {
+          clearTimeout(this._holdCheckTimer);
+          this._holdCheckTimer = null;
+        }
+
+        if (this._voicePointerId !== null) {
+          try { micBtn.releasePointerCapture(this._voicePointerId); } catch (err) {}
+          this._voicePointerId = null;
+        }
+
+        micBtn.classList.remove('holding');
+
+        if (!this._voiceActive && !this._voiceStarting) return;
+
+        // Se o usuário arrastou para cancelar
+        if (this._voiceCancelGesture) {
+          this._voiceCancelGesture = false;
+          this.cancelVoiceRecording();
+          if (navigator.vibrate) try { navigator.vibrate([25, 40, 25]); } catch (vErr) {}
+          return;
+        }
+
+        const duration = Date.now() - this._voicePressTime;
+
+        // Se segurou por mais de 350ms -> Push-to-Talk (soltou = envia na hora!)
+        if (duration >= 350 || this._voiceIsHolding) {
+          if (navigator.vibrate) try { navigator.vibrate(30); } catch (vErr) {}
+          this.stopVoiceRecordingAndSend('ptt_release');
+        } else {
+          // Se foi apenas um toque rápido (<350ms) -> Mantém gravando mãos livres!
+          this._voiceLocked = true;
+          this._voiceIsHolding = false;
+          micBtn.classList.add('recording-locked');
+          this.setListeningUI(true, 'Ouvindo... Toque no microfone ou no botão vermelho para enviar');
+          if (navigator.vibrate) try { navigator.vibrate(20); } catch (vErr) {}
+        }
+      };
+
+      const onPointerCancel = (e) => {
+        micBtn.classList.remove('holding');
+        if (this._voicePointerId !== null) {
+          try { micBtn.releasePointerCapture(this._voicePointerId); } catch (err) {}
+          this._voicePointerId = null;
+        }
+        const duration = Date.now() - this._voicePressTime;
+        if (duration >= 600 && this._voiceActive) {
+          this.stopVoiceRecordingAndSend('pointer_cancel_save');
+        } else {
+          this.cancelVoiceRecording();
+        }
+      };
+
+      micBtn.addEventListener('pointerdown', onPointerDown);
+      micBtn.addEventListener('pointermove', onPointerMove);
+      micBtn.addEventListener('pointerup', onPointerUp);
+      micBtn.addEventListener('pointercancel', onPointerCancel);
+    }
+
+    if (stopBtn) {
+      const handleStop = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        this.stopVoiceRecordingAndSend('stop_button');
+      };
+      stopBtn.addEventListener('click', handleStop);
+      stopBtn.addEventListener('touchend', handleStop);
     }
 
     // Chips
@@ -263,315 +376,221 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   /**
-   * Push-to-Talk via MediaRecorder.
-   * Segure o botão para gravar; solte para enviar o áudio à Bia via Gemini.
+   * ENGINE DE VOZ INTELIGENTE E HÍBRIDO DA BIA (GROQ WHISPER)
+   * Suporta:
+   * 1. Push-to-Talk: Segure para falar, solte para enviar
+   * 2. Toque Livre (Tap-to-Talk): Clique rápido para começar mãos-livres, clique de novo ou no botão parar para enviar
+   * 3. Transcrição Ultra-Rápida e precisa via Groq Whisper (~300ms)
    */
   isListening: false,
-  _pttMediaRecorder: null,
-  _pttChunks: [],
-  _pttStream: null,
-  _pttActive: false,
+  _voiceActive: false,
+  _voiceStarting: false,
+  _voiceStopRequested: false,
+  _voiceRecorder: null,
+  _voiceChunks: [],
+  _voiceStream: null,
+  _voicePressTime: 0,
+  _voiceIsHolding: false,
+  _voiceLocked: false,
+  _voicePointerId: null,
+  _voiceMaxTimer: null,
+  _voiceCancelGesture: false,
+  _voiceStartX: 0,
+  _voiceStartY: 0,
+  _holdCheckTimer: null,
 
-  async startPTT() {
-    if (this._pttActive || this.isProcessing) return;
+  async startVoiceRecording() {
+    if (this._voiceActive || this._voiceStarting || this.isProcessing) return;
+    this._voiceStarting = true;
+    this._voiceStopRequested = false;
+    this._voiceChunks = [];
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      this._pttStream = stream;
-      this._pttChunks = [];
+      this._voiceStream = stream;
 
-      // Seleciona o melhor mimeType suportado
+      // Se o usuário solicitou parada enquanto a permissão/stream abria
+      if (this._voiceStopRequested) {
+        stream.getTracks().forEach(t => t.stop());
+        this._voiceStream = null;
+        this._voiceStarting = false;
+        this._voiceStopRequested = false;
+        this.setListeningUI(false);
+        return;
+      }
+
       const mimeType = [
         'audio/webm;codecs=opus',
         'audio/webm',
+        'audio/mp4',
         'audio/ogg;codecs=opus',
         'audio/ogg',
-        'audio/mp4',
         ''
-      ].find(t => t === '' || MediaRecorder.isTypeSupported(t)) || '';
+      ].find(t => t === '' || (window.MediaRecorder && MediaRecorder.isTypeSupported(t))) || '';
 
-      const options = mimeType ? { mimeType } : {};
-      const recorder = new MediaRecorder(stream, options);
-      this._pttMediaRecorder = recorder;
-      this._pttActive = true;
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+      this._voiceRecorder = recorder;
+      this._voiceActive = true;
+      this._voiceStarting = false;
 
       recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) this._pttChunks.push(e.data);
+        if (e.data && e.data.size > 0) this._voiceChunks.push(e.data);
       };
 
       recorder.onstop = async () => {
-        // Para as faixas do microfone
-        if (this._pttStream) {
-          this._pttStream.getTracks().forEach(t => t.stop());
-          this._pttStream = null;
+        if (this._voiceStream) {
+          this._voiceStream.getTracks().forEach(t => t.stop());
+          this._voiceStream = null;
         }
-        this._pttActive = false;
+
+        const chunks = this._voiceChunks;
+        this._voiceChunks = [];
+        this._voiceActive = false;
+        this._voiceLocked = false;
+        this._voiceIsHolding = false;
         this.setListeningUI(false);
 
-        if (this._pttChunks.length === 0) {
-          console.warn('[BIA PTT] Nenhum dado de áudio capturado.');
+        const micBtn = document.getElementById('bia-btn-mic');
+        if (micBtn) {
+          micBtn.classList.remove('holding', 'recording-locked', 'listening');
+        }
+
+        if (!chunks || chunks.length === 0) {
+          console.warn('[BIA Audio] Nenhum áudio capturado.');
           return;
         }
 
-        const blob = new Blob(this._pttChunks, { type: recorder.mimeType || 'audio/webm' });
-        this._pttChunks = [];
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
 
-        if (blob.size < 500) {
-          console.warn('[BIA PTT] Áudio muito curto, ignorando.');
+        if (blob.size < 600) {
+          console.warn('[BIA Audio] Gravação muito curta (<600 bytes), ignorando.');
+          if (typeof Components !== 'undefined' && Components.toast) {
+            Components.toast('Áudio muito curto. Segure ou toque para falar.', 'info');
+          }
           return;
         }
 
-        // Converte para Base64
-        const base64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result; // data:audio/webm;base64,<data>
-            const b64 = result.split(',')[1];
-            resolve(b64);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-
-        const resolvedMime = recorder.mimeType || 'audio/webm';
-        console.log('[BIA PTT] Enviando áudio para transcrição, tamanho (bytes):', blob.size, 'mime:', resolvedMime);
-
+        // Feedback imediato ao usuário
+        this.setListeningUI(true, 'Transcrevendo áudio com Groq...');
         this.showTypingIndicator();
-        this.addUserMessage('🎙️ Áudio enviado...');
 
-        this.isProcessing = true;
         try {
-          const response = await BiaAPI.sendMessage(null, { audio: base64, mimeType: resolvedMime });
+          console.log('[BIA Audio] Transcrevendo áudio via Groq Whisper, bytes:', blob.size, 'mime:', blob.type);
+          const transcrito = await BiaAPI.transcribeAudio(blob, blob.type);
+
+          this.setListeningUI(false);
           this.removeTypingIndicator();
-          this.addBiaMessage(response.text, { pensamento: response.pensamento });
 
-          if (response.action === 'escala_alta_performance') {
-            await this.handleEscalaAltaPerformance(response.actionData);
-          } else if (response.action === 'escala_padrao_anterior') {
-            await this.handleEscalaPadraoAnterior(response.actionData);
-          } else if (response.action === 'desfazer_alteracoes') {
-            await this.handleDesfazerUltimaAcao();
-          } else if (response.action === 'agendar_avulso') {
-            await this.handleAgendarAvulso(response.actionData);
-          } else if (response.action === 'remover_avulso') {
-            await this.handleRemoverAvulso(response.actionData);
+          if (transcrito && transcrito.trim()) {
+            console.log('[BIA Audio] Transcrição bem-sucedida:', transcrito);
+            // Envia o texto reconhecido diretamente para a Bia como comando do usuário
+            this.handleUserSubmit(transcrito.trim());
+          } else {
+            this.addBiaMessage('Não consegui identificar palavras com clareza no áudio. Fale mais perto do microfone ou digite o comando.');
           }
-        } catch (err) {
+        } catch (transcribeErr) {
+          this.setListeningUI(false);
           this.removeTypingIndicator();
-          console.error('[BIA PTT] Erro ao processar áudio:', err);
-          this.addBiaMessage(`⚠️ Não consegui processar o áudio: ${err.message || 'Tente novamente.'}`);
-        } finally {
-          this.isProcessing = false;
+          console.error('[BIA Audio] Erro na transcrição:', transcribeErr);
+          this.addBiaMessage(`⚠️ Não consegui processar o áudio: ${transcribeErr.message || 'Tente novamente.'}`);
         }
       };
 
-      recorder.start();
-      this.setListeningUI(true, 'Gravando... solte para enviar');
-    } catch (err) {
-      this._pttActive = false;
-      this.setListeningUI(false);
-      console.error('[BIA PTT] Erro ao acessar microfone:', err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        this.addBiaMessage('Permissão do microfone negada. Libere o microfone nas configurações do app.');
-      } else {
-        this.addBiaMessage('Não consegui acessar o microfone. Digite o comando.');
-      }
-    }
-  },
+      // Watchdog de segurança: 45 segundos máximos
+      if (this._voiceMaxTimer) clearTimeout(this._voiceMaxTimer);
+      this._voiceMaxTimer = setTimeout(() => {
+        if (this._voiceActive) this.stopVoiceRecordingAndSend('max_duration');
+      }, 45000);
 
-  stopPTT() {
-    if (!this._pttActive) return;
-    if (this._pttMediaRecorder && this._pttMediaRecorder.state !== 'inactive') {
-      this.setListeningUI(true, 'Processando...');
-      try { this._pttMediaRecorder.stop(); } catch (e) { console.warn('[BIA PTT] Erro ao parar gravação:', e); }
-    }
-  },
-
-  // Mantidos como compat stubs para não quebrar refs externas
-  toggleVoice() {},
-  startVoice() {},
-  stopVoice() { this.stopPTT(); },
-
-  async startNativeVoice(NativeSR) {
-    const input = document.getElementById('bia-input-field');
-    try {
-      const avail = await NativeSR.available();
-      if (!avail || !avail.available) {
-        this.addBiaMessage('Reconhecimento de voz indisponível neste aparelho. Digite o comando.');
-        return;
-      }
-      let perm = await NativeSR.checkPermissions();
-      if (perm.speechRecognition !== 'granted') perm = await NativeSR.requestPermissions();
-      if (perm.speechRecognition !== 'granted') {
-        this.addBiaMessage('Permissão do microfone negada. Libere o microfone nas configurações do app.');
-        return;
-      }
-
-      let capturedText = '';
-      let isFinalizing = false;
-      let finalizeTimer = null;
-      let maxDurationTimer = null;
-
-      const finishAndSubmit = async (reason = 'auto') => {
-        if (isFinalizing) return;
-        isFinalizing = true;
-
-        if (finalizeTimer) { clearTimeout(finalizeTimer); finalizeTimer = null; }
-        if (maxDurationTimer) { clearTimeout(maxDurationTimer); maxDurationTimer = null; }
-        this.nativeStop = null;
-
-        // Fecha a UI de escuta imediatamente
-        this.setListeningUI(false);
-
-        // Envia parada nativa com tolerância a falhas
-        try { NativeSR.stop(); } catch (e) {}
-
-        // Aguarda breve intervalo para limpar listeners sem bloquear o fluxo
-        setTimeout(async () => {
-          try { await NativeSR.removeAllListeners(); } catch (e) {}
-        }, 300);
-
-        // Obtém o texto capturado ou que ficou no input
-        const text = (capturedText || (input ? input.value : '') || '').trim();
-        if (input) input.value = '';
-
-        if (text) {
-          console.log('[BIA Voice] Enviando comando capturado (' + reason + '):', text);
-          this.handleUserSubmit(text);
-        } else if (reason === 'manual_stop') {
-          console.log('[BIA Voice] Microfone parado sem texto detectado.');
-        }
-      };
-
-      // Limpa listeners antigos
-      try { await NativeSR.removeAllListeners(); } catch (e) {}
-
-      // Listener de resultados parciais e finais
-      await NativeSR.addListener('partialResults', (d) => {
-        if (d && d.matches && d.matches.length > 0) {
-          const match = d.matches[0];
-          if (match && match.trim()) {
-            capturedText = match.trim();
-            if (input) input.value = capturedText;
-          }
-        }
-      });
-
-      // Listener de estado de escuta do Android (ex: fim da fala / silêncio)
-      await NativeSR.addListener('listeningState', (d) => {
-        if (d && d.status === 'stopped') {
-          if (!isFinalizing) {
-            this.setListeningUI(true, 'Processando áudio...');
-            if (finalizeTimer) clearTimeout(finalizeTimer);
-            // Aguarda 350ms para garantir chegada do onResults final do Android antes de submeter
-            finalizeTimer = setTimeout(() => {
-              finishAndSubmit('end_of_speech');
-            }, 350);
-          }
-        }
-      });
-
-      // Função chamada ao clicar no botão de parar
-      this.nativeStop = () => {
-        if (isFinalizing) return;
-        // Atualiza a interface na hora: feedback imediato ao usuário
-        this.setListeningUI(true, 'Finalizando áudio...');
-        try { NativeSR.stop(); } catch (e) {}
-        // Aguarda 250ms para receber o último resultado do reconhecimento e envia
-        setTimeout(() => {
-          finishAndSubmit('manual_stop');
-        }, 250);
-      };
-
+      recorder.start(100);
       this.setListeningUI(true, 'Ouvindo... fale seu comando');
 
-      // Watchdog de segurança: 20 segundos máximos de escuta contínua
-      maxDurationTimer = setTimeout(() => {
-        if (!isFinalizing) finishAndSubmit('timeout');
-      }, 20000);
-
-      const res = await NativeSR.start({ language: 'pt-BR', maxResults: 1, partialResults: true, popup: false });
-      if (res && res.matches && res.matches[0]) {
-        capturedText = res.matches[0];
-        if (input) input.value = capturedText;
-      }
     } catch (err) {
-      console.warn('[BIA] Voz nativa falhou:', err);
+      this._voiceStarting = false;
+      this._voiceActive = false;
       this.setListeningUI(false);
-      this.nativeStop = null;
-      this.addBiaMessage('Não consegui acessar o microfone. Digite o comando.');
+      console.error('[BIA Audio] Erro ao acessar microfone:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        this.addBiaMessage('Permissão de microfone negada. Libere o acesso ao microfone nas configurações do seu aparelho.');
+      } else {
+        this.addBiaMessage('Não consegui acessar o microfone deste aparelho. Digite seu comando.');
+      }
     }
   },
 
-  startVoice() {
-    if (this.isProcessing || this.isListening) return;
-    const NativeSR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-    if (NativeSR) {
-      this.startNativeVoice(NativeSR);
-      return;
-    }
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      this.addBiaMessage('Seu dispositivo não suporta reconhecimento de voz. Digite o comando.');
-      return;
+  stopVoiceRecordingAndSend(reason = 'stop') {
+    if (this._voiceMaxTimer) {
+      clearTimeout(this._voiceMaxTimer);
+      this._voiceMaxTimer = null;
     }
 
-    const input = document.getElementById('bia-input-field');
-    const rec = new SR();
-    rec.lang = 'pt-BR';
-    rec.interimResults = true;
-    rec.continuous = false;
-    rec.maxAlternatives = 1;
-    this.recognition = rec;
-    let finalText = '';
+    if (this._voiceStarting) {
+      this._voiceStopRequested = true;
+      return;
+    }
 
-    rec.onstart = () => this.setListeningUI(true, 'Ouvindo... fale seu comando');
-    rec.onresult = (e) => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalText += t; else interim += t;
-      }
-      if (input) input.value = (finalText + interim).trim();
-    };
-    rec.onerror = (e) => {
+    if (!this._voiceActive) {
       this.setListeningUI(false);
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-        this.addBiaMessage('Permissão do microfone negada. Libere o acesso ao microfone nas configurações do app.');
-      } else if (e.error === 'no-speech') {
-        if (typeof Components !== 'undefined' && Components.toast) Components.toast('Não ouvi nada. Tente novamente.', 'info');
-      }
-    };
-    rec.onend = () => {
-      this.setListeningUI(false);
-      const text = (finalText || (input && input.value) || '').trim();
-      if (text) {
-        if (input) input.value = '';
-        this.handleUserSubmit(text);
-      }
-    };
+      return;
+    }
 
-    try { rec.start(); } catch (err) { this.setListeningUI(false); }
+    if (this._voiceRecorder && this._voiceRecorder.state !== 'inactive') {
+      this.setListeningUI(true, 'Finalizando áudio...');
+      try {
+        this._voiceRecorder.stop();
+      } catch (e) {
+        console.warn('[BIA Audio] Erro ao parar gravador:', e);
+      }
+    }
   },
 
-  stopVoice() {
-    if (!this.isListening) {
-      this.setListeningUI(false);
-      return;
+  cancelVoiceRecording() {
+    if (this._voiceMaxTimer) {
+      clearTimeout(this._voiceMaxTimer);
+      this._voiceMaxTimer = null;
     }
 
-    if (this.nativeStop) {
-      this.nativeStop();
-      return;
+    this._voiceStopRequested = true;
+    this._voiceStarting = false;
+    this._voiceActive = false;
+    this._voiceLocked = false;
+    this._voiceIsHolding = false;
+    this._voiceChunks = [];
+
+    if (this._voiceStream) {
+      this._voiceStream.getTracks().forEach(t => t.stop());
+      this._voiceStream = null;
     }
 
-    if (this.recognition) {
-      this.setListeningUI(false);
-      try { this.recognition.stop(); } catch (e) {}
-      return;
+    if (this._voiceRecorder && this._voiceRecorder.state !== 'inactive') {
+      try {
+        this._voiceRecorder.onstop = null;
+        this._voiceRecorder.stop();
+      } catch (e) {}
     }
 
     this.setListeningUI(false);
+    const micBtn = document.getElementById('bia-btn-mic');
+    if (micBtn) {
+      micBtn.classList.remove('holding', 'recording-locked', 'listening');
+    }
   },
+
+  // Compatibilidade e controle da UI
+  toggleVoice() {
+    if (this._voiceActive) {
+      this.stopVoiceRecordingAndSend('toggle');
+    } else {
+      this.startVoiceRecording();
+    }
+  },
+
+  stopVoice() {
+    this.cancelVoiceRecording();
+  },
+
+  startPTT() { this.startVoiceRecording(); },
+  stopPTT() { this.stopVoiceRecordingAndSend('ptt'); },
 
   setListeningUI(on, statusText = null) {
     this.isListening = on;
@@ -581,12 +600,11 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     const box = document.getElementById('bia-input-form');
     if (mic) {
       mic.classList.toggle('listening', on);
-      mic.classList.toggle('ptt-recording', on && this._pttActive);
     }
     if (ind) {
       ind.style.display = on ? 'flex' : 'none';
       if (textEl && statusText) textEl.textContent = statusText;
-      else if (textEl) textEl.textContent = 'Gravando... solte para enviar';
+      else if (textEl) textEl.textContent = 'Ouvindo... fale seu comando';
     }
     if (box) box.classList.toggle('bia-listening', on);
   },
