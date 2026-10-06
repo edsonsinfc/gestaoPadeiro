@@ -200,16 +200,8 @@ const BiaAPI = {
     if (isEscalaRequest) {
       let padeiroAlvo = this.extrairPadeiroDaMensagem(norm, padeirosAtivos);
 
-      // Se o usuário pediu "teste gerando a escala de um padeiro" ou "escala de um padeiro"
-      if (!padeiroAlvo && (norm.includes('de um padeiro') || norm.includes('do padeiro') || (norm.includes('teste') && norm.includes('padeiro')))) {
-        const contagemHistorico = {};
-        cronograma.forEach(c => { if (c.padeiroId) contagemHistorico[c.padeiroId] = (contagemHistorico[c.padeiroId] || 0) + 1; });
-        atividades.forEach(a => { if (a.padeiroId) contagemHistorico[a.padeiroId] = (contagemHistorico[a.padeiroId] || 0) + 1; });
-        const topPadeiroId = Object.entries(contagemHistorico).sort((a, b) => b[1] - a[1])[0]?.[0];
-        if (topPadeiroId) {
-          padeiroAlvo = padeirosAtivos.find(p => p.id === topPadeiroId);
-        }
-      }
+      // Padeiro alvo só deve existir se o gestor tiver explicitamente citado o nome de um padeiro
+      // Caso contrário, a escala é sempre coletiva para a equipe inteira
 
       const querHabitual = (
         norm.includes('padrao') ||
@@ -802,14 +794,30 @@ const BiaAPI = {
       }
     }
 
-    // Garantir que se tiver um padeiro no prompt e a ação for de escala, preenche os dados
-    if (action && (!actionData || !actionData.padeiroId)) {
-      const lower = this.normalizeText(userPrompt || '');
-      const p = this.extrairPadeiroDaMensagem(lower, systemContext.padeirosAtivos);
-      if (p) {
-        if (!actionData) actionData = { action };
-        actionData.padeiroId = p.id;
-        actionData.padeiroNome = p.nome;
+    // Validação estrita de padeiro alvo para escalas
+    if (action && actionData) {
+      if (action === 'escala_alta_performance' || action === 'escala_padrao_anterior') {
+        const lower = this.normalizeText(userPrompt || '');
+        const p = this.extrairPadeiroDaMensagem(lower, systemContext.padeirosAtivos);
+        if (!p) {
+          // Escala geral: Força nulidade para garantir toda a equipe
+          actionData.padeiroId = null;
+          actionData.padeiroNome = null;
+          actionData.clienteId = null;
+          actionData.clienteNome = null;
+          actionData.isIndividual = false;
+        } else {
+          actionData.padeiroId = p.id;
+          actionData.padeiroNome = p.nome;
+          actionData.isIndividual = true;
+        }
+      } else if (!actionData.padeiroId) {
+        const lower = this.normalizeText(userPrompt || '');
+        const p = this.extrairPadeiroDaMensagem(lower, systemContext.padeirosAtivos);
+        if (p) {
+          actionData.padeiroId = p.id;
+          actionData.padeiroNome = p.nome;
+        }
       }
     }
 

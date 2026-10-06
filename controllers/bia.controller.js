@@ -356,17 +356,8 @@ function gerarRespostaLocal(userMessage, context = {}) {
   if (isEscalaRequest) {
     let padeiroAlvo = extrairPadeiroDaMensagem(norm, padeirosAtivos);
 
-    // Se o usuário pediu "teste gerando a escala de um padeiro" ou "escala de um padeiro"
-    if (!padeiroAlvo && (norm.includes('de um padeiro') || norm.includes('do padeiro') || (norm.includes('teste') && norm.includes('padeiro')))) {
-      // Seleciona o padeiro ativo com maior histórico consolidado
-      const contagemHistorico = {};
-      cronograma.forEach(c => { if (c.padeiroId) contagemHistorico[c.padeiroId] = (contagemHistorico[c.padeiroId] || 0) + 1; });
-      atividades.forEach(a => { if (a.padeiroId) contagemHistorico[a.padeiroId] = (contagemHistorico[a.padeiroId] || 0) + 1; });
-      const topPadeiroId = Object.entries(contagemHistorico).sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (topPadeiroId) {
-        padeiroAlvo = padeirosAtivos.find(p => p.id === topPadeiroId);
-      }
-    }
+    // Padeiro alvo só deve existir se o gestor tiver explicitamente citado o nome de um padeiro
+    // Caso contrário, a escala é sempre coletiva para a equipe inteira
 
     const querHabitual = (
       norm.includes('padrao') ||
@@ -879,13 +870,21 @@ CONTEXTO OPERACIONAL EM TEMPO REAL:
 - Histórico de Escalas no Banco: ${(enrichedContext.cronogramaHistorico || []).length} registros
 - Atividades Registradas: ${(enrichedContext.atividades || []).length} atendimentos
 
+REGRAS FUNDAMENTAIS PARA ESCALAS DA EQUIPE:
+- Para 'escala_alta_performance' e 'escala_padrao_anterior', a proposta de escala gerada pelo SmartGestor atende SEMPRE TODA A EQUIPE DE PADEIROS ATIVOS (${(enrichedContext.padeirosAtivos || []).length} padeiros), distribuindo-os estrategicamente entre os clientes e dias da semana (segunda a sábado).
+- Por isso, em solicitações gerais de escala (ex: "faça a escala", "crie uma escala", "padrão habitual", "alta performance", "fazer um dos tipos de escalas", "escala de novo", etc.):
+  * "padeiroNome": DEVE OBRIGATORIAMENTE SER null! NUNCA preencha com o nome do primeiro colocado do ranking ou com qualquer outro padeiro.
+  * "clienteNome": DEVE OBRIGATORIAMENTE SER null!
+  * O texto explicativo e o pensamento devem SEMPRE se referir à equipe toda de ${(enrichedContext.padeirosAtivos || []).length} padeiros ativos.
+- O campo "padeiroNome" SÓ pode ser preenchido se o gestor tiver digitado EXPRESSAMENTE o nome de um padeiro específico na mensagem atual (exemplo: "Bia, faça a escala de alta performance do Daniel Mendes").
+
 AÇÕES OPERACIONAIS:
 Quando o gestor pedir ações executáveis (montar escala, replicar padrão habitual, desfazer escala ou agendar padeiro), além do texto explicativo profissional em linguagem natural, adicione no final um bloco JSON:
 \`\`\`json
 {
   "action": "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "agendar_avulso" | "nenhuma",
-  "padeiroNome": "Nome do padeiro se aplicável, ou null",
-  "clienteNome": "Nome do cliente se aplicável, ou null",
+  "padeiroNome": null,
+  "clienteNome": null,
   "diaSemana": "segunda|terca|quarta|quinta|sexta|sabado",
   "descricao": "Resumo da ação a ser executada",
   "confirmar": true
@@ -961,7 +960,30 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
               }
 
               if (action && actionData) {
-                if (!actionData.padeiroId) {
+                // TRAVA CRÍTICA: Escalas coletivas (Alta Performance ou Padrão Habitual)
+                if (action === 'escala_alta_performance' || action === 'escala_padrao_anterior') {
+                  const pMencionado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
+                  if (!pMencionado) {
+                    // Pedido geral da equipe: Força nulidade absoluta de padeiro individual
+                    actionData.padeiroId = null;
+                    actionData.padeiroNome = null;
+                    actionData.clienteId = null;
+                    actionData.clienteNome = null;
+                    actionData.isIndividual = false;
+
+                    // Se a IA alucinou texto vinculando apenas um padeiro, ajusta para a equipe
+                    if (cleanText.toLowerCase().includes('vinculando') || cleanText.toLowerCase().includes('individual') || cleanText.toLowerCase().includes('especificamente para o padeiro')) {
+                      const totalEquipe = (enrichedContext.padeirosAtivos || []).length;
+                      cleanText = action === 'escala_padrao_anterior'
+                        ? `A proposta de escala no padrão habitual foi calculada para toda a equipe (${totalEquipe} padeiros ativos). Verifique a distribuição da semana no card abaixo e confirme para aplicar.`
+                        : `A proposta de escala de alta performance foi calculada para toda a equipe (${totalEquipe} padeiros ativos), priorizando o volume de demanda das lojas. Verifique a distribuição no card abaixo e confirme para aplicar.`;
+                    }
+                  } else {
+                    actionData.padeiroId = pMencionado.id;
+                    actionData.padeiroNome = pMencionado.nome;
+                    actionData.isIndividual = true;
+                  }
+                } else if (!actionData.padeiroId) {
                   const pIdentificado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
                   if (pIdentificado) {
                     actionData.padeiroId = pIdentificado.id;

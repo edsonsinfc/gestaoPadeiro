@@ -135,12 +135,14 @@ const BiaActions = {
     }
 
     let padeiroAlvo = null;
-    if (options && options.padeiroId) {
-      padeiroAlvo = (padeirosLista || []).find(p => p.id === options.padeiroId);
-    }
-    if (!padeiroAlvo && options && options.padeiroNome) {
-      const alvoNorm = this.normalizeStr(options.padeiroNome);
-      padeiroAlvo = (padeirosLista || []).find(p => this.normalizeStr(p.nome) === alvoNorm || this.normalizeStr(p.nome).includes(alvoNorm));
+    if (options && options.isIndividual !== false) {
+      if (options.padeiroId) {
+        padeiroAlvo = (padeirosLista || []).find(p => p.id === options.padeiroId);
+      }
+      if (!padeiroAlvo && options.padeiroNome) {
+        const alvoNorm = this.normalizeStr(options.padeiroNome);
+        padeiroAlvo = (padeirosLista || []).find(p => this.normalizeStr(p.nome) === alvoNorm || this.normalizeStr(p.nome).includes(alvoNorm));
+      }
     }
 
     const padeirosParaEscalar = padeiroAlvo ? [padeiroAlvo] : padeirosLista;
@@ -296,12 +298,14 @@ const BiaActions = {
 
     // 1. Identificar se foi solicitada escala para um padeiro específico
     let padeiroAlvo = null;
-    if (options && options.padeiroId) {
-      padeiroAlvo = padeirosLista.find(p => p.id === options.padeiroId);
-    }
-    if (!padeiroAlvo && options && options.padeiroNome) {
-      const alvoNorm = this.normalizeStr(options.padeiroNome);
-      padeiroAlvo = padeirosLista.find(p => this.normalizeStr(p.nome) === alvoNorm || this.normalizeStr(p.nome).includes(alvoNorm));
+    if (options && options.isIndividual !== false) {
+      if (options.padeiroId) {
+        padeiroAlvo = padeirosLista.find(p => p.id === options.padeiroId);
+      }
+      if (!padeiroAlvo && options.padeiroNome) {
+        const alvoNorm = this.normalizeStr(options.padeiroNome);
+        padeiroAlvo = padeirosLista.find(p => this.normalizeStr(p.nome) === alvoNorm || this.normalizeStr(p.nome).includes(alvoNorm));
+      }
     }
 
     // 2. Unificar histórico ponderando Cronogramas planejados (peso 3) e Atividades executadas (peso 1)
