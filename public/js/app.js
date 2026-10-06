@@ -1055,7 +1055,15 @@ const App = {
     }
 
     if (!isCapacitor) return;
+    if (this._isDownloadingApk) {
+      console.log('[Update Check] Download de APK em andamento. Ignorando nova checagem.');
+      return;
+    }
+    if (this._isCheckingApkUpdate) return;
+    this._isCheckingApkUpdate = true;
+
     if (!navigator.onLine) {
+      this._isCheckingApkUpdate = false;
       if (manual && typeof Components !== 'undefined' && Components.toast) {
         Components.toast('Sem conexão com a internet para verificar atualizações.', 'warning');
       }
@@ -1112,6 +1120,8 @@ const App = {
       if (manual && typeof Components !== 'undefined' && Components.toast) {
         Components.toast('Não foi possível verificar atualizações no momento.', 'error');
       }
+    } finally {
+      this._isCheckingApkUpdate = false;
     }
   },
 
@@ -1128,6 +1138,11 @@ const App = {
   },
 
   showUpdateModal(info, autoStart = true) {
+    if (this._isDownloadingApk) {
+      console.log('[Update Check] Modal de update não substituído pois download está ativo.');
+      return;
+    }
+
     // Remove modal anterior se houver
     const old = document.getElementById('apk-update-modal');
     if (old) old.remove();
@@ -1221,12 +1236,19 @@ const App = {
   downloadApkUpdate(url, version) {
     const absoluteUrl = url.startsWith('http') ? url : `${API_BASE_URL || window.location.origin}${url}`;
 
+    if (this._isDownloadingApk) {
+      console.warn('[Update Check] Download já em andamento. Ignorando chamada duplicada.');
+      return;
+    }
+    this._isDownloadingApk = true;
+
     const ApkUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     const progressBar = document.getElementById('apk-download-bar');
     const progressText = document.getElementById('apk-download-text');
     const actionContainer = document.getElementById('apk-update-action-container');
 
     const showFallbackBtn = (msg) => {
+      this._isDownloadingApk = false;
       if (progressText) { progressText.style.color = '#ef4444'; progressText.textContent = msg || 'Erro no download automático.'; }
       if (actionContainer) {
         actionContainer.innerHTML = `
@@ -1241,31 +1263,39 @@ const App = {
 
     if (!ApkUpdater || typeof ApkUpdater.downloadAndInstall !== 'function') {
       // Plugin não disponível nesta versão do APK: download via browser externo
+      this._isDownloadingApk = false;
       console.warn('[Update Check] ApkUpdater não disponível, fallback para download externo.');
       this.forceOpenApkDownload(absoluteUrl);
       return;
     }
 
     console.log('[Update Check] Iniciando download nativo:', absoluteUrl);
-    if (progressText) progressText.textContent = 'Iniciando download...';
+    if (progressText) progressText.textContent = 'Conectando ao servidor...';
 
-    // Fallback após 5s sem progresso detectado
+    // Fallback após 20s sem progresso detectado (compatível com redes móveis lentas)
     let downloadStarted = false;
     const fallbackTimer = setTimeout(() => {
       if (!downloadStarted) {
-        console.warn('[Update Check] Nenhum progresso detectado em 5s, ativando fallback.');
-        showFallbackBtn('Download não iniciou automaticamente.');
+        console.warn('[Update Check] Nenhum progresso detectado em 20s, ativando fallback.');
+        showFallbackBtn('O servidor demorou para responder. Baixe manualmente:');
       }
-    }, 5000);
+    }, 20000);
 
     // Listener de progresso
     let progressListener = null;
+    let highestProgress = 0;
     try {
       if (typeof ApkUpdater.addListener === 'function') {
         progressListener = ApkUpdater.addListener('downloadProgress', (evt) => {
           downloadStarted = true;
           clearTimeout(fallbackTimer);
           if (evt && typeof evt.progress === 'number') {
+            // Garante que o progresso nunca volte para trás na interface
+            if (evt.progress < highestProgress && evt.progress < 0.99) {
+              return;
+            }
+            highestProgress = evt.progress;
+
             const pct = Math.min(100, Math.round(evt.progress * 100));
             if (progressBar) progressBar.style.width = `${pct}%`;
             if (progressText) {
@@ -1286,6 +1316,7 @@ const App = {
 
     const cleanup = () => {
       clearTimeout(fallbackTimer);
+      this._isDownloadingApk = false;
       try { if (progressListener && typeof progressListener.remove === 'function') progressListener.remove(); } catch (_) {}
     };
 
@@ -1296,12 +1327,13 @@ const App = {
         console.log('[Update Check] Instalador disparado!');
         if (progressText) { progressText.style.color = '#10b981'; progressText.textContent = 'Download concluído! Abrindo instalador...'; }
         if (progressBar) progressBar.style.width = '100%';
-        setTimeout(() => { const m = document.getElementById('apk-update-modal'); if (m) m.remove(); }, 4000);
+        setTimeout(() => { const m = document.getElementById('apk-update-modal'); if (m) m.remove(); }, 5000);
       })
       .catch(err => {
         cleanup();
         console.error('[Update Check] Erro no downloadAndInstall:', err);
-        showFallbackBtn('Falha no download automático. Baixe manualmente:');
+        const errMsg = (err && (err.message || err.toString())) || '';
+        showFallbackBtn(errMsg.includes('fontes desconhecidas') ? errMsg : 'Falha no download automático. Baixe manualmente:');
       });
   }
 };
