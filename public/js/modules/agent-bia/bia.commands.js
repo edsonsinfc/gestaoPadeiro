@@ -301,9 +301,9 @@ const BiaCommands = {
       };
     }
 
-    // 5. Tolerância a Erros de Digitação (Fuzzy Matching para typos como "venza" -> "veneza")
-    const stopWordsGerais = ['colocar', 'coloque', 'preciso', 'atenda', 'cliente', 'padeiro', 'para', 'quinta', 'feira', 'segunda', 'terca', 'quarta', 'sexta', 'sabado', 'domingo', 'amanha', 'hoje', 'pela', 'pelo', 'com', 'sem', 'vai'];
-    const palavrasMensagem = norm.split(/[\s\-\/\(\)\,\.]+/).filter(w => w.length >= 4 && !stopWordsGerais.includes(w));
+    // 5. Tolerância a Erros de Digitação e Nomes Curtos (Fuzzy Matching para typos como "venza" -> "veneza" e "bigo box" -> "big box")
+    const stopWordsGerais = ['colocar', 'coloque', 'preciso', 'atenda', 'cliente', 'padeiro', 'para', 'quinta', 'feira', 'segunda', 'terca', 'quarta', 'sexta', 'sabado', 'domingo', 'amanha', 'hoje', 'pela', 'pelo', 'com', 'sem', 'vai', 'outro', 'junto'];
+    const palavrasMensagem = norm.split(/[\s\-\/\(\)\,\.]+/).filter(w => w.length >= 3 && !stopWordsGerais.includes(w));
 
     let melhorFuzzyCli = null;
     let menorDistancia = 999;
@@ -311,11 +311,36 @@ const BiaCommands = {
     for (const cli of clientesAtivos) {
       const cNome = this.normalizeText(cli.nomeFantasia || cli.nome);
       const stopWords = ['panificadora', 'padaria', 'supermercado', 'mercado', 'ltda', 'comercio', 'de', 'da', 'do', 'dos', 'das', 'e'];
-      const tokens = cNome.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 4 && !stopWords.includes(w));
+      const tokens = cNome.split(/[\s\-\/\(\)]+/).filter(w => w.length >= 3 && !stopWords.includes(w));
+
+      // Caso A: Se os 2 primeiros tokens baterem juntos (ex: "big box" ou "bigo box")
+      if (tokens.length >= 2) {
+        const parTokens = `${tokens[0]} ${tokens[1]}`;
+        if (norm.includes(parTokens)) {
+          return {
+            id: cli.id,
+            nome: cli.nomeFantasia || cli.nome,
+            nomeFantasia: cli.nomeFantasia || cli.nome,
+            origem: 'clientes_ativos_par_tokens'
+          };
+        }
+        // Match com tolerância no par (ex: "bigo box" vs "big box")
+        for (let i = 0; i < palavrasMensagem.length - 1; i++) {
+          const parMsg = `${palavrasMensagem[i]} ${palavrasMensagem[i+1]}`;
+          if (this.levenshtein(parMsg, parTokens) <= 2) {
+            return {
+              id: cli.id,
+              nome: cli.nomeFantasia || cli.nome,
+              nomeFantasia: cli.nomeFantasia || cli.nome,
+              origem: 'clientes_ativos_par_fuzzy'
+            };
+          }
+        }
+      }
 
       for (const tok of tokens) {
         for (const palavraMsg of palavrasMensagem) {
-          const maxDiff = tok.length >= 7 ? 2 : 1;
+          const maxDiff = tok.length >= 6 ? 2 : 1;
           const dist = this.levenshtein(palavraMsg, tok);
           if (dist <= maxDiff && dist < menorDistancia) {
             menorDistancia = dist;
@@ -335,6 +360,36 @@ const BiaCommands = {
     }
 
     return null;
+  },
+
+  /**
+   * Extrai um ou múltiplos clientes mencionados na mensagem (ex: "atenda o cliente venza na terça junto com um outro cliente big box")
+   */
+  extrairClientes(norm, clientesAtivos = [], cronogramaHistorico = [], padeiroAlvo = null) {
+    if (!norm) return [];
+
+    const conectoresRegex = /junto\s+com|e\s+tambem|e\s+com|e\s+no\s+cliente|alem\s+de|e\s+o\s+cliente|e\s+outro\s+cliente|\be\s+no\b|\be\s+o\b|\bmais\s+o\b|\bcom\s+o\b|\bcom\s+outro\b/i;
+    const partes = norm.split(conectoresRegex).map(p => p.trim()).filter(Boolean);
+    const encontrados = [];
+    const idsVistos = new Set();
+
+    if (partes.length > 1) {
+      for (const parte of partes) {
+        const c = this.extrairCliente(parte, clientesAtivos, cronogramaHistorico, padeiroAlvo);
+        if (c && !idsVistos.has(c.id)) {
+          idsVistos.add(c.id);
+          encontrados.push(c);
+        }
+      }
+    }
+
+    // Se achou menos de 2 ou não dividiu por conectivo, tenta extrair da mensagem completa
+    if (encontrados.length === 0) {
+      const unico = this.extrairCliente(norm, clientesAtivos, cronogramaHistorico, padeiroAlvo);
+      if (unico) encontrados.push(unico);
+    }
+
+    return encontrados;
   },
 
   /**
@@ -473,7 +528,8 @@ const BiaCommands = {
 
     const diaInfo = this.extrairDiaEData(norm, weekOffset);
     const padeiro = this.extrairPadeiro(norm, padeirosAtivos);
-    const cliente = this.extrairCliente(norm, clientesAtivos, cronogramaHistorico, padeiro);
+    const clientes = this.extrairClientes(norm, clientesAtivos, cronogramaHistorico, padeiro);
+    const cliente = clientes.length > 0 ? clientes[0] : null;
     const { horario, horarioFim } = this.extrairHorarios(norm);
 
     // 1. Caso: Consulta Quem atende loja X no dia Y
@@ -548,26 +604,60 @@ const BiaCommands = {
       }
     }
 
-    // 4. Caso Principal: Agendamento / Alocação Avulsa
-    // Ex: "Preciso que na segunda o cides atenda o cliente veneza"
-    if (padeiro && diaInfo && cliente) {
-      const tarefaExistente = (cronogramaHistorico || []).find(t => t.data === diaInfo.data && t.padeiroId === padeiro.id);
-      const isSubstituicao = !!tarefaExistente;
+    // 4. Caso Principal: Agendamento / Alocação Avulsa (Suporta 1 ou Múltiplos Clientes)
+    // Ex: "Preciso que na terça o cides atenda o cliente venza junto com um outro cliente big box"
+    if (padeiro && diaInfo && clientes.length > 0) {
+      const tarefasExistentesDia = (cronogramaHistorico || []).filter(t => t.data === diaInfo.data && t.padeiroId === padeiro.id);
+      const tarefaExistente = tarefasExistentesDia.length > 0 ? tarefasExistentesDia[0] : null;
+      const isSubstituicao = !!tarefaExistente && clientes.length === 1;
       const lojaAnterior = tarefaExistente ? (tarefaExistente.clienteNome || 'outro cliente') : null;
 
-      let msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para atender a sua solicitação:\n\n` +
-        `* **Padeiro:** ${padeiro.nome} (COD ${padeiro.codTec || '—'})\n` +
-        `* **Loja / Cliente:** **${cliente.nomeFantasia || cliente.nome}**\n` +
-        `* **Data:** **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})**\n` +
-        `* **Horário:** ${horario} às ${horarioFim}\n`;
+      const tarefasGeradas = clientes.map((cli, idx) => {
+        let hIni = horario;
+        let hFim = horarioFim;
+        if (clientes.length === 2) {
+          hIni = idx === 0 ? '08:00' : '13:00';
+          hFim = idx === 0 ? '12:00' : '17:00';
+        } else if (clientes.length > 2) {
+          const horaBase = 8 + (idx * 3);
+          hIni = `${String(horaBase).padStart(2, '0')}:00`;
+          hFim = `${String(horaBase + 3).padStart(2, '0')}:00`;
+        }
 
-      if (isSubstituicao) {
-        msgIntro += `\n*(Esta alteração substituirá o agendamento anterior em **${lojaAnterior}**)*\n`;
+        const cNome = cli.nomeFantasia || cli.nome;
+        return {
+          padeiroId: padeiro.id,
+          padeiroNome: padeiro.nome,
+          codTec: padeiro.codTec || '',
+          clienteId: cli.id,
+          clienteNome: cNome,
+          data: diaInfo.data,
+          diaNome: diaInfo.diaNome,
+          horario: hIni,
+          horarioFim: hFim,
+          status: 'pendente',
+          observacao: `Ajuste pontual via Bia IA (${diaInfo.diaNome})`
+        };
+      });
+
+      let msgIntro = '';
+      if (clientes.length > 1) {
+        const listaLojas = tarefasGeradas.map(t => `* **${t.horario} às ${t.horarioFim}:** **${t.clienteNome}**`).join('\n');
+        msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})** com os atendimentos para **${padeiro.nome}**:\n\n${listaLojas}\n\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
+      } else {
+        msgIntro = `Com certeza! Preparei a alteração pontual no cronograma para atender a sua solicitação:\n\n` +
+          `* **Padeiro:** ${padeiro.nome} (COD ${padeiro.codTec || '—'})\n` +
+          `* **Loja / Cliente:** **${clientes[0].nomeFantasia || clientes[0].nome}**\n` +
+          `* **Data:** **${diaInfo.diaNome}-feira (${this.formatarDataBr(diaInfo.data)})**\n` +
+          `* **Horário:** ${horario} às ${horarioFim}\n`;
+
+        if (isSubstituicao) {
+          msgIntro += `\n*(Esta alteração substituirá o agendamento anterior em **${lojaAnterior}**)*\n`;
+        }
+        msgIntro += `\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
       }
 
-      msgIntro += `\nConfira os detalhes no card abaixo e clique em **Confirmar e Gravar no Cronograma** para aplicar.`;
-
-      const cliNomeFinal = cliente.nomeFantasia || cliente.nome;
+      const nomesDesc = clientes.map(c => c.nomeFantasia || c.nome).join(' e ');
 
       return {
         text: msgIntro,
@@ -584,29 +674,19 @@ const BiaCommands = {
             codTec: padeiro.codTec || ''
           },
           cliente: {
-            id: cliente.id,
-            nome: cliNomeFinal
+            id: clientes[0].id,
+            nome: clientes[0].nomeFantasia || clientes[0].nome
           },
+          clientes: clientes.map(c => ({ id: c.id, nome: c.nomeFantasia || c.nome })),
+          tarefas: tarefasGeradas,
           data: diaInfo.data,
           diaNome: diaInfo.diaNome,
           dataBr: this.formatarDataBr(diaInfo.data),
           horario,
           horarioFim,
           observacao: `Ajuste pontual do gestor via Bia IA`,
-          tarefa: {
-            padeiroId: padeiro.id,
-            padeiroNome: padeiro.nome,
-            codTec: padeiro.codTec || '',
-            clienteId: cliente.id,
-            clienteNome: cliNomeFinal,
-            data: diaInfo.data,
-            diaNome: diaInfo.diaNome,
-            horario,
-            horarioFim,
-            status: 'pendente',
-            observacao: `Ajuste pontual do gestor via Bia IA`
-          },
-          descricao: `Agendar ${padeiro.nome.split(' ')[0]} em ${cliNomeFinal} (${diaInfo.diaNome})`,
+          tarefa: tarefasGeradas[0],
+          descricao: `Agendar ${padeiro.nome.split(' ')[0]} em ${nomesDesc} (${diaInfo.diaNome})`,
           confirmar: true
         },
         tipo: 'agendar_avulso'

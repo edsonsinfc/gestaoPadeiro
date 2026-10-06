@@ -155,21 +155,49 @@ function calcularRankingClientesInteligente(clientes = [], atividades = []) {
 /**
  * Garante que o contexto operacional contenha os dados mais recentes do banco
  */
-async function carregarContextoBancoSeNecessario(context = {}) {
+async function carregarContextoBancoSeNecessario(context = {}, reqUser = null) {
   const ctx = { ...context };
   try {
     if (!ctx.padeirosAtivos || ctx.padeirosAtivos.length === 0 || !ctx.cronogramaHistorico) {
+      let queryPadeiros = { deletado: { $ne: 1 } };
+      if (reqUser && reqUser.role !== 'admin' && reqUser.filial && reqUser.filial !== 'null') {
+        queryPadeiros.filial = Array.isArray(reqUser.filial) ? { $in: reqUser.filial } : reqUser.filial;
+      }
+
       const [padeiros, clientes, cronos, ativs] = await Promise.all([
-        db.Padeiro.find({ deletado: { $ne: 1 } }),
+        db.Padeiro.find(queryPadeiros),
         db.Cliente.find({}),
         db.Cronograma.find({}),
         db.Atividade.find({})
       ]);
 
-      ctx.padeirosAtivos = padeiros || [];
+      const todosPadeiros = padeiros || [];
+      // Filtra contas de teste e garante compatibilidade de filial
+      const padeirosReais = todosPadeiros.filter(p => {
+        const pNome = (p.nome || '').toLowerCase();
+        if (pNome.includes('teste') || p.codTec === '971914') return false;
+        if (reqUser && reqUser.role !== 'admin' && reqUser.filial && reqUser.filial !== 'null') {
+          const filiaisUser = Array.isArray(reqUser.filial) ? reqUser.filial : [reqUser.filial];
+          if (p.filial && !filiaisUser.includes(p.filial)) return false;
+        }
+        return true;
+      });
+
+      ctx.padeirosAtivos = padeirosReais;
       ctx.clientesAtivos = clientes || [];
       ctx.cronogramaHistorico = cronos || [];
       ctx.atividades = ativs || [];
+    } else {
+      // Se já veio no payload, filtra contas de teste e filial
+      ctx.padeirosAtivos = ctx.padeirosAtivos.filter(p => {
+        const pNome = (p.nome || '').toLowerCase();
+        if (pNome.includes('teste') || p.codTec === '971914') return false;
+        if (reqUser && reqUser.role !== 'admin' && reqUser.filial && reqUser.filial !== 'null') {
+          const filiaisUser = Array.isArray(reqUser.filial) ? reqUser.filial : [reqUser.filial];
+          if (p.filial && !filiaisUser.includes(p.filial)) return false;
+        }
+        return true;
+      });
     }
 
     if (!ctx.rankingPadeiros || ctx.rankingPadeiros.length === 0) {
@@ -785,8 +813,8 @@ exports.chat = async (req, res) => {
     return res.status(400).json({ error: 'Mensagem vazia.' });
   }
 
-  // Carrega e enriquece contexto operacional completo em tempo real do banco de dados
-  const enrichedContext = await carregarContextoBancoSeNecessario(context);
+  // Carrega e enriquece contexto operacional completo em tempo real do banco de dados (respeitando filial e filtrando contas teste)
+  const enrichedContext = await carregarContextoBancoSeNecessario(context, req.user);
 
   const norm = normalizarTexto(message);
 
@@ -943,6 +971,34 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                   if (parsed.action && parsed.action !== 'nenhuma') {
                     action = parsed.action;
                     actionData = parsed;
+
+                    // TRAVA DE COERÊNCIA SEMÂNTICA:
+                    // Se a mensagem do usuário solicita explicitamente Padrão Habitual/Rotina/Anterior,
+                    // NUNCA permite que o LLM troque para Alta Performance devido a contexto antigo de chat.
+                    const querHabitualExplicito = (
+                      norm.includes('padrao') ||
+                      norm.includes('habitual') ||
+                      norm.includes('anterior') ||
+                      norm.includes('rotina') ||
+                      norm.includes('costume') ||
+                      norm.includes('repetir') ||
+                      norm.includes('replicar') ||
+                      norm.includes('o que ja fazia') ||
+                      norm.includes('igual antes')
+                    );
+                    const querAltaPerfExplicito = (
+                      norm.includes('alta performance') ||
+                      norm.includes('otimizada') ||
+                      norm.includes('mais produtivo')
+                    );
+
+                    if (querHabitualExplicito && !querAltaPerfExplicito && (action === 'escala_alta_performance' || action === 'escala_padrao_anterior')) {
+                      action = 'escala_padrao_anterior';
+                      actionData.action = 'escala_padrao_anterior';
+                    } else if (querAltaPerfExplicito && (action === 'escala_alta_performance' || action === 'escala_padrao_anterior')) {
+                      action = 'escala_alta_performance';
+                      actionData.action = 'escala_alta_performance';
+                    }
                   }
                 } catch (e) {}
                 cleanText = cleanText.replace(/```(?:json)?[\s\S]*?(?:```|$)/gi, '').trim();
@@ -1046,8 +1102,13 @@ exports.getStatus = (req, res) => {
  */
 exports.getContext = async (req, res) => {
   try {
+    let queryPadeiros = { deletado: { $ne: 1 } };
+    if (req.user && req.user.role !== 'admin' && req.user.filial && req.user.filial !== 'null') {
+      queryPadeiros.filial = Array.isArray(req.user.filial) ? { $in: req.user.filial } : req.user.filial;
+    }
+
     const [padeiros, clientes, cronogramas, atividades] = await Promise.all([
-      db.Padeiro.find({ deletado: { $ne: 1 } }),
+      db.Padeiro.find(queryPadeiros),
       db.Cliente.find({}),
       db.Cronograma.find({}),
       db.Atividade.find({})
@@ -1058,7 +1119,7 @@ exports.getContext = async (req, res) => {
       clientesAtivos: clientes || [],
       cronogramaHistorico: cronogramas || [],
       atividades: atividades || []
-    });
+    }, req.user);
 
     res.json(enriched);
   } catch (err) {

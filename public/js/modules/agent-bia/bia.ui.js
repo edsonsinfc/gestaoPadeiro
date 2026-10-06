@@ -136,14 +136,26 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
         <!-- Input Bar -->
         <div class="bia-input-area">
+          <div id="bia-listening-indicator" class="bia-listening-indicator" style="display:none;">
+            <div class="bia-audio-waves">
+              <span class="bia-wave-bar"></span><span class="bia-wave-bar"></span><span class="bia-wave-bar"></span><span class="bia-wave-bar"></span>
+            </div>
+            <span class="bia-listening-text" id="bia-listening-text">Ouvindo... fale seu comando</span>
+            <button type="button" class="bia-btn-stop-listening" id="bia-btn-stop-listening" title="Parar">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="2"/></svg>
+            </button>
+          </div>
           <form id="bia-input-form" class="bia-input-box" onsubmit="event.preventDefault();">
             <input 
               type="text" 
               id="bia-input-field" 
               class="bia-input-field" 
-              placeholder="Peça uma escala ou tire uma dúvida..." 
+              placeholder="Digite ou toque no microfone e fale..." 
               autocomplete="off"
             />
+            <button type="button" id="bia-btn-mic" class="bia-btn-mic" title="Falar com a Bia" aria-label="Falar com a Bia">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+            </button>
             <button type="submit" id="bia-btn-send" class="bia-btn-send" title="Enviar">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -189,6 +201,11 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       });
     }
 
+    const micBtn = document.getElementById('bia-btn-mic');
+    const stopBtn = document.getElementById('bia-btn-stop-listening');
+    if (micBtn) micBtn.addEventListener('click', () => this.toggleVoice());
+    if (stopBtn) stopBtn.addEventListener('click', () => this.stopVoice());
+
     // Chips
     document.querySelectorAll('.bia-chip').forEach(chip => {
       chip.addEventListener('click', () => {
@@ -222,11 +239,144 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   closeModal() {
+    this.stopVoice();
     const overlay = document.getElementById('bia-modal-overlay');
     if (overlay) {
       overlay.classList.remove('active');
       this.isOpen = false;
     }
+  },
+
+  /**
+   * Entrada por voz (Web Speech API, pt-BR). Ao finalizar a fala, envia o comando automaticamente.
+   */
+  isListening: false,
+  recognition: null,
+
+  toggleVoice() {
+    if (this.isListening) this.stopVoice();
+    else this.startVoice();
+  },
+
+  async startNativeVoice(NativeSR) {
+    const input = document.getElementById('bia-input-field');
+    try {
+      const avail = await NativeSR.available();
+      if (!avail || !avail.available) {
+        this.addBiaMessage('Reconhecimento de voz indisponível neste aparelho. Digite o comando.');
+        return;
+      }
+      let perm = await NativeSR.checkPermissions();
+      if (perm.speechRecognition !== 'granted') perm = await NativeSR.requestPermissions();
+      if (perm.speechRecognition !== 'granted') {
+        this.addBiaMessage('Permissão do microfone negada. Libere o microfone nas configurações do app.');
+        return;
+      }
+
+      let lastText = '';
+      let finished = false;
+      const finish = async () => {
+        if (finished) return;
+        finished = true;
+        this.setListeningUI(false);
+        try { await NativeSR.removeAllListeners(); } catch (e) {}
+        const text = lastText.trim();
+        if (input) input.value = '';
+        if (text) this.handleUserSubmit(text);
+      };
+
+      await NativeSR.removeAllListeners();
+      await NativeSR.addListener('partialResults', (d) => {
+        if (d && d.matches && d.matches[0]) {
+          lastText = d.matches[0];
+          if (input) input.value = lastText;
+        }
+      });
+      await NativeSR.addListener('listeningState', (d) => {
+        if (d && d.status === 'stopped') finish();
+      });
+
+      this.nativeFinish = finish;
+      this.setListeningUI(true);
+      const res = await NativeSR.start({ language: 'pt-BR', maxResults: 1, partialResults: true, popup: false });
+      if (res && res.matches && res.matches[0]) lastText = res.matches[0];
+    } catch (err) {
+      console.warn('[BIA] Voz nativa falhou:', err);
+      this.setListeningUI(false);
+      this.addBiaMessage('Não consegui acessar o microfone. Digite o comando.');
+    }
+  },
+
+  startVoice() {
+    if (this.isProcessing || this.isListening) return;
+    const NativeSR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+    if (NativeSR) {
+      this.startNativeVoice(NativeSR);
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this.addBiaMessage('Seu dispositivo não suporta reconhecimento de voz. Digite o comando.');
+      return;
+    }
+
+    const input = document.getElementById('bia-input-field');
+    const rec = new SR();
+    rec.lang = 'pt-BR';
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+    this.recognition = rec;
+    let finalText = '';
+
+    rec.onstart = () => this.setListeningUI(true);
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t; else interim += t;
+      }
+      if (input) input.value = (finalText + interim).trim();
+    };
+    rec.onerror = (e) => {
+      this.setListeningUI(false);
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        this.addBiaMessage('Permissão do microfone negada. Libere o acesso ao microfone nas configurações do app.');
+      } else if (e.error === 'no-speech') {
+        if (typeof Components !== 'undefined' && Components.toast) Components.toast('Não ouvi nada. Tente novamente.', 'info');
+      }
+    };
+    rec.onend = () => {
+      this.setListeningUI(false);
+      const text = (finalText || (input && input.value) || '').trim();
+      if (text) {
+        if (input) input.value = '';
+        this.handleUserSubmit(text);
+      }
+    };
+
+    try { rec.start(); } catch (err) { this.setListeningUI(false); }
+  },
+
+  stopVoice() {
+    const NativeSR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+    if (NativeSR && this.isListening) {
+      Promise.resolve(NativeSR.stop()).catch(() => {}).then(() => { if (this.nativeFinish) this.nativeFinish(); });
+      return;
+    }
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch (e) {}
+    }
+  },
+
+  setListeningUI(on) {
+    this.isListening = on;
+    const mic = document.getElementById('bia-btn-mic');
+    const ind = document.getElementById('bia-listening-indicator');
+    const box = document.getElementById('bia-input-form');
+    if (mic) mic.classList.toggle('listening', on);
+    if (ind) ind.style.display = on ? 'flex' : 'none';
+    if (box) box.classList.toggle('bia-listening', on);
   },
 
   /**
@@ -409,7 +559,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         <span class="bia-card-title">
           <i data-lucide="calendar-check" style="width: 15px; height: 15px; color: #1E4BFF;"></i> Ajuste Pontual de Escala
         </span>
-        <span class="bia-card-badge" style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF;">1 Agendamento</span>
+        <span class="bia-card-badge" style="background: rgba(30, 75, 255, 0.1); color: #1E4BFF;">${(actionData.tarefas && actionData.tarefas.length) || 1} Agendamento${actionData.tarefas && actionData.tarefas.length > 1 ? 's' : ''}</span>
       </div>
       <div class="bia-card-desc">
         Confirme a alocação pontual do padeiro abaixo para gravação direta no Cronograma do sistema:
@@ -424,7 +574,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         </div>
         <div class="bia-grid-cell">
           <span class="bia-cell-label">Cliente / Loja</span>
-          <span class="bia-cell-value" title="${actionData.cliente.nome}">${actionData.cliente.nome}</span>
+          <span class="bia-cell-value" title="${(actionData.clientes || [actionData.cliente]).map(c => c.nome).join(' + ')}">${(actionData.clientes || [actionData.cliente]).map(c => c.nome).join(' + ')}</span>
         </div>
         <div class="bia-grid-cell">
           <span class="bia-cell-label">Data</span>

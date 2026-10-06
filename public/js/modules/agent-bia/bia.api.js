@@ -785,12 +785,32 @@ const BiaAPI = {
       cleanText = (cleanText || '').replace(/```json[\s\S]*?```/g, '').trim();
     }
 
-    // Se a IA não retornou ação estruturada, usa o fallback local
-    if (!action) {
-      const fallback = this.generateLocalFallback(userPrompt, systemContext);
-      if (fallback.action) {
-        action = fallback.action;
-        actionData = fallback.actionData;
+    // Trava de coerência semântica para escalas
+    if (action) {
+      const lower = this.normalizeText(userPrompt || '');
+      const querHabitual = (
+        lower.includes('padrao') ||
+        lower.includes('habitual') ||
+        lower.includes('anterior') ||
+        lower.includes('rotina') ||
+        lower.includes('costume') ||
+        lower.includes('repetir') ||
+        lower.includes('replicar') ||
+        lower.includes('o que ja fazia') ||
+        lower.includes('igual antes')
+      );
+      const querAltaPerf = (
+        lower.includes('alta performance') ||
+        lower.includes('otimizada') ||
+        lower.includes('mais produtivo')
+      );
+
+      if (querHabitual && !querAltaPerf && (action === 'escala_alta_performance' || action === 'escala_padrao_anterior')) {
+        action = 'escala_padrao_anterior';
+        if (actionData) actionData.action = 'escala_padrao_anterior';
+      } else if (querAltaPerf && (action === 'escala_alta_performance' || action === 'escala_padrao_anterior')) {
+        action = 'escala_alta_performance';
+        if (actionData) actionData.action = 'escala_alta_performance';
       }
     }
 

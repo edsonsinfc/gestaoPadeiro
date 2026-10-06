@@ -536,11 +536,17 @@
   padding: 4px 6px 4px 14px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  gap: 6px;
 }
 
 .bia-input-box:focus-within {
   border-color: #1E4BFF;
   box-shadow: 0 0 0 3px rgba(30, 75, 255, 0.15);
+}
+
+.bia-input-box.bia-listening {
+  border-color: #FF3B30;
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15);
 }
 
 .bia-input-field {
@@ -552,6 +558,117 @@
   outline: none;
   font-family: inherit;
   padding: 8px 0;
+}
+
+/* Botão de Microfone de Voz Apple HIG */
+.bia-btn-mic {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(30, 75, 255, 0.08);
+  border: none;
+  color: #1E4BFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bia-btn-mic:hover {
+  background: rgba(30, 75, 255, 0.16);
+  transform: scale(1.05);
+}
+
+.bia-btn-mic:active {
+  transform: scale(0.92);
+}
+
+/* Microfone Ativo / Ouvindo (Pulse Efeito Siri / Apple Intelligence) */
+.bia-btn-mic.listening {
+  background: linear-gradient(135deg, #FF3B30 0%, #FF2D55 100%);
+  color: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.2), 0 4px 12px rgba(255, 59, 48, 0.4);
+  animation: biaMicPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes biaMicPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5), 0 4px 12px rgba(255, 59, 48, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 59, 48, 0), 0 6px 16px rgba(255, 59, 48, 0.5);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0), 0 4px 12px rgba(255, 59, 48, 0.3);
+    transform: scale(1);
+  }
+}
+
+/* Banner de Gravação e Ondas de Áudio em Tempo Real */
+.bia-listening-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  animation: biaFadeIn 0.2s ease-out;
+}
+
+.bia-audio-waves {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+}
+
+.bia-wave-bar {
+  width: 3px;
+  background: #FF3B30;
+  border-radius: 3px;
+  animation: biaWave 1s ease-in-out infinite;
+}
+
+.bia-wave-bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.bia-wave-bar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.bia-wave-bar:nth-child(3) { height: 18px; animation-delay: 0.2s; }
+.bia-wave-bar:nth-child(4) { height: 8px; animation-delay: 0.4s; }
+
+@keyframes biaWave {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+
+.bia-listening-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF3B30;
+}
+
+.bia-btn-stop-listening {
+  background: #FF3B30;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.bia-btn-stop-listening:hover {
+  transform: scale(1.1);
 }
 
 .bia-btn-send {

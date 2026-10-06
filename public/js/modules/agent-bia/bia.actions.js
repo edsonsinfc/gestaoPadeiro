@@ -16,6 +16,18 @@ const BiaActions = {
       ]);
 
       if (serverCtx && Array.isArray(serverCtx.cronogramaHistorico) && serverCtx.cronogramaHistorico.length > 0) {
+        const user = (typeof API !== 'undefined' && API.getUser && API.getUser()) || {};
+        if (serverCtx.padeirosAtivos) {
+          serverCtx.padeirosAtivos = serverCtx.padeirosAtivos.filter(p => {
+            const pNome = (p.nome || '').toLowerCase();
+            if (pNome.includes('teste') || p.codTec === '971914') return false;
+            if (user && user.role !== 'admin' && user.filial && user.filial !== 'null') {
+              const filiaisUser = Array.isArray(user.filial) ? user.filial : [user.filial];
+              if (p.filial && !filiaisUser.includes(p.filial)) return false;
+            }
+            return true;
+          });
+        }
         if (stats && Array.isArray(stats.rankingClientes) && stats.rankingClientes.length > 0) {
           serverCtx.rankingClientes = stats.rankingClientes.map(c => ({
             ...c,
@@ -34,7 +46,17 @@ const BiaActions = {
         API.get('/api/cronograma').catch(() => [])
       ]);
 
-      const padeirosAtivos = (padeiros || []).filter(p => p.ativo !== false && !p.deletado);
+      const user = (typeof API !== 'undefined' && API.getUser && API.getUser()) || {};
+      const padeirosAtivos = (padeiros || []).filter(p => {
+        if (p.ativo === false || p.deletado) return false;
+        const pNome = (p.nome || '').toLowerCase();
+        if (pNome.includes('teste') || p.codTec === '971914') return false;
+        if (user && user.role !== 'admin' && user.filial && user.filial !== 'null') {
+          const filiaisUser = Array.isArray(user.filial) ? user.filial : [user.filial];
+          if (p.filial && !filiaisUser.includes(p.filial)) return false;
+        }
+        return true;
+      });
       const clientesAtivos = (clientes || []).filter(c => c.ativo !== false);
       const atividadesFinalizadas = (atividades || []).filter(a => a.status === 'finalizada');
 
@@ -778,8 +800,62 @@ const BiaActions = {
    * Suporta criação direta ou substituição de agendamento existente no dia
    */
   async executarAgendamentoAvulso(actionData) {
-    if (!actionData || !actionData.padeiro || !actionData.cliente || !actionData.data) {
+    if (!actionData || !actionData.padeiro || !actionData.data) {
       throw new Error('Dados incompletos para efetuar o agendamento avulso.');
+    }
+
+    // Caso Múltiplas Tarefas (ex: Padeiro atendendo 2 lojas no mesmo dia)
+    if (actionData.tarefas && actionData.tarefas.length > 1) {
+      const createdIds = [];
+      for (const t of actionData.tarefas) {
+        try {
+          const payload = {
+            padeiroId: t.padeiroId,
+            padeiroNome: t.padeiroNome,
+            codTec: t.codTec || '',
+            clienteId: t.clienteId,
+            clienteNome: t.clienteNome,
+            data: t.data,
+            horario: t.horario || '08:00',
+            horarioFim: t.horarioFim || '17:00',
+            status: 'pendente',
+            observacao: t.observacao || `Ajuste Pontual Gestor (Bia IA) - ${t.diaNome || t.data}`
+          };
+          const postRes = await API.post('/api/cronograma', payload);
+          const tId = postRes?.id || postRes?._id || postRes?.tarefa?.id || postRes?.tarefa?._id;
+          if (tId) createdIds.push(tId);
+        } catch (err) {
+          console.warn('[BIA] Falha ao criar tarefa individual de lote avulso:', err);
+        }
+      }
+
+      if (createdIds.length > 0) {
+        const nomesLojas = actionData.tarefas.map(t => t.clienteNome).join(' e ');
+        this.recordAction({
+          id: 'bia_multi_' + Date.now(),
+          timestamp: new Date().toISOString(),
+          tipo: 'agendamento_avulso_multiplo',
+          titulo: `${actionData.padeiro.nome} ➔ ${nomesLojas}`,
+          descricao: `${actionData.diaNome || ''} (${actionData.data})`,
+          tarefasCriadasIds: createdIds,
+          totalTarefas: createdIds.length
+        });
+      }
+
+      if (typeof Cronograma !== 'undefined' && typeof Cronograma.render === 'function') {
+        try { await Cronograma.render(); } catch (e) {}
+      }
+
+      return {
+        sucesso: true,
+        tarefasCriadasIds: createdIds,
+        totalTarefas: createdIds.length
+      };
+    }
+
+    // Caso Tarefa Única
+    if (!actionData.cliente) {
+      throw new Error('Loja ou cliente não especificado para o agendamento.');
     }
 
     const payload = {
@@ -837,6 +913,7 @@ const BiaActions = {
     return {
       sucesso: true,
       tarefaId,
+      tarefasCriadasIds: tarefaId ? [tarefaId] : [],
       payload,
       substituicao: !!actionData.substituicao
     };
