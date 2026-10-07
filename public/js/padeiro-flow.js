@@ -68,14 +68,29 @@ const PadeiroFlow = {
     let agenda = [];
     let clientes = [];
     try {
-      const [resAtv, resAgenda, resCli] = await Promise.all([
+      const [resAtv, resAgenda, resCli, resCrono] = await Promise.all([
         API.get('/api/atividades').catch(() => []),
         API.get('/api/cronograma/agenda').catch(() => []),
-        API.get('/api/clientes').catch(() => [])
+        API.get('/api/clientes').catch(() => []),
+        API.get('/api/cronograma').catch(() => [])
       ]);
       atividades = Array.isArray(resAtv) ? resAtv : [];
-      agenda = Array.isArray(resAgenda) ? resAgenda : [];
       clientes = Array.isArray(resCli) ? resCli : [];
+
+      const user = API.getUser() || {};
+      const tasksMap = new Map();
+      [...(Array.isArray(resCrono) ? resCrono : []), ...(Array.isArray(resAgenda) ? resAgenda : [])].forEach(t => {
+        if (!t) return;
+        if (user.role === 'padeiro') {
+          const matchId = t.padeiroId && (String(t.padeiroId) === String(user.id));
+          const matchCod = user.codTec && t.codTec && String(t.codTec).trim() === String(user.codTec).trim();
+          const matchNome = user.nome && t.padeiroNome && t.padeiroNome.trim().toLowerCase() === user.nome.trim().toLowerCase();
+          if (!matchId && !matchCod && !matchNome) return;
+        }
+        const key = String(t.id || t._id || (t.data + '_' + (t.clienteId || t.clienteNome)));
+        if (!tasksMap.has(key)) tasksMap.set(key, t);
+      });
+      agenda = Array.from(tasksMap.values());
     } catch(e) {
       console.warn('Erro ao carregar dados no PadeiroFlow:', e);
     }

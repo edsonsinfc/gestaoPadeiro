@@ -320,45 +320,48 @@ exports.getPadeiroAgenda = async (req, res) => {
     // Se for admin, gestor ou vendedor visualizando a tela do padeiro
     if (req.user.role && req.user.role !== 'padeiro') {
       const today = new Date().toISOString().split('T')[0];
-      const agenda = await Cronograma.find({ data: req.query.data || today })
-        .sort({ horario: 1 });
+      const query = {};
+      if (req.query.data) query.data = req.query.data;
+      else if (!req.query.semana && !req.query.all) query.data = today;
+      if (req.query.padeiroId) query.padeiroId = req.query.padeiroId;
+      const agenda = await Cronograma.find(query).sort({ data: 1, horario: 1 });
       return res.json(agenda);
     }
 
-    let padeiroIds = [req.user.id];
-    
-    // Se o usuário tiver codTec, busca também outros IDs com o mesmo codTec
-    if (req.user.codTec) {
+    // Resolver perfil do padeiro no banco para coletar ID, codTec e nome reais
+    let padeiro = null;
+    if (req.user.id) {
+      padeiro = await Padeiro.findById(req.user.id);
+    }
+    if (!padeiro && req.user.email) {
+      padeiro = await Padeiro.findOne({ email: req.user.email });
+    }
+    if (!padeiro && req.user.nome) {
+      padeiro = await Padeiro.findOne({ nome: req.user.nome });
+    }
+
+    const padeiroIds = new Set([req.user.id]);
+    if (padeiro && padeiro.id) padeiroIds.add(padeiro.id);
+
+    const codTec = req.user.codTec || (padeiro ? padeiro.codTec : null);
+    const nome = (req.user.nome || (padeiro ? padeiro.nome : '')).trim();
+
+    // Se tiver codTec, busca outros registros do mesmo técnico
+    if (codTec) {
       try {
-        const samePadeiros = await Padeiro.find({ codTec: req.user.codTec });
+        const samePadeiros = await Padeiro.find({ codTec });
         samePadeiros.forEach(p => {
-          if (p.id && !padeiroIds.includes(p.id)) padeiroIds.push(p.id);
+          if (p.id) padeiroIds.add(p.id);
         });
       } catch (err) {}
     }
 
-    // Busca principal por IDs do padeiro
-    const query = padeiroIds.length === 1 ? { padeiroId: req.user.id } : { padeiroId: { $in: padeiroIds } };
-    let agenda = await Cronograma.find(query).sort({ data: 1, horario: 1 });
+    // Construir condições de busca abrangentes (por qualquer ID do padeiro, por codTec ou por Nome)
+    const orConds = [{ padeiroId: { $in: Array.from(padeiroIds) } }];
+    if (codTec) orConds.push({ codTec });
+    if (nome) orConds.push({ padeiroNome: nome });
 
-    // Se tiver codTec, garante que tarefas gravadas diretamente com o codTec também venham
-    if (req.user.codTec) {
-      try {
-        const byCod = await Cronograma.find({ codTec: req.user.codTec });
-        const existingIds = new Set(agenda.map(a => a.id));
-        byCod.forEach(t => {
-          if (!existingIds.has(t.id)) agenda.push(t);
-        });
-      } catch (err) {}
-    }
-
-    // Se tiver nome e não encontrou por ID/codTec, busca por nome como fallback
-    if (req.user.nome && agenda.length === 0) {
-      try {
-        const byNome = await Cronograma.find({ padeiroNome: req.user.nome });
-        agenda = byNome;
-      } catch (err) {}
-    }
+    let agenda = await Cronograma.find({ $or: orConds }).sort({ data: 1, horario: 1 });
 
     const allClientes = await Cliente.find();
     const cliMap = new Map();

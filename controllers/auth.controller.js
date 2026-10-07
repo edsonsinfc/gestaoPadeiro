@@ -81,7 +81,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
+    const token = jwt.sign({ id: padeiro.id, email: padeiro.email, role: padeiro.role, nome: padeiro.nome, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial }, JWT_SECRET, { expiresIn: '5d' });
     logAudit(req, { id: padeiro.id, nome: padeiro.nome, role: padeiro.role, filial: padeiro.filial }, 'login');
     return res.json({ token, user: { id: padeiro.id, nome: padeiro.nome, email: padeiro.email, role: padeiro.role, cargo: padeiro.cargo, codTec: padeiro.codTec, filial: padeiro.filial } });
   } catch (error) {

@@ -188,12 +188,13 @@ const PadeiroEstoque = {
 
     pageContainer.innerHTML = Components.empty('loader', 'Carregando clientes...');
     try {
-      const [clientes, atividades, padeiros, avaliacoes, produtos, agenda] = await Promise.all([
+      const [clientes, atividades, padeiros, avaliacoes, produtos, cronogramaGeral, agendaPadeiro] = await Promise.all([
         API.get('/api/clientes').catch(() => []),
         API.get('/api/atividades').catch(() => []),
         API.get('/api/padeiros').catch(() => []),
         API.get('/api/avaliacoes').catch(() => []),
         API.get('/api/produtos').catch(() => []),
+        API.get('/api/cronograma').catch(() => []),
         API.get('/api/cronograma/agenda').catch(() => [])
       ]);
       
@@ -212,9 +213,41 @@ const PadeiroEstoque = {
       this.atividades = atividades;
       this.padeiros = padeiros;
       this.avaliacoes = avaliacoes;
-      this.agenda = agenda;
       
-      const user = API.getUser();
+      // Unificar tarefas do cronograma geral e da rota específica do padeiro
+      const tasksMap = new Map();
+      [...(Array.isArray(cronogramaGeral) ? cronogramaGeral : []), ...(Array.isArray(agendaPadeiro) ? agendaPadeiro : [])].forEach(t => {
+        if (t) {
+          const key = String(t.id || t._id || (t.data + '_' + (t.clienteId || t.clienteNome)));
+          if (!tasksMap.has(key)) tasksMap.set(key, t);
+        }
+      });
+      const todasTarefasCronograma = Array.from(tasksMap.values());
+      this.agenda = todasTarefasCronograma;
+      
+      const user = API.getUser() || {};
+      
+      // Resolver perfil do padeiro atual para cruzamento completo
+      const currentPadeiro = (padeiros || []).find(p =>
+        (user.id && (String(p.id) === String(user.id) || String(p._id) === String(user.id))) ||
+        (user.codTec && String(p.codTec) === String(user.codTec)) ||
+        (user.nome && p.nome && p.nome.trim().toLowerCase() === user.nome.trim().toLowerCase()) ||
+        (user.email && p.email && p.email.trim().toLowerCase() === user.email.trim().toLowerCase())
+      );
+      
+      const myIds = new Set([user.id, currentPadeiro?.id, currentPadeiro?._id].filter(Boolean).map(String));
+      const myCod = String(user.codTec || currentPadeiro?.codTec || '').trim();
+      const myNome = (user.nome || currentPadeiro?.nome || '').trim().toLowerCase();
+      
+      // Filtrar tarefas atribuídas ao padeiro logado (se admin/gestor/vendedor, visualiza todas)
+      const tarefasDoPadeiro = todasTarefasCronograma.filter(t => {
+        if (!t) return false;
+        if (user.role && user.role !== 'padeiro') return true;
+        if (t.padeiroId && myIds.has(String(t.padeiroId))) return true;
+        if (myCod && t.codTec && String(t.codTec).trim() === myCod) return true;
+        if (myNome && t.padeiroNome && t.padeiroNome.trim().toLowerCase() === myNome) return true;
+        return false;
+      });
       
       // Obter data de hoje em YYYY-MM-DD no fuso local
       const dateObj = new Date();
@@ -223,11 +256,61 @@ const PadeiroEstoque = {
       const day = String(dateObj.getDate()).padStart(2, '0');
       const hojeStr = `${year}-${month}-${day}`;
       
-      // Filtrar tarefas agendadas para o padeiro logado no dia de hoje (independente de concluídas)
-      const tarefasHoje = agenda.filter(t => t.data === hojeStr);
+      // Filtrar tarefas agendadas para hoje com normalização de data
+      const tarefasHoje = tarefasDoPadeiro.filter(t => {
+        if (!t || !t.data) return false;
+        const dStr = String(t.data).split('T')[0].split(' ')[0].trim();
+        return dStr === hojeStr;
+      });
       
-      const uniqueClientIds = [...new Set(tarefasHoje.map(t => t.clienteId).filter(Boolean))];
-      this.clientesAtendidos = clientes.filter(c => uniqueClientIds.includes(c.id || c._id));
+      // Extrair clientes da escala de hoje sincronizados com o cronograma
+      const clientesEncontrados = [];
+      const seenKeys = new Set();
+      
+      tarefasHoje.forEach(t => {
+        if (t.status === 'solicitado') return; // Ignora solicitações pendentes de aprovação
+        
+        const tCliId = t.clienteId ? String(t.clienteId) : null;
+        const tCliNome = (t.clienteNome || '').trim().toLowerCase();
+        
+        // 1. Tentar por ID exato no cadastro de clientes
+        let cli = null;
+        if (tCliId) {
+          cli = (clientes || []).find(c => String(c.id || c._id) === tCliId);
+        }
+        
+        // 2. Tentar por Nome Fantasia / Razão Social / Nome no cadastro de clientes
+        if (!cli && tCliNome) {
+          cli = (clientes || []).find(c => {
+            const fn = (c.nomeFantasia || '').trim().toLowerCase();
+            const n = (c.nome || '').trim().toLowerCase();
+            const rz = (c.razaoSocial || '').trim().toLowerCase();
+            return fn === tCliNome || n === tCliNome || rz === tCliNome ||
+                   (fn && (tCliNome.includes(fn) || fn.includes(tCliNome)));
+          });
+        }
+        
+        // 3. Fallback: se não estiver na lista de clientes mas estiver na tarefa do cronograma,
+        // cria o registro do cliente a partir da tarefa agendada
+        if (!cli) {
+          cli = {
+            id: tCliId || ('crono_' + (t.id || t._id)),
+            _id: tCliId || ('crono_' + (t.id || t._id)),
+            nome: t.clienteNome || 'Cliente',
+            nomeFantasia: t.clienteNome || 'Cliente',
+            bairro: t.bairro || '',
+            cidade: t.cidade || ''
+          };
+        }
+        
+        const key = String(cli.id || cli._id || cli.nomeFantasia || cli.nome);
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          clientesEncontrados.push(cli);
+        }
+      });
+      
+      this.clientesAtendidos = clientesEncontrados;
       
       if (this.selectedClienteId) {
         this.renderDetailScreen(pageContainer);
@@ -346,7 +429,8 @@ const PadeiroEstoque = {
   },
 
   renderDetailScreen(container) {
-    const cliente = this.clientesAtendidos.find(c => (c.id || c._id) === this.selectedClienteId);
+    const cliente = (this.clientesAtendidos || []).find(c => String(c.id || c._id) === String(this.selectedClienteId)) ||
+                    (this.clientes || []).find(c => String(c.id || c._id) === String(this.selectedClienteId));
     if (!cliente) {
       this.backToList();
       return;
@@ -1176,7 +1260,8 @@ const PadeiroEstoque = {
   },
 
   async saveEstoque() {
-    const cliente = this.clientesAtendidos.find(c => (c.id || c._id) === this.selectedClienteId);
+    const cliente = (this.clientesAtendidos || []).find(c => String(c.id || c._id) === String(this.selectedClienteId)) ||
+                    (this.clientes || []).find(c => String(c.id || c._id) === String(this.selectedClienteId));
     if (!cliente) return;
     const clientName = cliente.nomeFantasia || cliente.nome || 'Cliente';
     
