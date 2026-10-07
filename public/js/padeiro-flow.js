@@ -1216,46 +1216,6 @@ const PadeiroFlow = {
           `)}
         </div>
       </div>
-
-      <!-- 1. Grid Dashboard (2x2) -->
-      <div class="pf-dashboard-grid pf-animate-cascade" style="animation-delay: 0.10s">
-        <!-- Card 1: KG -->
-        <div class="pf-dash-card">
-          <div class="pf-dash-card-label"><i data-lucide="scale" style="width:14px;height:14px"></i> Peso Total</div>
-          <div class="pf-dash-card-value">
-            <span id="flow-wallet-kg-display">${this.activity.kgTotal || '0.0'}</span>
-            <span class="pf-dash-card-unit">KG</span>
-          </div>
-        </div>
-        
-        <!-- Card 2: Itens -->
-        <div class="pf-dash-card">
-          <div class="pf-dash-card-label"><i data-lucide="package" style="width:14px;height:14px"></i> Produtos</div>
-          <div class="pf-dash-card-value">
-            <span id="flow-wallet-items-display">0</span>
-            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">itens</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Unidades -->
-        <div class="pf-dash-card">
-          <div class="pf-dash-card-label"><i data-lucide="box" style="width:14px;height:14px"></i> Unidades</div>
-          <div class="pf-dash-card-value">
-            <span id="flow-wallet-un-display">0</span>
-            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">un</span>
-          </div>
-        </div>
-
-        <!-- Card 4: Pacotes -->
-        <div class="pf-dash-card">
-          <div class="pf-dash-card-label"><i data-lucide="boxes" style="width:14px;height:14px"></i> Pacotes</div>
-          <div class="pf-dash-card-value">
-            <span id="flow-wallet-pct-display">0</span>
-            <span class="pf-dash-card-unit" style="font-size:12px; margin-left:2px;">pct</span>
-          </div>
-        </div>
-      </div>
-      
       <input type="hidden" id="flow-kg-total" value="${this.activity.kgTotal || ''}">
 
       <!-- 2. Produto Selecionado (Banner) -->
