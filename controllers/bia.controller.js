@@ -807,24 +807,85 @@ ${alertasStr}
 
   if (padeiroEncontrado) {
     const p = padeiroEncontrado;
+    const isPerguntaEscala = norm.includes('escala') || 
+                             norm.includes('agenda') || 
+                             norm.includes('atende') || 
+                             norm.includes('vai atender') || 
+                             norm.includes('onde') || 
+                             norm.includes('trabalha') || 
+                             norm.includes('qual e') || 
+                             norm.includes('qual era') || 
+                             norm.includes('roteiro');
+
     const rankingObj = rankingPadeiros.find(rp => rp.id === p.id) || p;
     const kg = (rankingObj.totalKg || 0).toFixed(0);
     const ativ = rankingObj.totalAtividades || 0;
 
+    // Consulta inteligência detalhada de escala semanal no Cérebro da Bia
+    try {
+      const infoEscala = await BiaCerebroService.obterEscalaSemanalPadeiro(p.nome);
+      if (infoEscala) {
+        const gradeFormatada = infoEscala.escalaPorDia.map(d => {
+          const infoLoja = d.clienteSugerido || d.descricao;
+          const horario = d.horario ? ` (${d.horario})` : '';
+          return `* **${d.diaNome}**: ${infoLoja}${horario}`;
+        }).join('\n');
+
+        if (infoEscala.tipo === 'agendada') {
+          return {
+            text: `Escala semanal do padeiro **${p.nome}** (Período: ${infoEscala.semanaInicio} a ${infoEscala.semanaFim}):\n\n${gradeFormatada}\n\n* Total de atendimentos programados: **${infoEscala.totalTarefas} visitas**.`,
+            action: null,
+            actionData: null,
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Encontradas ${infoEscala.totalTarefas} tarefas agendadas para esta semana.\n3. Estruturação: Distribuição organizada dia a dia de Segunda a Sábado.\n4. Decisão: Apresentação da agenda detalhada com lojas e horários.`
+          };
+        } else if (infoEscala.tipo === 'historico_habitual') {
+          return {
+            text: `O padeiro **${p.nome}** ainda não possui escalas agendadas no cronograma desta semana.\n\nCom base na rotina habitual histórica dele, a escala costumeira é:\n\n${gradeFormatada}\n\nDeseja confirmar e aplicar essa escala para o **${p.nome}** no sistema agora?`,
+            action: 'escala_padrao_anterior',
+            actionData: {
+              action: 'escala_padrao_anterior',
+              padeiroId: p.id,
+              padeiroNome: p.nome,
+              descricao: `Aplicar escala habitual para ${p.nome}`,
+              confirmar: true
+            },
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação: Padeiro sem escalas ativas nesta semana, mas com rotina habitual identificada no histórico.\n3. Estruturação: Mapeamento dos clientes mais frequentes por dia da semana.\n4. Decisão: Exibição da rotina dia a dia com opção de confirmação imediata.`
+          };
+        } else {
+          // proposta_sugerida (caso do Cides e outros sem escala na semana)
+          return {
+            text: `O padeiro **${p.nome}** não possui escalas agendadas no cronograma desta semana.\n\nProposta de escala semanal estruturada para o **${p.nome}** cobrir clientes da filial **${infoEscala.filialNome || 'Brago Brasília'}**:\n\n${gradeFormatada}\n\nDeseja confirmar e gravar essa escala para o **${p.nome}** no cronograma agora?`,
+            action: 'escala_padrao_anterior',
+            actionData: {
+              action: 'escala_padrao_anterior',
+              padeiroId: p.id,
+              padeiroNome: p.nome,
+              descricao: `Gravar escala semanal sugerida para ${p.nome}`,
+              confirmar: true
+            },
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação: Padeiro ativo sem agendamento no cronograma da semana e sem rotina anterior gravada.\n3. Estruturação: Alocação estratégica dia a dia (Segunda a Sábado) entre os principais clientes da sua praça (${infoEscala.filialNome}).\n4. Decisão: Exibição clara da grade sugerida de clientes por dia e disponibilização de botão de confirmação.`
+          };
+        }
+      }
+    } catch (errEscala) {
+      console.warn('[BIA Controller] Erro ao obter escala semanal do padeiro:', errEscala.message);
+    }
+
+    // Fallback se não conseguir consultar o cérebro
     const hojeIso = getHojeFormatado().iso;
     const proximasTarefas = cronograma
       .filter(t => (t.padeiroId === p.id || normalizarTexto(t.padeiroNome) === normalizarTexto(p.nome)) && t.data >= hojeIso)
-      .slice(0, 4);
+      .slice(0, 6);
 
     let escalaTexto = '';
     if (proximasTarefas.length > 0) {
-      escalaTexto = '\n\n**Próximos agendamentos no Cronograma:**\n' + proximasTarefas.map(t => `* ${t.data} (${t.diaNome || ''}): **${t.clienteNome}** (${t.horario || '08:00'})`).join('\n');
+      escalaTexto = '\n\n**Próximos agendamentos no Cronograma:**\n' + proximasTarefas.map(t => `* ${t.diaNome || t.data}: **${t.clienteNome}** (${t.horario || '08:00'})`).join('\n');
     } else {
-      escalaTexto = '\n\n*Nenhuma escala futura agendada para ele no momento.*';
+      escalaTexto = '\n\n*Nenhuma escala agendada para ele no momento.*';
     }
 
     return {
-      text: `Informações sobre o padeiro **${p.nome}**:\n* **Cargo**: ${p.cargo || 'Padeiro Técnico'}\n* **Código Técnico**: ${p.codTec || 'N/A'}\n* **Filial**: ${p.filial || 'Matriz'}\n* **Produção Registrada**: ${kg} kg (${ativ} atendimentos realizados)${escalaTexto}`,
+      text: `Informações sobre o padeiro **${p.nome}**:\n* **Cargo**: ${p.cargo || 'Padeiro Técnico'}\n* **Filial**: ${p.filial || 'Matriz'}\n* **Produção Registrada**: ${kg} kg (${ativ} atendimentos realizados)${escalaTexto}`,
       action: null,
       actionData: null
     };
@@ -1108,6 +1169,30 @@ exports.chat = async (req, res) => {
 
       const briefingCerebro = await BiaCerebroService.construirBriefingCerebroOperacional(req.user, effectiveMessage);
 
+      const padeiroMencionado = extrairPadeiroDaMensagem(norm, enrichedContext.padeirosAtivos);
+      let briefingEscalaPadeiro = '';
+      if (padeiroMencionado) {
+        try {
+          const infoEscalaP = await BiaCerebroService.obterEscalaSemanalPadeiro(padeiroMencionado.nome);
+          if (infoEscalaP) {
+            const gradeLinhas = infoEscalaP.escalaPorDia.map(d => `* ${d.diaNome} (${d.dataIso}): ${d.clienteSugerido || d.descricao}${d.horario ? ` [${d.horario}]` : ''}`).join('\n');
+            briefingEscalaPadeiro = `
+[ESCALA SEMANAL DETALHADA DO PADEIRO ${padeiroMencionado.nome}]:
+- Filial: ${padeiroMencionado.filial || 'Brago Brasília'} | Status: ${infoEscalaP.tipo}
+- Programação Dia a Dia:
+${gradeLinhas}
+
+DIRETRIZ OBRIGATÓRIA PARA PERGUNTAS SOBRE ESTE PADEIRO:
+Se o gestor perguntar sobre a escala do padeiro ${padeiroMencionado.nome} (ex.: "qual é a escala do padeiro cides", "onde ele vai", "quais clientes vai atender"):
+Você DEVE OBRIGATORIAMENTE estruturar a resposta dia a dia citando nominalmente as lojas reais da "Programação Dia a Dia" listada acima (exemplo: Segunda-feira: PANIFICADORA DELICIA BIG FENIX, Terça-feira: PAO DE SAL, etc.). NUNCA use termos genéricos como "Loja da Rede Brago". Use os nomes exatos das lojas da programação.
+Se o status for "proposta_sugerida" ou "historico_habitual", explique com clareza que ele está sem agendamento no cronograma da semana e apresente a grade sugerida com as lojas da sua praça, perguntando se o gestor deseja confirmar a aplicação no cronograma.
+`;
+          }
+        } catch (eEsc) {
+          console.warn('[BIA Prompt] Erro ao extrair escala do padeiro para prompt:', eEsc.message);
+        }
+      }
+
       const systemInstruction = `Você é a BIA, assistente de inteligência artificial oficial do Smart Gestor (Brago Distribuidora).
 Seu objetivo é auxiliar gestores e administradores na operação de padarias, escalas de atendimento e produtividade da equipe.
 
@@ -1135,6 +1220,8 @@ CONTEXTO OPERACIONAL EM TEMPO REAL:
 - Atividades Registradas: ${(enrichedContext.atividades || []).length} atendimentos
 
 ${briefingCerebro}
+
+${briefingEscalaPadeiro}
 
 REGRAS FUNDAMENTAIS PARA ESCALAS DA EQUIPE:
 - Para 'escala_alta_performance' e 'escala_padrao_anterior', a proposta de escala gerada pelo SmartGestor atende SEMPRE TODA A EQUIPE DE PADEIROS ATIVOS (${(enrichedContext.padeirosAtivos || []).length} padeiros), distribuindo-os estrategicamente entre os clientes e dias da semana (segunda a sábado).

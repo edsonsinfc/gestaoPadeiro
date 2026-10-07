@@ -406,6 +406,176 @@ ${secaoFoco}
 
     return briefing;
   }
+
+  /**
+   * Obtém a escala detalhada de um padeiro dia a dia (Segunda a Sábado)
+   * Se já estiver agendado, retorna as lojas exatas de cada dia.
+   * Se estiver sem escala na semana, busca a rotina histórica ou propõe uma grade
+   * estruturada com lojas da filial dele.
+   * 
+   * @param {string} termoBusca - Nome ou ID do padeiro (ex: "cides", "daniel")
+   */
+  static async obterEscalaSemanalPadeiro(termoBusca) {
+    if (!termoBusca) return null;
+    const snapshot = await this.carregarSnapshotOperacional();
+    const { padeiros, clientes, cronogramas, atividades } = snapshot;
+
+    const termoNorm = termoBusca.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    // 1. Localizar o padeiro
+    const padeiro = (padeiros || []).find(p => {
+      if (!p) return false;
+      const pNomeNorm = (p.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const pId = String(p.id || '');
+      const pCod = String(p.codTec || '');
+      if (pId === termoNorm || pCod === termoNorm) return true;
+      if (pNomeNorm === termoNorm) return true;
+      const partes = pNomeNorm.split(/\s+/).filter(w => w.length > 3 && !['padeiro', 'teste', 'silva', 'santos', 'sousa', 'souza'].includes(w));
+      return partes.some(parte => termoNorm.includes(parte)) || termoNorm.includes(pNomeNorm);
+    });
+
+    if (!padeiro) return null;
+
+    // 2. Determinar a semana corrente (Segunda a Sábado)
+    const agora = new Date();
+    const base = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 12, 0, 0);
+    const day = base.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(base);
+    monday.setDate(base.getDate() + diffToMonday);
+
+    const diasSemanaNomes = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const diasSemanaKeys = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const gradeDias = [];
+
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const iso = d.toISOString().split('T')[0];
+      const diaMes = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      gradeDias.push({
+        indice: i + 1, // 1=Segunda ... 6=Sábado
+        diaNome: diasSemanaNomes[i],
+        diaKey: diasSemanaKeys[i],
+        dataIso: iso,
+        diaMes
+      });
+    }
+
+    const datasSemanaIso = gradeDias.map(g => g.dataIso);
+
+    // 3. Buscar escalas do padeiro na semana corrente
+    const pNomeNorm = (padeiro.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const tarefasSemana = (cronogramas || []).filter(c => {
+      const isEle = c.padeiroId === padeiro.id || 
+                    (c.codTec && String(c.codTec) === String(padeiro.codTec)) ||
+                    ((c.padeiroNome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === pNomeNorm);
+      return isEle && datasSemanaIso.includes(c.data);
+    });
+
+    // CENÁRIO A: Padeiro já possui escalas agendadas para esta semana
+    if (tarefasSemana.length > 0) {
+      const escalaPorDia = gradeDias.map(dia => {
+        const tarefasDoDia = tarefasSemana.filter(t => t.data === dia.dataIso);
+        if (tarefasDoDia.length > 0) {
+          const lojasStr = tarefasDoDia.map(t => {
+            const hIni = t.horario || '08:00';
+            const hFim = t.horarioFim || (dia.indice === 6 ? '12:00' : '17:00');
+            return `${t.clienteNome} (${hIni} às ${hFim})`;
+          }).join(' | ');
+          return { ...dia, escalado: true, descricao: lojasStr };
+        } else {
+          return { ...dia, escalado: false, descricao: 'Folga ou Sem Agendamento' };
+        }
+      });
+
+      return {
+        tipo: 'agendada',
+        padeiro,
+        totalTarefas: tarefasSemana.length,
+        escalaPorDia,
+        semanaInicio: gradeDias[0].diaMes,
+        semanaFim: gradeDias[5].diaMes
+      };
+    }
+
+    // CENÁRIO B: Padeiro não tem escala na semana corrente.
+    // Verificar se ele tem rotina histórica prévia no banco
+    const historicoPadeiro = (cronogramas || []).concat(atividades || []).filter(c => {
+      return c.padeiroId === padeiro.id || 
+             (c.codTec && String(c.codTec) === String(padeiro.codTec)) ||
+             ((c.padeiroNome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === pNomeNorm);
+    });
+
+    const rotinaHabitualMap = new Map();
+    historicoPadeiro.forEach(h => {
+      if (!h.data || !h.clienteNome) return;
+      const dObj = new Date(h.data + 'T12:00:00');
+      const dWeek = dObj.getDay(); // 1=Seg, 2=Ter...
+      if (dWeek >= 1 && dWeek <= 6) {
+        if (!rotinaHabitualMap.has(dWeek)) rotinaHabitualMap.set(dWeek, new Map());
+        const diaLojas = rotinaHabitualMap.get(dWeek);
+        diaLojas.set(h.clienteNome, (diaLojas.get(h.clienteNome) || 0) + 1);
+      }
+    });
+
+    // Se possui histórico habitual anterior em outros períodos
+    if (rotinaHabitualMap.size >= 2) {
+      const escalaHabitual = gradeDias.map(dia => {
+        const diaLojas = rotinaHabitualMap.get(dia.indice);
+        if (diaLojas && diaLojas.size > 0) {
+          const lojaMaisFrequente = [...diaLojas.entries()].sort((a, b) => b[1] - a[1])[0][0];
+          const hFim = dia.indice === 6 ? '12:00' : '17:00';
+          return { ...dia, escalado: true, clienteSugerido: lojaMaisFrequente, horario: `08:00 às ${hFim}`, habitual: true };
+        }
+        return { ...dia, escalado: false, clienteSugerido: 'Sem histórico para este dia', habitual: false };
+      });
+
+      return {
+        tipo: 'historico_habitual',
+        padeiro,
+        totalTarefas: 0,
+        escalaPorDia: escalaHabitual,
+        semanaInicio: gradeDias[0].diaMes,
+        semanaFim: gradeDias[5].diaMes
+      };
+    }
+
+    // CENÁRIO C: Padeiro sem escala na semana e sem histórico anterior (ex: Cides)
+    // Monta proposta estruturada dia a dia com clientes reais da filial dele
+    const filialNorm = this.normalizarNomeFilial(padeiro.filial);
+    const clientesFilial = (clientes || []).filter(c => {
+      if (c.ativo === false) return false;
+      const fC = this.normalizarNomeFilial(c.filial, c.estado || c.uf, c.cidade);
+      return fC === filialNorm || filialNorm.includes('Brasília');
+    });
+
+    // Selecionar até 6 lojas distintas da praça
+    const lojasAlvo = clientesFilial.slice(0, 6).map(c => c.nomeFantasia || c.nome);
+
+    const escalaProposta = gradeDias.map((dia, idx) => {
+      const loja = lojasAlvo[idx % lojasAlvo.length] || 'Loja da Rede Brago';
+      const hFim = dia.indice === 6 ? '12:00' : '17:00';
+      return {
+        ...dia,
+        escalado: true,
+        clienteSugerido: loja,
+        horario: `08:00 às ${hFim}`,
+        proposta: true
+      };
+    });
+
+    return {
+      tipo: 'proposta_sugerida',
+      padeiro,
+      totalTarefas: 0,
+      escalaPorDia: escalaProposta,
+      semanaInicio: gradeDias[0].diaMes,
+      semanaFim: gradeDias[5].diaMes,
+      filialNome: filialNorm
+    };
+  }
 }
 
 module.exports = BiaCerebroService;
+
