@@ -11,5 +11,8 @@ const { authMiddleware } = require('../../middleware/auth');
 router.post('/metas/gerar', authMiddleware, ctrl.cadastrarMetasMensais);
 router.get('/metas/preview', authMiddleware, ctrl.preverMetasMensais);
 router.get('/status', authMiddleware, ctrl.getStatusAutonomia);
+router.get('/cron/status', authMiddleware, ctrl.getCronStatus);
+router.post('/cron/teste', authMiddleware, ctrl.forcarTesteCron);
+router.post('/cron/limpar', authMiddleware, ctrl.forcarLimpezaCron);
 
 module.exports = router;

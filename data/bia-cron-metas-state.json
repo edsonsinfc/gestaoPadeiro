@@ -1,0 +1,15 @@
+{
+  "ativo": true,
+  "testeExecutadoEm": "2026-10-07",
+  "testeLimpo": false,
+  "ultimaExecucaoOficial": null,
+  "ultimoCheck": "2026-10-07T13:33:47.197Z",
+  "logs": [
+    "[2026-10-07T13:33:54.792Z] Metas de teste geradas com sucesso para 52 padeiros (109200 kg total). Serão limpas amanhã.",
+    "[2026-10-07T13:33:47.197Z] Iniciando geração de metas de teste da Bia para hoje (2026-10-07)...",
+    "[2026-10-07T13:32:53.678Z] Limpeza concluída com sucesso: 52 metas de teste removidas do banco de dados.",
+    "[2026-10-07T13:32:53.157Z] Virada de dia detectada (Hoje: 2026-10-07 > Teste: 2026-10-06). Limpando metas de teste...",
+    "[2026-10-07T13:32:23.868Z] Metas de teste geradas com sucesso para 52 padeiros (109200 kg total). Serão limpas amanhã.",
+    "[2026-10-07T13:32:23.164Z] Iniciando geração de metas de teste da Bia para hoje (2026-10-07)..."
+  ]
+}

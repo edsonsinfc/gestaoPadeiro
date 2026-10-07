@@ -4,6 +4,7 @@
  */
 
 const MetasAutonomasService = require('./metas-autonomas.service');
+const BiaCronMetasService = require('./bia-cron-metas.service');
 
 exports.cadastrarMetasMensais = async (req, res) => {
   try {
@@ -93,5 +94,39 @@ exports.getStatusAutonomia = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao verificar status da autonomia.' });
+  }
+};
+
+exports.getCronStatus = async (req, res) => {
+  try {
+    const estado = BiaCronMetasService.carregarEstado();
+    res.json({
+      sucesso: true,
+      estado,
+      regras: {
+        faseAtual: !estado.testeExecutadoEm ? 'Pendente de teste hoje' : (!estado.testeLimpo ? 'Teste ativo (será limpo amanhã)' : 'Teste limpo. Aguardando dia 20 oficial'),
+        rotinaOficial: 'Todo dia 20 de cada mês para o próximo ciclo'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao obter status do cron', detalhes: err.message });
+  }
+};
+
+exports.forcarTesteCron = async (req, res) => {
+  try {
+    const estado = await BiaCronMetasService.forcarTesteAgora();
+    res.json({ sucesso: true, mensagem: 'Teste forçado executado com sucesso!', estado });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao executar teste forçado', detalhes: err.message });
+  }
+};
+
+exports.forcarLimpezaCron = async (req, res) => {
+  try {
+    const resultado = await BiaCronMetasService.forcarLimpezaTesteAgora();
+    res.json({ sucesso: true, mensagem: 'Limpeza de teste executada com sucesso!', resultado });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao executar limpeza forçada', detalhes: err.message });
   }
 };

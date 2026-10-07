@@ -587,6 +587,14 @@ async function start() {
   // Initialize Sockets
   await initLocationSocket(io);
 
+  // Inicializa o Cron Autônomo da Bia (Metas: Teste hoje, limpeza amanhã, dia 20 oficial)
+  try {
+    const { BiaCronMetasService } = require('./modules/bia-autonoma');
+    BiaCronMetasService.iniciar();
+  } catch (errCron) {
+    console.warn('   ⚠️  BiaCronMetasService falhou ao inicializar:', errCron.message);
+  }
+
   const HOST = '0.0.0.0';
   httpServer.listen(PORT, HOST, () => {
     const os = require('os');
