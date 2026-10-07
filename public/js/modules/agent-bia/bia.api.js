@@ -85,6 +85,102 @@ const BiaAPI = {
   },
 
   /**
+   * Extrai o período solicitado para geração de escala (intervalo de dias, mês inteiro ou datas específicas)
+   */
+  extrairPeriodoEscala(texto) {
+    if (!texto) return null;
+    const norm = (texto || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth();
+
+    const mesesNomes = {
+      'janeiro': 0, 'fevereiro': 1, 'marco': 2, 'abril': 3,
+      'maio': 4, 'junho': 5, 'julho': 6, 'agosto': 7,
+      'setembro': 8, 'outubro': 9, 'novembro': 10, 'dezembro': 11
+    };
+
+    // 1. INTERVALO ESPECÍFICO DE DIAS
+    const regexIntervalo = /(?:do\s*dia|dia|de|entre)?\s*(\d{1,2})\s*(?:ao\s*dia|a|ao|ate|ate\s*o\s*dia|ate\s*o|e)\s*(?:dia\s*)?(\d{1,2})(?:\s*(?:de|do|da|em)?\s*([a-z]+))?/i;
+    const matchInt = norm.match(regexIntervalo);
+
+    if (matchInt) {
+      const diaIni = parseInt(matchInt[1], 10);
+      const diaFim = parseInt(matchInt[2], 10);
+      const possivelMes = matchInt[3];
+
+      if (diaIni >= 1 && diaIni <= 31 && diaFim >= 1 && diaFim <= 31 && diaIni <= diaFim) {
+        let mIdx = mesAtual;
+        if (possivelMes && mesesNomes[possivelMes] !== undefined) {
+          mIdx = mesesNomes[possivelMes];
+        }
+
+        const datas = [];
+        for (let d = diaIni; d <= diaFim; d++) {
+          const dt = new Date(anoAtual, mIdx, d, 12, 0, 0);
+          if (dt.getDay() >= 1 && dt.getDay() <= 6) {
+            datas.push(dt.toISOString().split('T')[0]);
+          }
+        }
+
+        if (datas.length > 0) {
+          const dtInicio = new Date(anoAtual, mIdx, diaIni, 12, 0, 0);
+          const dtFim = new Date(anoAtual, mIdx, diaFim, 12, 0, 0);
+          const formatBr = (dt) => `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+          return {
+            tipo: 'intervalo',
+            dataInicio: datas[0],
+            dataFim: datas[datas.length - 1],
+            label: `${formatBr(dtInicio)} a ${formatBr(dtFim)}`,
+            datas,
+            totalDiasUteis: datas.length
+          };
+        }
+      }
+    }
+
+    // 2. ESCALA DO MÊS INTEIRO
+    const ehMes = norm.includes('do mes') || norm.includes('deste mes') || norm.includes('desse mes') || norm.includes('mes todo') || norm.includes('mes inteiro');
+    let mesAlvo = null;
+    for (const [mNome, mIdx] of Object.entries(mesesNomes)) {
+      if (new RegExp('\\b' + mNome + '\\b').test(norm)) {
+        mesAlvo = mIdx;
+        break;
+      }
+    }
+
+    if (ehMes || mesAlvo !== null) {
+      let mIdx = mesAlvo !== null ? mesAlvo : mesAtual;
+      if (norm.includes('mes que vem') || norm.includes('proximo mes')) {
+        mIdx = (mIdx + 1) % 12;
+      }
+
+      const ultimoDia = new Date(anoAtual, mIdx + 1, 0, 12, 0, 0);
+      const nomesMesesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+      const datas = [];
+      for (let d = 1; d <= ultimoDia.getDate(); d++) {
+        const dt = new Date(anoAtual, mIdx, d, 12, 0, 0);
+        if (dt.getDay() >= 1 && dt.getDay() <= 6) {
+          datas.push(dt.toISOString().split('T')[0]);
+        }
+      }
+
+      return {
+        tipo: 'mes',
+        mes: `${anoAtual}-${String(mIdx + 1).padStart(2, '0')}`,
+        label: `Mês de ${nomesMesesPt[mIdx]}/${anoAtual}`,
+        dataInicio: datas[0],
+        dataFim: datas[datas.length - 1],
+        datas,
+        totalDiasUteis: datas.length
+      };
+    }
+
+    return null;
+  },
+
+  /**
    * Extrai o padeiro mencionado na mensagem do usuário com alta precisão
    */
   extrairPadeiroDaMensagem(norm, padeirosAtivos = []) {
@@ -166,8 +262,62 @@ const BiaAPI = {
     }
 
     // 1.5. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções com suporte a multi-turno)
+    const activePending = options.pendingCommand !== undefined ? options.pendingCommand : this.pendingCommand;
+    if (activePending && activePending.tipo === 'escolher_tipo_escala') {
+      const querHabitualResp = (
+        norm.includes('padrao') ||
+        norm.includes('habitual') ||
+        norm.includes('anterior') ||
+        norm.includes('rotina') ||
+        norm.includes('costume') ||
+        norm.includes('repetir') ||
+        norm.includes('replicar') ||
+        norm === '1' ||
+        norm.includes('opcao 1') ||
+        norm.includes('primeira')
+      );
+      const querAltaPerfResp = (
+        norm.includes('alta performance') ||
+        norm.includes('performance') ||
+        norm.includes('otimizada') ||
+        norm === '2' ||
+        norm.includes('opcao 2') ||
+        norm.includes('segunda')
+      );
+
+      if (querHabitualResp || querAltaPerfResp) {
+        const action = querHabitualResp ? 'escala_padrao_anterior' : 'escala_alta_performance';
+        const per = activePending.periodo || {};
+        const padeiroAlvo = activePending.padeiroAlvo || null;
+        const descPeriodo = per.label || (per.tipo === 'mes' ? 'o mês' : 'o período');
+        const descAlvo = padeiroAlvo ? `para ${padeiroAlvo.nome}` : 'para toda a equipe';
+        const nomeModo = querHabitualResp ? 'Padrão Habitual' : 'Alta Performance';
+
+        this.pendingCommand = null;
+
+        return {
+          text: `Excelente! Preparei a proposta de **Escala no ${nomeModo}** ${descAlvo} para **${descPeriodo}**${per.totalDiasUteis ? ` (${per.totalDiasUteis} dias úteis)` : ''}.\n\nConfira os agendamentos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar os agendamentos.`,
+          action,
+          actionData: {
+            action,
+            datas: per.datas || null,
+            periodoLabel: per.label || null,
+            dataInicio: per.dataInicio || null,
+            dataFim: per.dataFim || null,
+            tipoPeriodo: per.tipo || null,
+            mes: per.mes || null,
+            padeiroId: padeiroAlvo?.id || null,
+            padeiroNome: padeiroAlvo?.nome || null,
+            isIndividual: !!padeiroAlvo,
+            descricao: `Escala ${nomeModo} ${descAlvo} - ${descPeriodo}`,
+            confirmar: true
+          },
+          pendingCommand: null
+        };
+      }
+    }
+
     if (typeof BiaCommands !== 'undefined') {
-      const activePending = options.pendingCommand !== undefined ? options.pendingCommand : this.pendingCommand;
       const comando = BiaCommands.processarComando(userMessage, ctx, { pendingCommand: activePending, history: this.conversationHistory });
       if (comando) {
         if (comando.pendingCommand !== undefined) {
@@ -209,10 +359,8 @@ const BiaAPI = {
     );
 
     if (isEscalaRequest) {
+      const periodo = this.extrairPeriodoEscala(userMessage);
       let padeiroAlvo = this.extrairPadeiroDaMensagem(norm, padeirosAtivos);
-
-      // Padeiro alvo só deve existir se o gestor tiver explicitamente citado o nome de um padeiro
-      // Caso contrário, a escala é sempre coletiva para a equipe inteira
 
       const querHabitual = (
         norm.includes('padrao') ||
@@ -226,51 +374,72 @@ const BiaAPI = {
         norm.includes('igual antes')
       );
 
+      const querAltaPerf = (
+        norm.includes('alta performance') ||
+        norm.includes('performance') ||
+        norm.includes('otimizada')
+      );
+
+      // REGRA OBRIGATÓRIA: Antes de gerar, se o gestor NÃO informou o tipo (padrão habitual ou alta performance),
+      // a Bia deve PERGUNTAR antes de gerar!
+      if (!querHabitual && !querAltaPerf) {
+        const descPeriodo = periodo ? `para **${periodo.label}** (${periodo.totalDiasUteis} dias úteis)` : 'para a escala de trabalho';
+        const descAlvo = padeiroAlvo ? `do padeiro **${padeiroAlvo.nome}**` : `da equipe (${padeirosAtivos.length} colaboradores)`;
+
+        this.pendingCommand = {
+          tipo: 'escolher_tipo_escala',
+          periodo,
+          padeiroAlvo: padeiroAlvo ? { id: padeiroAlvo.id, nome: padeiroAlvo.nome, codTec: padeiroAlvo.codTec } : null
+        };
+
+        return {
+          text: `Identifiquei sua solicitação de escala ${descAlvo} ${descPeriodo}.\n\nAntes de eu gerar os agendamentos no sistema, **como você prefere que ela seja montada?**\n\n1️⃣ **Padrão Habitual**: Replica os clientes que os padeiros costumam atender em cada dia da semana com base no histórico real registrado.\n2️⃣ **Alta Performance**: Distribui os colaboradores com maior volume de produção nos clientes e praças de maior demanda da filial.\n\nPor favor, responda com **"Padrão Habitual"** ou **"Alta Performance"**.`,
+          action: null,
+          actionData: null,
+          pendingCommand: this.pendingCommand
+        };
+      }
+
+      // Se o gestor já informou a modalidade na mensagem:
+      const descPeriodo = periodo ? ` (${periodo.label})` : '';
+
       // CASO A: Escala para Padeiro Específico
       if (padeiroAlvo) {
-        const historicoPadeiro = (cronograma || []).filter(c =>
-          c.padeiroId === padeiroAlvo.id ||
-          (c.codTec && String(c.codTec) === String(padeiroAlvo.codTec)) ||
-          this.normalizeText(c.padeiroNome) === this.normalizeText(padeiroAlvo.nome)
-        ).concat(
-          (atividades || []).filter(a =>
-            a.padeiroId === padeiroAlvo.id ||
-            (a.codTec && String(a.codTec) === String(padeiroAlvo.codTec)) ||
-            this.normalizeText(a.padeiroNome) === this.normalizeText(padeiroAlvo.nome)
-          )
-        );
-
-        const prefereHabitual = querHabitual || (historicoPadeiro.length > 0 && !norm.includes('alta performance') && !norm.includes('otimizada'));
-
-        if (prefereHabitual) {
-          if (historicoPadeiro.length > 0) {
-            return {
-              text: `Entendido! Analisei o histórico operacional do padeiro **${padeiroAlvo.nome}** (${historicoPadeiro.length} atendimentos registrados). Mapeei os clientes mais frequentes para cada dia da semana dele e preparei a proposta da **Escala Padrão Habitual** individualizada.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+        if (querHabitual) {
+          return {
+            text: `Entendido! Analisei o histórico do padeiro **${padeiroAlvo.nome}** e montei a proposta da **Escala Padrão Habitual** individualizada${descPeriodo}.\n\nConfira os agendamentos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+            action: 'escala_padrao_anterior',
+            actionData: {
               action: 'escala_padrao_anterior',
-              actionData: {
-                action: 'escala_padrao_anterior',
-                padeiroId: padeiroAlvo.id,
-                padeiroNome: padeiroAlvo.nome,
-                descricao: `Escala habitual individual para ${padeiroAlvo.nome}`,
-                confirmar: true
-              }
-            };
-          } else {
-            return {
-              text: `O padeiro **${padeiroAlvo.nome}** ainda não possui histórico de escalas ou atendimentos registrados no sistema para que eu possa identificar uma rotina habitual.\n\nPara ele, você pode:\n* 📅 Iniciar o cronograma agendando clientes manualmente.\n* ⚡ Me pedir uma escala otimizada: *"Bia, crie uma escala de alta performance para ${padeiroAlvo.nome}"* (vou alocar clientes disponíveis de maior volume).`,
-              action: null,
-              actionData: null
-            };
-          }
+              datas: periodo?.datas || null,
+              periodoLabel: periodo?.label || null,
+              dataInicio: periodo?.dataInicio || null,
+              dataFim: periodo?.dataFim || null,
+              tipoPeriodo: periodo?.tipo || null,
+              mes: periodo?.mes || null,
+              padeiroId: padeiroAlvo.id,
+              padeiroNome: padeiroAlvo.nome,
+              isIndividual: true,
+              descricao: `Escala habitual individual para ${padeiroAlvo.nome}${descPeriodo}`,
+              confirmar: true
+            }
+          };
         } else {
           return {
-            text: `Com certeza! Preparei uma proposta de **Escala de Alta Performance** individual para o padeiro **${padeiroAlvo.nome}**, priorizando clientes ativos de alta demanda para esta semana.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+            text: `Com certeza! Preparei uma proposta de **Escala de Alta Performance** individual para o padeiro **${padeiroAlvo.nome}**${descPeriodo}, priorizando clientes ativos de alta demanda.\n\nConfira a distribuição no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
             action: 'escala_alta_performance',
             actionData: {
               action: 'escala_alta_performance',
+              datas: periodo?.datas || null,
+              periodoLabel: periodo?.label || null,
+              dataInicio: periodo?.dataInicio || null,
+              dataFim: periodo?.dataFim || null,
+              tipoPeriodo: periodo?.tipo || null,
+              mes: periodo?.mes || null,
               padeiroId: padeiroAlvo.id,
               padeiroNome: padeiroAlvo.nome,
-              descricao: `Escala de alta performance para ${padeiroAlvo.nome}`,
+              isIndividual: true,
+              descricao: `Escala de alta performance para ${padeiroAlvo.nome}${descPeriodo}`,
               confirmar: true
             }
           };
@@ -280,21 +449,33 @@ const BiaAPI = {
       // CASO B: Escala Geral para Toda a Equipe
       if (querHabitual) {
         return {
-          text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual** da equipe.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+          text: `Entendido! Analisei todo o histórico operacional e de escalas registradas. Mapeei a rotina da equipe para a proposta da **Escala Padrão Habitual**${descPeriodo}.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
           action: 'escala_padrao_anterior',
           actionData: {
             action: 'escala_padrao_anterior',
-            descricao: 'Escala replicando padrão anterior habitual da equipe',
+            datas: periodo?.datas || null,
+            periodoLabel: periodo?.label || null,
+            dataInicio: periodo?.dataInicio || null,
+            dataFim: periodo?.dataFim || null,
+            tipoPeriodo: periodo?.tipo || null,
+            mes: periodo?.mes || null,
+            descricao: `Escala no padrão habitual da equipe${descPeriodo}`,
             confirmar: true
           }
         };
       } else {
         return {
-          text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+          text: `Com certeza! Analisei os dados de produtividade e preparei a proposta de **Escala de Alta Performance** da equipe${descPeriodo}, priorizando os padeiros de maior volume nos clientes de maior demanda.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
           action: 'escala_alta_performance',
           actionData: {
             action: 'escala_alta_performance',
-            descricao: 'Escala de alta performance para a semana',
+            datas: periodo?.datas || null,
+            periodoLabel: periodo?.label || null,
+            dataInicio: periodo?.dataInicio || null,
+            dataFim: periodo?.dataFim || null,
+            tipoPeriodo: periodo?.tipo || null,
+            mes: periodo?.mes || null,
+            descricao: `Escala de alta performance da equipe${descPeriodo}`,
             confirmar: true
           }
         };

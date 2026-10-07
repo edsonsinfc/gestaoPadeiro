@@ -168,13 +168,31 @@ const BiaActions = {
     }
 
     const padeirosParaEscalar = padeiroAlvo ? [padeiroAlvo] : padeirosLista;
-
-    const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || 0;
-    const weekDates = this.getWeekDates(weekOffset);
     const diasSemanaNomes = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-    // Filtra tarefas já existentes na semana
-    const weekDatesIso = weekDates.map(d => d.toISOString().split('T')[0]);
+    // Suporte a Datas Personalizadas (intervalo de dias, mês inteiro ou semana)
+    let diasParaEscalar = [];
+    if (options && options.datas && Array.isArray(options.datas) && options.datas.length > 0) {
+      diasParaEscalar = options.datas.map(iso => {
+        const parts = iso.split('-');
+        const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
+        const dow = dt.getDay();
+        const diaNome = (dow >= 1 && dow <= 6) ? diasSemanaNomes[dow - 1] : 'Sábado';
+        return { date: dt, dateStr: iso, diaNome, dow };
+      }).filter(d => d.dow >= 1 && d.dow <= 6);
+    } else {
+      const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || 0;
+      const weekDates = this.getWeekDates(weekOffset);
+      diasParaEscalar = weekDates.map((d, idx) => ({
+        date: d,
+        dateStr: d.toISOString().split('T')[0],
+        diaNome: diasSemanaNomes[idx],
+        dow: d.getDay()
+      }));
+    }
+
+    // Filtra tarefas já existentes nas datas alvo
+    const weekDatesIso = diasParaEscalar.map(d => d.dateStr);
     const tarefasExistentes = (cronogramaHistorico || []).filter(t => t && weekDatesIso.includes(t.data));
     const mapaTarefasExistentes = new Map();
     tarefasExistentes.forEach(t => {
@@ -185,10 +203,10 @@ const BiaActions = {
     const topClientes = [...rankingClientes];
     let clientQueueIdx = 0;
 
-    for (let diaIdx = 0; diaIdx < 6; diaIdx++) {
-      const date = weekDates[diaIdx];
-      const dateStr = date.toISOString().split('T')[0];
-      const diaNome = diasSemanaNomes[diaIdx];
+    for (let diaIdx = 0; diaIdx < diasParaEscalar.length; diaIdx++) {
+      const itemDia = diasParaEscalar[diaIdx];
+      const dateStr = itemDia.dateStr;
+      const diaNome = itemDia.diaNome;
       const clientesUsadosNoDia = new Set();
 
       for (let pIdx = 0; pIdx < padeirosParaEscalar.length; pIdx++) {
@@ -257,7 +275,9 @@ const BiaActions = {
       }
     }
 
-    const titulo = padeiroAlvo ? `Escala de Alta Performance - ${padeiroAlvo.nome}` : 'Escala de Alta Performance';
+    const periodoLabel = options.periodoLabel || (options.dataInicio && options.dataFim ? `${this.formatarDataBr(options.dataInicio)} a ${this.formatarDataBr(options.dataFim)}` : null);
+    const tituloBase = padeiroAlvo ? `Escala de Alta Performance - ${padeiroAlvo.nome}` : 'Escala de Alta Performance';
+    const titulo = periodoLabel ? `${tituloBase} (${periodoLabel})` : tituloBase;
     const descricao = padeiroAlvo
       ? `Alocação otimizada individual para ${padeiroAlvo.nome} nos clientes de maior demanda ${descInfo}.`
       : `Cruzamento de ${rankingPadeiros.length} padeiros de alta produção com os clientes de maior volume ${descInfo}.`;
@@ -473,10 +493,30 @@ const BiaActions = {
       diasAtivosPadeiro[r.padeiroId].add(dayOfWeek);
     });
 
-    const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || 0;
-    const weekDates = this.getWeekDates(weekOffset);
     const diasSemanaNomes = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const weekDatesIso = weekDates.map(d => d.toISOString().split('T')[0]);
+
+    // Suporte a Datas Personalizadas (intervalo de dias, mês inteiro ou semana)
+    let diasParaEscalar = [];
+    if (options && options.datas && Array.isArray(options.datas) && options.datas.length > 0) {
+      diasParaEscalar = options.datas.map(iso => {
+        const parts = iso.split('-');
+        const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
+        const dow = dt.getDay();
+        const diaNome = (dow >= 1 && dow <= 6) ? diasSemanaNomes[dow - 1] : 'Sábado';
+        return { date: dt, dateStr: iso, diaNome, dow };
+      }).filter(d => d.dow >= 1 && d.dow <= 6);
+    } else {
+      const weekOffset = (typeof Cronograma !== 'undefined' && Cronograma.weekOffset) || 0;
+      const weekDates = this.getWeekDates(weekOffset);
+      diasParaEscalar = weekDates.map((d, idx) => ({
+        date: d,
+        dateStr: d.toISOString().split('T')[0],
+        diaNome: diasSemanaNomes[idx],
+        dow: d.getDay()
+      }));
+    }
+
+    const weekDatesIso = diasParaEscalar.map(d => d.dateStr);
 
     // Se foi solicitado padeiro específico, validar se ele tem hábito
     if (padeiroAlvo) {
@@ -507,7 +547,7 @@ const BiaActions = {
       };
     }
 
-    // Mapear tarefas já agendadas nesta semana para identificar status e substituições
+    // Mapear tarefas já agendadas nestas datas para identificar status e substituições
     const tarefasExistentes = (cronogramaHistorico || []).filter(t => t && weekDatesIso.includes(t.data));
     const mapaTarefasExistentes = new Map();
     tarefasExistentes.forEach(t => {
@@ -516,11 +556,11 @@ const BiaActions = {
 
     const novasTarefas = [];
 
-    for (let diaIdx = 0; diaIdx < 6; diaIdx++) {
-      const date = weekDates[diaIdx];
-      const dateStr = date.toISOString().split('T')[0];
-      const diaNome = diasSemanaNomes[diaIdx];
-      const dayOfWeek = diaIdx + 1; // 1=Seg, 2=Ter, ..., 6=Sab
+    for (let diaIdx = 0; diaIdx < diasParaEscalar.length; diaIdx++) {
+      const itemDia = diasParaEscalar[diaIdx];
+      const dateStr = itemDia.dateStr;
+      const diaNome = itemDia.diaNome;
+      const dayOfWeek = itemDia.dow; // 1=Seg, 2=Ter, ..., 6=Sab
 
       for (const padeiro of padeirosParaEscalar) {
         const tarefaExistente = mapaTarefasExistentes.get(`${dateStr}_${padeiro.id}`);
@@ -602,7 +642,9 @@ const BiaActions = {
       }
     }
 
-    const titulo = padeiroAlvo ? `Escala Habitual - ${padeiroAlvo.nome}` : 'Escala no Padrão Anterior Habitual';
+    const periodoLabel = options.periodoLabel || (options.dataInicio && options.dataFim ? `${this.formatarDataBr(options.dataInicio)} a ${this.formatarDataBr(options.dataFim)}` : null);
+    const tituloBase = padeiroAlvo ? `Escala Habitual - ${padeiroAlvo.nome}` : 'Escala no Padrão Anterior Habitual';
+    const titulo = periodoLabel ? `${tituloBase} (${periodoLabel})` : tituloBase;
     const descricao = padeiroAlvo
       ? `Replicado o padrão habitual de ${padeiroAlvo.nome} com base no histórico real ${descInfo}.`
       : `Replicado o padrão habitual da equipe com base no histórico real ${descInfo}.`;

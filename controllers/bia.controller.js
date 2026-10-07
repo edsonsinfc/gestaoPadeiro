@@ -461,8 +461,61 @@ ${alertasStr}
   }
 
   // 1. MÓDULO DE COMANDOS AVULSOS DO GESTOR (Ajustes pontuais, trocas e remoções com suporte a multi-turno)
+  const pendingCmd = options.pendingCommand || context.pendingCommand || null;
+  if (pendingCmd && pendingCmd.tipo === 'escolher_tipo_escala') {
+    const querHabitualResp = (
+      norm.includes('padrao') ||
+      norm.includes('habitual') ||
+      norm.includes('anterior') ||
+      norm.includes('rotina') ||
+      norm.includes('costume') ||
+      norm.includes('repetir') ||
+      norm.includes('replicar') ||
+      norm === '1' ||
+      norm.includes('opcao 1') ||
+      norm.includes('primeira')
+    );
+    const querAltaPerfResp = (
+      norm.includes('alta performance') ||
+      norm.includes('performance') ||
+      norm.includes('otimizada') ||
+      norm === '2' ||
+      norm.includes('opcao 2') ||
+      norm.includes('segunda')
+    );
+
+    if (querHabitualResp || querAltaPerfResp) {
+      const action = querHabitualResp ? 'escala_padrao_anterior' : 'escala_alta_performance';
+      const per = pendingCmd.periodo || {};
+      const padeiroAlvo = pendingCmd.padeiroAlvo || null;
+      const descPeriodo = per.label || (per.tipo === 'mes' ? 'o mês' : 'o período');
+      const descAlvo = padeiroAlvo ? `para ${padeiroAlvo.nome}` : 'para toda a equipe';
+      const nomeModo = querHabitualResp ? 'Padrão Habitual' : 'Alta Performance';
+
+      return {
+        text: `Excelente! Preparei a proposta de **Escala no ${nomeModo}** ${descAlvo} para **${descPeriodo}**${per.totalDiasUteis ? ` (${per.totalDiasUteis} dias úteis)` : ''}.\n\nConfira os agendamentos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar os agendamentos.`,
+        action,
+        actionData: {
+          action,
+          datas: per.datas || null,
+          periodoLabel: per.label || null,
+          dataInicio: per.dataInicio || null,
+          dataFim: per.dataFim || null,
+          tipoPeriodo: per.tipo || null,
+          mes: per.mes || null,
+          padeiroId: padeiroAlvo?.id || null,
+          padeiroNome: padeiroAlvo?.nome || null,
+          isIndividual: !!padeiroAlvo,
+          descricao: `Escala ${nomeModo} ${descAlvo} - ${descPeriodo}`,
+          confirmar: true
+        },
+        pendingCommand: null,
+        pensamento: `1. Demanda: Gestor confirmou a modalidade ${nomeModo} para o período ${descPeriodo}.\n2. Ação: Disparo da ação ${action} para aplicação no cronograma do sistema com as datas calculadas.`
+      };
+    }
+  }
+
   if (BiaCommands) {
-    const pendingCmd = options.pendingCommand || context.pendingCommand || null;
     const comando = BiaCommands.processarComando(userMessage, context, { pendingCommand: pendingCmd, history: options.history });
     if (comando) {
       return {
@@ -504,10 +557,8 @@ ${alertasStr}
   );
 
   if (isEscalaRequest) {
+    const periodo = BiaCerebroService.extrairPeriodoEscala(userMessage);
     let padeiroAlvo = extrairPadeiroDaMensagem(norm, padeirosAtivos);
-
-    // Padeiro alvo só deve existir se o gestor tiver explicitamente citado o nome de um padeiro
-    // Caso contrário, a escala é sempre coletiva para a equipe inteira
 
     const querHabitual = (
       norm.includes('padrao') ||
@@ -521,51 +572,71 @@ ${alertasStr}
       norm.includes('igual antes')
     );
 
+    const querAltaPerf = (
+      norm.includes('alta performance') ||
+      norm.includes('performance') ||
+      norm.includes('otimizada')
+    );
+
+    // REGRA OBRIGATÓRIA: Antes de gerar, se o gestor NÃO informou o tipo (padrão habitual ou alta performance),
+    // a Bia deve PERGUNTAR antes de gerar!
+    if (!querHabitual && !querAltaPerf) {
+      const descPeriodo = periodo ? `para **${periodo.label}** (${periodo.totalDiasUteis} dias úteis)` : 'para a escala de trabalho';
+      const descAlvo = padeiroAlvo ? `do padeiro **${padeiroAlvo.nome}**` : `da equipe (${padeirosAtivos.length} colaboradores)`;
+
+      return {
+        text: `Identifiquei sua solicitação de escala ${descAlvo} ${descPeriodo}.\n\nAntes de eu gerar os agendamentos no sistema, **como você prefere que ela seja montada?**\n\n1️⃣ **Padrão Habitual**: Replica os clientes que os padeiros costumam atender em cada dia da semana com base no histórico real registrado.\n2️⃣ **Alta Performance**: Distribui os colaboradores com maior volume de produção nos clientes e praças de maior demanda da filial.\n\nPor favor, responda com **"Padrão Habitual"** ou **"Alta Performance"**.`,
+        action: null,
+        actionData: null,
+        pendingCommand: {
+          tipo: 'escolher_tipo_escala',
+          periodo,
+          padeiroAlvo: padeiroAlvo ? { id: padeiroAlvo.id, nome: padeiroAlvo.nome, codTec: padeiroAlvo.codTec } : null
+        },
+        pensamento: `1. Demanda: Solicitação de geração de escala ${descAlvo} ${descPeriodo}.\n2. Averiguação: Período identificado. Modalidade não informada pelo usuário.\n3. Decisão Operacional: Pausar e perguntar se prefere Padrão Habitual ou Alta Performance antes de gerar os agendamentos.`
+      };
+    }
+
+    // Se o gestor já informou a modalidade na mensagem:
+    const descPeriodo = periodo ? ` (${periodo.label})` : '';
+
     // CASO A: Escala para Padeiro Específico
     if (padeiroAlvo) {
-      const historicoPadeiro = (cronograma || []).filter(c =>
-        c.padeiroId === padeiroAlvo.id ||
-        (c.codTec && String(c.codTec) === String(padeiroAlvo.codTec)) ||
-        normalizarTexto(c.padeiroNome) === normalizarTexto(padeiroAlvo.nome)
-      ).concat(
-        (atividades || []).filter(a =>
-          a.padeiroId === padeiroAlvo.id ||
-          (a.codTec && String(a.codTec) === String(padeiroAlvo.codTec)) ||
-          normalizarTexto(a.padeiroNome) === normalizarTexto(padeiroAlvo.nome)
-        )
-      );
-
-      const prefereHabitual = querHabitual || (historicoPadeiro.length > 0 && !norm.includes('alta performance') && !norm.includes('otimizada'));
-
-      if (prefereHabitual) {
-        if (historicoPadeiro.length > 0) {
-          return {
-            text: `Entendido! Analisei o histórico operacional do padeiro **${padeiroAlvo.nome}** (${historicoPadeiro.length} atendimentos registrados). Mapeei os clientes mais frequentes para cada dia da semana dele e preparei a proposta da **Escala Padrão Habitual** individualizada.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+      if (querHabitual) {
+        return {
+          text: `Entendido! Analisei o histórico do padeiro **${padeiroAlvo.nome}** e montei a proposta da **Escala Padrão Habitual** individualizada${descPeriodo}.\n\nConfira os agendamentos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+          action: 'escala_padrao_anterior',
+          actionData: {
             action: 'escala_padrao_anterior',
-            actionData: {
-              action: 'escala_padrao_anterior',
-              padeiroId: padeiroAlvo.id,
-              padeiroNome: padeiroAlvo.nome,
-              descricao: `Escala habitual individual para ${padeiroAlvo.nome}`,
-              confirmar: true
-            }
-          };
-        } else {
-          return {
-            text: `O padeiro **${padeiroAlvo.nome}** ainda não possui histórico de escalas ou atendimentos registrados no sistema para que eu possa identificar uma rotina habitual.\n\nPara ele, você pode:\n* 📅 Iniciar o cronograma agendando clientes manualmente.\n* ⚡ Me pedir uma escala otimizada: *"Bia, crie uma escala de alta performance para ${padeiroAlvo.nome}"* (vou alocar clientes disponíveis de maior volume).`,
-            action: null,
-            actionData: null
-          };
-        }
+            datas: periodo?.datas || null,
+            periodoLabel: periodo?.label || null,
+            dataInicio: periodo?.dataInicio || null,
+            dataFim: periodo?.dataFim || null,
+            tipoPeriodo: periodo?.tipo || null,
+            mes: periodo?.mes || null,
+            padeiroId: padeiroAlvo.id,
+            padeiroNome: padeiroAlvo.nome,
+            isIndividual: true,
+            descricao: `Escala habitual individual para ${padeiroAlvo.nome}${descPeriodo}`,
+            confirmar: true
+          }
+        };
       } else {
         return {
-          text: `Com certeza! Preparei uma proposta de **Escala de Alta Performance** individual para o padeiro **${padeiroAlvo.nome}**, priorizando clientes ativos de alta demanda para esta semana.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
+          text: `Com certeza! Preparei uma proposta de **Escala de Alta Performance** individual para o padeiro **${padeiroAlvo.nome}**${descPeriodo}, priorizando clientes ativos de alta demanda.\n\nConfira a distribuição no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
           action: 'escala_alta_performance',
           actionData: {
             action: 'escala_alta_performance',
+            datas: periodo?.datas || null,
+            periodoLabel: periodo?.label || null,
+            dataInicio: periodo?.dataInicio || null,
+            dataFim: periodo?.dataFim || null,
+            tipoPeriodo: periodo?.tipo || null,
+            mes: periodo?.mes || null,
             padeiroId: padeiroAlvo.id,
             padeiroNome: padeiroAlvo.nome,
-            descricao: `Escala de alta performance para ${padeiroAlvo.nome}`,
+            isIndividual: true,
+            descricao: `Escala de alta performance para ${padeiroAlvo.nome}${descPeriodo}`,
             confirmar: true
           }
         };
@@ -575,21 +646,33 @@ ${alertasStr}
     // CASO B: Escala Geral para Toda a Equipe
     if (querHabitual) {
       return {
-        text: 'Entendido! Analisei todo o histórico operacional e de escalas registradas. Mapeei os hábitos e clientes mais frequentes de cada padeiro para cada dia da semana e preparei a proposta da **Escala Padrão Habitual** da equipe.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+        text: `Entendido! Analisei todo o histórico operacional e de escalas registradas. Mapeei a rotina da equipe para a proposta da **Escala Padrão Habitual**${descPeriodo}.\n\nConfira os agendamentos sugeridos no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
         action: 'escala_padrao_anterior',
         actionData: {
           action: 'escala_padrao_anterior',
-          descricao: 'Escala replicando padrão anterior habitual da equipe',
+          datas: periodo?.datas || null,
+          periodoLabel: periodo?.label || null,
+          dataInicio: periodo?.dataInicio || null,
+          dataFim: periodo?.dataFim || null,
+          tipoPeriodo: periodo?.tipo || null,
+          mes: periodo?.mes || null,
+          descricao: `Escala no padrão habitual da equipe${descPeriodo}`,
           confirmar: true
         }
       };
     } else {
       return {
-        text: 'Com certeza! Analisei os dados de produtividade da equipe e o histórico de demanda dos clientes ativos. Preparei uma proposta de **Escala de Alta Performance** para esta semana, priorizando os padeiros de maior volume nos clientes com maior fluxo.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.',
+        text: `Com certeza! Analisei os dados de produtividade e preparei a proposta de **Escala de Alta Performance** da equipe${descPeriodo}, priorizando os padeiros de maior volume nos clientes de maior demanda.\n\nConfira a distribuição sugerida no card abaixo e clique em **Aplicar no Cronograma do Sistema** para confirmar.`,
         action: 'escala_alta_performance',
         actionData: {
           action: 'escala_alta_performance',
-          descricao: 'Escala de alta performance para a semana',
+          datas: periodo?.datas || null,
+          periodoLabel: periodo?.label || null,
+          dataInicio: periodo?.dataInicio || null,
+          dataFim: periodo?.dataFim || null,
+          tipoPeriodo: periodo?.tipo || null,
+          mes: periodo?.mes || null,
+          descricao: `Escala de alta performance da equipe${descPeriodo}`,
           confirmar: true
         }
       };
@@ -825,45 +908,36 @@ ${alertasStr}
     try {
       const infoEscala = await BiaCerebroService.obterEscalaSemanalPadeiro(p.nome);
       if (infoEscala) {
-        const gradeFormatada = infoEscala.escalaPorDia.map(d => {
-          const infoLoja = d.clienteSugerido || d.descricao;
-          const horario = d.horario ? ` (${d.horario})` : '';
-          return `* **${d.diaNome}**: ${infoLoja}${horario}`;
-        }).join('\n');
+        const gradeFormatada = BiaCerebroService.formatarEscalaPadeiro(infoEscala);
 
-        if (infoEscala.tipo === 'agendada') {
+        if (infoEscala.tipo === 'semana_atual') {
           return {
-            text: `Escala semanal do padeiro **${p.nome}** (Período: ${infoEscala.semanaInicio} a ${infoEscala.semanaFim}):\n\n${gradeFormatada}\n\n* Total de atendimentos programados: **${infoEscala.totalTarefas} visitas**.`,
+            text: `Escala semanal do padeiro **${p.nome}** no Cronograma (Semana atual: ${infoEscala.semanaInicio} a ${infoEscala.semanaFim}):\n\n${gradeFormatada}\n\n* Total de atendimentos programados no cronograma: **${infoEscala.totalTarefas} visitas**.`,
             action: null,
             actionData: null,
-            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Encontradas ${infoEscala.totalTarefas} tarefas agendadas para esta semana.\n3. Estruturação: Distribuição organizada dia a dia de Segunda a Sábado.\n4. Decisão: Apresentação da agenda detalhada com lojas e horários.`
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Consulta direta à base de dados. Encontradas ${infoEscala.totalTarefas} tarefas ativas para a semana corrente.\n3. Estruturação: Listagem real dia a dia conforme registrado no cronograma.\n4. Decisão: Entrega fiel dos agendamentos do sistema sem propostas inventadas.`
           };
-        } else if (infoEscala.tipo === 'historico_habitual') {
+        } else if (infoEscala.tipo === 'proxima_semana') {
           return {
-            text: `O padeiro **${p.nome}** ainda não possui escalas agendadas no cronograma desta semana.\n\nCom base na rotina habitual histórica dele, a escala costumeira é:\n\n${gradeFormatada}\n\nDeseja confirmar e aplicar essa escala para o **${p.nome}** no sistema agora?`,
-            action: 'escala_padrao_anterior',
-            actionData: {
-              action: 'escala_padrao_anterior',
-              padeiroId: p.id,
-              padeiroNome: p.nome,
-              descricao: `Aplicar escala habitual para ${p.nome}`,
-              confirmar: true
-            },
-            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação: Padeiro sem escalas ativas nesta semana, mas com rotina habitual identificada no histórico.\n3. Estruturação: Mapeamento dos clientes mais frequentes por dia da semana.\n4. Decisão: Exibição da rotina dia a dia com opção de confirmação imediata.`
+            text: `O padeiro **${p.nome}** não possui escalas na semana corrente, mas constam agendamentos futuros no Cronograma para o período de **${infoEscala.semanaInicio} a ${infoEscala.semanaFim}**:\n\n${gradeFormatada}\n\n* Total de atendimentos: **${infoEscala.totalTarefas} visitas**.`,
+            action: null,
+            actionData: null,
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Semana corrente sem tarefas; localizados agendamentos futuros para ${infoEscala.semanaInicio} a ${infoEscala.semanaFim}.\n3. Decisão: Apresentação da agenda futura real do cronograma.`
+          };
+        } else if (infoEscala.tipo === 'ultima_semana') {
+          return {
+            text: `O padeiro **${p.nome}** não possui escalas ativas para a semana corrente. O último registro de escala dele localizado no Cronograma foi no período de **${infoEscala.semanaInicio} a ${infoEscala.semanaFim}**:\n\n${gradeFormatada}\n\n* Total de registros no banco: **${infoEscala.totalRegistrosCronograma} tarefas**. Caso deseje gerar uma nova escala para ele nesta semana, basta solicitar: *"Bia, monte a escala do ${p.nome}"*.`,
+            action: null,
+            actionData: null,
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Semana corrente vazia; exibição da última escala histórica registrada (${infoEscala.semanaInicio} a ${infoEscala.semanaFim}).\n3. Decisão: Relatório fiel aos registros reais do banco da Hostinger.`
           };
         } else {
-          // proposta_sugerida (caso do Cides e outros sem escala na semana)
+          // sem_registros
           return {
-            text: `O padeiro **${p.nome}** não possui escalas agendadas no cronograma desta semana.\n\nProposta de escala semanal estruturada para o **${p.nome}** cobrir clientes da filial **${infoEscala.filialNome || 'Brago Brasília'}**:\n\n${gradeFormatada}\n\nDeseja confirmar e gravar essa escala para o **${p.nome}** no cronograma agora?`,
-            action: 'escala_padrao_anterior',
-            actionData: {
-              action: 'escala_padrao_anterior',
-              padeiroId: p.id,
-              padeiroNome: p.nome,
-              descricao: `Gravar escala semanal sugerida para ${p.nome}`,
-              confirmar: true
-            },
-            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação: Padeiro ativo sem agendamento no cronograma da semana e sem rotina anterior gravada.\n3. Estruturação: Alocação estratégica dia a dia (Segunda a Sábado) entre os principais clientes da sua praça (${infoEscala.filialNome}).\n4. Decisão: Exibição clara da grade sugerida de clientes por dia e disponibilização de botão de confirmação.`
+            text: `Consultei a base de dados do Cronograma no sistema e o padeiro **${p.nome}** (Código Técnico: ${p.codTec || 'N/A'}, Filial: ${p.filial || 'Brago Brasília'}) atualmente **não possui nenhuma escala ou atendimento cadastrado no cronograma**.\n\nEle encontra-se sem rotas atribuídas no momento.\n\nSe você desejar que eu gere a escala dele com base nos clientes da filial, basta solicitar: *"Bia, faça a escala do ${p.nome}"*.`,
+            action: null,
+            actionData: null,
+            pensamento: `1. Demanda: Consulta de escala do padeiro ${p.nome}.\n2. Averiguação no Cronograma: Consulta direta à tabela de cronograma da Hostinger retornou 0 tarefas para este técnico.\n3. Decisão: Informar com precisão que não há escalas cadastradas para ele no sistema, sem inventar rotas fictícias.`
           };
         }
       }
@@ -1175,17 +1249,19 @@ exports.chat = async (req, res) => {
         try {
           const infoEscalaP = await BiaCerebroService.obterEscalaSemanalPadeiro(padeiroMencionado.nome);
           if (infoEscalaP) {
-            const gradeLinhas = infoEscalaP.escalaPorDia.map(d => `* ${d.diaNome} (${d.dataIso}): ${d.clienteSugerido || d.descricao}${d.horario ? ` [${d.horario}]` : ''}`).join('\n');
+            const gradeLinhas = BiaCerebroService.formatarEscalaPadeiro(infoEscalaP);
             briefingEscalaPadeiro = `
-[ESCALA SEMANAL DETALHADA DO PADEIRO ${padeiroMencionado.nome}]:
-- Filial: ${padeiroMencionado.filial || 'Brago Brasília'} | Status: ${infoEscalaP.tipo}
-- Programação Dia a Dia:
+[CONSULTA REAL AO CRONOGRAMA - PADEIRO ${padeiroMencionado.nome}]:
+- Filial: ${padeiroMencionado.filial || 'Brago Brasília'} | Status no Cronograma: ${infoEscalaP.tipo}
+- Total de tarefas agendadas no cronograma: ${infoEscalaP.totalTarefas || 0}
+- Período identificado: ${infoEscalaP.semanaInicio ? `${infoEscalaP.semanaInicio} a ${infoEscalaP.semanaFim}` : 'Sem período ativo'}
+- Programação Dia a Dia no Cronograma:
 ${gradeLinhas}
 
-DIRETRIZ OBRIGATÓRIA PARA PERGUNTAS SOBRE ESTE PADEIRO:
+DIRETRIZ OBRIGATÓRIA PARA PERGUNTAS SOBRE A ESCALA DESTE PADEIRO:
 Se o gestor perguntar sobre a escala do padeiro ${padeiroMencionado.nome} (ex.: "qual é a escala do padeiro cides", "onde ele vai", "quais clientes vai atender"):
-Você DEVE OBRIGATORIAMENTE estruturar a resposta dia a dia citando nominalmente as lojas reais da "Programação Dia a Dia" listada acima (exemplo: Segunda-feira: PANIFICADORA DELICIA BIG FENIX, Terça-feira: PAO DE SAL, etc.). NUNCA use termos genéricos como "Loja da Rede Brago". Use os nomes exatos das lojas da programação.
-Se o status for "proposta_sugerida" ou "historico_habitual", explique com clareza que ele está sem agendamento no cronograma da semana e apresente a grade sugerida com as lojas da sua praça, perguntando se o gestor deseja confirmar a aplicação no cronograma.
+1. Se o status for "semana_atual", "proxima_semana" ou "ultima_semana", apresente fielmente a programação dia a dia listada acima com os nomes reais das lojas e horários de cada dia (Segunda a Sábado).
+2. Se o status for "sem_registros" (0 tarefas no cronograma), informe expressamente com transparência que consultou a base de dados do Cronograma e que ele atualmente NÃO possui tarefas ou escalas cadastradas no sistema (está desocupado). NUNCA invente lojas, clientes ou propostas fictícias se o gestor apenas perguntou qual é a escala dele. Apenas ofereça a opção de gerar caso ele queira ("Bia, monte a escala do ${padeiroMencionado.nome}").
 `;
           }
         } catch (eEsc) {
@@ -1224,6 +1300,13 @@ ${briefingCerebro}
 ${briefingEscalaPadeiro}
 
 REGRAS FUNDAMENTAIS PARA ESCALAS DA EQUIPE:
+- Janela de datas e períodos: O sistema suporta escalas para intervalos de datas específicos (exemplo: "do dia 12 ao dia 16", "12 a 16 de outubro") e para o mês inteiro (exemplo: "escala do mês", "escala de outubro").
+- PERGUNTA OBRIGATÓRIA ANTES DE GERAR:
+  Se o gestor pedir para gerar uma escala e NÃO tiver especificado explicitamente na mensagem se quer no "Padrão Habitual" ou em "Alta Performance", você DEVE OBRIGATORIAMENTE PERGUNTAR qual das duas modalidades ele prefere antes de gerar a escala!
+  NÃO gere card de ação ("action": "nenhuma", "confirmar": false) antes de o gestor informar a modalidade.
+  Explique educadamente as duas opções:
+  1. Padrão Habitual: replica a rotina dos clientes que os padeiros costumam atender em cada dia da semana com base no histórico.
+  2. Alta Performance: distribui os colaboradores de maior produção nos clientes de maior demanda e volume.
 - Para 'escala_alta_performance' e 'escala_padrao_anterior', a proposta de escala gerada pelo SmartGestor atende SEMPRE TODA A EQUIPE DE PADEIROS ATIVOS (${(enrichedContext.padeirosAtivos || []).length} padeiros), distribuindo-os estrategicamente entre os clientes e dias da semana (segunda a sábado).
 - Por isso, em solicitações gerais de escala (ex: "faça a escala", "crie uma escala", "padrão habitual", "alta performance", "fazer um dos tipos de escalas", "escala de novo", etc.):
   * "padeiroNome": DEVE OBRIGATORIAMENTE SER null! NUNCA preencha com o nome do primeiro colocado do ranking ou com qualquer outro padeiro.
@@ -1364,10 +1447,63 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                   }
                 }
 
-                // TRAVA CRÍTICA: Escalas coletivas (Alta Performance ou Padrão Habitual)
+                // TRAVA CRÍTICA: Escalas coletivas ou individuais (Alta Performance ou Padrão Habitual)
                 if (action === 'escala_alta_performance' || action === 'escala_padrao_anterior') {
+                  // 1. Se veio de pendingCommand de confirmação de tipo de escala:
+                  if (pendingCommand && pendingCommand.tipo === 'escolher_tipo_escala') {
+                    const per = pendingCommand.periodo || {};
+                    actionData.datas = per.datas || null;
+                    actionData.periodoLabel = per.label || null;
+                    actionData.dataInicio = per.dataInicio || null;
+                    actionData.dataFim = per.dataFim || null;
+                    actionData.tipoPeriodo = per.tipo || null;
+                    actionData.mes = per.mes || null;
+                    if (pendingCommand.padeiroAlvo) {
+                      actionData.padeiroId = pendingCommand.padeiroAlvo.id;
+                      actionData.padeiroNome = pendingCommand.padeiroAlvo.nome;
+                      actionData.isIndividual = true;
+                    }
+                  } else {
+                    // 2. Se NÃO veio de pendingCommand:
+                    const querHabitualExplicito = norm.includes('padrao') || norm.includes('habitual') || norm.includes('anterior') || norm.includes('rotina') || norm.includes('o que ja fazia') || norm.includes('igual antes');
+                    const querAltaPerfExplicito = norm.includes('alta performance') || norm.includes('performance') || norm.includes('otimizada');
+
+                    // Se o usuário NÃO informou a modalidade na mensagem, a Bia DEVE perguntar antes de gerar!
+                    if (!querHabitualExplicito && !querAltaPerfExplicito) {
+                      const periodoDetectado = BiaCerebroService.extrairPeriodoEscala(effectiveMessage);
+                      const pMencionado = extrairPadeiroDaMensagem(norm, enrichedContext.padeirosAtivos);
+                      const descPeriodo = periodoDetectado ? `para **${periodoDetectado.label}** (${periodoDetectado.totalDiasUteis} dias úteis)` : 'para a escala de trabalho';
+                      const descAlvo = pMencionado ? `do padeiro **${pMencionado.nome}**` : `da equipe (${(enrichedContext.padeirosAtivos || []).length} colaboradores)`;
+
+                      return responder({
+                        text: `Identifiquei sua solicitação de escala ${descAlvo} ${descPeriodo}.\n\nAntes de eu gerar os agendamentos no sistema, **como você prefere que ela seja montada?**\n\n1️⃣ **Padrão Habitual**: Replica os clientes que os padeiros costumam atender em cada dia da semana com base no histórico real registrado.\n2️⃣ **Alta Performance**: Distribui os colaboradores com maior volume de produção nos clientes e praças de maior demanda da filial.\n\nPor favor, responda com **"Padrão Habitual"** ou **"Alta Performance"**.`,
+                        action: null,
+                        actionData: null,
+                        pendingCommand: {
+                          tipo: 'escolher_tipo_escala',
+                          periodo: periodoDetectado,
+                          padeiroAlvo: pMencionado ? { id: pMencionado.id, nome: pMencionado.nome, codTec: pMencionado.codTec } : null
+                        },
+                        pensamento: `1. Demanda: Solicitação de geração de escala ${descAlvo} ${descPeriodo}.\n2. Averiguação: Janela de datas detectada. Modalidade não informada.\n3. Decisão Operacional: Pausar e perguntar se prefere Padrão Habitual ou Alta Performance antes de gerar os agendamentos.`,
+                        source: 'gemini',
+                        model
+                      });
+                    }
+
+                    // Se informou na mensagem, enriquece com as datas do período detectado
+                    const periodoDetectado = BiaCerebroService.extrairPeriodoEscala(effectiveMessage);
+                    if (periodoDetectado) {
+                      actionData.datas = periodoDetectado.datas;
+                      actionData.periodoLabel = periodoDetectado.label;
+                      actionData.dataInicio = periodoDetectado.dataInicio;
+                      actionData.dataFim = periodoDetectado.dataFim;
+                      actionData.tipoPeriodo = periodoDetectado.tipo;
+                      actionData.mes = periodoDetectado.mes;
+                    }
+                  }
+
                   const pMencionado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
-                  if (!pMencionado) {
+                  if (!pMencionado && !actionData.isIndividual) {
                     // Pedido geral da equipe: Força nulidade absoluta de padeiro individual
                     actionData.padeiroId = null;
                     actionData.padeiroNome = null;
@@ -1382,7 +1518,7 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
                         ? `A proposta de escala no padrão habitual foi calculada para toda a equipe (${totalEquipe} padeiros ativos). Verifique a distribuição da semana no card abaixo e confirme para aplicar.`
                         : `A proposta de escala de alta performance foi calculada para toda a equipe (${totalEquipe} padeiros ativos), priorizando o volume de demanda das lojas. Verifique a distribuição no card abaixo e confirme para aplicar.`;
                     }
-                  } else {
+                  } else if (pMencionado) {
                     actionData.padeiroId = pMencionado.id;
                     actionData.padeiroNome = pMencionado.nome;
                     actionData.isIndividual = true;
