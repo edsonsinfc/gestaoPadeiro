@@ -646,6 +646,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         await this.handleEscalaAltaPerformance(response.actionData);
       } else if (response.action === 'escala_padrao_anterior') {
         await this.handleEscalaPadraoAnterior(response.actionData);
+      } else if (response.action === 'cadastrar_metas_mensais') {
+        await this.handleCadastrarMetasMensais(response.actionData);
       } else if (response.action === 'desfazer_alteracoes') {
         await this.handleDesfazerUltimaAcao();
       } else if (response.action === 'agendar_avulso') {
@@ -700,6 +702,66 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     } catch (e) {
       this.removeTypingIndicator();
       this.addBiaMessage(`Não consegui replicar o padrão anterior: ${e.message}`);
+    }
+  },
+
+  /**
+   * Trata a exibição do Card de Metas Mensais Autônomas Cadastradas
+   */
+  async handleCadastrarMetasMensais(actionData = null) {
+    const resMetas = actionData?.resultadoMetas || actionData;
+    if (!resMetas || !resMetas.metas || resMetas.metas.length === 0) return;
+
+    const body = document.getElementById('bia-messages-body');
+    if (!body) return;
+
+    const card = document.createElement('div');
+    card.className = 'bia-action-card';
+    card.style.borderColor = 'rgba(0, 122, 255, 0.25)';
+    card.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)';
+
+    const mesFormatado = resMetas.periodoNome || resMetas.periodo || 'Mês Atual';
+    const totalPadeiros = resMetas.totalPadeiros || resMetas.metas.length;
+    const metaTotalStr = (resMetas.metaTotalKg || 0).toLocaleString('pt-BR');
+    const cardId = 'btn-ver-metas-' + Date.now();
+
+    const previewPadeiros = (resMetas.metas || []).slice(0, 4).map(m => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px;">
+        <span style="font-weight: 600; color: #1E293B;">${m.padeiroNome}</span>
+        <span style="font-weight: 700; color: #007AFF;">${(m.metaKg || 0).toLocaleString('pt-BR')} kg</span>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="bia-card-top">
+        <span class="bia-card-title" style="color: #007AFF; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="target" style="width: 16px; height: 16px; color: #007AFF;"></i> Metas Autônomas Cadastradas
+        </span>
+        <span class="bia-card-badge" style="background: rgba(0, 122, 255, 0.1); color: #007AFF; font-weight: 700;">${mesFormatado}</span>
+      </div>
+      <div class="bia-card-desc" style="margin-bottom: 12px;">
+        A Bia calculou e registrou as metas mensais para <strong>${totalPadeiros} padeiros</strong> ativos, com projeção total de <strong>${metaTotalStr} kg</strong> para a equipe.
+      </div>
+      <div style="background: #FFFFFF; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.06);">
+        ${previewPadeiros}
+        ${resMetas.metas.length > 4 ? `<div style="font-size: 11px; color: #64748B; text-align: center; padding-top: 6px;">+ ${resMetas.metas.length - 4} outros técnicos com metas salvas</div>` : ''}
+      </div>
+      <button id="${cardId}" class="bia-btn-apply" style="background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%); width: 100%; border: none; color: white; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i data-lucide="bar-chart-3" style="width: 16px; height: 16px;"></i> Abrir Aba de Metas no Painel
+      </button>
+    `;
+
+    body.appendChild(card);
+    if (window.lucide) lucide.createIcons();
+    this.scrollToBottom();
+
+    const btn = document.getElementById(cardId);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+          App.navigate('metas');
+        }
+      });
     }
   },
 

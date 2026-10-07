@@ -105,9 +105,9 @@ const PadeiroFlow = {
       }
     });
 
-    // Tarefas pendentes do dia (não concluídas, não não-realizadas e sem atividade finalizada hoje)
+    // Tarefas pendentes do dia (não concluídas e sem atividade finalizada hoje)
     const tarefasPendentes = todasTarefasHoje.filter(t => {
-      if (t.status === 'concluida' || t.status === 'nao_realizada') return false;
+      if (t.status === 'concluida') return false;
       const jaFinalizada = atividadesFinalizadasHoje.some(act => 
         (act.cronogramaId && (String(act.cronogramaId) === String(t.id) || String(act.cronogramaId) === String(t._id))) ||
         (act.clienteId && String(act.clienteId) === String(t.clienteId))
@@ -136,12 +136,20 @@ const PadeiroFlow = {
       targetTask = tarefasPendentes[0];
     }
 
-    // 3. Tratar atividades em andamento: descartar vazias e bloquear se houver pendência de outro cliente
-    const inProgressList = atividades.filter(a => a.status === 'em_andamento');
+    // Se a tarefa de hoje estava com status 'nao_realizada' devido a bug anterior, restaura para 'pendente'
+    if (targetTask && targetTask.status === 'nao_realizada') {
+      try {
+        await API.patch(`/api/cronograma/agenda/${targetTask.id || targetTask._id}/status`, { status: 'pendente' });
+        targetTask.status = 'pendente';
+      } catch(e) {}
+    }
+
+    // 3. Tratar atividades em andamento: RESTRITO ESTRITAMENTE A HOJE (tarefas anteriores não bloqueiam nem são exibidas)
+    const inProgressListHoje = atividadesHoje.filter(a => a.status === 'em_andamento');
     let blockingActivity = null;
     let resumeActivity = null;
 
-    for (const em of inProgressList) {
+    for (const em of inProgressListHoje) {
       // Falso positivo: pertence a cliente já finalizado hoje
       if (atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(em.clienteId))) {
         try {
@@ -150,33 +158,30 @@ const PadeiroFlow = {
         continue;
       }
 
-      // Regra: se a atividade estiver 100% vazia, marca automaticamente como 'nao_realizada'
+      const isSameClientAsTarget = targetTask && String(em.clienteId) === String(targetTask.clienteId);
+
+      // Se for a atividade do mesmo cliente alvo de hoje, retoma diretamente
+      if (isSameClientAsTarget) {
+        resumeActivity = em;
+        continue;
+      }
+
+      // Se for de outro cliente e estiver 100% vazia: remove o rascunho órfão de hoje sem afetar cronograma
       if (this.isActivityEmpty(em)) {
-        console.log('[PadeiroFlow] Atividade vazia em andamento descartada automaticamente como nao_realizada:', em.id, em.clienteNome);
+        console.log('[PadeiroFlow] Rascunho vazio de hoje de outro cliente removido:', em.id, em.clienteNome);
         try {
-          await API.put(`/api/atividades/${em.id || em._id}`, { 
-            status: 'nao_realizada', 
-            fimEm: new Date().toISOString() 
-          });
+          await API.delete(`/api/atividades/${em.id || em._id}`);
         } catch(e) {}
         continue;
       }
 
-      // Se NÃO for vazia (tem produtos, kg, fotos, etc.):
-      const isSameClientAsTarget = targetTask && String(em.clienteId) === String(targetTask.clienteId);
-      const isToday = em.data === today;
-
-      if (isSameClientAsTarget && isToday) {
-        resumeActivity = em;
-      } else {
-        // O padeiro iniciou e esqueceu de terminar a atividade anterior de outro cliente ou dia!
-        // Bloqueia ele de iniciar a nova tarefa até concluir ou encerrar a anterior!
-        blockingActivity = em;
-        break;
-      }
+      // Se for de outro cliente e TIVER itens/produção apontada hoje:
+      // Aí sim bloqueia para evitar abandono de produção iniciada hoje
+      blockingActivity = em;
+      break;
     }
 
-    // Bloqueio obrigatório por atividade anterior não finalizada
+    // Bloqueio apenas se houver atividade iniciada com produção hoje para outro cliente
     if (blockingActivity) {
       this.pendingResume = null;
       this.pendingPreviousResume = blockingActivity;
@@ -201,13 +206,24 @@ const PadeiroFlow = {
         this.renderNoActivitiesScheduledScreen(container, today);
         return;
       }
-      if (todasTarefasHoje.length > 0 && tarefasPendentes.length === 0) {
+
+      // REGRA CRÍTICA: "Todas as Tarefas Cumpridas!" SÓ PODE ser exibida se
+      // TODAS as tarefas agendadas para hoje foram REALMENTE CONCLUÍDAS (status === 'concluida')
+      const todasRealmenteConcluidas = todasTarefasHoje.length > 0 && todasTarefasHoje.every(t => {
+        if (t.status === 'concluida') return true;
+        return atividadesFinalizadasHoje.some(act => 
+          (act.cronogramaId && (String(act.cronogramaId) === String(t.id) || String(act.cronogramaId) === String(t._id))) ||
+          (act.clienteId && String(act.clienteId) === String(t.clienteId))
+        );
+      });
+
+      if (todasRealmenteConcluidas) {
         this.renderAllActivitiesCompletedScreen(container, todasTarefasHoje, atividadesFinalizadasHoje, today);
         return;
       }
     }
 
-    // 5. Sincroniza dados da atividade com o cronograma obrigatório
+    // 5. Sincroniza dados da atividade com a tarefa atual agendada para hoje
     if (targetTask) {
       this.activity.clienteId = targetTask.clienteId;
       this.activity.clienteNome = cliMap.get(String(targetTask.clienteId)) || targetTask.clienteNome;

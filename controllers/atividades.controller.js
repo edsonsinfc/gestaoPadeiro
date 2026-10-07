@@ -1,8 +1,12 @@
 const { Atividade, Padeiro, Cronograma, Avaliacao } = require('../data/db-adapter');
 const { getIo } = require('../sockets/location.socket');
+const { autoExpirePastTasks } = require('./cronograma.controller');
 
 exports.listAtividades = async (req, res) => {
   try {
+    if (typeof autoExpirePastTasks === 'function') {
+      await autoExpirePastTasks();
+    }
     const query = {};
     if (req.user.role === 'padeiro') {
       let padeiroIds = [req.user.id];
@@ -223,65 +227,74 @@ exports.updateAtividade = async (req, res) => {
     
     if (!atividade) return res.status(404).json({ error: 'Atividade não encontrada' });
 
-    // Sincronizar status do Cronograma quando a atividade for finalizada ou marcada como não realizada
+    // Sincronizar status do Cronograma quando a atividade for finalizada ou marcada como não realizada (regra 24h)
     const isFinished = updateData.status === 'finalizada' || atividade.status === 'finalizada';
     const isNotDone = updateData.status === 'nao_realizada' || atividade.status === 'nao_realizada';
     if (isFinished || isNotDone) {
-      const targetCronoStatus = isFinished ? 'concluida' : 'nao_realizada';
-      try {
-        const cronoId = atividade.cronogramaId || req.body.cronogramaId;
-        if (cronoId) {
-          await Cronograma.findByIdAndUpdate(cronoId, { 
-            status: targetCronoStatus, 
-            atualizadoEm: new Date().toISOString() 
-          });
-          const io = getIo();
-          if (io) {
-            io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: targetCronoStatus } });
-          }
-        }
-        
-        // Também busca cronograma por clienteId + data caso não houvesse cronogramaId direto
-        if (atividade.clienteId && atividade.data) {
-          const matchingTasks = await Cronograma.find({
-            clienteId: atividade.clienteId,
-            data: atividade.data,
-            status: { $ne: 'concluida' }
-          });
-          for (const t of matchingTasks) {
-            await Cronograma.findByIdAndUpdate(t.id, { 
+      // Regra 24h: 'nao_realizada' SÓ afeta o cronograma se a atividade for de dia anterior (< today)
+      const n = new Date();
+      const todayStr = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+      const isPast = atividade.data && (atividade.data < todayStr);
+
+      if (isFinished || isPast) {
+        const targetCronoStatus = isFinished ? 'concluida' : 'nao_realizada';
+        try {
+          const cronoId = atividade.cronogramaId || req.body.cronogramaId;
+          if (cronoId) {
+            await Cronograma.findByIdAndUpdate(cronoId, { 
               status: targetCronoStatus, 
               atualizadoEm: new Date().toISOString() 
             });
             const io = getIo();
             if (io) {
-              io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: targetCronoStatus } });
+              io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: targetCronoStatus } });
             }
           }
-        }
-
-        // Limpa qualquer outra atividade em_andamento duplicada deste mesmo padeiro e cliente na mesma data
-        try {
-          const duplicateInProgress = await Atividade.find({
-            padeiroId: atividade.padeiroId,
-            clienteId: atividade.clienteId,
-            data: atividade.data,
-            status: 'em_andamento'
-          });
-          for (const dup of duplicateInProgress) {
-            if (dup.id !== atividade.id) {
-              await Atividade.findByIdAndUpdate(dup.id, {
-                status: 'finalizada',
-                fimEm: new Date().toISOString(),
-                atualizadoEm: new Date().toISOString()
+          
+          // Também busca cronograma por clienteId + data caso não houvesse cronogramaId direto
+          if (atividade.clienteId && atividade.data) {
+            const matchingTasks = await Cronograma.find({
+              clienteId: atividade.clienteId,
+              data: atividade.data,
+              status: { $ne: 'concluida' }
+            });
+            for (const t of matchingTasks) {
+              await Cronograma.findByIdAndUpdate(t.id, { 
+                status: targetCronoStatus, 
+                atualizadoEm: new Date().toISOString() 
               });
+              const io = getIo();
+              if (io) {
+                io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: targetCronoStatus } });
+              }
             }
           }
-        } catch (dupErr) {
-          console.warn('Aviso ao sincronizar duplicatas de atividade:', dupErr);
+
+          // Limpa qualquer outra atividade em_andamento duplicada deste mesmo padeiro e cliente na mesma data
+          if (isFinished) {
+            try {
+              const duplicateInProgress = await Atividade.find({
+                padeiroId: atividade.padeiroId,
+                clienteId: atividade.clienteId,
+                data: atividade.data,
+                status: 'em_andamento'
+              });
+              for (const dup of duplicateInProgress) {
+                if (dup.id !== atividade.id) {
+                  await Atividade.findByIdAndUpdate(dup.id, {
+                    status: 'finalizada',
+                    fimEm: new Date().toISOString(),
+                    atualizadoEm: new Date().toISOString()
+                  });
+                }
+              }
+            } catch (dupErr) {
+              console.warn('Aviso ao sincronizar duplicatas de atividade:', dupErr);
+            }
+          }
+        } catch (cronoErr) {
+          console.error('Erro ao sincronizar status no cronograma:', cronoErr);
         }
-      } catch (cronoErr) {
-        console.error('Erro ao sincronizar status concluído no cronograma:', cronoErr);
       }
     }
 

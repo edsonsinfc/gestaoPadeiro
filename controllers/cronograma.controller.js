@@ -1,7 +1,84 @@
 const { Cronograma, Padeiro, Atividade, Avaliacao, Cliente } = require('../data/db-adapter');
 const { getIo } = require('../sockets/location.socket');
 
+// Expirar tarefas com mais de 24 horas (dias anteriores) que não foram realizadas
+async function autoExpirePastTasks(today) {
+  try {
+    if (!today) {
+      const n = new Date();
+      today = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+    }
+
+    // 1. Regra 24h: Tarefas com data anterior a hoje que não foram concluídas são marcadas como 'nao_realizada'
+    const pastTasks = await Cronograma.find({
+      data: { $lt: today },
+      status: { $in: ['pendente', 'em_andamento', 'solicitado'] }
+    });
+
+    if (pastTasks && pastTasks.length > 0) {
+      for (const t of pastTasks) {
+        await Cronograma.findByIdAndUpdate(t.id, {
+          status: 'nao_realizada',
+          atualizadoEm: new Date().toISOString()
+        });
+      }
+      console.log(`[Cronograma] ${pastTasks.length} tarefa(s) de dia anterior expiradas para 'nao_realizada' (regra 24h).`);
+    }
+
+    // Atividades de dias anteriores que ficaram com status 'em_andamento'
+    const pastAtividades = await Atividade.find({
+      data: { $lt: today },
+      status: 'em_andamento'
+    });
+
+    if (pastAtividades && pastAtividades.length > 0) {
+      for (const a of pastAtividades) {
+        await Atividade.findByIdAndUpdate(a.id, {
+          status: 'nao_realizada',
+          fimEm: (a.data || today) + 'T23:59:59.000Z',
+          atualizadoEm: new Date().toISOString()
+        });
+      }
+      console.log(`[Atividades] ${pastAtividades.length} atividade(s) de dia anterior em andamento expiradas para 'nao_realizada'.`);
+    }
+
+    // 2. Correção segura: Tarefas de HOJE ou FUTURO que foram indevidamente marcadas como 'nao_realizada'
+    // A regra de 24h só se aplica no dia seguinte! No dia de hoje, a tarefa fica ativa/pendente para realização.
+    const wronglyExpiredToday = await Cronograma.find({
+      data: { $gte: today },
+      status: 'nao_realizada'
+    });
+
+    if (wronglyExpiredToday && wronglyExpiredToday.length > 0) {
+      for (const t of wronglyExpiredToday) {
+        await Cronograma.findByIdAndUpdate(t.id, {
+          status: 'pendente',
+          atualizadoEm: new Date().toISOString()
+        });
+      }
+      console.log(`[Cronograma] ${wronglyExpiredToday.length} tarefa(s) de hoje restauradas de 'nao_realizada' para 'pendente'.`);
+    }
+
+    // Atividades vazias de hoje/futuro que foram indevidamente marcadas como 'nao_realizada'
+    const wronglyExpiredAtividades = await Atividade.find({
+      data: { $gte: today },
+      status: 'nao_realizada'
+    });
+    if (wronglyExpiredAtividades && wronglyExpiredAtividades.length > 0) {
+      for (const a of wronglyExpiredAtividades) {
+        await Atividade.findByIdAndDelete(a.id);
+      }
+      console.log(`[Atividades] ${wronglyExpiredAtividades.length} atividade(s) vazias de hoje limpas do banco.`);
+    }
+  } catch (err) {
+    console.warn('[Cronograma] Aviso ao expirar tarefas anteriores:', err.message);
+  }
+}
+
+exports.autoExpirePastTasks = autoExpirePastTasks;
+
 exports.listCronograma = async (req, res) => {
+  await autoExpirePastTasks();
   const query = {};
   if (req.query.data) {
     query.data = req.query.data;
@@ -71,6 +148,7 @@ exports.getWeeklyAgenda = async (req, res) => {
   if (!semana) return res.status(400).json({ error: 'Data da semana obrigatória' });
 
   try {
+    await autoExpirePastTasks();
     const filter = {};
     if (filial) {
       // Simplificando de RegExp para comparação direta para evitar erros de sintaxe SQL
@@ -237,6 +315,8 @@ exports.deleteTarefa = async (req, res) => {
 
 exports.getPadeiroAgenda = async (req, res) => {
   try {
+    await autoExpirePastTasks();
+
     // Se for admin, gestor ou vendedor visualizando a tela do padeiro
     if (req.user.role && req.user.role !== 'padeiro') {
       const today = new Date().toISOString().split('T')[0];

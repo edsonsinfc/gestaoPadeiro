@@ -6,6 +6,8 @@
 const fetch = globalThis.fetch || require('node-fetch');
 const db = require('../data/db-adapter');
 const BiaCommands = require('../public/js/modules/agent-bia/bia.commands');
+const { MetasAutonomasService } = require('../modules/bia-autonoma');
+const BiaCerebroService = require('../services/bia-cerebro.service');
 
 // Chave padrão da Bia decodificada em runtime (permite operar sem mexer no .env da hospedagem)
 const _k = 'QVEuQWI4Uk42SjMwV1Znck5JdVFYeTc5aGUyem54T1RMSUMxTXNabFEwVUYyLWtVOXNaNXc=';
@@ -297,6 +299,8 @@ function construirCaminhoPensamento(userMessage, context = {}, decisao = {}) {
     const padNome = decisao.actionData.padeiroNome;
     const padHist = (context.cronogramaHistorico || []).filter(c => c.padeiroNome === padNome || c.padeiroId === decisao.actionData.padeiroId);
     steps.push(`3. Análise Operacional: Padeiro identificado: ${padNome} (${padHist.length} escalas no histórico do banco). Cruzamento de padrões de agendamento e dias da semana.`);
+  } else if (decisao.action === 'cadastrar_metas_mensais') {
+    steps.push(`3. Análise Operacional: Execução autônoma da Bia para cálculo de metas mensais por padeiro com base no histórico real ponderado dos últimos 60 dias (+6% de evolução).`);
   } else if (decisao.action === 'escala_padrao_anterior') {
     steps.push(`3. Análise Operacional: Mapeamento de rotina e frequência semanal da equipe com base em todas as escalas históricas da Hostinger.`);
   } else if (decisao.action === 'escala_alta_performance') {
@@ -315,7 +319,7 @@ function construirCaminhoPensamento(userMessage, context = {}, decisao = {}) {
 /**
  * Motor de Inteligência e Processamento de Linguagem Natural Local da Bia
  */
-function gerarRespostaLocal(userMessage, context = {}, options = {}) {
+async function gerarRespostaLocal(userMessage, context = {}, options = {}) {
   const norm = normalizarTexto(userMessage);
   const rankingPadeiros = context.rankingPadeiros || [];
   const rankingClientes = context.rankingClientes || [];
@@ -340,6 +344,117 @@ function gerarRespostaLocal(userMessage, context = {}, options = {}) {
       actionData: {
         action: 'desfazer_alteracoes',
         descricao: 'Reverter última escala gerada',
+        confirmar: true
+      }
+    };
+  }
+
+  // 0.2. RADIOGRAFIA E SITUAÇÃO OPERACIONAL DA FILIAL (Cérebro da Bia)
+  const isConsultaFilial = (
+    norm.includes('situacao') ||
+    norm.includes('como esta') ||
+    norm.includes('como estao') ||
+    norm.includes('panorama') ||
+    norm.includes('status') ||
+    norm.includes('cenario') ||
+    norm.includes('radiografia') ||
+    norm.includes('posicao')
+  ) && (
+    norm.includes('filial') ||
+    norm.includes('brasilia') ||
+    norm.includes('goiania') ||
+    norm.includes('palmas') ||
+    norm.includes('campo grande') ||
+    norm.includes('df')
+  ) || (
+    norm.includes('filial de brasilia') ||
+    norm.includes('filial brasilia') ||
+    norm.includes('filial de goiania') ||
+    norm.includes('filial goiania') ||
+    norm.includes('filial de palmas') ||
+    norm.includes('filial palmas')
+  );
+
+  if (isConsultaFilial) {
+    let filialAlvo = 'Brasília';
+    if (norm.includes('goia') || norm.includes('gyn')) filialAlvo = 'Goiânia';
+    else if (norm.includes('palm') || norm.includes('tocant')) filialAlvo = 'Palmas';
+    else if (norm.includes('campo grande') || norm.includes('ms')) filialAlvo = 'Campo Grande';
+
+    try {
+      const dadosFilial = await BiaCerebroService.obterSituacaoFilial(filialAlvo);
+      if (dadosFilial) {
+        const padsLista = dadosFilial.padeirosNomes.slice(0, 10).map(n => `* ${n}`).join('\n');
+        const maisPads = dadosFilial.padeirosNomes.length > 10 ? `\n* *(...e mais ${dadosFilial.padeirosNomes.length - 10} técnicos)*` : '';
+        const semEscala = dadosFilial.cronogramaSemana?.padeirosOciososCount || 0;
+        const visitas = dadosFilial.cronogramaSemana?.totalVisitasAgendadas || 0;
+        const metaStr = dadosFilial.metaMesKg ? `${dadosFilial.metaMesKg.toLocaleString('pt-BR')} kg` : 'Em definição';
+        const atingimentoStr = dadosFilial.percAtingimentoMeta !== null ? `${dadosFilial.percAtingimentoMeta}%` : '0%';
+        const alertasStr = dadosFilial.alertas.length ? dadosFilial.alertas.map(a => `* Alerta: ${a}`).join('\n') : '* Nenhum gargalo crítico identificado na operação.';
+
+        const respostaTexto = `Relatório Operacional da Filial **${dadosFilial.nome}** (Período: ${dadosFilial.mesAtual}):
+
+1. Força de Trabalho:
+* Equipe Ativa: **${dadosFilial.totalPadeirosAtivos} padeiros técnicos**
+${padsLista}${maisPads}
+
+2. Carteira e Demanda:
+* Lojas/Clientes Cadastrados na Praça: **${dadosFilial.totalClientesCadastrados} clientes**
+* Produção Histórica Registrada: **${dadosFilial.producaoHistoricaTotalKg.toLocaleString('pt-BR')} kg** (${dadosFilial.totalAtendimentosHistorico} atendimentos concluídos)
+
+3. Metas Operacionais do Mês:
+* Meta Mensal da Equipe: **${metaStr}**
+* Produção Registrada no Mês: **${dadosFilial.producaoMesKg.toLocaleString('pt-BR')} kg** (${atingimentoStr} da meta atingida)
+
+4. Cronograma e Escalas da Semana:
+* Visitas Agendadas: **${visitas} atendimentos**
+* Técnicos Escalados: **${dadosFilial.cronogramaSemana?.padeirosEscalados || 0}**
+* Técnicos sem Escala nesta Semana: **${semEscala}** ${semEscala > 0 ? `(${dadosFilial.cronogramaSemana?.padeirosOciososNomes?.slice(0, 4).join(', ')}${semEscala > 4 ? '...' : ''})` : ''}
+* Total de Escalas no Histórico: **${dadosFilial.totalEscalasHistoricas} registros**
+
+5. Indicadores de Qualidade:
+* Nota Média de Avaliação: **${dadosFilial.notaMediaQualidade} / 5.0**
+
+6. Diagnóstico e Alertas:
+${alertasStr}
+* Status: **${dadosFilial.statusOperacional}**`;
+
+        return {
+          text: respostaTexto,
+          action: null,
+          actionData: null,
+          pensamento: `1. Interpretação da Demanda: Solicitação de status e radiografia operacional da filial ${filialAlvo}.\n2. Averiguação na Base de Dados: Consulta direta ao Cérebro da Bia. Força de trabalho: ${dadosFilial.totalPadeirosAtivos} padeiros, ${dadosFilial.totalClientesCadastrados} clientes, ${dadosFilial.totalEscalasHistoricas} escalas históricas e meta mensal de ${metaStr}.\n3. Análise Operacional: Verificação de cobertura de visitas semanais (${visitas} agendadas) e detecção de ${semEscala} técnicos sem escala ativa.\n4. Decisão Operacional: Emissão de relatório analítico executivo completo sem emojis, destacando equipe, metas, cronograma e alertas.`
+        };
+      }
+    } catch (errCerebro) {
+      console.error('[BIA Cérebro Local] Erro ao obter situação da filial:', errCerebro.message);
+    }
+  }
+
+  // 0.5. CADASTRO AUTÔNOMO DE METAS MENSAIS (Feature de Autonomia da Bia)
+  if (
+    (norm.includes('meta') || norm.includes('metas')) &&
+    (
+      norm.includes('cadastr') ||
+      norm.includes('defin') ||
+      norm.includes('gerar') ||
+      norm.includes('crie') ||
+      norm.includes('criar') ||
+      norm.includes('mes') ||
+      norm.includes('mensal') ||
+      norm.includes('padeiro') ||
+      norm.includes('equipe') ||
+      norm.includes('autonoma') ||
+      norm.includes('autonomo')
+    )
+  ) {
+    return {
+      text: 'Comando de Autonomia: Processando o cálculo e cadastro de metas mensais para os padeiros da equipe com base no histórico de produção e desafio de evolução.',
+      action: 'cadastrar_metas_mensais',
+      actionData: {
+        action: 'cadastrar_metas_mensais',
+        periodo: null,
+        descricao: 'Cadastrar metas mensais de produção por padeiro autonomamente',
         confirmar: true
       }
     };
@@ -991,6 +1106,8 @@ exports.chat = async (req, res) => {
       const clientesNomes = (enrichedContext.clientesAtivos || []).slice(0, 50).map(c => c.nomeFantasia || c.nome).join(', ');
       const hojeInfo = getHojeFormatado();
 
+      const briefingCerebro = await BiaCerebroService.construirBriefingCerebroOperacional(req.user, effectiveMessage);
+
       const systemInstruction = `Você é a BIA, assistente de inteligência artificial oficial do Smart Gestor (Brago Distribuidora).
 Seu objetivo é auxiliar gestores e administradores na operação de padarias, escalas de atendimento e produtividade da equipe.
 
@@ -1017,6 +1134,8 @@ CONTEXTO OPERACIONAL EM TEMPO REAL:
 - Histórico de Escalas no Banco: ${(enrichedContext.cronogramaHistorico || []).length} registros
 - Atividades Registradas: ${(enrichedContext.atividades || []).length} atendimentos
 
+${briefingCerebro}
+
 REGRAS FUNDAMENTAIS PARA ESCALAS DA EQUIPE:
 - Para 'escala_alta_performance' e 'escala_padrao_anterior', a proposta de escala gerada pelo SmartGestor atende SEMPRE TODA A EQUIPE DE PADEIROS ATIVOS (${(enrichedContext.padeirosAtivos || []).length} padeiros), distribuindo-os estrategicamente entre os clientes e dias da semana (segunda a sábado).
 - Por isso, em solicitações gerais de escala (ex: "faça a escala", "crie uma escala", "padrão habitual", "alta performance", "fazer um dos tipos de escalas", "escala de novo", etc.):
@@ -1029,7 +1148,8 @@ AÇÕES OPERACIONAIS:
 Quando o gestor pedir ações executáveis (montar escala, replicar padrão habitual, desfazer escala ou agendar padeiro), além do texto explicativo profissional em linguagem natural, adicione no final um bloco JSON:
 \`\`\`json
 {
-  "action": "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "agendar_avulso" | "nenhuma",
+  "action": "cadastrar_metas_mensais" | "escala_alta_performance" | "escala_padrao_anterior" | "desfazer_alteracoes" | "agendar_avulso" | "nenhuma",
+  "periodo": "YYYY-MM",
   "padeiroNome": null,
   "clienteNome": null,
   "diaSemana": "segunda|terca|quarta|quinta|sexta|sabado",
@@ -1135,6 +1255,28 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
               }
 
               if (action && actionData) {
+                // FEATURE AUTÔNOMA: Cadastrar Metas Mensais por Padeiro
+                if (action === 'cadastrar_metas_mensais') {
+                  try {
+                    const resMetas = await MetasAutonomasService.processarMetasMensais({
+                      periodo: actionData.periodo,
+                      usuarioSolicitante: req.user,
+                      apenasSimulacao: false
+                    });
+                    actionData.resultadoMetas = resMetas;
+                    actionData.periodo = resMetas.periodo;
+                    actionData.periodoNome = resMetas.periodoNome;
+                    actionData.totalPadeiros = resMetas.totalPadeiros;
+                    actionData.metaTotalKg = resMetas.metaTotalKg;
+                    actionData.metas = resMetas.metas;
+
+                    const resumoLinhas = (resMetas.metas || []).slice(0, 5).map(m => `* **${m.padeiroNome}**: ${m.metaKg.toLocaleString('pt-BR')} kg (${m.filial})`).join('\n');
+                    cleanText = `As metas mensais de produção para **${resMetas.periodoNome}** foram calculadas e cadastradas autonomamente pela Bia para ${resMetas.totalPadeiros} padeiros ativos, totalizando **${resMetas.metaTotalKg.toLocaleString('pt-BR')} kg** de meta projetada para a equipe.\n\n${resumoLinhas}${resMetas.metas.length > 5 ? `\n* *(...e mais ${resMetas.metas.length - 5} padeiros)*` : ''}\n\nVocê pode consultar os indicadores completos na aba de Metas do sistema.`;
+                  } catch (errMetas) {
+                    console.error('[BIA Autonoma] Erro ao cadastrar metas no chat:', errMetas.message);
+                  }
+                }
+
                 // TRAVA CRÍTICA: Escalas coletivas (Alta Performance ou Padrão Habitual)
                 if (action === 'escala_alta_performance' || action === 'escala_padrao_anterior') {
                   const pMencionado = extrairPadeiroDaMensagem(normalizarTexto(message), enrichedContext.padeirosAtivos);
@@ -1191,7 +1333,27 @@ Para dúvidas gerais, análises, rankings ou conversas, use "action": "nenhuma" 
   }
 
   // Motor Operacional Inteligente Local da Bia
-  const localResponse = gerarRespostaLocal(effectiveMessage, enrichedContext, { pendingCommand, history });
+  const localResponse = await gerarRespostaLocal(effectiveMessage, enrichedContext, { pendingCommand, history });
+  if (localResponse.action === 'cadastrar_metas_mensais') {
+    try {
+      const resMetas = await MetasAutonomasService.processarMetasMensais({
+        periodo: localResponse.actionData?.periodo,
+        usuarioSolicitante: req.user,
+        apenasSimulacao: false
+      });
+      localResponse.actionData.resultadoMetas = resMetas;
+      localResponse.actionData.periodo = resMetas.periodo;
+      localResponse.actionData.periodoNome = resMetas.periodoNome;
+      localResponse.actionData.totalPadeiros = resMetas.totalPadeiros;
+      localResponse.actionData.metaTotalKg = resMetas.metaTotalKg;
+      localResponse.actionData.metas = resMetas.metas;
+
+      const resumoLinhas = (resMetas.metas || []).slice(0, 5).map(m => `* **${m.padeiroNome}**: ${m.metaKg.toLocaleString('pt-BR')} kg (${m.filial})`).join('\n');
+      localResponse.text = `As metas mensais de produção para **${resMetas.periodoNome}** foram calculadas e cadastradas com sucesso para toda a equipe de ${resMetas.totalPadeiros} padeiros ativos, totalizando **${resMetas.metaTotalKg.toLocaleString('pt-BR')} kg** de meta projetada para a equipe.\n\n${resumoLinhas}${resMetas.metas.length > 5 ? `\n* *(...e mais ${resMetas.metas.length - 5} padeiros)*` : ''}\n\nVocê pode consultar os indicadores completos na aba de Metas do sistema.`;
+    } catch (errM) {
+      console.error('[BIA Autonoma Fallback] Erro ao cadastrar metas no motor local:', errM.message);
+    }
+  }
   const localPensamento = localResponse.pensamento || construirCaminhoPensamento(effectiveMessage, enrichedContext, localResponse);
   return responder({
     text: localResponse.text,

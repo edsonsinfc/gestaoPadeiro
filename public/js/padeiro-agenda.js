@@ -501,27 +501,24 @@ const PadeiroAgenda = {
           String(a.clienteId) === String(emAndamento.clienteId) &&
           (a.data === today || (a.data || '').startsWith(today))
         );
-        if (jaFinalizadaHoje) {
-          // Falso positivo resolvido
-        } else {
-          const isEmpty = (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.isActivityEmpty)
-            ? PadeiroFlow.isActivityEmpty(emAndamento)
-            : ((!emAndamento.kgItens || emAndamento.kgItens.length === 0) && (!emAndamento.fotos || emAndamento.fotos.length === 0) && (!emAndamento.kgTotal || parseFloat(emAndamento.kgTotal) === 0));
-          
-          if (isEmpty) {
-            // Descarta atividade vazia como nao_realizada automaticamente
-            console.log('[PadeiroAgenda] Atividade vazia em andamento descartada automaticamente.');
-            try {
-              await API.put(`/api/atividades/${emAndamento.id || emAndamento._id}`, {
-                status: 'nao_realizada',
-                fimEm: new Date().toISOString()
-              });
-            } catch(e) {}
-          } else if (String(emAndamento.clienteId) !== String(clienteId) || emAndamento.data !== today) {
-            // Atividade com conteúdo em aberto: bloqueia o padeiro!
-            Components.toast('Você possui uma atividade anterior pendente de finalização! Conclua-a ou marque como não realizada.', 'warning');
-            App.navigate('padeiro-atividade');
-            return;
+        if (!jaFinalizadaHoje) {
+          const isPast = emAndamento.data && (emAndamento.data < today);
+          if (!isPast) {
+            const isEmpty = (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.isActivityEmpty)
+              ? PadeiroFlow.isActivityEmpty(emAndamento)
+              : ((!emAndamento.kgItens || emAndamento.kgItens.length === 0) && (!emAndamento.fotos || emAndamento.fotos.length === 0) && (!emAndamento.kgTotal || parseFloat(emAndamento.kgTotal) === 0));
+            
+            if (isEmpty) {
+              // Descarta rascunho vazio sem alterar status do cronograma
+              try {
+                await API.delete(`/api/atividades/${emAndamento.id || emAndamento._id}`);
+              } catch(e) {}
+            } else if (String(emAndamento.clienteId) !== String(clienteId)) {
+              // Atividade de hoje com produção iniciada para outro cliente: bloqueia
+              Components.toast('Você possui uma atividade iniciada hoje com produção em andamento! Conclua-a primeiro.', 'warning');
+              App.navigate('padeiro-atividade');
+              return;
+            }
           }
         }
       }

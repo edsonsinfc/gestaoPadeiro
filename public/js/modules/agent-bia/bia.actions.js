@@ -1042,6 +1042,19 @@ const BiaActions = {
 
     return Array.from(agrupamentoMap.values())
       .sort((a, b) => (b.totalKg - a.totalKg) || (b.totalVisitas - a.totalVisitas));
+  },
+
+  /**
+   * AÇÃO: Cadastrar Metas Mensais Autônomas por Padeiro
+   */
+  async cadastrarMetasMensais(periodo = null) {
+    try {
+      const res = await API.post('/api/bia/autonoma/metas/gerar', { periodo });
+      return res;
+    } catch (e) {
+      console.error('[BIA Actions] Erro ao cadastrar metas autônomas:', e);
+      throw e;
+    }
   }
 };
 
