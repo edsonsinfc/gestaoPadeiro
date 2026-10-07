@@ -21,9 +21,9 @@ const BIA_CONFIG = {
   groqBaseUrl: 'https://api.groq.com/openai/v1/audio/transcriptions',
 
   models: [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite'
   ],
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
   

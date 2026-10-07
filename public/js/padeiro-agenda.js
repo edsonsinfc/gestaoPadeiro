@@ -405,9 +405,10 @@ const PadeiroAgenda = {
     const statusConfig = {
       'pendente': { icon: isLate ? 'alert-circle' : 'clock', label: isLate ? 'Atrasado' : 'Pendente', class: isLate ? 'danger' : 'amber' },
       'em_andamento': { icon: 'zap', label: 'Andamento', class: 'blue' },
-      'concluida': { icon: 'check-circle-2', label: 'Concluído', class: 'success' }
+      'concluida': { icon: 'check-circle-2', label: 'Concluído', class: 'success' },
+      'nao_realizada': { icon: 'x-circle', label: 'Não Realizada', class: 'danger' }
     };
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig['pendente'];
 
     return `
       <div class="task-card-premium" style="animation: pfCascadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: ${0.32 + index * 0.08}s;" onclick="PadeiroAgenda.startActivity('${t.id}', '${t.clienteId}', '${t.clienteNome}')">
@@ -450,7 +451,8 @@ const PadeiroAgenda = {
     const statusMap = {
       'pendente': { icon: 'clock', label: 'Pendente', color: 'amber' },
       'em_andamento': { icon: 'zap', label: 'Em Andamento', color: 'blue' },
-      'concluida': { icon: 'star', label: 'Concluída', color: 'success' }
+      'concluida': { icon: 'star', label: 'Concluída', color: 'success' },
+      'nao_realizada': { icon: 'x-circle', label: 'Não Realizada', color: 'danger' }
     };
     
     const config = statusMap[status] || statusMap['pendente'];
@@ -501,15 +503,26 @@ const PadeiroAgenda = {
         );
         if (jaFinalizadaHoje) {
           // Falso positivo resolvido
-        } else if (emAndamento.data !== today) {
-          const isEmpty = (!emAndamento.kgItens || emAndamento.kgItens.length === 0) && (!emAndamento.fotos || emAndamento.fotos.length === 0);
-          if (!isEmpty) {
-            Components.toast('Você possui uma atividade anterior pendente de finalização!', 'warning');
+        } else {
+          const isEmpty = (typeof PadeiroFlow !== 'undefined' && PadeiroFlow.isActivityEmpty)
+            ? PadeiroFlow.isActivityEmpty(emAndamento)
+            : ((!emAndamento.kgItens || emAndamento.kgItens.length === 0) && (!emAndamento.fotos || emAndamento.fotos.length === 0) && (!emAndamento.kgTotal || parseFloat(emAndamento.kgTotal) === 0));
+          
+          if (isEmpty) {
+            // Descarta atividade vazia como nao_realizada automaticamente
+            console.log('[PadeiroAgenda] Atividade vazia em andamento descartada automaticamente.');
+            try {
+              await API.put(`/api/atividades/${emAndamento.id || emAndamento._id}`, {
+                status: 'nao_realizada',
+                fimEm: new Date().toISOString()
+              });
+            } catch(e) {}
+          } else if (String(emAndamento.clienteId) !== String(clienteId) || emAndamento.data !== today) {
+            // Atividade com conteúdo em aberto: bloqueia o padeiro!
+            Components.toast('Você possui uma atividade anterior pendente de finalização! Conclua-a ou marque como não realizada.', 'warning');
             App.navigate('padeiro-atividade');
             return;
           }
-        } else if (String(emAndamento.clienteId) !== String(clienteId)) {
-          if (!confirm('Você já tem uma atividade em andamento. Deseja iniciar outra?')) return;
         }
       }
     } catch(e) {}

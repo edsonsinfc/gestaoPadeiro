@@ -18,9 +18,9 @@ const GROQ_WHISPER_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 
 // Lista de modelos Gemini suportados em ordem de preferência
 const GEMINI_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash'
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite'
 ];
 
 /**

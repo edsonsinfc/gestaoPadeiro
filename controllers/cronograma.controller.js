@@ -1,4 +1,4 @@
-const { Cronograma, Padeiro, Atividade, Avaliacao } = require('../data/db-adapter');
+const { Cronograma, Padeiro, Atividade, Avaliacao, Cliente } = require('../data/db-adapter');
 const { getIo } = require('../sockets/location.socket');
 
 exports.listCronograma = async (req, res) => {
@@ -91,10 +91,18 @@ exports.getWeeklyAgenda = async (req, res) => {
       status: { $ne: 'solicitado' } // Ignora solicitações pendentes de aprovação!
     }).sort({ data: 1 });
 
+    const allClientes = await Cliente.find();
+    const cliMap = new Map();
+    allClientes.forEach(c => cliMap.set(c.id, c));
+
     agenda.forEach(a => {
       if (a.padeiroId) {
         const p = padeiros.find(x => x.id === a.padeiroId);
         if (p) a.padeiroNome = p.nome;
+      }
+      if (a.clienteId && cliMap.has(a.clienteId)) {
+        const c = cliMap.get(a.clienteId);
+        if (c.nomeFantasia) a.clienteNome = c.nomeFantasia;
       }
     });
 
@@ -272,8 +280,16 @@ exports.getPadeiroAgenda = async (req, res) => {
       } catch (err) {}
     }
 
+    const allClientes = await Cliente.find();
+    const cliMap = new Map();
+    allClientes.forEach(c => cliMap.set(c.id, c));
+
     agenda.forEach(a => {
       a.padeiroNome = a.padeiroNome || req.user.nome;
+      if (a.clienteId && cliMap.has(a.clienteId)) {
+        const c = cliMap.get(a.clienteId);
+        if (c.nomeFantasia) a.clienteNome = c.nomeFantasia;
+      }
     });
 
     res.json(agenda);
@@ -294,9 +310,10 @@ exports.updateTarefaStatus = async (req, res) => {
     );
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
-    // Se a tarefa for marcada como concluída, sincroniza qualquer atividade em andamento correspondente
-    if (status === 'concluida') {
+    // Se a tarefa for marcada como concluída ou não realizada, sincroniza qualquer atividade em andamento correspondente
+    if (status === 'concluida' || status === 'nao_realizada') {
       try {
+        const targetStatus = status === 'concluida' ? 'finalizada' : 'nao_realizada';
         const atvs = await Atividade.find({
           $or: [
             { cronogramaId: req.params.id },
@@ -306,13 +323,13 @@ exports.updateTarefaStatus = async (req, res) => {
         });
         for (const atv of atvs) {
           await Atividade.findByIdAndUpdate(atv.id, {
-            status: 'finalizada',
+            status: targetStatus,
             fimEm: new Date().toISOString(),
             atualizadoEm: new Date().toISOString()
           });
           const ioAtv = getIo();
           if (ioAtv) {
-            ioAtv.emit('activity-updated', { ...atv, status: 'finalizada' });
+            ioAtv.emit('activity-updated', { ...atv, status: targetStatus });
           }
         }
       } catch (atvErr) {

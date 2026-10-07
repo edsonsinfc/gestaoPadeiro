@@ -19,6 +19,34 @@ const PadeiroFlow = {
     return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
   },
 
+  isActivityEmpty(act) {
+    if (!act) return true;
+    
+    // Parse kgItens se string
+    let itens = act.kgItens;
+    if (typeof itens === 'string') {
+      try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+    }
+    const hasItems = Array.isArray(itens) && itens.length > 0;
+
+    // Parse fotos se string
+    let fotos = act.fotos;
+    if (typeof fotos === 'string') {
+      try { fotos = JSON.parse(fotos); } catch(e) { fotos = []; }
+    }
+    const hasFotos = Array.isArray(fotos) && fotos.length > 0;
+
+    const kgTotal = parseFloat(act.kgTotal || 0);
+    const lTotal = parseFloat(act.lTotal || 0);
+    const hasProducao = (kgTotal > 0) || (lTotal > 0);
+
+    const hasAssinatura = !!(act.assinatura && typeof act.assinatura === 'string' && act.assinatura.trim().length > 10);
+    const hasObs = !!(act.observacao && typeof act.observacao === 'string' && act.observacao.trim().length > 0);
+    const hasNota = !!act.notaCliente || !!act.notaPadeiroCliente;
+
+    return !hasItems && !hasFotos && !hasProducao && !hasAssinatura && !hasObs && !hasNota;
+  },
+
   async render(prefill = {}) {
     this.stopNoActivitiesAutoPoller();
     const container = document.getElementById('page-container');
@@ -35,84 +63,51 @@ const PadeiroFlow = {
 
     const today = this.getTodayLocal();
 
-    // 1. Buscar atividades e agenda antecipadamente para evitar falsos positivos
+    // 1. Carregar atividades, agenda e clientes em paralelo
     let atividades = [];
-    let atividadesHoje = [];
+    let agenda = [];
+    let clientes = [];
     try {
-      atividades = await API.get('/api/atividades');
-      if (!Array.isArray(atividades)) atividades = [];
-      atividadesHoje = atividades.filter(a => ((a.data || '').split('T')[0]) === today);
+      const [resAtv, resAgenda, resCli] = await Promise.all([
+        API.get('/api/atividades').catch(() => []),
+        API.get('/api/cronograma/agenda').catch(() => []),
+        API.get('/api/clientes').catch(() => [])
+      ]);
+      atividades = Array.isArray(resAtv) ? resAtv : [];
+      agenda = Array.isArray(resAgenda) ? resAgenda : [];
+      clientes = Array.isArray(resCli) ? resCli : [];
     } catch(e) {
-      console.warn('Erro ao carregar atividades:', e);
+      console.warn('Erro ao carregar dados no PadeiroFlow:', e);
     }
+    this.todosClientes = clientes;
+
+    // Mapeamento de clientes para garantir uso prioritário do nome fantasia
+    const cliMap = new Map();
+    clientes.forEach(c => {
+      const cid = String(c.id || c._id);
+      cliMap.set(cid, c.nomeFantasia || c.nome || c.razaoSocial || 'Cliente');
+    });
+
+    const atividadesHoje = atividades.filter(a => ((a.data || '').split('T')[0]) === today);
     this.atividadesHoje = atividadesHoje;
     const atividadesFinalizadasHoje = atividadesHoje.filter(a => a.status === 'finalizada');
 
-    // Verificar se há atividade em andamento
-    try {
-      let em = atividades.find(a => a.status === 'em_andamento');
+    // 2. Tarefas agendadas para hoje enriquecidas com nomeFantasia
+    let todasTarefasHoje = (agenda || []).filter(a => {
+      if (!a) return false;
+      const aData = (a.data || '').split('T')[0];
+      return aData === today || aData.startsWith(today);
+    });
 
-      // Falso positivo 1: A atividade em andamento pertence a cliente já finalizado hoje
-      if (em && atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(em.clienteId))) {
-        console.warn('[PadeiroFlow] Atividade em andamento pertence a cliente já finalizado hoje. Limpando falso positivo...');
-        try {
-          await API.put(`/api/atividades/${em.id || em._id}`, { status: 'finalizada', fimEm: new Date().toISOString() });
-        } catch (e) {}
-        em = null;
+    todasTarefasHoje.forEach(t => {
+      if (t.clienteId && cliMap.has(String(t.clienteId))) {
+        t.clienteNome = cliMap.get(String(t.clienteId));
       }
+    });
 
-      // Falso positivo 2: Rascunho vazio de dia anterior abandonado
-      if (em && em.data !== today) {
-        const isEmptyDraft = (!em.kgItens || em.kgItens.length === 0) && 
-                             (!em.fotos || em.fotos.length === 0) && 
-                             (!em.kgTotal || parseFloat(em.kgTotal) === 0);
-        if (isEmptyDraft) {
-          console.log('[PadeiroFlow] Descartando rascunho vazio de data anterior:', em.id, em.data);
-          try {
-            await API.delete(`/api/atividades/${em.id || em._id}`).catch(() => 
-              API.put(`/api/atividades/${em.id || em._id}`, { status: 'cancelada' })
-            );
-          } catch (e) {}
-          em = null;
-        }
-      }
-
-      if (em) {
-        if (em.data === today) {
-          if (prefill && prefill.clienteId && String(prefill.clienteId) !== String(em.clienteId)) {
-            // Se prefill veio especificamente para outro cliente, não força retomada da atividade antiga
-            this.pendingResume = null;
-          } else {
-            this.pendingResume = em;
-            await this.confirmResume();
-            return;
-          }
-        } else {
-          this.pendingPreviousResume = em;
-          this.renderPendingPreviousActivityScreen(container, em);
-          return;
-        }
-      }
-    } catch(e) {}
-
-    // 2. Buscar agenda do usuário e atividades de hoje
-    const me = (typeof API !== 'undefined' && typeof API.getUser === 'function' ? API.getUser() : null) || {};
-    let todasTarefasHoje = [];
-
-    try {
-      const agenda = await API.get('/api/cronograma/agenda');
-      todasTarefasHoje = (agenda || []).filter(a => {
-        if (!a) return false;
-        const aData = (a.data || '').split('T')[0];
-        return aData === today || aData.startsWith(today);
-      });
-    } catch(e) {
-      console.warn('Erro ao buscar agenda:', e);
-    }
-
-    // Tarefas pendentes do dia (não concluídas e não vinculadas a atividade já finalizada hoje por cronogramaId OU clienteId)
+    // Tarefas pendentes do dia (não concluídas, não não-realizadas e sem atividade finalizada hoje)
     const tarefasPendentes = todasTarefasHoje.filter(t => {
-      if (t.status === 'concluida') return false;
+      if (t.status === 'concluida' || t.status === 'nao_realizada') return false;
       const jaFinalizada = atividadesFinalizadasHoje.some(act => 
         (act.cronogramaId && (String(act.cronogramaId) === String(t.id) || String(act.cronogramaId) === String(t._id))) ||
         (act.clienteId && String(act.clienteId) === String(t.clienteId))
@@ -120,43 +115,103 @@ const PadeiroFlow = {
       return !jaFinalizada;
     });
 
-    const isExplicitStart = !!(prefill && (prefill.clienteId || prefill.forceStart));
+    // Sempre priorizar a tarefa agendada mais recente de hoje no topo
+    tarefasPendentes.sort((a, b) => {
+      const timeA = a.atualizadoEm || a.criadoEm || a.horario || '';
+      const timeB = b.atualizadoEm || b.criadoEm || b.horario || '';
+      return timeB.localeCompare(timeA);
+    });
 
-    // Se NÃO for início forçado/específico por clique em cliente da agenda
+    this.agendaHoje = tarefasPendentes;
+
+    // Tarefa alvo obrigatória sincronizada com o cronograma de hoje
+    let targetTask = null;
+    if (prefill && prefill.clienteId) {
+      targetTask = todasTarefasHoje.find(t => String(t.clienteId) === String(prefill.clienteId)) || {
+        clienteId: prefill.clienteId,
+        clienteNome: prefill.clienteNome || cliMap.get(String(prefill.clienteId)) || 'Cliente',
+        id: prefill.cronogramaId || null
+      };
+    } else if (tarefasPendentes.length > 0) {
+      targetTask = tarefasPendentes[0];
+    }
+
+    // 3. Tratar atividades em andamento: descartar vazias e bloquear se houver pendência de outro cliente
+    const inProgressList = atividades.filter(a => a.status === 'em_andamento');
+    let blockingActivity = null;
+    let resumeActivity = null;
+
+    for (const em of inProgressList) {
+      // Falso positivo: pertence a cliente já finalizado hoje
+      if (atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(em.clienteId))) {
+        try {
+          await API.put(`/api/atividades/${em.id || em._id}`, { status: 'finalizada', fimEm: new Date().toISOString() });
+        } catch(e) {}
+        continue;
+      }
+
+      // Regra: se a atividade estiver 100% vazia, marca automaticamente como 'nao_realizada'
+      if (this.isActivityEmpty(em)) {
+        console.log('[PadeiroFlow] Atividade vazia em andamento descartada automaticamente como nao_realizada:', em.id, em.clienteNome);
+        try {
+          await API.put(`/api/atividades/${em.id || em._id}`, { 
+            status: 'nao_realizada', 
+            fimEm: new Date().toISOString() 
+          });
+        } catch(e) {}
+        continue;
+      }
+
+      // Se NÃO for vazia (tem produtos, kg, fotos, etc.):
+      const isSameClientAsTarget = targetTask && String(em.clienteId) === String(targetTask.clienteId);
+      const isToday = em.data === today;
+
+      if (isSameClientAsTarget && isToday) {
+        resumeActivity = em;
+      } else {
+        // O padeiro iniciou e esqueceu de terminar a atividade anterior de outro cliente ou dia!
+        // Bloqueia ele de iniciar a nova tarefa até concluir ou encerrar a anterior!
+        blockingActivity = em;
+        break;
+      }
+    }
+
+    // Bloqueio obrigatório por atividade anterior não finalizada
+    if (blockingActivity) {
+      this.pendingResume = null;
+      this.pendingPreviousResume = blockingActivity;
+      this.renderBlockedPreviousActivityScreen(container, blockingActivity, targetTask);
+      return;
+    }
+
+    // Se houver atividade em andamento para o mesmo cliente alvo de hoje, retoma diretamente
+    if (resumeActivity) {
+      this.activity = resumeActivity;
+      const oldStep = parseInt(resumeActivity.lastStep) || 0;
+      const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
+      this.currentStep = hasFinishedProd ? 1 : 0;
+      this.renderWizard(container);
+      return;
+    }
+
+    // 4. Verificações de escala de hoje se não for início avulso/explícito
+    const isExplicitStart = !!(prefill && (prefill.clienteId || prefill.forceStart));
     if (!isExplicitStart) {
-      // Caso 1: Nenhuma tarefa agendada no dia
       if (todasTarefasHoje.length === 0) {
         this.renderNoActivitiesScheduledScreen(container, today);
         return;
       }
-
-      // Caso 2: Usuário já cumpriu todas as tarefas do dia
       if (todasTarefasHoje.length > 0 && tarefasPendentes.length === 0) {
         this.renderAllActivitiesCompletedScreen(container, todasTarefasHoje, atividadesFinalizadasHoje, today);
         return;
       }
     }
 
-    this.agendaHoje = tarefasPendentes;
-
-    if (!this.activity.clienteId && tarefasPendentes.length > 0) {
-      this.activity.clienteId = tarefasPendentes[0].clienteId;
-      this.activity.clienteNome = tarefasPendentes[0].clienteNome;
-      this.activity.cronogramaId = tarefasPendentes[0].id || tarefasPendentes[0]._id;
-    } else if (this.activity.clienteId && tarefasPendentes.length > 0) {
-      const match = tarefasPendentes.find(t => String(t.clienteId) === String(this.activity.clienteId));
-      if (match) {
-        this.activity.clienteNome = this.activity.clienteNome || match.clienteNome;
-        this.activity.cronogramaId = this.activity.cronogramaId || (match.id || match._id);
-      }
-    }
-
-    // Auto-inicia atividade no backend APENAS se o cliente ainda NÃO tiver sido finalizado hoje
-    if (this.activity.clienteId) {
-      const jaFinalizada = atividadesFinalizadasHoje.some(a => String(a.clienteId) === String(this.activity.clienteId));
-      if (!jaFinalizada) {
-        await this.ensureActivityStarted();
-      }
+    // 5. Sincroniza dados da atividade com o cronograma obrigatório
+    if (targetTask) {
+      this.activity.clienteId = targetTask.clienteId;
+      this.activity.clienteNome = cliMap.get(String(targetTask.clienteId)) || targetTask.clienteNome;
+      this.activity.cronogramaId = targetTask.id || targetTask._id;
     }
 
     App.routeData = {};
@@ -385,51 +440,148 @@ const PadeiroFlow = {
     Components.renderIcons();
   },
 
-  renderPendingPreviousActivityScreen(container, em) {
+  renderBlockedPreviousActivityScreen(container, em, targetTask) {
     const formatDate = (dateStr) => {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-      }
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
       return dateStr;
     };
-    
+
+    let totalItens = 0;
+    try {
+      const it = typeof em.kgItens === 'string' ? JSON.parse(em.kgItens) : em.kgItens;
+      if (Array.isArray(it)) totalItens = it.length;
+    } catch(e) {}
+
+    const kgTotal = parseFloat(em.kgTotal || 0);
+    const targetNome = targetTask ? (targetTask.clienteNome || 'Cliente Agendado') : 'sua escala de hoje';
+
     container.innerHTML = `
-      <div class="pf-container pf-resume-container fade-in" style="max-width:500px;margin:40px auto;text-align:center;">
-        <div class="pf-resume-card" style="border: 2px solid #f59e0b; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15); background: var(--surface-bg);">
-          <div class="pf-resume-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; width: 72px; height: 72px; border-radius: 50%;">
-            <i data-lucide="alert-triangle" style="width:36px;height:36px"></i>
+      <div class="pf-container pf-resume-container fade-in" style="max-width:520px;margin:30px auto;padding:0 16px;text-align:center;">
+        <div class="pf-resume-card" style="border: 2px solid #ef4444; box-shadow: 0 12px 32px -8px rgba(239, 68, 68, 0.2); background: #ffffff; border-radius: 24px; padding: 28px 22px;">
+          
+          <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; width: 76px; height: 76px; border-radius: 50%; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);">
+            <i data-lucide="shield-alert" style="width:38px;height:38px"></i>
           </div>
-          <h2 class="pf-resume-title" style="color: #d97706; font-size: 20px; font-weight: 800; margin-bottom: 8px;">Atividade Pendente!</h2>
-          <p class="pf-resume-sub" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
-            Por favor, finalize a atividade anterior antes de iniciar uma nova.
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #FEF2F2; color: #DC2626; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px; border: 1px solid #fee2e2;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #EF4444; display: inline-block;"></span>
+              Atividade Anterior Bloqueando Escala
+            </span>
+          </div>
+
+          <h2 style="color: #0f172a; font-size: 21px; font-weight: 800; margin-bottom: 8px; line-height: 1.3;">
+            Atendimento Pendente de Conclusão!
+          </h2>
+          
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">
+            Você possui um atendimento em andamento para <strong>${em.clienteNome || 'outro cliente'}</strong> que foi deixado em aberto com apontamentos iniciados.
           </p>
-          <div class="pf-resume-info" style="text-align: left; background: #fafbfc; border: 1px solid #f1f5f9; border-radius: 14px; padding: 18px; margin-bottom: 24px;">
-            <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-              Identificamos que você iniciou um atendimento em <strong>${formatDate(em.data)}</strong> para o cliente abaixo, mas ele não foi concluído:
-            </p>
-            <div class="pf-resume-row" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-              <span style="font-size: 13px; color: var(--text-tertiary);">Cliente:</span>
-              <strong style="font-size: 13px; color: var(--text-primary); text-align: right; max-width: 70%;">${em.clienteNome||'—'}</strong>
-            </div>
-            <div class="pf-resume-row" style="display: flex; justify-content: space-between; padding: 6px 0;">
-              <span style="font-size: 13px; color: var(--text-tertiary);">Iniciado em:</span>
-              <strong style="font-size: 13px; color: var(--text-primary);">${formatDate(em.data)} às ${em.hora ? em.hora.slice(0, 5) : '—'}</strong>
+
+          <!-- Banner Informativo -->
+          <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 14px; padding: 14px; margin-bottom: 20px; text-align: left; display: flex; gap: 12px; align-items: flex-start;">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #D97706; flex-shrink: 0; margin-top: 2px;"></i>
+            <div style="font-size: 13px; color: #92400E; line-height: 1.4;">
+              Para iniciar o atendimento agendado de <strong>${targetNome}</strong>, você precisa primeiro <strong>finalizar</strong> ou <strong>marcar como não realizada</strong> a atividade anterior.
             </div>
           </div>
-          <button class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.confirmResumePrevious()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);">
-            <i data-lucide="play" style="width:18px;height:18px"></i> Retomar e Finalizar Atividade
-          </button>
-          <button class="pf-btn-ghost pf-btn-full" onclick="PadeiroFlow.discardPendingPrevious('${em.id || em._id}')" style="margin-top: 10px; color: #ef4444; border: 1.5px solid #fca5a5; background: #fff5f5; border-radius: 12px; font-weight: 700; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-            <i data-lucide="trash-2" style="width:16px;height:16px"></i> Descartar Atividade Não Concluída
-          </button>
-          <button class="pf-btn-ghost" onclick="App.navigate('padeiro-inicio')" style="margin-top: 10px;">
-            <i data-lucide="calendar" style="width:16px;height:16px;margin-right:6px;"></i> Voltar para a Agenda
-          </button>
+
+          <!-- Card com detalhes da atividade pendente -->
+          <div style="text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+              Detalhes da Atividade Pendente
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0;">
+              <span style="font-size: 13px; color: #64748b;">Cliente Anterior:</span>
+              <strong style="font-size: 13px; color: #1e293b; text-align: right; max-width: 65%;">${em.clienteNome || '—'}</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0;">
+              <span style="font-size: 13px; color: #64748b;">Iniciado em:</span>
+              <strong style="font-size: 13px; color: #1e293b;">${formatDate(em.data)} às ${em.hora ? em.hora.slice(0, 5) : '—'}</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+              <span style="font-size: 13px; color: #64748b;">Produção Apontada:</span>
+              <strong style="font-size: 13px; color: #1E4BFF;">${totalItens} produtos (${kgTotal} kg)</strong>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="pf-btn-primary pf-btn-full" onclick="PadeiroFlow.confirmResumeBlocked('${em.id || em._id}')" style="background: linear-gradient(135deg, #1E4BFF 0%, #002ECC 100%); box-shadow: 0 4px 14px rgba(30, 75, 255, 0.25); height: 48px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="play-circle" style="width:18px;height:18px"></i> Retomar e Concluir Atividade Anterior
+            </button>
+            
+            <button class="pf-btn-full" onclick="PadeiroFlow.markPendingAsNotDone('${em.id || em._id}', '${em.cronogramaId || ''}')" style="background: #fff5f5; border: 1.5px solid #fca5a5; color: #dc2626; height: 46px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <i data-lucide="x-circle" style="width:18px;height:18px"></i> Marcar Anterior como Não Realizada
+            </button>
+
+            <button class="pf-btn-ghost pf-btn-full" onclick="App.navigate('padeiro-agenda')" style="margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; color: #64748b;">
+              <i data-lucide="calendar" style="width:16px;height:16px"></i> Ver Minha Agenda Semanal
+            </button>
+          </div>
+
         </div>
-      </div>`;
+      </div>
+    `;
     Components.renderIcons();
+  },
+
+  renderPendingPreviousActivityScreen(container, em) {
+    this.renderBlockedPreviousActivityScreen(container, em, null);
+  },
+
+  async confirmResumeBlocked(activityId) {
+    if (!activityId) return;
+    try {
+      const atvs = await API.get('/api/atividades');
+      const atv = (atvs || []).find(a => (a.id || a._id) === activityId);
+      if (atv) {
+        this.activity = atv;
+        const oldStep = parseInt(atv.lastStep) || 0;
+        const hasFinishedProd = (this.activity.kgItens && this.activity.kgItens.length > 0) || oldStep >= 2;
+        this.currentStep = hasFinishedProd ? 1 : 0;
+        this.pendingPreviousResume = null;
+        this.pendingResume = null;
+        this.renderWizard(document.getElementById('page-container'));
+        return;
+      }
+    } catch(e) {
+      console.warn('Erro ao retomar atividade bloqueada:', e);
+    }
+    await this.render();
+  },
+
+  async markPendingAsNotDone(activityId, cronogramaId) {
+    if (!activityId) return;
+    const confirmAction = confirm('Atenção: Deseja realmente marcar esta atividade pendente como "Não Realizada"? Ela será encerrada e o atendimento de hoje será liberado.');
+    if (!confirmAction) return;
+
+    try {
+      await API.put(`/api/atividades/${activityId}`, {
+        status: 'nao_realizada',
+        fimEm: new Date().toISOString()
+      });
+      if (cronogramaId) {
+        try {
+          await API.patch(`/api/cronograma/agenda/${cronogramaId}/status`, { status: 'nao_realizada' });
+        } catch(e) {}
+      }
+      if (typeof Components !== 'undefined' && Components.toast) {
+        Components.toast('Atividade anterior marcada como Não Realizada. Escala liberada!', 'info');
+      }
+    } catch (e) {
+      console.warn('Erro ao marcar atividade como nao_realizada:', e);
+    }
+
+    this.pendingPreviousResume = null;
+    this.pendingResume = null;
+    this.clearDraftLocally();
+    await this.render();
   },
 
   async discardPendingPrevious(activityId) {
@@ -1034,12 +1186,13 @@ const PadeiroFlow = {
               ${todosClientes.map(cli => {
                 const cid = cli.id || cli._id;
                 const isSelected = this.activity.clienteId && String(this.activity.clienteId) === String(cid);
+                const displayName = cli.nomeFantasia || cli.nome || cli.razaoSocial || 'Cliente';
                 return `
                 <option value="${cid}" 
-                        data-nome="${cli.nome || cli.razaoSocial || 'Cliente'}" 
+                        data-nome="${displayName}" 
                         data-cronograma=""
                         ${isSelected ? 'selected' : ''}>
-                  ${cli.nome || cli.razaoSocial}
+                  ${displayName}
                 </option>`;
               }).join('')}
             </select>

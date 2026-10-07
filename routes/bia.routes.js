@@ -7,5 +7,6 @@ router.post('/chat', authMiddleware, ctrl.chat);
 router.post('/transcribe', authMiddleware, ctrl.transcribe);
 router.get('/status', authMiddleware, ctrl.getStatus);
 router.get('/context', authMiddleware, ctrl.getContext);
+router.use('/autonoma', require('../modules/bia-autonoma').routes);
 
 module.exports = router;

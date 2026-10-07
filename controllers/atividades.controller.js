@@ -223,18 +223,21 @@ exports.updateAtividade = async (req, res) => {
     
     if (!atividade) return res.status(404).json({ error: 'Atividade não encontrada' });
 
-    // Sincronizar status do Cronograma quando a atividade for finalizada
-    if (updateData.status === 'finalizada' || atividade.status === 'finalizada') {
+    // Sincronizar status do Cronograma quando a atividade for finalizada ou marcada como não realizada
+    const isFinished = updateData.status === 'finalizada' || atividade.status === 'finalizada';
+    const isNotDone = updateData.status === 'nao_realizada' || atividade.status === 'nao_realizada';
+    if (isFinished || isNotDone) {
+      const targetCronoStatus = isFinished ? 'concluida' : 'nao_realizada';
       try {
         const cronoId = atividade.cronogramaId || req.body.cronogramaId;
         if (cronoId) {
           await Cronograma.findByIdAndUpdate(cronoId, { 
-            status: 'concluida', 
+            status: targetCronoStatus, 
             atualizadoEm: new Date().toISOString() 
           });
           const io = getIo();
           if (io) {
-            io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: 'concluida' } });
+            io.emit('agenda-updated', { action: 'status_update', tarefa: { id: cronoId, status: targetCronoStatus } });
           }
         }
         
@@ -247,12 +250,12 @@ exports.updateAtividade = async (req, res) => {
           });
           for (const t of matchingTasks) {
             await Cronograma.findByIdAndUpdate(t.id, { 
-              status: 'concluida', 
+              status: targetCronoStatus, 
               atualizadoEm: new Date().toISOString() 
             });
             const io = getIo();
             if (io) {
-              io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: 'concluida' } });
+              io.emit('agenda-updated', { action: 'status_update', tarefa: { id: t.id, status: targetCronoStatus } });
             }
           }
         }
