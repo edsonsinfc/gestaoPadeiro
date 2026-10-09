@@ -63,13 +63,13 @@ function sanitizarTextoParaFala(texto) {
   limpo = limpo.replace(/\n/g, ' ');
   limpo = limpo.replace(/\s{2,}/g, ' ').trim();
 
-  // 9. Limite de segurança de caracteres por fala para manter agilidade (máx ~1200 caracteres)
-  if (limpo.length > 1200) {
-    const pontuacao = limpo.lastIndexOf('.', 1200);
-    if (pontuacao > 400) {
+  // 9. Limite otimizado para síntese instantânea (< 2.5s na ElevenLabs)
+  if (limpo.length > 450) {
+    const pontuacao = limpo.lastIndexOf('.', 450);
+    if (pontuacao > 150) {
       limpo = limpo.slice(0, pontuacao + 1);
     } else {
-      limpo = limpo.slice(0, 1200) + '...';
+      limpo = limpo.slice(0, 450) + '...';
     }
   }
 

@@ -1394,6 +1394,23 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
   },
 
+  getAudioPlayer() {
+    let player = document.getElementById('bia-global-audio-player');
+    if (!player && typeof document !== 'undefined') {
+      player = document.createElement('audio');
+      player.id = 'bia-global-audio-player';
+      player.setAttribute('playsinline', '');
+      player.setAttribute('preload', 'auto');
+      player.style.position = 'fixed';
+      player.style.width = '0';
+      player.style.height = '0';
+      player.style.opacity = '0';
+      player.style.pointerEvents = 'none';
+      document.body.appendChild(player);
+    }
+    return player;
+  },
+
   async speakText(text, btnEl = null) {
     if (!text || typeof text !== 'string') return;
     this.stopSpeaking();
@@ -1407,13 +1424,13 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       if (label) label.textContent = 'Carregando...';
     }
 
-    // Trava de segurança para NUNCA manter o botão travado em "Carregando..."
+    // Trava de segurança com tempo realista para IA (20s) para NUNCA abortar enquanto a síntese gera
     let safetyTimer = setTimeout(() => {
       if (this._isSpeaking && btnEl && btnEl.classList.contains('is-loading')) {
-        console.warn('[BIA Audio] Safety timeout de 8s disparado. Alternando para voz nativa...');
+        console.warn('[BIA Audio] Safety timeout de 20s disparado. Alternando para voz nativa...');
         this.speakNative(text, btnEl);
       }
-    }, 8000);
+    }, 20000);
 
     try {
       if (typeof BiaAPI !== 'undefined' && typeof BiaAPI.synthesizeSpeech === 'function') {
@@ -1432,11 +1449,12 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             if (label) label.textContent = 'Falando...';
           }
 
-          const audio = new Audio();
+          const audio = this.getAudioPlayer() || new Audio();
           audio.preload = 'auto';
           audio.src = res.audioUrl;
+          audio.volume = 1.0;
           this._currentAudio = audio;
-          window._activeBiaAudio = audio; // Previne coleta indevida pelo Garbage Collector no Android
+          window._activeBiaAudio = audio;
 
           audio.onplay = () => {
             if (btnEl) {
@@ -1460,7 +1478,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             audio.load();
             const p = audio.play();
             if (p !== undefined) {
-              p.catch(playErr => {
+              p.then(() => {
+                console.log('[BIA Audio] Reprodução iniciada no player de áudio!');
+              }).catch(playErr => {
                 console.warn('[BIA Audio] Autoplay bloqueado pelo navegador/WebView, tentando fala nativa:', playErr);
                 this.speakNative(text, btnEl);
               });

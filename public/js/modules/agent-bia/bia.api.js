@@ -1167,22 +1167,27 @@ const BiaAPI = {
 
     console.log('[BIA TTS] Solicitando áudio para:', endpoint);
 
-    // 1. CAMADA 1: Tentar via Backend (com AbortController de 3.5s para NUNCA travar o app Android)
+    // 1. CAMADA 1: Tentar via Backend (com format: base64 e timeout generoso de 15s para IA)
     try {
       const token = (typeof localStorage !== 'undefined' && (localStorage.getItem('brago_token') || localStorage.getItem('token'))) || (typeof API !== 'undefined' && API.token) || '';
       
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3500);
+      const timer = setTimeout(() => {
+        console.warn('[BIA TTS] Timeout de 15s atingido no backend, abortando...');
+        controller.abort();
+      }, 15000);
 
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'ngrok-skip-browser-warning': 'true',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           text,
+          format: 'base64',
           apiKey: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || '',
           voiceId: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || ''
         }),
@@ -1192,7 +1197,24 @@ const BiaAPI = {
 
       if (res.ok) {
         const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('audio')) {
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && data.audio) {
+            console.log('[BIA TTS] Áudio Base64 recebido com sucesso do backend!');
+            return {
+              type: 'audio',
+              audioUrl: data.audio
+            };
+          }
+          if (data && data.fallback) {
+            console.log('[BIA TTS] Backend solicitou fallback:', data.error);
+            try {
+              const direto = await this.chamarElevenLabsDireto(text);
+              if (direto) return direto;
+            } catch (_) {}
+            return { type: 'native', text: data.text || text };
+          }
+        } else if (contentType.includes('audio')) {
           const blob = await res.blob();
           const base64Url = await new Promise((resolve) => {
             const reader = new FileReader();
@@ -1200,27 +1222,17 @@ const BiaAPI = {
             reader.onerror = () => resolve(URL.createObjectURL(blob));
             reader.readAsDataURL(blob);
           });
-          console.log('[BIA TTS] Áudio gerado pelo backend com sucesso.');
+          console.log('[BIA TTS] Áudio Blob convertido em Base64!');
           return {
             type: 'audio',
             audioUrl: base64Url
           };
         }
-
-        const data = await res.json();
-        if (data.fallback) {
-          console.log('[BIA TTS] Backend indicou fallback, tentando ElevenLabs direto...');
-          try {
-            const direto = await this.chamarElevenLabsDireto(text);
-            if (direto) return direto;
-          } catch (_) {}
-          return { type: 'native', text: data.text || text };
-        }
       } else {
         console.warn(`[BIA TTS] Backend respondeu status ${res.status}. Tentando chamada direta ElevenLabs...`);
       }
     } catch (serverErr) {
-      console.warn('[BIA TTS] Backend inacessível ou timeout (' + serverErr.message + '). Acionando ElevenLabs direto...');
+      console.warn('[BIA TTS] Backend inacessível ou falha (' + serverErr.message + '). Acionando contingência direta ElevenLabs...');
     }
 
     // 2. CAMADA DE CONTINGÊNCIA: Chamada direta ao ElevenLabs (100% funcional no APK Android e WebView móvel)
@@ -1265,10 +1277,13 @@ const BiaAPI = {
       .replace(/\n+/g, '. ')
       .trim();
 
-    if (clean.length > 1000) clean = clean.slice(0, 1000) + '...';
+    if (clean.length > 450) {
+      const pt = clean.lastIndexOf('.', 450);
+      clean = (pt > 150 ? clean.slice(0, pt + 1) : clean.slice(0, 450)) + '...';
+    }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    const timer = setTimeout(() => controller.abort(), 15000);
 
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
       method: 'POST',

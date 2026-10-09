@@ -1697,6 +1697,16 @@ exports.tts = async (req, res) => {
       apiKey: apiKey || process.env.ELEVENLABS_API_KEY
     });
 
+    const querBase64 = req.body.format === 'base64' || req.query.format === 'base64' || req.headers.accept?.includes('application/json');
+    if (querBase64) {
+      const b64 = resultado.buffer.toString('base64');
+      return res.json({
+        success: true,
+        audio: `data:audio/mpeg;base64,${b64}`,
+        spokenText: resultado.textoFalado
+      });
+    }
+
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': resultado.buffer.length,
