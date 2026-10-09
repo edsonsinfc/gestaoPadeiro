@@ -16,4 +16,15 @@ public class MainActivity extends BridgeActivity {
             }
         } catch (Exception ignored) {}
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                WebSettings settings = getBridge().getWebView().getSettings();
+                settings.setMediaPlaybackRequiresUserGesture(false);
+            }
+        } catch (Exception ignored) {}
+    }
 }

@@ -1401,14 +1401,28 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     this._isSpeaking = true;
     this._speakingBtn = btnEl;
     if (btnEl) {
+      btnEl.classList.remove('is-playing');
       btnEl.classList.add('is-loading');
       const label = btnEl.querySelector('.bia-speak-label');
       if (label) label.textContent = 'Carregando...';
     }
 
+    // Trava de segurança para NUNCA manter o botão travado em "Carregando..."
+    let safetyTimer = setTimeout(() => {
+      if (this._isSpeaking && btnEl && btnEl.classList.contains('is-loading')) {
+        console.warn('[BIA Audio] Safety timeout de 8s disparado. Alternando para voz nativa...');
+        this.speakNative(text, btnEl);
+      }
+    }, 8000);
+
     try {
       if (typeof BiaAPI !== 'undefined' && typeof BiaAPI.synthesizeSpeech === 'function') {
         const res = await BiaAPI.synthesizeSpeech(text);
+
+        if (safetyTimer) {
+          clearTimeout(safetyTimer);
+          safetyTimer = null;
+        }
 
         if (res && res.type === 'audio' && res.audioUrl) {
           if (btnEl) {
@@ -1422,6 +1436,16 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           audio.preload = 'auto';
           audio.src = res.audioUrl;
           this._currentAudio = audio;
+          window._activeBiaAudio = audio; // Previne coleta indevida pelo Garbage Collector no Android
+
+          audio.onplay = () => {
+            if (btnEl) {
+              btnEl.classList.remove('is-loading');
+              btnEl.classList.add('is-playing');
+              const label = btnEl.querySelector('.bia-speak-label');
+              if (label) label.textContent = 'Falando...';
+            }
+          };
 
           audio.onended = () => {
             this.stopSpeaking();
@@ -1436,11 +1460,14 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             audio.load();
             const p = audio.play();
             if (p !== undefined) {
-              await p;
+              p.catch(playErr => {
+                console.warn('[BIA Audio] Autoplay bloqueado pelo navegador/WebView, tentando fala nativa:', playErr);
+                this.speakNative(text, btnEl);
+              });
             }
             return;
           } catch (playErr) {
-            console.warn('[BIA Audio] Autoplay bloqueado pelo navegador/WebView, tentando fala nativa:', playErr);
+            console.warn('[BIA Audio] Erro síncrono no play, tentando fala nativa:', playErr);
             this.speakNative(text, btnEl);
             return;
           }
@@ -1451,8 +1478,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         return;
       }
 
+      if (safetyTimer) clearTimeout(safetyTimer);
       this.speakNative(text, btnEl);
     } catch (err) {
+      if (safetyTimer) clearTimeout(safetyTimer);
       console.warn('[BIA Voice] Erro na síntese:', err);
       this.speakNative(text, btnEl);
     }
@@ -1465,6 +1494,11 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
 
     try {
+      // Destrava qualquer fala anterior travada no Android WebView
+      try {
+        window.speechSynthesis.cancel();
+      } catch (_) {}
+
       // Limpeza de texto para fala nativa fluida em português
       let clean = text
         .replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '')
@@ -1490,7 +1524,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       utterance.rate = 1.05;
       utterance.pitch = 1.05;
 
-      const voices = window.speechSynthesis.getVoices();
+      const voices = window.speechSynthesis.getVoices() || [];
       const ptVoice = voices.find(v => v.lang.startsWith('pt') && (v.name.includes('Luciana') || v.name.includes('Maria') || v.name.includes('Francisca') || v.name.includes('Female') || v.name.includes('Google português')))
         || voices.find(v => v.lang.startsWith('pt'));
       if (ptVoice) {
@@ -1498,6 +1532,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       }
 
       this._currentUtterance = utterance;
+      window._currentBiaUtterance = utterance; // Referência global para evitar GC no Android
 
       if (btnEl) {
         btnEl.classList.remove('is-loading');

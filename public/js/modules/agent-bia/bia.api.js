@@ -1132,18 +1132,47 @@ const BiaAPI = {
   },
 
   /**
+   * Obtém a URL base da API garantindo que no APK Android aponte sempre para a Hostinger
+   */
+  getBaseUrl() {
+    if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) return API_BASE_URL;
+    if (typeof window !== 'undefined' && window.API_BASE_URL) return window.API_BASE_URL;
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('custom_api_url')) return localStorage.getItem('custom_api_url');
+    if (typeof window !== 'undefined') {
+      const isNative = !!(window.Capacitor || window.location.protocol === 'capacitor:' || (window.location.hostname === 'localhost' && !window.location.port));
+      if (isNative) {
+        return 'https://app2.bragodistribuidora.com.br';
+      }
+    }
+    return '';
+  },
+
+  /**
    * Síntese de Voz (TTS) da Bia:
    * Conecta ao endpoint /api/bia/tts com ElevenLabs, suporta chamada direta de contingência no APK Android e Data URL
    */
   async synthesizeSpeech(text) {
     if (!text || typeof text !== 'string') return null;
 
-    // 1. Tentar via Backend (usando API_BASE_URL correto no APK Android e token brago_token)
+    const baseUrl = this.getBaseUrl();
+    const rawEndpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
+    let endpoint = rawEndpoint;
+    if (!endpoint.startsWith('http')) {
+      if (baseUrl) {
+        endpoint = `${baseUrl}${endpoint}`;
+      } else {
+        endpoint = `https://app2.bragodistribuidora.com.br${endpoint}`;
+      }
+    }
+
+    console.log('[BIA TTS] Solicitando áudio para:', endpoint);
+
+    // 1. CAMADA 1: Tentar via Backend (com AbortController de 3.5s para NUNCA travar o app Android)
     try {
       const token = (typeof localStorage !== 'undefined' && (localStorage.getItem('brago_token') || localStorage.getItem('token'))) || (typeof API !== 'undefined' && API.token) || '';
-      const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) || (typeof window !== 'undefined' && window.API_BASE_URL) || '';
-      const rawEndpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
-      const endpoint = rawEndpoint.startsWith('http') ? rawEndpoint : `${baseUrl}${rawEndpoint}`;
+      
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -1156,8 +1185,10 @@ const BiaAPI = {
           text,
           apiKey: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || '',
           voiceId: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || ''
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timer);
 
       if (res.ok) {
         const contentType = res.headers.get('content-type') || '';
@@ -1169,6 +1200,7 @@ const BiaAPI = {
             reader.onerror = () => resolve(URL.createObjectURL(blob));
             reader.readAsDataURL(blob);
           });
+          console.log('[BIA TTS] Áudio gerado pelo backend com sucesso.');
           return {
             type: 'audio',
             audioUrl: base64Url
@@ -1177,27 +1209,33 @@ const BiaAPI = {
 
         const data = await res.json();
         if (data.fallback) {
-          // Se o servidor indicou fallback mas temos a chave configurada no frontend, tenta direto ElevenLabs!
+          console.log('[BIA TTS] Backend indicou fallback, tentando ElevenLabs direto...');
           try {
             const direto = await this.chamarElevenLabsDireto(text);
             if (direto) return direto;
           } catch (_) {}
           return { type: 'native', text: data.text || text };
         }
+      } else {
+        console.warn(`[BIA TTS] Backend respondeu status ${res.status}. Tentando chamada direta ElevenLabs...`);
       }
     } catch (serverErr) {
-      console.warn('[BIA API] Backend TTS falhou ou inacessível no app, tentando chamada direta ElevenLabs:', serverErr);
+      console.warn('[BIA TTS] Backend inacessível ou timeout (' + serverErr.message + '). Acionando ElevenLabs direto...');
     }
 
-    // 2. CAMADA DE CONTINGÊNCIA: Chamada direta ao ElevenLabs (indispensável no APK Android quando fora do domínio)
+    // 2. CAMADA DE CONTINGÊNCIA: Chamada direta ao ElevenLabs (100% funcional no APK Android e WebView móvel)
     try {
       const direto = await this.chamarElevenLabsDireto(text);
-      if (direto) return direto;
+      if (direto) {
+        console.log('[BIA TTS] Áudio gerado via ElevenLabs direto com sucesso.');
+        return direto;
+      }
     } catch (elevenErr) {
-      console.warn('[BIA API] Chamada direta ElevenLabs falhou:', elevenErr);
+      console.warn('[BIA TTS] Chamada direta ElevenLabs falhou:', elevenErr);
     }
 
     // 3. FALLBACK NATIVO (Web Speech API)
+    console.log('[BIA TTS] Recorrendo ao fallback de voz nativa.');
     return {
       type: 'native',
       text
@@ -1229,6 +1267,9 @@ const BiaAPI = {
 
     if (clean.length > 1000) clean = clean.slice(0, 1000) + '...';
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
       method: 'POST',
       headers: {
@@ -1243,8 +1284,10 @@ const BiaAPI = {
           stability: 0.5,
           similarity_boost: 0.75
         }
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
 
     if (!res.ok) {
       throw new Error(`ElevenLabs direto HTTP ${res.status}`);

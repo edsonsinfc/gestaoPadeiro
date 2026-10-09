@@ -1234,6 +1234,9 @@ const _isNativeOrRemote = !!(window.Capacitor || (window.location.hostname === '
 
 // URL ativa — definida pelo ACTIVE_ENV acima (ou URL customizada salva)
 let API_BASE_URL = safeGetLocalStorage('custom_api_url') || (_isNativeOrRemote ? API_URLS.hostinger : '');
+if (typeof window !== 'undefined') {
+  window.API_BASE_URL = API_BASE_URL;
+}
 // ==========================================
 
 class APIError extends Error {
