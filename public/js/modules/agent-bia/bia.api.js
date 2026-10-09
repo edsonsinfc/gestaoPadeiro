@@ -1149,7 +1149,7 @@ const BiaAPI = {
 
   /**
    * Síntese de Voz (TTS) da Bia:
-   * Conecta ao endpoint /api/bia/tts com ElevenLabs, suporta chamada direta de contingência no APK Android e Data URL
+   * Conecta ao endpoint /api/bia/tts com ElevenLabs, suporta API.post, fetch direto e contingência ElevenLabs
    */
   async synthesizeSpeech(text) {
     if (!text || typeof text !== 'string') return null;
@@ -1167,7 +1167,32 @@ const BiaAPI = {
 
     console.log('[BIA TTS] Solicitando áudio para:', endpoint);
 
-    // 1. CAMADA 1: Tentar via Backend (com format: base64 e timeout generoso de 15s para IA)
+    // 1. CAMADA 1: Tentar via API.post (Padronizado no Smart Gestor e APK Android)
+    if (typeof API !== 'undefined' && typeof API.post === 'function') {
+      try {
+        const payload = {
+          text,
+          format: 'base64',
+          apiKey: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || '',
+          voiceId: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || ''
+        };
+        const data = await API.post('/api/bia/tts', payload);
+        if (data && data.audio) {
+          console.log('[BIA TTS] Áudio Base64 recebido via API.post com sucesso!');
+          return {
+            type: 'audio',
+            audioUrl: data.audio
+          };
+        }
+        if (data && data.fallback) {
+          console.log('[BIA TTS] Servidor solicitou fallback:', data.error);
+        }
+      } catch (apiErr) {
+        console.warn('[BIA TTS] API.post falhou, tentando fetch direto:', apiErr);
+      }
+    }
+
+    // 2. CAMADA 2: Tentar via fetch direto
     try {
       const token = (typeof localStorage !== 'undefined' && (localStorage.getItem('brago_token') || localStorage.getItem('token'))) || (typeof API !== 'undefined' && API.token) || '';
       

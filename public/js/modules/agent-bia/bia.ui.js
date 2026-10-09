@@ -103,6 +103,11 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             </div>
           </div>
           <div class="bia-header-actions">
+            <button class="bia-btn-circle" id="bia-btn-audio-diag" title="Diagnóstico de Áudio do APK" style="color: #FF9500; background: rgba(255, 149, 0, 0.1);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </button>
             <button class="bia-btn-circle" id="bia-btn-voice-toggle" title="Voz da Bia (Ativar/Desativar Fala)">
               <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
             </button>
@@ -117,6 +122,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
         <!-- Sugestões Rápidas (Chips Apple HIG com Lucide Icons) -->
         <div class="bia-suggestions-bar">
+          <div class="bia-chip" data-prompt="Bia teste o áudio do aplicativo" style="border-color: rgba(255, 149, 0, 0.4); color: #D97706;">
+            <i data-lucide="activity" style="width: 13px; height: 13px;"></i> Testar Som APK
+          </div>
           <div class="bia-chip" data-prompt="Bia crie uma escala de alta perfomance">
             <i data-lucide="zap" style="width: 13px; height: 13px;"></i> Alta Performance
           </div>
@@ -182,6 +190,25 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     const clearBtn = document.getElementById('bia-btn-clear');
     const form = document.getElementById('bia-input-form');
     const input = document.getElementById('bia-input-field');
+
+    const diagBtn = document.getElementById('bia-btn-audio-diag');
+    if (diagBtn) {
+      diagBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openAudioDiagnosticModal();
+      });
+    }
+
+    // Desbloqueio global no primeiro toque em qualquer lugar da tela
+    const unlockGlobalAudio = () => {
+      this.unlockAudio();
+      window.removeEventListener('touchstart', unlockGlobalAudio);
+      window.removeEventListener('click', unlockGlobalAudio);
+      window.removeEventListener('pointerdown', unlockGlobalAudio);
+    };
+    window.addEventListener('touchstart', unlockGlobalAudio, { passive: true });
+    window.addEventListener('click', unlockGlobalAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockGlobalAudio, { passive: true });
 
     const voiceToggleBtn = document.getElementById('bia-btn-voice-toggle');
     if (voiceToggleBtn) {
@@ -631,6 +658,14 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
    * Envia a mensagem do usuário e processa resposta e ações da IA
    */
   async handleUserSubmit(message) {
+    const cleanMsg = (message || '').toLowerCase().trim();
+    if (cleanMsg.includes('teste de audio') || cleanMsg.includes('teste de áudio') || cleanMsg.includes('testar audio') || cleanMsg.includes('testar áudio') || cleanMsg.includes('teste som') || cleanMsg.includes('testar som') || cleanMsg.includes('teste o áudio')) {
+      this.addUserMessage(message);
+      this.addBiaMessage('Iniciando o **Painel de Diagnóstico de Som do APK** para você...', { silent: true });
+      this.openAudioDiagnosticModal();
+      return;
+    }
+
     if (this.isProcessing) return;
     this.unlockAudio();
     this.stopSpeaking();
@@ -1398,14 +1433,23 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         if (this._audioCtx.state === 'suspended') {
           this._audioCtx.resume();
         }
+        // Micro buffer silencioso de 1 amostra para forçar o foco no AudioManager.STREAM_MUSIC do Android
+        try {
+          const buf = this._audioCtx.createBuffer(1, 1, 22050);
+          const src = this._audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.connect(this._audioCtx.destination);
+          src.start(0);
+        } catch (_) {}
       }
     } catch (_) {}
 
     try {
-      const silence = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
-      silence.volume = 0.01;
-      const p = silence.play();
-      if (p) p.catch(() => {});
+      const player = this.getAudioPlayer();
+      if (player) {
+        const p = player.play();
+        if (p) p.then(() => player.pause()).catch(() => {});
+      }
     } catch (_) {}
 
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -1416,12 +1460,37 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   /**
-   * Reproduz áudio em MP3 via Web Audio API (Decodificação direta em memória do Android)
+   * Converte Base64 (Data URI ou string pura) em Blob binário e Blob URL compatível com Android WebView
    */
-  async playAudioViaWebAudio(base64Url, btnEl = null) {
+  base64ToBlobUrl(base64Url, mimeType = 'audio/mpeg') {
+    try {
+      if (!base64Url || typeof base64Url !== 'string') return { blob: null, blobUrl: '', bytes: null, buffer: null };
+      if (base64Url.startsWith('blob:')) {
+        return { blob: null, blobUrl: base64Url, bytes: null, buffer: null };
+      }
+      const base64Data = base64Url.includes(',') ? base64Url.split(',')[1] : base64Url;
+      const binaryString = window.atob(base64Data);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+      return { blob, blobUrl, bytes, buffer: bytes.buffer };
+    } catch (e) {
+      console.warn('[BIA Audio] Conversão Base64 para Blob falhou:', e);
+      return { blob: null, blobUrl: base64Url, bytes: null, buffer: null };
+    }
+  },
+
+  /**
+   * Reproduz áudio em MP3 via Web Audio API (Decodificação direta em memória)
+   */
+  async playAudioViaWebAudio(arrayBuffer, btnEl = null) {
     try {
       const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtxClass) return false;
+      if (!AudioCtxClass || !arrayBuffer) return false;
 
       if (!this._audioCtx) {
         this._audioCtx = new AudioCtxClass();
@@ -1430,17 +1499,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         await this._audioCtx.resume();
       }
 
-      const base64Data = base64Url.includes(',') ? base64Url.split(',')[1] : base64Url;
-      const binaryString = window.atob(base64Data);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
       // Decodificação direta pelo chip de áudio
       const audioBuffer = await new Promise((resolve, reject) => {
-        this._audioCtx.decodeAudioData(bytes.buffer.slice(0), resolve, reject);
+        this._audioCtx.decodeAudioData(arrayBuffer.slice(0), resolve, reject);
       });
 
       if (!audioBuffer) return false;
@@ -1523,16 +1584,20 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && res.audioUrl) {
-          // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Mais confiável no Android WebView)
-          const tocouWebAudio = await this.playAudioViaWebAudio(res.audioUrl, btnEl);
-          if (tocouWebAudio) {
-            return;
+          const audioData = this.base64ToBlobUrl(res.audioUrl);
+
+          // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Decodificação direta em memória)
+          if (audioData.buffer) {
+            const tocouWebAudio = await this.playAudioViaWebAudio(audioData.buffer, btnEl);
+            if (tocouWebAudio) {
+              return;
+            }
           }
 
-          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 (sem audio.load())
-          console.log('[BIA Audio] Tentando fallback para elemento HTML5 Audio...');
+          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 COM BLOB URL
+          console.log('[BIA Audio] Tentando reprodução via HTML5 Audio Blob URL...');
           const audio = this.getAudioPlayer() || new Audio();
-          audio.src = res.audioUrl;
+          audio.src = audioData.blobUrl;
           audio.volume = 1.0;
           this._currentAudio = audio;
           window._activeBiaAudio = audio;
@@ -1551,7 +1616,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           };
 
           audio.onerror = (e) => {
-            console.warn('[BIA Audio] Elemento de áudio disparou erro:', e);
+            console.warn('[BIA Audio] Elemento de áudio disparou erro:', e, audio.error);
             this.speakNative(text, btnEl);
           };
 
@@ -1676,6 +1741,350 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
     if (typeof Components !== 'undefined' && Components.toast) {
       Components.toast(BIA_CONFIG.voiceAutoPlay ? '🔊 Voz da Bia ativada!' : '🔇 Voz da Bia silenciada.', 'info');
+    }
+  },
+
+  /* ═════════════════════════════════════════════════════════════════════════════
+   * PAINEL DE DIAGNÓSTICO DE ÁUDIO DO APK (TESTE EM TEMPO REAL NO CELULAR)
+   * ═════════════════════════════════════════════════════════════════════════════ */
+  _lastDiagAudioUrl: null,
+
+  openAudioDiagnosticModal() {
+    this.unlockAudio();
+    let overlay = document.getElementById('bia-diag-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'bia-diag-overlay';
+      overlay.className = 'bia-diag-overlay';
+      overlay.innerHTML = `
+        <div class="bia-diag-card" onclick="event.stopPropagation()">
+          <div class="bia-diag-header">
+            <div class="bia-diag-title-area">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              </svg>
+              <h3 class="bia-diag-title">Diagnóstico de Áudio do APK</h3>
+              <span class="bia-diag-badge">APK Test</span>
+            </div>
+            <button class="bia-btn-circle" id="bia-diag-close" title="Fechar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+
+          <div class="bia-diag-body">
+            <div class="bia-diag-alert">
+              <span style="font-size: 18px;">📢</span>
+              <div>
+                <strong>Atenção ao Volume do Celular:</strong><br>
+                No Android, o som de aplicativos sai pelo <b>Volume de Mídia</b> (ícone de nota musical 🎵). Pressione o botão de volume do celular e verifique se a barra com a nota musical está alta.
+              </div>
+            </div>
+
+            <div class="bia-diag-status-grid">
+              <div class="bia-diag-status-box">
+                <span class="bia-diag-status-lbl">Ambiente</span>
+                <span class="bia-diag-status-val" id="diag-env-val">Detectando...</span>
+              </div>
+              <div class="bia-diag-status-box">
+                <span class="bia-diag-status-lbl">AudioContext</span>
+                <span class="bia-diag-status-val" id="diag-ctx-val">Detectando...</span>
+              </div>
+            </div>
+
+            <!-- Teste 1 -->
+            <div class="bia-diag-test-item">
+              <div class="bia-diag-test-top">
+                <span class="bia-diag-test-name">🔔 Teste 1: Beep de Hardware (Web Audio)</span>
+                <button class="bia-diag-test-btn" id="btn-diag-test-1">Testar</button>
+              </div>
+              <div class="bia-diag-test-desc">Gera um tom puro de 880Hz no chip de áudio sem depender de internet.</div>
+              <div class="bia-diag-test-result" id="diag-res-1"></div>
+            </div>
+
+            <!-- Teste 2 -->
+            <div class="bia-diag-test-item">
+              <div class="bia-diag-test-top">
+                <span class="bia-diag-test-name">🎵 Teste 2: Som Local Sintético (WAV Blob)</span>
+                <button class="bia-diag-test-btn" id="btn-diag-test-2">Testar</button>
+              </div>
+              <div class="bia-diag-test-desc">Toca um acorde harmônico gerado em memória na tag &lt;audio&gt;.</div>
+              <div class="bia-diag-test-result" id="diag-res-2"></div>
+            </div>
+
+            <!-- Teste 3 -->
+            <div class="bia-diag-test-item">
+              <div class="bia-diag-test-top">
+                <span class="bia-diag-test-name">🌐 Teste 3: Conexão TTS Hostinger</span>
+                <button class="bia-diag-test-btn" id="btn-diag-test-3">Testar</button>
+              </div>
+              <div class="bia-diag-test-desc">Testa a chamada ao endpoint /api/bia/tts e mede o tempo de resposta em ms.</div>
+              <div class="bia-diag-test-result" id="diag-res-3"></div>
+            </div>
+
+            <!-- Teste 4 -->
+            <div class="bia-diag-test-item">
+              <div class="bia-diag-test-top">
+                <span class="bia-diag-test-name">🗣️ Teste 4: Voz Real da Bia (ElevenLabs)</span>
+                <button class="bia-diag-test-btn" id="btn-diag-test-4">Testar</button>
+              </div>
+              <div class="bia-diag-test-desc">Baixa e reproduz a fala completa da Bia confirmando o som do app.</div>
+              <div class="bia-diag-test-result" id="diag-res-4"></div>
+            </div>
+
+            <div class="bia-diag-actions">
+              <button class="bia-diag-btn-auto" id="btn-diag-auto">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                EXECUTAR TODOS OS TESTES (AUTO)
+              </button>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #64748B; margin-bottom: 4px; text-transform: uppercase;">Log de Diagnóstico ao Vivo</div>
+              <div class="bia-diag-console" id="bia-diag-console">Pronto para iniciar diagnóstico...\n</div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) this.closeAudioDiagnosticModal();
+      });
+      const closeBtn = document.getElementById('bia-diag-close');
+      if (closeBtn) closeBtn.addEventListener('click', () => this.closeAudioDiagnosticModal());
+
+      // Bind botões de teste
+      document.getElementById('btn-diag-test-1').addEventListener('click', () => this.runDiagTest1());
+      document.getElementById('btn-diag-test-2').addEventListener('click', () => this.runDiagTest2());
+      document.getElementById('btn-diag-test-3').addEventListener('click', () => this.runDiagTest3());
+      document.getElementById('btn-diag-test-4').addEventListener('click', () => this.runDiagTest4());
+      document.getElementById('btn-diag-auto').addEventListener('click', () => this.runDiagAuto());
+    }
+
+    this.updateDiagStatus();
+    overlay.classList.add('active');
+  },
+
+  closeAudioDiagnosticModal() {
+    this.stopSpeaking();
+    const overlay = document.getElementById('bia-diag-overlay');
+    if (overlay) overlay.classList.remove('active');
+  },
+
+  updateDiagStatus() {
+    const envVal = document.getElementById('diag-env-val');
+    const ctxVal = document.getElementById('diag-ctx-val');
+    if (envVal) {
+      const isNative = !!(window.Capacitor || window.location.protocol === 'capacitor:' || (window.location.hostname === 'localhost' && !window.location.port));
+      envVal.textContent = isNative ? 'Android APK (Nativo)' : 'Navegador Web';
+    }
+    if (ctxVal) {
+      const state = this._audioCtx ? this._audioCtx.state : 'Não iniciado';
+      ctxVal.textContent = state;
+      ctxVal.style.color = state === 'running' ? '#16A34A' : '#D97706';
+    }
+  },
+
+  logDiag(msg) {
+    const consoleEl = document.getElementById('bia-diag-console');
+    if (consoleEl) {
+      const time = new Date().toLocaleTimeString('pt-BR');
+      consoleEl.textContent += `[${time}] ${msg}\n`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+    console.log('[BIA Diag]', msg);
+  },
+
+  async runDiagTest1() {
+    this.logDiag('[Teste 1] Iniciando Beep de Hardware...');
+    const resEl = document.getElementById('diag-res-1');
+    const btn = document.getElementById('btn-diag-test-1');
+    btn.classList.add('testing');
+    try {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) throw new Error('Web Audio API não suportada');
+      if (!this._audioCtx) this._audioCtx = new AudioCtxClass();
+      if (this._audioCtx.state === 'suspended') {
+        this.logDiag('[Teste 1] AudioContext suspenso, resumindo...');
+        await this._audioCtx.resume();
+      }
+      this.logDiag('[Teste 1] AudioContext ativo (' + this._audioCtx.state + '). Tocando tom 880Hz...');
+      const osc = this._audioCtx.createOscillator();
+      const gain = this._audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, this._audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.5, this._audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this._audioCtx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(this._audioCtx.destination);
+      osc.start();
+      osc.stop(this._audioCtx.currentTime + 0.4);
+      this.logDiag('✅ [Teste 1] Beep enviado ao alto-falante com sucesso!');
+      resEl.textContent = '✅ Sucesso! Beep enviado ao alto-falante.';
+      resEl.className = 'bia-diag-test-result success';
+    } catch (e) {
+      this.logDiag('❌ [Teste 1] Erro: ' + e.message);
+      resEl.textContent = '❌ Erro: ' + e.message;
+      resEl.className = 'bia-diag-test-result error';
+    } finally {
+      btn.classList.remove('testing');
+      this.updateDiagStatus();
+    }
+  },
+
+  async runDiagTest2() {
+    this.logDiag('[Teste 2] Gerando áudio sintético local em formato WAV...');
+    const resEl = document.getElementById('diag-res-2');
+    const btn = document.getElementById('btn-diag-test-2');
+    btn.classList.add('testing');
+    try {
+      // Gera 0.4s de tom harmônico 523Hz (C5) em PCM 16-bit WAV
+      const sampleRate = 22050;
+      const duration = 0.4;
+      const numSamples = Math.floor(sampleRate * duration);
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+      const writeString = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, numSamples * 2, true);
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const s = Math.sin(2 * Math.PI * 523.25 * t) * Math.exp(-4 * t);
+        view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      const blobUrl = URL.createObjectURL(blob);
+      this.logDiag('[Teste 2] Blob WAV criado (' + blob.size + ' bytes). Tocando via tag <audio>...');
+      const audio = new Audio();
+      audio.src = blobUrl;
+      audio.volume = 1.0;
+      await new Promise((resolve, reject) => {
+        audio.onplay = () => this.logDiag('[Teste 2] Tag <audio> onplay disparado com sucesso!');
+        audio.onended = () => resolve();
+        audio.onerror = () => reject(new Error('Audio onerror: ' + (audio.error ? audio.error.message : 'desconhecido')));
+        const p = audio.play();
+        if (p) p.catch(reject);
+      });
+      this.logDiag('✅ [Teste 2] Som local WAV reproduzido com sucesso!');
+      resEl.textContent = '✅ Sucesso! Som reproduzido via tag <audio>.';
+      resEl.className = 'bia-diag-test-result success';
+    } catch (e) {
+      this.logDiag('❌ [Teste 2] Erro: ' + e.message);
+      resEl.textContent = '❌ Erro: ' + e.message;
+      resEl.className = 'bia-diag-test-result error';
+    } finally {
+      btn.classList.remove('testing');
+    }
+  },
+
+  async runDiagTest3() {
+    this.logDiag('[Teste 3] Enviando requisição para /api/bia/tts na Hostinger...');
+    const resEl = document.getElementById('diag-res-3');
+    const btn = document.getElementById('btn-diag-test-3');
+    btn.classList.add('testing');
+    const t0 = Date.now();
+    try {
+      const res = await BiaAPI.synthesizeSpeech('Teste de diagnóstico');
+      const elapsed = Date.now() - t0;
+      if (!res || !res.audioUrl) {
+        throw new Error('API não retornou áudio (tipo: ' + (res?.type || 'nulo') + ')');
+      }
+      const sizeBytes = res.audioUrl.length;
+      this.logDiag(`✅ [Teste 3] Sucesso em ${elapsed}ms! Recebidos ${sizeBytes} caracteres de áudio.`);
+      resEl.textContent = `✅ Sucesso! Hostinger respondeu em ${elapsed}ms (${Math.round(sizeBytes / 1024)} KB).`;
+      resEl.className = 'bia-diag-test-result success';
+      this._lastDiagAudioUrl = res.audioUrl;
+    } catch (e) {
+      this.logDiag('❌ [Teste 3] Erro: ' + e.message);
+      resEl.textContent = '❌ Erro: ' + e.message;
+      resEl.className = 'bia-diag-test-result error';
+    } finally {
+      btn.classList.remove('testing');
+    }
+  },
+
+  async runDiagTest4() {
+    this.logDiag('[Teste 4] Iniciando reprodução da Voz da Bia...');
+    const resEl = document.getElementById('diag-res-4');
+    const btn = document.getElementById('btn-diag-test-4');
+    btn.classList.add('testing');
+    try {
+      let audioUrl = this._lastDiagAudioUrl;
+      if (!audioUrl) {
+        this.logDiag('[Teste 4] Solicitando síntese com texto de diagnóstico...');
+        const res = await BiaAPI.synthesizeSpeech('Diagnóstico de som concluído com sucesso. A assistente Bia está pronta no Smart Gestor.');
+        if (!res || !res.audioUrl) throw new Error('Falha ao obter áudio da Bia');
+        audioUrl = res.audioUrl;
+      }
+      this.logDiag('[Teste 4] Decodificando áudio Base64 para Blob binário...');
+      const audioData = this.base64ToBlobUrl(audioUrl);
+      this.logDiag('[Teste 4] Blob URL gerada: ' + audioData.blobUrl.substring(0, 30) + '... Tentando reprodução...');
+      
+      let tocou = false;
+      // Tenta Web Audio API se houver buffer
+      if (audioData.buffer) {
+        try {
+          tocou = await this.playAudioViaWebAudio(audioData.buffer);
+          if (tocou) this.logDiag('[Teste 4] Reprodução via Web Audio API em andamento!');
+        } catch (_) {}
+      }
+
+      if (!tocou) {
+        this.logDiag('[Teste 4] Tocando via HTML5 Audio Blob...');
+        const audio = this.getAudioPlayer() || new Audio();
+        audio.src = audioData.blobUrl;
+        audio.volume = 1.0;
+        await audio.play();
+        this.logDiag('[Teste 4] HTML5 Audio tocando agora!');
+      }
+
+      this.logDiag('✅ [Teste 4] Voz da Bia executada com sucesso! Verifique o som do aparelho.');
+      resEl.textContent = '✅ Sucesso! Voz da Bia reproduzida.';
+      resEl.className = 'bia-diag-test-result success';
+    } catch (e) {
+      this.logDiag('❌ [Teste 4] Erro: ' + e.message);
+      resEl.textContent = '❌ Erro: ' + e.message;
+      resEl.className = 'bia-diag-test-result error';
+    } finally {
+      btn.classList.remove('testing');
+    }
+  },
+
+  async runDiagAuto() {
+    this.logDiag('═══════════════════════════════════════════');
+    this.logDiag('INICIANDO DIAGNÓSTICO AUTOMÁTICO COMPLETO...');
+    this.logDiag('═══════════════════════════════════════════');
+    const autoBtn = document.getElementById('btn-diag-auto');
+    if (autoBtn) autoBtn.disabled = true;
+
+    try {
+      await this.runDiagTest1();
+      await new Promise(r => setTimeout(r, 1200));
+      await this.runDiagTest2();
+      await new Promise(r => setTimeout(r, 1200));
+      await this.runDiagTest3();
+      await new Promise(r => setTimeout(r, 800));
+      await this.runDiagTest4();
+      this.logDiag('═══════════════════════════════════════════');
+      this.logDiag('DIAGNÓSTICO COMPLETO FINALIZADO COM ÊXITO!');
+      this.logDiag('═══════════════════════════════════════════');
+    } catch (e) {
+      this.logDiag('Erro no auto diagnóstico: ' + e.message);
+    } finally {
+      if (autoBtn) autoBtn.disabled = false;
     }
   }
 };

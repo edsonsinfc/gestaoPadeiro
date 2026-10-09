@@ -1024,3 +1024,251 @@
   background: rgba(0, 122, 255, 0.12);
 }
 
+/* ─── PAINEL DE DIAGNÓSTICO DE ÁUDIO DO APK ────────────────────────────── */
+.bia-diag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+}
+
+.bia-diag-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bia-diag-card {
+  width: 480px;
+  max-width: 100%;
+  max-height: 90vh;
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transform: scale(0.95);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bia-diag-overlay.active .bia-diag-card {
+  transform: scale(1);
+}
+
+.bia-diag-header {
+  padding: 16px 20px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bia-diag-title-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bia-diag-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.bia-diag-badge {
+  background: #FF9500;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bia-diag-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bia-diag-alert {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #92400E;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.bia-diag-alert strong {
+  color: #78350F;
+}
+
+.bia-diag-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bia-diag-status-box {
+  background: #F1F5F9;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bia-diag-status-lbl {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.bia-diag-status-val {
+  font-size: 13px;
+  color: #0F172A;
+  font-weight: 700;
+}
+
+.bia-diag-test-item {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.bia-diag-test-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bia-diag-test-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bia-diag-test-btn {
+  background: #007AFF;
+  color: #FFFFFF;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.bia-diag-test-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.bia-diag-test-btn.testing {
+  background: #64748B;
+  pointer-events: none;
+}
+
+.bia-diag-test-desc {
+  font-size: 11.5px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.bia-diag-test-result {
+  font-size: 11.5px;
+  font-weight: 600;
+  display: none;
+}
+
+.bia-diag-test-result.success {
+  display: block;
+  color: #16A34A;
+}
+
+.bia-diag-test-result.error {
+  display: block;
+  color: #DC2626;
+}
+
+.bia-diag-console {
+  background: #0F172A;
+  color: #38BDF8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  border-radius: 12px;
+  padding: 10px 12px;
+  height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border: 1px solid #1E293B;
+}
+
+.bia-diag-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bia-diag-btn-auto {
+  flex: 1;
+  background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
+  color: #FFFFFF;
+  border: none;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  touch-action: manipulation;
+}
+
+.bia-diag-btn-auto:active {
+  transform: scale(0.98);
+}
+
+
