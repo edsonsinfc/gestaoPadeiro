@@ -1418,7 +1418,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             if (label) label.textContent = 'Falando...';
           }
 
-          const audio = new Audio(res.audioUrl);
+          const audio = new Audio();
+          audio.preload = 'auto';
+          audio.src = res.audioUrl;
           this._currentAudio = audio;
 
           audio.onended = () => {
@@ -1431,10 +1433,14 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           };
 
           try {
-            await audio.play();
+            audio.load();
+            const p = audio.play();
+            if (p !== undefined) {
+              await p;
+            }
             return;
           } catch (playErr) {
-            console.warn('[BIA Audio] Autoplay bloqueado pelo navegador, tentando fala nativa:', playErr);
+            console.warn('[BIA Audio] Autoplay bloqueado pelo navegador/WebView, tentando fala nativa:', playErr);
             this.speakNative(text, btnEl);
             return;
           }

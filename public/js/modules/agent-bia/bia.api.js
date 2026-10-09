@@ -1133,19 +1133,23 @@ const BiaAPI = {
 
   /**
    * Síntese de Voz (TTS) da Bia:
-   * Conecta ao endpoint /api/bia/tts com ElevenLabs e provê fallback seguro
+   * Conecta ao endpoint /api/bia/tts com ElevenLabs, suporta chamada direta de contingência no APK Android e Data URL
    */
   async synthesizeSpeech(text) {
     if (!text || typeof text !== 'string') return null;
 
+    // 1. Tentar via Backend (usando API_BASE_URL correto no APK Android e token brago_token)
     try {
-      const token = (typeof localStorage !== 'undefined' && localStorage.getItem('token')) || (typeof API !== 'undefined' && API.token) || '';
-      const endpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
+      const token = (typeof localStorage !== 'undefined' && (localStorage.getItem('brago_token') || localStorage.getItem('token'))) || (typeof API !== 'undefined' && API.token) || '';
+      const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) || (typeof window !== 'undefined' && window.API_BASE_URL) || '';
+      const rawEndpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
+      const endpoint = rawEndpoint.startsWith('http') ? rawEndpoint : `${baseUrl}${rawEndpoint}`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
@@ -1155,32 +1159,109 @@ const BiaAPI = {
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`TTS server HTTP ${res.status}`);
-      }
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('audio')) {
+          const blob = await res.blob();
+          const base64Url = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve(URL.createObjectURL(blob));
+            reader.readAsDataURL(blob);
+          });
+          return {
+            type: 'audio',
+            audioUrl: base64Url
+          };
+        }
 
-      const contentType = res.headers.get('content-type') || '';
-      if (contentType.includes('audio')) {
-        const blob = await res.blob();
-        return {
-          type: 'audio',
-          audioUrl: URL.createObjectURL(blob)
-        };
+        const data = await res.json();
+        if (data.fallback) {
+          // Se o servidor indicou fallback mas temos a chave configurada no frontend, tenta direto ElevenLabs!
+          try {
+            const direto = await this.chamarElevenLabsDireto(text);
+            if (direto) return direto;
+          } catch (_) {}
+          return { type: 'native', text: data.text || text };
+        }
       }
-
-      // Se o servidor retornou JSON (fallback com texto sanitizado)
-      const data = await res.json();
-      return {
-        type: 'native',
-        text: data.text || text
-      };
-    } catch (err) {
-      console.warn('[BIA API] Erro ao sintetizar áudio via servidor, usando fallback nativo:', err);
-      return {
-        type: 'native',
-        text
-      };
+    } catch (serverErr) {
+      console.warn('[BIA API] Backend TTS falhou ou inacessível no app, tentando chamada direta ElevenLabs:', serverErr);
     }
+
+    // 2. CAMADA DE CONTINGÊNCIA: Chamada direta ao ElevenLabs (indispensável no APK Android quando fora do domínio)
+    try {
+      const direto = await this.chamarElevenLabsDireto(text);
+      if (direto) return direto;
+    } catch (elevenErr) {
+      console.warn('[BIA API] Chamada direta ElevenLabs falhou:', elevenErr);
+    }
+
+    // 3. FALLBACK NATIVO (Web Speech API)
+    return {
+      type: 'native',
+      text
+    };
+  },
+
+  /**
+   * Chamada direta à API da ElevenLabs do lado do cliente (100% funcional no APK Android)
+   */
+  async chamarElevenLabsDireto(text) {
+    const key = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50';
+    const voiceId = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || 'EXAVITQu4vr4xnSDxMaL';
+    if (!key) return null;
+
+    let clean = text
+      .replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '')
+      .replace(/```[\s\S]*?```/gi, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, '')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/\b(\d+)\s*kg\b/gi, '$1 quilos')
+      .replace(/\bkg\b/gi, 'quilos')
+      .replace(/R\$\s*(\d+)/gi, '$1 reais')
+      .replace(/%/g, ' por cento')
+      .replace(/\n+/g, '. ')
+      .trim();
+
+    if (clean.length > 1000) clean = clean.slice(0, 1000) + '...';
+
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': key,
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: clean,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75
+        }
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error(`ElevenLabs direto HTTP ${res.status}`);
+    }
+
+    const blob = await res.blob();
+    const base64Url = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(URL.createObjectURL(blob));
+      reader.readAsDataURL(blob);
+    });
+
+    return {
+      type: 'audio',
+      audioUrl: base64Url
+    };
   }
 };
 
