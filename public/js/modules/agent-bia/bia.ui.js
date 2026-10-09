@@ -1239,6 +1239,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     if (speakBtn) {
       speakBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        this.unlockAudio();
         if (this._isSpeaking && this._speakingBtn === speakBtn) {
           this.stopSpeaking();
         } else {
@@ -1347,16 +1348,30 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   /* ─── SISTEMA DE REPRODUÇÃO DE VOZ DA BIA (TTS) ────────────────────────── */
   _currentAudio: null,
   _currentUtterance: null,
-  _isSpeaking: false,
-  _speakingBtn: null,
+  _audioCtx: null,
+  _currentAudioSource: null,
 
   stopSpeaking() {
+    if (this._currentAudioSource) {
+      try {
+        this._currentAudioSource.stop();
+        this._currentAudioSource.disconnect();
+      } catch (_) {}
+      this._currentAudioSource = null;
+    }
     if (this._currentAudio) {
       try {
         this._currentAudio.pause();
         this._currentAudio.currentTime = 0;
       } catch (_) {}
       this._currentAudio = null;
+    }
+    const player = document.getElementById('bia-global-audio-player');
+    if (player) {
+      try {
+        player.pause();
+        player.currentTime = 0;
+      } catch (_) {}
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
@@ -1373,24 +1388,89 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
   },
 
-  _audioUnlocked: false,
   unlockAudio() {
-    if (this._audioUnlocked) return;
+    try {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        if (!this._audioCtx) {
+          this._audioCtx = new AudioCtxClass();
+        }
+        if (this._audioCtx.state === 'suspended') {
+          this._audioCtx.resume();
+        }
+      }
+    } catch (_) {}
+
     try {
       const silence = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
       silence.volume = 0.01;
       const p = silence.play();
-      if (p) {
-        p.then(() => {
-          this._audioUnlocked = true;
-        }).catch(() => {});
-      }
+      if (p) p.catch(() => {});
     } catch (_) {}
 
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.getVoices();
       } catch (_) {}
+    }
+  },
+
+  /**
+   * Reproduz áudio em MP3 via Web Audio API (Decodificação direta em memória do Android)
+   */
+  async playAudioViaWebAudio(base64Url, btnEl = null) {
+    try {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) return false;
+
+      if (!this._audioCtx) {
+        this._audioCtx = new AudioCtxClass();
+      }
+      if (this._audioCtx.state === 'suspended') {
+        await this._audioCtx.resume();
+      }
+
+      const base64Data = base64Url.includes(',') ? base64Url.split(',')[1] : base64Url;
+      const binaryString = window.atob(base64Data);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Decodificação direta pelo chip de áudio
+      const audioBuffer = await new Promise((resolve, reject) => {
+        this._audioCtx.decodeAudioData(bytes.buffer.slice(0), resolve, reject);
+      });
+
+      if (!audioBuffer) return false;
+
+      if (this._currentAudioSource) {
+        try { this._currentAudioSource.stop(); } catch (_) {}
+      }
+
+      const source = this._audioCtx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(this._audioCtx.destination);
+
+      source.onended = () => {
+        this.stopSpeaking();
+      };
+
+      this._currentAudioSource = source;
+      source.start(0);
+
+      if (btnEl) {
+        btnEl.classList.remove('is-loading');
+        btnEl.classList.add('is-playing');
+        const label = btnEl.querySelector('.bia-speak-label');
+        if (label) label.textContent = 'Falando...';
+      }
+      console.log('[BIA Audio] Áudio reproduzido com sucesso via Web Audio API!');
+      return true;
+    } catch (err) {
+      console.warn('[BIA Audio] Web Audio API falhou:', err);
+      return false;
     }
   },
 
@@ -1414,6 +1494,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   async speakText(text, btnEl = null) {
     if (!text || typeof text !== 'string') return;
     this.stopSpeaking();
+    this.unlockAudio();
 
     this._isSpeaking = true;
     this._speakingBtn = btnEl;
@@ -1424,10 +1505,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       if (label) label.textContent = 'Carregando...';
     }
 
-    // Trava de segurança com tempo realista para IA (20s) para NUNCA abortar enquanto a síntese gera
+    // Trava de segurança de 20s
     let safetyTimer = setTimeout(() => {
       if (this._isSpeaking && btnEl && btnEl.classList.contains('is-loading')) {
-        console.warn('[BIA Audio] Safety timeout de 20s disparado. Alternando para voz nativa...');
+        console.warn('[BIA Audio] Safety timeout disparado.');
         this.speakNative(text, btnEl);
       }
     }, 20000);
@@ -1442,15 +1523,15 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && res.audioUrl) {
-          if (btnEl) {
-            btnEl.classList.remove('is-loading');
-            btnEl.classList.add('is-playing');
-            const label = btnEl.querySelector('.bia-speak-label');
-            if (label) label.textContent = 'Falando...';
+          // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Mais confiável no Android WebView)
+          const tocouWebAudio = await this.playAudioViaWebAudio(res.audioUrl, btnEl);
+          if (tocouWebAudio) {
+            return;
           }
 
+          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 (sem audio.load())
+          console.log('[BIA Audio] Tentando fallback para elemento HTML5 Audio...');
           const audio = this.getAudioPlayer() || new Audio();
-          audio.preload = 'auto';
           audio.src = res.audioUrl;
           audio.volume = 1.0;
           this._currentAudio = audio;
@@ -1470,24 +1551,21 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           };
 
           audio.onerror = (e) => {
-            console.warn('[BIA Audio] Falha ao tocar áudio MP3, usando fallback nativo:', e);
+            console.warn('[BIA Audio] Elemento de áudio disparou erro:', e);
             this.speakNative(text, btnEl);
           };
 
           try {
-            audio.load();
             const p = audio.play();
             if (p !== undefined) {
-              p.then(() => {
-                console.log('[BIA Audio] Reprodução iniciada no player de áudio!');
-              }).catch(playErr => {
-                console.warn('[BIA Audio] Autoplay bloqueado pelo navegador/WebView, tentando fala nativa:', playErr);
+              p.catch(playErr => {
+                console.warn('[BIA Audio] play() rejeitado:', playErr);
                 this.speakNative(text, btnEl);
               });
             }
             return;
           } catch (playErr) {
-            console.warn('[BIA Audio] Erro síncrono no play, tentando fala nativa:', playErr);
+            console.warn('[BIA Audio] Erro síncrono no play:', playErr);
             this.speakNative(text, btnEl);
             return;
           }
