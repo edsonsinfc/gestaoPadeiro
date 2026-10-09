@@ -1578,25 +1578,34 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           safetyTimer = null;
         }
 
-        if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl || res.arrayBuffer)) {
-          const playViaWebAudioFallback = async () => {
-            const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
+        if (res && res.type === 'audio' && (res.blobUrl || res.audioUrl || res.arrayBuffer)) {
+          const targetBlobUrl = res.blobUrl || (res.arrayBuffer ? URL.createObjectURL(new Blob([res.arrayBuffer], { type: 'audio/mpeg' })) : null);
+          const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
+
+          const playWebAudioFallback = async () => {
             if (buf) {
               const tocou = await this.playAudioViaWebAudio(buf, btnEl);
-              if (tocou) return;
+              if (tocou) return true;
             }
             this.speakNative(text, btnEl);
+            return false;
           };
 
-          // 1. CAMADA 1: HTML5 AUDIO COM DATA URI (Toca direto no hardware STREAM_MUSIC do Android)
-          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio nativo...');
+          // 1. TENTA PRIMEIRO VIA HTML5 AUDIO COM BLOB URL (Não sofre do limite de 32KB do Android MediaPlayer)
+          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio Blob URL...');
           const audio = new Audio();
+          audio.preload = 'auto';
           audio.volume = 1.0;
-          audio.src = res.audioUrl || res.blobUrl;
+          audio.src = targetBlobUrl || res.audioUrl;
           this._currentAudio = audio;
           window._activeBiaAudio = audio;
 
+          let startTime = 0;
+          let tocouNativo = false;
+
           audio.onplay = () => {
+            startTime = Date.now();
+            tocouNativo = true;
             if (safetyTimer) {
               clearTimeout(safetyTimer);
               safetyTimer = null;
@@ -1609,13 +1618,22 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             }
           };
 
-          audio.onended = () => {
+          audio.onended = async () => {
+            const playedDuration = Date.now() - startTime;
+            // Se o reprodutor nativo fechou em menos de 400ms (áudio truncado pelo MediaPlayer), aciona WebAudio imediatamente!
+            if (playedDuration < 400 && buf) {
+              console.warn('[BIA Audio] MediaPlayer nativo encerrou precocemente (' + playedDuration + 'ms). Recorrendo a Web Audio API...');
+              const ok = await playWebAudioFallback();
+              if (ok) return;
+            }
             this.stopSpeaking();
           };
 
-          audio.onerror = (e) => {
+          audio.onerror = async (e) => {
             console.warn('[BIA Audio] HTML5 Audio erro, recorrendo a Web Audio API:', e);
-            playViaWebAudioFallback();
+            if (!tocouNativo) {
+              await playWebAudioFallback();
+            }
           };
 
           try {
@@ -1625,8 +1643,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             }
             return;
           } catch (audioErr) {
-            console.warn('[BIA Audio] audio.play() falhou:', audioErr);
-            await playViaWebAudioFallback();
+            console.warn('[BIA Audio] audio.play() falhou, acionando WebAudio:', audioErr);
+            await playWebAudioFallback();
             return;
           }
         }
@@ -2035,11 +2053,12 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         audioBuffer = res.arrayBuffer;
       }
 
-      const buffer = audioBuffer || (audioUrl ? this.base64ToBlobUrl(audioUrl).buffer : null);
-      this.logDiag('[Teste 4] Iniciando reprodução com HTML5 Audio (canal STREAM_MUSIC)...');
+      const targetBlob = blobUrl || (audioBuffer ? URL.createObjectURL(new Blob([audioBuffer], { type: 'audio/mpeg' })) : null);
+      this.logDiag('[Teste 4] Iniciando reprodução via HTML5 Audio (Blob URL)...');
       const audio = new Audio();
+      audio.preload = 'auto';
       audio.volume = 1.0;
-      audio.src = audioUrl || blobUrl;
+      audio.src = targetBlob || audioUrl;
 
       let tocou = false;
       try {
@@ -2048,9 +2067,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         this.logDiag('✅ [Teste 4] HTML5 Audio tocando agora com volume total!');
       } catch (audioErr) {
         this.logDiag('[Teste 4] HTML5 Audio play falhou (' + audioErr.message + '), tentando WebAudio...');
-        if (buffer) {
+        const buf = audioBuffer || (audioUrl ? this.base64ToBlobUrl(audioUrl).buffer : null);
+        if (buf) {
           try {
-            tocou = await this.playAudioViaWebAudio(buffer);
+            tocou = await this.playAudioViaWebAudio(buf);
             if (tocou) this.logDiag('✅ [Teste 4] Web Audio API tocando com sucesso!');
           } catch (weErr) {
             this.logDiag('[Teste 4] WebAudio falhou: ' + weErr.message);

@@ -26,7 +26,7 @@ var safeGetLocalStorage = window.safeGetLocalStorage;
 var safeSetLocalStorage = window.safeSetLocalStorage;
 
 const App = {
-  APP_VERSION: '1.2.8',
+  APP_VERSION: '1.2.9',
   currentRoute: 'login',
   async init() {
     // === PRIORITY 1: Renderizar a tela IMEDIATAMENTE ===
