@@ -1259,40 +1259,57 @@ const BiaAPI = {
    * Chamada direta à API da ElevenLabs do lado do cliente (100% direta, sem passar por servidor)
    */
   async chamarElevenLabsDireto(text) {
-    const key = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50';
     const voiceId = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || 'EXAVITQu4vr4xnSDxMaL';
-    if (!key) return null;
+    const principal = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50';
+    const reserva = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsFallbackApiKey) || 'sk_e04f9290e2db94daeb00acfcdb3ab3e128d6252ba070bba3';
+    // Lista de chaves em ordem de prioridade (sem duplicatas)
+    const keys = [principal, reserva].filter((k, i, arr) => k && arr.indexOf(k) === i);
+    if (!keys.length) return null;
 
     const clean = this.extrairResumoFalado(text);
     if (!clean) return null;
 
-    console.log('[BIA TTS Direto] Enviando para ElevenLabs (' + clean.length + ' chars):', clean.substring(0, 70) + '...');
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
-
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': key,
-        'Accept': 'audio/mpeg'
-      },
-      body: JSON.stringify({
-        text: clean,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
+    let res = null;
+    let lastErr = null;
+    for (let i = 0; i < keys.length; i++) {
+      console.log(`[BIA TTS Direto] Chave ${i === 0 ? 'principal' : 'reserva #' + i} -> ElevenLabs (${clean.length} chars)`);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+      try {
+        const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': keys[i],
+            'Accept': 'audio/mpeg'
+          },
+          body: JSON.stringify({
+            text: clean,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75
+            }
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (r.ok) {
+          res = r;
+          break;
         }
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timer);
+        const errDetail = await r.text().catch(() => '');
+        lastErr = new Error(`ElevenLabs HTTP ${r.status}: ${errDetail.substring(0, 120)}`);
+        console.warn('[BIA TTS Direto] ' + lastErr.message + ' — tentando próxima chave...');
+      } catch (e) {
+        clearTimeout(timer);
+        lastErr = e;
+        console.warn('[BIA TTS Direto] Falha de rede/timeout:', e.message);
+      }
+    }
 
-    if (!res.ok) {
-      const errDetail = await res.text().catch(() => '');
-      throw new Error(`ElevenLabs HTTP ${res.status}: ${errDetail.substring(0, 120)}`);
+    if (!res) {
+      throw lastErr || new Error('ElevenLabs: nenhuma chave disponível');
     }
 
     const buffer = await res.arrayBuffer();
