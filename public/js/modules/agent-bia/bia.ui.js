@@ -1517,7 +1517,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       source.connect(this._audioCtx.destination);
 
       source.onended = () => {
-        this.stopSpeaking();
+        // Ignora fim de fonte antiga (não deve cancelar uma fala nova)
+        if (this._currentAudioSource === source) this.stopSpeaking();
       };
 
       this._currentAudioSource = source;
@@ -1558,6 +1559,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     if (!text || typeof text !== 'string') return;
     this.stopSpeaking();
     this.unlockAudio();
+    const token = (this._speakToken = (this._speakToken || 0) + 1);
 
     this._isSpeaking = true;
     this._speakingBtn = btnEl;
@@ -1579,6 +1581,12 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     try {
       if (typeof BiaAPI !== 'undefined' && typeof BiaAPI.synthesizeSpeech === 'function') {
         const res = await BiaAPI.synthesizeSpeech(text);
+
+        // Outra fala foi iniciada enquanto esta carregava: descarta esta
+        if (token !== this._speakToken) {
+          if (safetyTimer) clearTimeout(safetyTimer);
+          return;
+        }
 
         if (safetyTimer) {
           clearTimeout(safetyTimer);
@@ -1722,8 +1730,12 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       utterance.onend = () => {
         this.stopSpeaking();
       };
-      utterance.onerror = () => {
+      utterance.onerror = (ev) => {
+        console.warn('[BIA Native Voice] Erro:', ev && ev.error);
         this.stopSpeaking();
+        if (typeof Components !== 'undefined' && Components.toast) {
+          Components.toast('Não foi possível reproduzir a voz da Bia neste aparelho.', 'warning');
+        }
       };
 
       window.speechSynthesis.speak(utterance);
