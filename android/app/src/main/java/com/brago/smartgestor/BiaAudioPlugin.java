@@ -3,6 +3,7 @@ package com.brago.smartgestor;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.Base64;
@@ -21,7 +22,7 @@ public class BiaAudioPlugin extends Plugin {
 
     private static final String TAG = "BiaAudioPlugin";
     private MediaPlayer mediaPlayer;
-    private java.io.FileInputStream currentFis;
+    private MediaDataSource currentDataSource;
     private final Object lock = new Object();
 
     @PluginMethod
@@ -40,32 +41,13 @@ public class BiaAudioPlugin extends Plugin {
             }
             base64Data = base64Data.trim();
 
-            byte[] audioBytes = Base64.decode(base64Data, Base64.DEFAULT);
+            final byte[] audioBytes = Base64.decode(base64Data, Base64.DEFAULT);
             if (audioBytes == null || audioBytes.length == 0) {
                 call.reject("Decoded audio bytes are empty");
                 return;
             }
 
             Context context = getContext();
-            File cacheDir = context.getExternalCacheDir();
-            if (cacheDir == null) {
-                cacheDir = context.getCacheDir();
-            }
-            File tempAudioFile = new File(cacheDir, "bia_speech_cache.mp3");
-            if (tempAudioFile.exists()) {
-                tempAudioFile.delete();
-            }
-
-            try (FileOutputStream fos = new FileOutputStream(tempAudioFile)) {
-                fos.write(audioBytes);
-                fos.flush();
-                try {
-                    fos.getFD().sync();
-                } catch (Exception ignored) {}
-            }
-
-            tempAudioFile.setReadable(true, false);
-
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             int currentVol = -1;
             int maxVol = -1;
@@ -101,15 +83,29 @@ public class BiaAudioPlugin extends Plugin {
                         .build()
                 );
 
-                // Abre o FileInputStream e mantem aberto durante a reproducao
-                // Usa o descritor de arquivo completo (sem restricoes de offset/length) para permitir busca de headers MP3
-                try {
-                    currentFis = new java.io.FileInputStream(tempAudioFile);
-                    mediaPlayer.setDataSource(currentFis.getFD());
-                } catch (Exception eFd) {
-                    Log.w(TAG, "Falha ao definir dataSource via FD, tentando caminho absoluto: " + eFd.getMessage());
-                    mediaPlayer.setDataSource(tempAudioFile.getAbsolutePath());
-                }
+                // MediaDataSource lê diretamente os bytes da memória RAM sem criar arquivos temporários em disco
+                currentDataSource = new MediaDataSource() {
+                    @Override
+                    public int readAt(long position, byte[] buffer, int offset, int size) {
+                        if (position >= audioBytes.length) {
+                            return -1; // End of stream
+                        }
+                        int remaining = (int) (audioBytes.length - position);
+                        int bytesToRead = Math.min(size, remaining);
+                        System.arraycopy(audioBytes, (int) position, buffer, offset, bytesToRead);
+                        return bytesToRead;
+                    }
+
+                    @Override
+                    public long getSize() {
+                        return audioBytes.length;
+                    }
+
+                    @Override
+                    public void close() {}
+                };
+
+                mediaPlayer.setDataSource(currentDataSource);
                 mediaPlayer.setVolume(1.0f, 1.0f);
 
                 mediaPlayer.setOnCompletionListener(mp -> {
@@ -142,23 +138,16 @@ public class BiaAudioPlugin extends Plugin {
                 mediaPlayer.setOnPreparedListener(mp -> {
                     try {
                         mp.start();
-                        Log.i(TAG, "Reprodução nativa iniciada com sucesso via hardware Android (onPrepared)!");
+                        Log.i(TAG, "Reprodução nativa iniciada com sucesso via MediaDataSource em RAM!");
                     } catch (Exception eStart) {
                         Log.e(TAG, "Falha ao iniciar MediaPlayer no onPrepared: " + eStart.getMessage());
                     }
                 });
 
-                // prepareAsync garante inicialização assíncrona limpa do codec sem travar a thread
                 mediaPlayer.prepareAsync();
             }
 
             int duration = 0;
-            try {
-                if (mediaPlayer != null) {
-                    duration = mediaPlayer.getDuration();
-                }
-            } catch (Exception ignored) {}
-
             JSObject ret = new JSObject();
             ret.put("success", true);
             ret.put("bytes", audioBytes.length);
@@ -210,11 +199,11 @@ public class BiaAudioPlugin extends Plugin {
                 } catch (Exception ignored) {}
                 mediaPlayer = null;
             }
-            if (currentFis != null) {
+            if (currentDataSource != null) {
                 try {
-                    currentFis.close();
+                    currentDataSource.close();
                 } catch (Exception ignored) {}
-                currentFis = null;
+                currentDataSource = null;
             }
         }
     }
