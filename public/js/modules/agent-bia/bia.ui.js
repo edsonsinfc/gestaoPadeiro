@@ -1385,8 +1385,22 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   _currentUtterance: null,
   _audioCtx: null,
   _currentAudioSource: null,
+  _nativeAudioListeners: [],
 
   stopSpeaking() {
+    // Interrompe reprodução nativa Android se disponível
+    if (window.Capacitor?.Plugins?.BiaAudio) {
+      try {
+        window.Capacitor.Plugins.BiaAudio.stopAudio().catch(() => {});
+      } catch (_) {}
+    }
+    if (this._nativeAudioListeners && this._nativeAudioListeners.length) {
+      this._nativeAudioListeners.forEach(l => {
+        try { if (typeof l.remove === 'function') l.remove(); } catch (_) {}
+      });
+      this._nativeAudioListeners = [];
+    }
+
     if (this._currentAudioSource) {
       try {
         this._currentAudioSource.stop();
@@ -1496,6 +1510,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         try { this._currentAudioSource.stop(); } catch (_) {}
       }
 
+      const source = this._audioCtx.createBufferSource();
+      source.buffer = audioBuffer;
       const gainNode = this._audioCtx.createGain();
       gainNode.gain.setValueAtTime(1.0, this._audioCtx.currentTime);
       source.connect(gainNode);
@@ -1555,13 +1571,13 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       if (label) label.textContent = 'Carregando...';
     }
 
-    // Trava de segurança de 20s
+    // Trava de segurança de 25s
     let safetyTimer = setTimeout(() => {
       if (this._isSpeaking && btnEl && btnEl.classList.contains('is-loading')) {
         console.warn('[BIA Audio] Safety timeout disparado.');
         this.speakNative(text, btnEl);
       }
-    }, 20000);
+    }, 25000);
 
     try {
       if (typeof BiaAPI !== 'undefined' && typeof BiaAPI.synthesizeSpeech === 'function') {
@@ -1579,6 +1595,54 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && (res.blobUrl || res.audioUrl || res.arrayBuffer)) {
+          // ─── 1. PRIORIDADE MÁXIMA NO APK ANDROID: PLUGIN JAVA NATIVO MEDIAPLAYER ───
+          const nativeBiaAudio = window.Capacitor?.Plugins?.BiaAudio;
+          if (nativeBiaAudio && typeof nativeBiaAudio.playBase64 === 'function') {
+            console.log('[BIA Audio] APK Android detectado: Reproduzindo via BiaAudioPlugin (MediaPlayer nativo)...');
+            try {
+              if (this._nativeAudioListeners) {
+                this._nativeAudioListeners.forEach(l => {
+                  try { if (typeof l.remove === 'function') l.remove(); } catch (_) {}
+                });
+              }
+              this._nativeAudioListeners = [];
+
+              const onPlayHandle = await nativeBiaAudio.addListener('onPlay', () => {
+                console.log('[BIA Audio] Plugin nativo: onPlay disparado!');
+                if (btnEl) {
+                  btnEl.classList.remove('is-loading');
+                  btnEl.classList.add('is-playing');
+                  const label = btnEl.querySelector('.bia-speak-label');
+                  if (label) label.textContent = 'Falando...';
+                }
+              });
+              this._nativeAudioListeners.push(onPlayHandle);
+
+              const onEndedHandle = await nativeBiaAudio.addListener('onEnded', () => {
+                console.log('[BIA Audio] Plugin nativo: onEnded disparado!');
+                this.stopSpeaking();
+              });
+              this._nativeAudioListeners.push(onEndedHandle);
+
+              const onErrorHandle = await nativeBiaAudio.addListener('onError', (err) => {
+                console.warn('[BIA Audio] Plugin nativo: onError disparado:', err);
+                this.stopSpeaking();
+              });
+              this._nativeAudioListeners.push(onErrorHandle);
+
+              const playRes = await nativeBiaAudio.playBase64({ base64: res.audioUrl });
+              console.log('[BIA Audio] playBase64 iniciado com sucesso:', playRes);
+
+              if (playRes && playRes.volume === 0 && typeof Components !== 'undefined' && Components.toast) {
+                Components.toast('Atenção: O volume de mídia do celular está no mudo (0). Aumente nos botões laterais do aparelho.', 'warning');
+              }
+              return;
+            } catch (nativeErr) {
+              console.warn('[BIA Audio] Falha ao acionar BiaAudio nativo, recorrendo a fallbacks:', nativeErr);
+            }
+          }
+
+          // ─── 2. SE FOR WEB (CHROME DESKTOP OU NAVEGADOR COMUM) ───
           const targetBlobUrl = res.blobUrl || (res.arrayBuffer ? URL.createObjectURL(new Blob([res.arrayBuffer], { type: 'audio/mpeg' })) : null);
           const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
 
@@ -1591,8 +1655,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             return false;
           };
 
-          // 1. TENTA PRIMEIRO VIA HTML5 AUDIO COM BLOB URL (Não sofre do limite de 32KB do Android MediaPlayer)
-          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio Blob URL...');
+          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio Blob URL (Web)...');
           const audio = new Audio();
           audio.preload = 'auto';
           audio.volume = 1.0;
@@ -1620,9 +1683,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
           audio.onended = async () => {
             const playedDuration = Date.now() - startTime;
-            // Se o reprodutor nativo fechou em menos de 400ms (áudio truncado pelo MediaPlayer), aciona WebAudio imediatamente!
             if (playedDuration < 400 && buf) {
-              console.warn('[BIA Audio] MediaPlayer nativo encerrou precocemente (' + playedDuration + 'ms). Recorrendo a Web Audio API...');
+              console.warn('[BIA Audio] Player encerrou precocemente (' + playedDuration + 'ms). Recorrendo a Web Audio API...');
               const ok = await playWebAudioFallback();
               if (ok) return;
             }
@@ -2053,6 +2115,21 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         audioBuffer = res.arrayBuffer;
       }
 
+      // ─── 1. SE FOR APK ANDROID: TESTA DIRETO O PLUGIN NATIVO MEDIAPLAYER ───
+      const nativeBiaAudio = window.Capacitor?.Plugins?.BiaAudio;
+      if (nativeBiaAudio && typeof nativeBiaAudio.playBase64 === 'function') {
+        this.logDiag('[Teste 4] 📱 Dispositivo APK Android detectado! Acionando BiaAudioPlugin nativo...');
+        const pRes = await nativeBiaAudio.playBase64({ base64: audioUrl });
+        this.logDiag(`✅ [Teste 4] BiaAudioPlugin reproduziu nativamente! Volume do sistema: ${pRes.volume}/${pRes.maxVolume}`);
+        if (pRes.volume === 0) {
+          this.logDiag('⚠️ ATENÇÃO: Volume de mídia do Android está em 0 (MUDO)! Aumente o volume pelos botões laterais do aparelho.');
+        }
+        resEl.textContent = `✅ Sucesso Nativo! Áudio tocando no hardware Android (Vol: ${pRes.volume}/${pRes.maxVolume}).`;
+        resEl.className = 'bia-diag-test-result success';
+        return;
+      }
+
+      // ─── 2. SE FOR NAVEGADOR WEB (CHROME DESKTOP/MOBILE) ───
       const targetBlob = blobUrl || (audioBuffer ? URL.createObjectURL(new Blob([audioBuffer], { type: 'audio/mpeg' })) : null);
       this.logDiag('[Teste 4] Iniciando reprodução via HTML5 Audio (Blob URL)...');
       const audio = new Audio();
