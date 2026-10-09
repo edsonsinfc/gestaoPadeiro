@@ -1543,6 +1543,58 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
   },
 
+  /**
+   * Contingência resiliente via Web Audio API e HTML5 Audio
+   */
+  async playFallbackWebAudio(targetBlobUrl, buf, btnEl = null, text = '') {
+    console.log('[BIA Audio] Iniciando reprodução via contingência Web Audio API...');
+    try {
+      if (buf) {
+        const tocou = await this.playAudioViaWebAudio(buf, btnEl);
+        if (tocou) return true;
+      }
+    } catch (e) {
+      console.warn('[BIA Audio] Web Audio falhou na contingência:', e);
+    }
+
+    try {
+      if (targetBlobUrl) {
+        console.log('[BIA Audio] Tentando reproduzir via HTML5 Audio Blob URL...');
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.volume = 1.0;
+        audio.src = targetBlobUrl;
+        this._currentAudio = audio;
+        window._activeBiaAudio = audio;
+
+        let started = false;
+        audio.onplay = () => {
+          started = true;
+          if (btnEl) {
+            btnEl.classList.remove('is-loading');
+            btnEl.classList.add('is-playing');
+            const label = btnEl.querySelector('.bia-speak-label');
+            if (label) label.textContent = 'Falando...';
+          }
+        };
+        audio.onended = () => {
+          this.stopSpeaking();
+        };
+        audio.onerror = () => {
+          if (!started && text) this.speakNative(text, btnEl);
+        };
+        const p = audio.play();
+        if (p !== undefined) await p;
+        return true;
+      }
+    } catch (audioErr) {
+      console.warn('[BIA Audio] HTML5 Audio falhou na contingência:', audioErr);
+    }
+
+    if (text) this.speakNative(text, btnEl);
+    return false;
+  },
+
   getAudioPlayer() {
     let player = document.getElementById('bia-global-audio-player');
     if (!player && typeof document !== 'undefined') {
@@ -1599,6 +1651,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && (res.blobUrl || res.audioUrl || res.arrayBuffer)) {
+          const targetBlobUrl = res.blobUrl || (res.arrayBuffer ? URL.createObjectURL(new Blob([res.arrayBuffer], { type: 'audio/mpeg' })) : null);
+          const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
+
           // ─── 1. PRIORIDADE MÁXIMA NO APK ANDROID: PLUGIN JAVA NATIVO MEDIAPLAYER ───
           const nativeBiaAudio = window.Capacitor?.Plugins?.BiaAudio;
           if (nativeBiaAudio && typeof nativeBiaAudio.playBase64 === 'function') {
@@ -1611,20 +1666,30 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
               }
               this._nativeAudioListeners = [];
 
+              let playStartTime = Date.now();
               const onEndedHandle = await nativeBiaAudio.addListener('onEnded', () => {
-                console.log('[BIA Audio] Plugin nativo: onEnded disparado!');
+                const elapsed = Date.now() - playStartTime;
+                console.log('[BIA Audio] Plugin nativo: onEnded disparado após', elapsed, 'ms');
+                // Se o player nativo encerrou em menos de 800ms (corte anormal do Android), recorre imediatamente ao player Web!
+                if (elapsed < 800) {
+                  console.warn('[BIA Audio] Player nativo encerrou precocemente (' + elapsed + 'ms). Acionando contingência Web Audio...');
+                  this.playFallbackWebAudio(targetBlobUrl, buf, btnEl, text);
+                  return;
+                }
                 this.stopSpeaking();
               });
               this._nativeAudioListeners.push(onEndedHandle);
 
               const onErrorHandle = await nativeBiaAudio.addListener('onError', (err) => {
                 console.warn('[BIA Audio] Plugin nativo: onError disparado:', err);
-                this.stopSpeaking();
+                console.warn('[BIA Audio] Erro nativo, alternando para player web...');
+                this.playFallbackWebAudio(targetBlobUrl, buf, btnEl, text);
               });
               this._nativeAudioListeners.push(onErrorHandle);
 
               const playRes = await nativeBiaAudio.playBase64({ base64: res.audioUrl });
               console.log('[BIA Audio] playBase64 iniciado com sucesso:', playRes);
+              playStartTime = Date.now();
 
               // Atualiza o botão para "Falando..." imediatamente após o MediaPlayer iniciar no hardware
               if (btnEl) {
@@ -1636,10 +1701,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
               // Timer de proteção baseado na duração real (ms) do áudio retornada pelo Android
               if (this._nativeEndTimer) clearTimeout(this._nativeEndTimer);
-              const durationMs = (playRes && playRes.duration > 0) ? playRes.duration : 10000;
+              const durationMs = (playRes && playRes.duration > 0) ? playRes.duration : 12000;
               this._nativeEndTimer = setTimeout(() => {
                 this.stopSpeaking();
-              }, durationMs + 600);
+              }, durationMs + 1000);
 
               if (playRes && playRes.volume === 0 && typeof Components !== 'undefined' && Components.toast) {
                 Components.toast('Atenção: O volume de mídia do celular está no mudo (0). Aumente nos botões laterais do aparelho.', 'warning');
@@ -1650,73 +1715,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             }
           }
 
-          // ─── 2. SE FOR WEB (CHROME DESKTOP OU NAVEGADOR COMUM) ───
-          const targetBlobUrl = res.blobUrl || (res.arrayBuffer ? URL.createObjectURL(new Blob([res.arrayBuffer], { type: 'audio/mpeg' })) : null);
-          const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
-
-          const playWebAudioFallback = async () => {
-            if (buf) {
-              const tocou = await this.playAudioViaWebAudio(buf, btnEl);
-              if (tocou) return true;
-            }
-            this.speakNative(text, btnEl);
-            return false;
-          };
-
-          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio Blob URL (Web)...');
-          const audio = new Audio();
-          audio.preload = 'auto';
-          audio.volume = 1.0;
-          audio.src = targetBlobUrl || res.audioUrl;
-          this._currentAudio = audio;
-          window._activeBiaAudio = audio;
-
-          let startTime = 0;
-          let tocouNativo = false;
-
-          audio.onplay = () => {
-            startTime = Date.now();
-            tocouNativo = true;
-            if (safetyTimer) {
-              clearTimeout(safetyTimer);
-              safetyTimer = null;
-            }
-            if (btnEl) {
-              btnEl.classList.remove('is-loading');
-              btnEl.classList.add('is-playing');
-              const label = btnEl.querySelector('.bia-speak-label');
-              if (label) label.textContent = 'Falando...';
-            }
-          };
-
-          audio.onended = async () => {
-            const playedDuration = Date.now() - startTime;
-            if (playedDuration < 400 && buf) {
-              console.warn('[BIA Audio] Player encerrou precocemente (' + playedDuration + 'ms). Recorrendo a Web Audio API...');
-              const ok = await playWebAudioFallback();
-              if (ok) return;
-            }
-            this.stopSpeaking();
-          };
-
-          audio.onerror = async (e) => {
-            console.warn('[BIA Audio] HTML5 Audio erro, recorrendo a Web Audio API:', e);
-            if (!tocouNativo) {
-              await playWebAudioFallback();
-            }
-          };
-
-          try {
-            const p = audio.play();
-            if (p !== undefined) {
-              await p;
-            }
-            return;
-          } catch (audioErr) {
-            console.warn('[BIA Audio] audio.play() falhou, acionando WebAudio:', audioErr);
-            await playWebAudioFallback();
-            return;
-          }
+          // ─── 2. SE FOR WEB (CHROME DESKTOP/MOBILE) OU FALLBACK DO PLUGIN NATIVO ───
+          await this.playFallbackWebAudio(targetBlobUrl, buf, btnEl, text);
+          return;
         }
 
         // Se o backend indicou fallback ou deu JSON
