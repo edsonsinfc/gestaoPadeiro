@@ -1431,24 +1431,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           this._audioCtx = new AudioCtxClass();
         }
         if (this._audioCtx.state === 'suspended') {
-          this._audioCtx.resume();
+          this._audioCtx.resume().catch(() => {});
         }
-        // Micro buffer silencioso de 1 amostra para forçar o foco no AudioManager.STREAM_MUSIC do Android
-        try {
-          const buf = this._audioCtx.createBuffer(1, 1, 22050);
-          const src = this._audioCtx.createBufferSource();
-          src.buffer = buf;
-          src.connect(this._audioCtx.destination);
-          src.start(0);
-        } catch (_) {}
-      }
-    } catch (_) {}
-
-    try {
-      const player = this.getAudioPlayer();
-      if (player) {
-        const p = player.play();
-        if (p) p.then(() => player.pause()).catch(() => {});
       }
     } catch (_) {}
 
@@ -1512,9 +1496,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         try { this._currentAudioSource.stop(); } catch (_) {}
       }
 
-      const source = this._audioCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this._audioCtx.destination);
+      const gainNode = this._audioCtx.createGain();
+      gainNode.gain.setValueAtTime(1.0, this._audioCtx.currentTime);
+      source.connect(gainNode);
+      gainNode.connect(this._audioCtx.destination);
 
       source.onended = () => {
         // Ignora fim de fonte antiga (não deve cancelar uma fala nova)
@@ -1594,22 +1579,20 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl || res.arrayBuffer)) {
-          const buffer = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
-
-          // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Decodificação direta em memória)
-          if (buffer) {
-            const tocouWebAudio = await this.playAudioViaWebAudio(buffer, btnEl);
-            if (tocouWebAudio) {
-              return;
+          const playViaWebAudioFallback = async () => {
+            const buf = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
+            if (buf) {
+              const tocou = await this.playAudioViaWebAudio(buf, btnEl);
+              if (tocou) return;
             }
-          }
+            this.speakNative(text, btnEl);
+          };
 
-          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 (Data URI ou Blob URL)
-          console.log('[BIA Audio] WebAudio não tocou, tentando HTML5 Audio...');
-          const audio = this.getAudioPlayer() || new Audio();
-          // Data URI de MP3 é muito mais estável em Android WebView do que blob: isolado
-          audio.src = res.audioUrl || res.blobUrl;
+          // 1. CAMADA 1: HTML5 AUDIO COM DATA URI (Toca direto no hardware STREAM_MUSIC do Android)
+          console.log('[BIA Audio] Iniciando reprodução via HTML5 Audio nativo...');
+          const audio = new Audio();
           audio.volume = 1.0;
+          audio.src = res.audioUrl || res.blobUrl;
           this._currentAudio = audio;
           window._activeBiaAudio = audio;
 
@@ -1630,30 +1613,20 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             this.stopSpeaking();
           };
 
-          let triedDataUri = false;
           audio.onerror = (e) => {
-            console.warn('[BIA Audio] Elemento de áudio disparou erro:', e, audio.error);
-            if (!triedDataUri && res.audioUrl && res.audioUrl.startsWith('data:')) {
-              triedDataUri = true;
-              audio.src = res.audioUrl;
-              audio.play().catch(() => this.speakNative(text, btnEl));
-              return;
-            }
-            this.speakNative(text, btnEl);
+            console.warn('[BIA Audio] HTML5 Audio erro, recorrendo a Web Audio API:', e);
+            playViaWebAudioFallback();
           };
 
           try {
             const p = audio.play();
             if (p !== undefined) {
-              p.catch(playErr => {
-                console.warn('[BIA Audio] play() rejeitado:', playErr);
-                this.speakNative(text, btnEl);
-              });
+              await p;
             }
             return;
-          } catch (playErr) {
-            console.warn('[BIA Audio] Erro síncrono no play:', playErr);
-            this.speakNative(text, btnEl);
+          } catch (audioErr) {
+            console.warn('[BIA Audio] audio.play() falhou:', audioErr);
+            await playViaWebAudioFallback();
             return;
           }
         }
@@ -2062,28 +2035,27 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         audioBuffer = res.arrayBuffer;
       }
 
-      const audioData = this.base64ToBlobUrl(audioUrl);
-      const buffer = audioBuffer || audioData.buffer;
-      this.logDiag('[Teste 4] Áudio pronto (' + (buffer ? 'Buffer WebAudio OK' : 'Base64 OK') + '). Reproduzindo voz real...');
-      
-      let tocou = false;
-      // Tenta Web Audio API se houver buffer
-      if (buffer) {
-        try {
-          tocou = await this.playAudioViaWebAudio(buffer);
-          if (tocou) this.logDiag('[Teste 4] Reprodução via Web Audio API em andamento!');
-        } catch (weErr) {
-          this.logDiag('[Teste 4] WebAudio falhou: ' + weErr.message);
-        }
-      }
+      const buffer = audioBuffer || (audioUrl ? this.base64ToBlobUrl(audioUrl).buffer : null);
+      this.logDiag('[Teste 4] Iniciando reprodução com HTML5 Audio (canal STREAM_MUSIC)...');
+      const audio = new Audio();
+      audio.volume = 1.0;
+      audio.src = audioUrl || blobUrl;
 
-      if (!tocou) {
-        this.logDiag('[Teste 4] Tocando via HTML5 Audio...');
-        const audio = this.getAudioPlayer() || new Audio();
-        audio.src = audioUrl || blobUrl;
-        audio.volume = 1.0;
+      let tocou = false;
+      try {
         await audio.play();
-        this.logDiag('[Teste 4] HTML5 Audio tocando agora!');
+        tocou = true;
+        this.logDiag('✅ [Teste 4] HTML5 Audio tocando agora com volume total!');
+      } catch (audioErr) {
+        this.logDiag('[Teste 4] HTML5 Audio play falhou (' + audioErr.message + '), tentando WebAudio...');
+        if (buffer) {
+          try {
+            tocou = await this.playAudioViaWebAudio(buffer);
+            if (tocou) this.logDiag('✅ [Teste 4] Web Audio API tocando com sucesso!');
+          } catch (weErr) {
+            this.logDiag('[Teste 4] WebAudio falhou: ' + weErr.message);
+          }
+        }
       }
 
       this.logDiag('✅ [Teste 4] Voz da Bia executada com sucesso! Verifique o som do aparelho.');
