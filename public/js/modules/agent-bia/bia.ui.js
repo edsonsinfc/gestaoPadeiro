@@ -39,14 +39,14 @@ const BiaUI = {
     this.renderModal();
     this.bindEvents();
 
-    // Mensagem de boas-vindas inicial
+    // Mensagem de boas-vindas inicial (silenciosa até o usuário interagir)
     setTimeout(() => {
       this.addBiaMessage(`Olá! Eu sou a **Bia**, assistente operacional de inteligência artificial do Smart Gestor.
 
 Como posso ajudar na operação hoje? Exemplos de comandos:
 - *"Bia, crie uma escala de alta performance"*
 - *"Bia, faça uma escala seguindo o padrão de escala"*
-- *"Quem são os padeiros com maior produção?"*`);
+- *"Quem são os padeiros com maior produção?"*`, { silent: true });
     }, 500);
   },
 
@@ -366,6 +366,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
   openModal() {
     if (!this.isAuthorized()) return;
+    this.unlockAudio();
     const overlay = document.getElementById('bia-modal-overlay');
     if (overlay) {
       overlay.classList.add('active');
@@ -415,6 +416,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
   async startVoiceRecording() {
     if (this._voiceActive || this._voiceStarting || this.isProcessing) return;
+    this.unlockAudio();
     this._voiceStarting = true;
     this._voiceStopRequested = false;
     this._voiceChunks = [];
@@ -630,6 +632,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
    */
   async handleUserSubmit(message) {
     if (this.isProcessing) return;
+    this.unlockAudio();
     this.stopSpeaking();
     this.isProcessing = true;
 
@@ -1370,6 +1373,27 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     }
   },
 
+  _audioUnlocked: false,
+  unlockAudio() {
+    if (this._audioUnlocked) return;
+    try {
+      const silence = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+      silence.volume = 0.01;
+      const p = silence.play();
+      if (p) {
+        p.then(() => {
+          this._audioUnlocked = true;
+        }).catch(() => {});
+      }
+    } catch (_) {}
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.getVoices();
+      } catch (_) {}
+    }
+  },
+
   async speakText(text, btnEl = null) {
     if (!text || typeof text !== 'string') return;
     this.stopSpeaking();
@@ -1406,8 +1430,14 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             this.speakNative(text, btnEl);
           };
 
-          await audio.play();
-          return;
+          try {
+            await audio.play();
+            return;
+          } catch (playErr) {
+            console.warn('[BIA Audio] Autoplay bloqueado pelo navegador, tentando fala nativa:', playErr);
+            this.speakNative(text, btnEl);
+            return;
+          }
         }
 
         // Se o backend indicou fallback ou deu JSON
