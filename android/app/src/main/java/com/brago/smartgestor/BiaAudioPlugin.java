@@ -77,44 +77,51 @@ public class BiaAudioPlugin extends Plugin {
                         .build()
                 );
 
-                try (java.io.FileInputStream fis = new java.io.FileInputStream(tempAudioFile)) {
-                    mediaPlayer.setDataSource(fis.getFD());
-                }
-
+                // Caminho absoluto direto do arquivo temporário gerado no cache
+                mediaPlayer.setDataSource(tempAudioFile.getAbsolutePath());
                 mediaPlayer.setVolume(1.0f, 1.0f);
-
-                mediaPlayer.setOnPreparedListener(mp -> {
-                    try {
-                        mp.start();
-                        Log.i(TAG, "Reprodução nativa iniciada com sucesso!");
-                        notifyListeners("onPlay", new JSObject());
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error starting playback: " + e.getMessage());
-                        notifyListeners("onError", new JSObject().put("error", e.getMessage()));
-                    }
-                });
 
                 mediaPlayer.setOnCompletionListener(mp -> {
                     Log.i(TAG, "Reprodução nativa concluída.");
                     stopPlayback();
-                    notifyListeners("onEnded", new JSObject());
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> notifyListeners("onEnded", new JSObject()));
+                    } else {
+                        notifyListeners("onEnded", new JSObject());
+                    }
                 });
 
                 mediaPlayer.setOnErrorListener((mp, what, extra) -> {
                     Log.e(TAG, "MediaPlayer error - what: " + what + ", extra: " + extra);
                     stopPlayback();
-                    notifyListeners("onError", new JSObject().put("what", what).put("extra", extra));
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> notifyListeners("onError", new JSObject().put("what", what).put("extra", extra)));
+                    } else {
+                        notifyListeners("onError", new JSObject().put("what", what).put("extra", extra));
+                    }
                     return true;
                 });
 
-                mediaPlayer.prepareAsync();
+                // Arquivo local em cache: prepare() é síncrono e ultra-rápido (< 2ms)
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+                Log.i(TAG, "Reprodução nativa iniciada com sucesso via hardware Android!");
             }
+
+            int duration = 0;
+            try {
+                if (mediaPlayer != null) {
+                    duration = mediaPlayer.getDuration();
+                }
+            } catch (Exception ignored) {}
 
             JSObject ret = new JSObject();
             ret.put("success", true);
             ret.put("bytes", audioBytes.length);
+            ret.put("duration", duration);
             ret.put("volume", currentVol);
             ret.put("maxVolume", maxVol);
+            ret.put("playing", true);
             call.resolve(ret);
 
         } catch (Exception e) {

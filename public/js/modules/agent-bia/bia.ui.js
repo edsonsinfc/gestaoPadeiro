@@ -1389,6 +1389,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
   stopSpeaking() {
     // Interrompe reprodução nativa Android se disponível
+    if (this._nativeEndTimer) {
+      clearTimeout(this._nativeEndTimer);
+      this._nativeEndTimer = null;
+    }
     if (window.Capacitor?.Plugins?.BiaAudio) {
       try {
         window.Capacitor.Plugins.BiaAudio.stopAudio().catch(() => {});
@@ -1607,17 +1611,6 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
               }
               this._nativeAudioListeners = [];
 
-              const onPlayHandle = await nativeBiaAudio.addListener('onPlay', () => {
-                console.log('[BIA Audio] Plugin nativo: onPlay disparado!');
-                if (btnEl) {
-                  btnEl.classList.remove('is-loading');
-                  btnEl.classList.add('is-playing');
-                  const label = btnEl.querySelector('.bia-speak-label');
-                  if (label) label.textContent = 'Falando...';
-                }
-              });
-              this._nativeAudioListeners.push(onPlayHandle);
-
               const onEndedHandle = await nativeBiaAudio.addListener('onEnded', () => {
                 console.log('[BIA Audio] Plugin nativo: onEnded disparado!');
                 this.stopSpeaking();
@@ -1632,6 +1625,21 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
               const playRes = await nativeBiaAudio.playBase64({ base64: res.audioUrl });
               console.log('[BIA Audio] playBase64 iniciado com sucesso:', playRes);
+
+              // Atualiza o botão para "Falando..." imediatamente após o MediaPlayer iniciar no hardware
+              if (btnEl) {
+                btnEl.classList.remove('is-loading');
+                btnEl.classList.add('is-playing');
+                const label = btnEl.querySelector('.bia-speak-label');
+                if (label) label.textContent = 'Falando...';
+              }
+
+              // Timer de proteção baseado na duração real (ms) do áudio retornada pelo Android
+              if (this._nativeEndTimer) clearTimeout(this._nativeEndTimer);
+              const durationMs = (playRes && playRes.duration > 0) ? playRes.duration : 10000;
+              this._nativeEndTimer = setTimeout(() => {
+                this.stopSpeaking();
+              }, durationMs + 600);
 
               if (playRes && playRes.volume === 0 && typeof Components !== 'undefined' && Components.toast) {
                 Components.toast('Atenção: O volume de mídia do celular está no mudo (0). Aumente nos botões laterais do aparelho.', 'warning');
