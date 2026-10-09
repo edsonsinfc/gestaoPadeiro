@@ -1583,12 +1583,13 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           safetyTimer = null;
         }
 
-        if (res && res.type === 'audio' && res.audioUrl) {
-          const audioData = this.base64ToBlobUrl(res.audioUrl);
+        if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl)) {
+          const blobUrl = res.blobUrl || this.base64ToBlobUrl(res.audioUrl).blobUrl;
+          const buffer = this.base64ToBlobUrl(res.audioUrl).buffer;
 
           // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Decodificação direta em memória)
-          if (audioData.buffer) {
-            const tocouWebAudio = await this.playAudioViaWebAudio(audioData.buffer, btnEl);
+          if (buffer) {
+            const tocouWebAudio = await this.playAudioViaWebAudio(buffer, btnEl);
             if (tocouWebAudio) {
               return;
             }
@@ -1597,12 +1598,16 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 COM BLOB URL
           console.log('[BIA Audio] Tentando reprodução via HTML5 Audio Blob URL...');
           const audio = this.getAudioPlayer() || new Audio();
-          audio.src = audioData.blobUrl;
+          audio.src = blobUrl;
           audio.volume = 1.0;
           this._currentAudio = audio;
           window._activeBiaAudio = audio;
 
           audio.onplay = () => {
+            if (safetyTimer) {
+              clearTimeout(safetyTimer);
+              safetyTimer = null;
+            }
             if (btnEl) {
               btnEl.classList.remove('is-loading');
               btnEl.classList.add('is-playing');
@@ -1816,10 +1821,10 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             <!-- Teste 3 -->
             <div class="bia-diag-test-item">
               <div class="bia-diag-test-top">
-                <span class="bia-diag-test-name">🌐 Teste 3: Conexão TTS Hostinger</span>
+                <span class="bia-diag-test-name">⚡ Teste 3: Conexão Direta ElevenLabs (Sem Hostinger)</span>
                 <button class="bia-diag-test-btn" id="btn-diag-test-3">Testar</button>
               </div>
-              <div class="bia-diag-test-desc">Testa a chamada ao endpoint /api/bia/tts e mede o tempo de resposta em ms.</div>
+              <div class="bia-diag-test-desc">Comunicação direta do celular com a ElevenLabs para velocidade instantânea (&lt; 1.5s).</div>
               <div class="bia-diag-test-result" id="diag-res-3"></div>
             </div>
 
@@ -1991,22 +1996,23 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
   },
 
   async runDiagTest3() {
-    this.logDiag('[Teste 3] Enviando requisição para /api/bia/tts na Hostinger...');
+    this.logDiag('[Teste 3] Enviando requisição DIRETA para api.elevenlabs.io...');
     const resEl = document.getElementById('diag-res-3');
     const btn = document.getElementById('btn-diag-test-3');
     btn.classList.add('testing');
     const t0 = Date.now();
     try {
-      const res = await BiaAPI.synthesizeSpeech('Teste de diagnóstico');
+      const res = await BiaAPI.chamarElevenLabsDireto('Teste direto de voz da Bia.');
       const elapsed = Date.now() - t0;
       if (!res || !res.audioUrl) {
-        throw new Error('API não retornou áudio (tipo: ' + (res?.type || 'nulo') + ')');
+        throw new Error('ElevenLabs direto não retornou áudio');
       }
       const sizeBytes = res.audioUrl.length;
       this.logDiag(`✅ [Teste 3] Sucesso em ${elapsed}ms! Recebidos ${sizeBytes} caracteres de áudio.`);
-      resEl.textContent = `✅ Sucesso! Hostinger respondeu em ${elapsed}ms (${Math.round(sizeBytes / 1024)} KB).`;
+      resEl.textContent = `✅ Sucesso! ElevenLabs direto respondeu em ${elapsed}ms (${Math.round(sizeBytes / 1024)} KB).`;
       resEl.className = 'bia-diag-test-result success';
       this._lastDiagAudioUrl = res.audioUrl;
+      this._lastDiagBlobUrl = res.blobUrl;
     } catch (e) {
       this.logDiag('❌ [Teste 3] Erro: ' + e.message);
       resEl.textContent = '❌ Erro: ' + e.message;
@@ -2023,15 +2029,18 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     btn.classList.add('testing');
     try {
       let audioUrl = this._lastDiagAudioUrl;
+      let blobUrl = this._lastDiagBlobUrl;
       if (!audioUrl) {
         this.logDiag('[Teste 4] Solicitando síntese com texto de diagnóstico...');
         const res = await BiaAPI.synthesizeSpeech('Diagnóstico de som concluído com sucesso. A assistente Bia está pronta no Smart Gestor.');
         if (!res || !res.audioUrl) throw new Error('Falha ao obter áudio da Bia');
         audioUrl = res.audioUrl;
+        blobUrl = res.blobUrl;
       }
-      this.logDiag('[Teste 4] Decodificando áudio Base64 para Blob binário...');
+
       const audioData = this.base64ToBlobUrl(audioUrl);
-      this.logDiag('[Teste 4] Blob URL gerada: ' + audioData.blobUrl.substring(0, 30) + '... Tentando reprodução...');
+      const targetBlobUrl = blobUrl || audioData.blobUrl;
+      this.logDiag('[Teste 4] Áudio pronto (' + (audioData.buffer ? 'Buffer WebAudio OK' : 'Blob OK') + '). Reproduzindo...');
       
       let tocou = false;
       // Tenta Web Audio API se houver buffer
@@ -2045,7 +2054,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       if (!tocou) {
         this.logDiag('[Teste 4] Tocando via HTML5 Audio Blob...');
         const audio = this.getAudioPlayer() || new Audio();
-        audio.src = audioData.blobUrl;
+        audio.src = targetBlobUrl;
         audio.volume = 1.0;
         await audio.play();
         this.logDiag('[Teste 4] HTML5 Audio tocando agora!');

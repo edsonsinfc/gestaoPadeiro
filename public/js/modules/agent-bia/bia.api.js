@@ -1148,26 +1148,84 @@ const BiaAPI = {
   },
 
   /**
+   * Extrai um resumo executivo fluído e natural para locução de voz:
+   * Mantém mensagens curtas intactas e resume respostas longas (escalas, rankings)
+   * para uma fala ágil (< 280 caracteres), evitando demoras ou travamentos.
+   */
+  extrairResumoFalado(texto) {
+    if (!texto || typeof texto !== 'string') return '';
+    let limpo = texto
+      .replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '')
+      .replace(/```[\s\S]*?```/gi, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, '')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\b(\d+)\s*kg\b/gi, '$1 quilos')
+      .replace(/\bkg\b/gi, 'quilos')
+      .replace(/R\$\s*(\d+)/gi, '$1 reais')
+      .replace(/%/g, ' por cento')
+      .trim();
+
+    if (limpo.length <= 260) {
+      return limpo.replace(/\n+/g, '. ');
+    }
+
+    const linhas = limpo.split('\n').map(l => l.trim()).filter(Boolean);
+    const frases = [];
+    let tam = 0;
+    for (const l of linhas) {
+      if (/^[-*•\d]/.test(l) && tam > 50) break;
+      const parts = l.split(/(?<=[.!?])\s+/);
+      for (const p of parts) {
+        if (tam + p.length > 250 && tam > 60) break;
+        frases.push(p);
+        tam += p.length;
+      }
+      if (tam >= 220) break;
+    }
+    let res = frases.join(' ').trim();
+    if (!res || res.length < 25) {
+      res = limpo.slice(0, 220);
+      const p = res.lastIndexOf('.');
+      if (p > 60) res = res.slice(0, p + 1);
+      else res += '...';
+    }
+    res = res.replace(/:\s*$/, '.');
+    if (limpo.length > 300 && !res.includes('card') && !res.includes('tela') && !res.includes('abaixo')) {
+      if (texto.includes('escala') || texto.includes('cronograma')) {
+        res += ' Os detalhes completos da escala estão disponíveis no card da tela.';
+      } else {
+        res += ' Você pode conferir os detalhes na tela.';
+      }
+    }
+    return res;
+  },
+
+  /**
    * Síntese de Voz (TTS) da Bia:
-   * Conecta ao endpoint /api/bia/tts com ElevenLabs, suporta API.post, fetch direto e contingência ElevenLabs
+   * Conecta DIRETAMENTE ao ElevenLabs (Prioridade Máxima para velocidade instantânea e sem passar pela Hostinger)
+   * com contingência na Hostinger e Fallback nativo
    */
   async synthesizeSpeech(text) {
     if (!text || typeof text !== 'string') return null;
 
-    const baseUrl = this.getBaseUrl();
-    const rawEndpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
-    let endpoint = rawEndpoint;
-    if (!endpoint.startsWith('http')) {
-      if (baseUrl) {
-        endpoint = `${baseUrl}${endpoint}`;
-      } else {
-        endpoint = `https://app2.bragodistribuidora.com.br${endpoint}`;
+    console.log('[BIA TTS] Iniciando síntese prioritária direta com ElevenLabs...');
+
+    // 1. CAMADA 1 (PRIORIDADE TOTAL): Conexão Direta ao ElevenLabs (Rápido, sem intermediário)
+    try {
+      const direto = await this.chamarElevenLabsDireto(text);
+      if (direto && direto.audioUrl) {
+        console.log('[BIA TTS] Áudio gerado via ElevenLabs direto com sucesso!');
+        return direto;
       }
+    } catch (elevenErr) {
+      console.warn('[BIA TTS] ElevenLabs direto falhou (' + elevenErr.message + '). Tentando contingência na Hostinger...');
     }
 
-    console.log('[BIA TTS] Solicitando áudio para:', endpoint);
-
-    // 1. CAMADA 1: Tentar via API.post (Padronizado no Smart Gestor e APK Android)
+    // 2. CAMADA 2: Contingência via Backend Hostinger
     if (typeof API !== 'undefined' && typeof API.post === 'function') {
       try {
         const payload = {
@@ -1178,100 +1236,18 @@ const BiaAPI = {
         };
         const data = await API.post('/api/bia/tts', payload);
         if (data && data.audio) {
-          console.log('[BIA TTS] Áudio Base64 recebido via API.post com sucesso!');
+          console.log('[BIA TTS] Áudio Base64 recebido via Hostinger com sucesso!');
           return {
             type: 'audio',
             audioUrl: data.audio
           };
         }
-        if (data && data.fallback) {
-          console.log('[BIA TTS] Servidor solicitou fallback:', data.error);
-        }
       } catch (apiErr) {
-        console.warn('[BIA TTS] API.post falhou, tentando fetch direto:', apiErr);
+        console.warn('[BIA TTS] Contingência Hostinger falhou:', apiErr.message);
       }
     }
 
-    // 2. CAMADA 2: Tentar via fetch direto
-    try {
-      const token = (typeof localStorage !== 'undefined' && (localStorage.getItem('brago_token') || localStorage.getItem('token'))) || (typeof API !== 'undefined' && API.token) || '';
-      
-      const controller = new AbortController();
-      const timer = setTimeout(() => {
-        console.warn('[BIA TTS] Timeout de 15s atingido no backend, abortando...');
-        controller.abort();
-      }, 15000);
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          text,
-          format: 'base64',
-          apiKey: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || '',
-          voiceId: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || ''
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timer);
-
-      if (res.ok) {
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await res.json();
-          if (data && data.audio) {
-            console.log('[BIA TTS] Áudio Base64 recebido com sucesso do backend!');
-            return {
-              type: 'audio',
-              audioUrl: data.audio
-            };
-          }
-          if (data && data.fallback) {
-            console.log('[BIA TTS] Backend solicitou fallback:', data.error);
-            try {
-              const direto = await this.chamarElevenLabsDireto(text);
-              if (direto) return direto;
-            } catch (_) {}
-            return { type: 'native', text: data.text || text };
-          }
-        } else if (contentType.includes('audio')) {
-          const blob = await res.blob();
-          const base64Url = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = () => resolve(URL.createObjectURL(blob));
-            reader.readAsDataURL(blob);
-          });
-          console.log('[BIA TTS] Áudio Blob convertido em Base64!');
-          return {
-            type: 'audio',
-            audioUrl: base64Url
-          };
-        }
-      } else {
-        console.warn(`[BIA TTS] Backend respondeu status ${res.status}. Tentando chamada direta ElevenLabs...`);
-      }
-    } catch (serverErr) {
-      console.warn('[BIA TTS] Backend inacessível ou falha (' + serverErr.message + '). Acionando contingência direta ElevenLabs...');
-    }
-
-    // 2. CAMADA DE CONTINGÊNCIA: Chamada direta ao ElevenLabs (100% funcional no APK Android e WebView móvel)
-    try {
-      const direto = await this.chamarElevenLabsDireto(text);
-      if (direto) {
-        console.log('[BIA TTS] Áudio gerado via ElevenLabs direto com sucesso.');
-        return direto;
-      }
-    } catch (elevenErr) {
-      console.warn('[BIA TTS] Chamada direta ElevenLabs falhou:', elevenErr);
-    }
-
-    // 3. FALLBACK NATIVO (Web Speech API)
+    // 3. CAMADA 3: Fallback nativo (Web Speech API)
     console.log('[BIA TTS] Recorrendo ao fallback de voz nativa.');
     return {
       type: 'native',
@@ -1280,35 +1256,20 @@ const BiaAPI = {
   },
 
   /**
-   * Chamada direta à API da ElevenLabs do lado do cliente (100% funcional no APK Android)
+   * Chamada direta à API da ElevenLabs do lado do cliente (100% direta, sem passar por servidor)
    */
   async chamarElevenLabsDireto(text) {
     const key = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50';
     const voiceId = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || 'EXAVITQu4vr4xnSDxMaL';
     if (!key) return null;
 
-    let clean = text
-      .replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '')
-      .replace(/```[\s\S]*?```/gi, '')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, '')
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/\*([^*]+)\*/g, '$1')
-      .replace(/\b(\d+)\s*kg\b/gi, '$1 quilos')
-      .replace(/\bkg\b/gi, 'quilos')
-      .replace(/R\$\s*(\d+)/gi, '$1 reais')
-      .replace(/%/g, ' por cento')
-      .replace(/\n+/g, '. ')
-      .trim();
+    const clean = this.extrairResumoFalado(text);
+    if (!clean) return null;
 
-    if (clean.length > 450) {
-      const pt = clean.lastIndexOf('.', 450);
-      clean = (pt > 150 ? clean.slice(0, pt + 1) : clean.slice(0, 450)) + '...';
-    }
+    console.log('[BIA TTS Direto] Enviando para ElevenLabs (' + clean.length + ' chars):', clean.substring(0, 70) + '...');
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+    const timer = setTimeout(() => controller.abort(), 12000);
 
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
       method: 'POST',
@@ -1330,27 +1291,27 @@ const BiaAPI = {
     clearTimeout(timer);
 
     if (!res.ok) {
-      throw new Error(`ElevenLabs direto HTTP ${res.status}`);
+      const errDetail = await res.text().catch(() => '');
+      throw new Error(`ElevenLabs HTTP ${res.status}: ${errDetail.substring(0, 120)}`);
     }
 
-    let base64Url = '';
-    try {
-      const buffer = await res.arrayBuffer();
-      let binary = '';
-      const bytes = new Uint8Array(buffer);
-      const chunkSize = 8192;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-      }
-      base64Url = 'data:audio/mpeg;base64,' + btoa(binary);
-    } catch (_) {
-      const blob = await res.blob();
-      base64Url = URL.createObjectURL(blob);
+    const buffer = await res.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
     }
+    const base64Url = 'data:audio/mpeg;base64,' + btoa(binary);
 
     return {
       type: 'audio',
-      audioUrl: base64Url
+      audioUrl: base64Url,
+      blobUrl: blobUrl,
+      spokenText: clean
     };
   }
 };
