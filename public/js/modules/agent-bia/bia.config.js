@@ -17,7 +17,8 @@ const BIA_CONFIG = {
   serverTtsEndpoint: '/api/bia/tts',
 
   // Configuração ElevenLabs TTS (Síntese de Voz Ultra-Realista da Bia)
-  elevenLabsApiKey: (typeof window !== 'undefined' && (window.ELEVENLABS_API_KEY || localStorage.getItem('BIA_ELEVENLABS_API_KEY'))) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50',
+  elevenLabsApiKey: (typeof window !== 'undefined' && (window.ELEVENLABS_API_KEY || localStorage.getItem('BIA_ELEVENLABS_API_KEY'))) || 'sk_e04f9290e2db94daeb00acfcdb3ab3e128d6252ba070bba3',
+  elevenLabsFallbackApiKey: 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50',
   // Fala ativada por padrão sempre (a menos que o usuário clique no ícone de mudo)
   voiceAutoPlay: typeof window !== 'undefined' ? (localStorage.getItem('BIA_VOICE_AUTO_PLAY') !== 'false') : true,
 

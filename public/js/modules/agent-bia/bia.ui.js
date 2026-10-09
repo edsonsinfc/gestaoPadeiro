@@ -1593,10 +1593,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
           safetyTimer = null;
         }
 
-        if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl)) {
-          const decoded = this.base64ToBlobUrl(res.audioUrl);
-          const blobUrl = res.blobUrl || decoded.blobUrl;
-          const buffer = decoded.buffer;
+        if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl || res.arrayBuffer)) {
+          const buffer = res.arrayBuffer || (res.audioUrl ? this.base64ToBlobUrl(res.audioUrl).buffer : null);
 
           // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Decodificação direta em memória)
           if (buffer) {
@@ -1606,10 +1604,11 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             }
           }
 
-          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 COM BLOB URL
-          console.log('[BIA Audio] Tentando reprodução via HTML5 Audio Blob URL...');
+          // 2. FALLBACK PARA ELEMENTO AUDIO HTML5 (Data URI ou Blob URL)
+          console.log('[BIA Audio] WebAudio não tocou, tentando HTML5 Audio...');
           const audio = this.getAudioPlayer() || new Audio();
-          audio.src = blobUrl;
+          // Data URI de MP3 é muito mais estável em Android WebView do que blob: isolado
+          audio.src = res.audioUrl || res.blobUrl;
           audio.volume = 1.0;
           this._currentAudio = audio;
           window._activeBiaAudio = audio;
@@ -2035,6 +2034,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       resEl.className = 'bia-diag-test-result success';
       this._lastDiagAudioUrl = res.audioUrl;
       this._lastDiagBlobUrl = res.blobUrl;
+      this._lastDiagBuffer = res.arrayBuffer;
     } catch (e) {
       this.logDiag('❌ [Teste 3] Erro: ' + e.message);
       resEl.textContent = '❌ Erro: ' + e.message;
@@ -2052,39 +2052,37 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     try {
       let audioUrl = this._lastDiagAudioUrl;
       let blobUrl = this._lastDiagBlobUrl;
+      let audioBuffer = this._lastDiagBuffer;
       if (!audioUrl) {
         this.logDiag('[Teste 4] Solicitando síntese com texto de diagnóstico...');
         const res = await BiaAPI.synthesizeSpeech('Diagnóstico de som concluído com sucesso. A assistente Bia está pronta no Smart Gestor.');
         if (!res || !res.audioUrl) throw new Error('Falha ao obter áudio da Bia');
         audioUrl = res.audioUrl;
         blobUrl = res.blobUrl;
+        audioBuffer = res.arrayBuffer;
       }
 
       const audioData = this.base64ToBlobUrl(audioUrl);
-      const targetBlobUrl = blobUrl || audioData.blobUrl;
-      this.logDiag('[Teste 4] Áudio pronto (' + (audioData.buffer ? 'Buffer WebAudio OK' : 'Blob OK') + '). Reproduzindo...');
+      const buffer = audioBuffer || audioData.buffer;
+      this.logDiag('[Teste 4] Áudio pronto (' + (buffer ? 'Buffer WebAudio OK' : 'Base64 OK') + '). Reproduzindo voz real...');
       
       let tocou = false;
       // Tenta Web Audio API se houver buffer
-      if (audioData.buffer) {
+      if (buffer) {
         try {
-          tocou = await this.playAudioViaWebAudio(audioData.buffer);
+          tocou = await this.playAudioViaWebAudio(buffer);
           if (tocou) this.logDiag('[Teste 4] Reprodução via Web Audio API em andamento!');
-        } catch (_) {}
+        } catch (weErr) {
+          this.logDiag('[Teste 4] WebAudio falhou: ' + weErr.message);
+        }
       }
 
       if (!tocou) {
-        this.logDiag('[Teste 4] Tocando via HTML5 Audio Blob...');
+        this.logDiag('[Teste 4] Tocando via HTML5 Audio...');
         const audio = this.getAudioPlayer() || new Audio();
-        audio.src = targetBlobUrl;
+        audio.src = audioUrl || blobUrl;
         audio.volume = 1.0;
-        try {
-          await audio.play();
-        } catch (blobErr) {
-          this.logDiag('[Teste 4] Blob falhou (' + blobErr.message + '). Tentando data URI...');
-          audio.src = audioUrl;
-          await audio.play();
-        }
+        await audio.play();
         this.logDiag('[Teste 4] HTML5 Audio tocando agora!');
       }
 
