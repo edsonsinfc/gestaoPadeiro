@@ -103,6 +103,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             </div>
           </div>
           <div class="bia-header-actions">
+            <button class="bia-btn-circle" id="bia-btn-voice-toggle" title="Voz da Bia (Ativar/Desativar Fala)">
+              <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+            </button>
             <button class="bia-btn-circle" id="bia-btn-clear" title="Limpar conversa">
               <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
             </button>
@@ -180,10 +183,17 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     const form = document.getElementById('bia-input-form');
     const input = document.getElementById('bia-input-field');
 
+    const voiceToggleBtn = document.getElementById('bia-btn-voice-toggle');
+    if (voiceToggleBtn) {
+      voiceToggleBtn.addEventListener('click', () => this.toggleVoiceAutoPlay());
+      this.updateVoiceToggleUI();
+    }
+
     if (closeBtn) closeBtn.addEventListener('click', () => this.closeModal());
     
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
+        this.stopSpeaking();
         if (typeof BiaAPI !== 'undefined') BiaAPI.clearHistory();
         this.pendingCommand = null;
         if (typeof BiaCommands !== 'undefined') BiaCommands.pendingCommand = null;
@@ -360,6 +370,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     if (overlay) {
       overlay.classList.add('active');
       this.isOpen = true;
+      this.updateVoiceToggleUI();
       if (window.lucide) lucide.createIcons();
       const input = document.getElementById('bia-input-field');
       if (input) setTimeout(() => input.focus(), 300);
@@ -369,6 +380,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
   closeModal() {
     this.stopVoice();
+    this.stopSpeaking();
     this.setListeningUI(false);
     const overlay = document.getElementById('bia-modal-overlay');
     if (overlay) {
@@ -618,6 +630,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
    */
   async handleUserSubmit(message) {
     if (this.isProcessing) return;
+    this.stopSpeaking();
     this.isProcessing = true;
 
     // 1. Exibir balão do usuário
@@ -1195,6 +1208,7 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
 
     const row = document.createElement('div');
     row.className = 'bia-msg-row bia';
+    const msgId = 'bia-msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     row.innerHTML = `
       <div class="bia-msg-avatar">
         ${this.starIconSvg}
@@ -1202,10 +1216,38 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       <div class="bia-msg-bubble">
         ${thoughtHtml}
         <div class="bia-msg-text">${this.formatMarkdown(displayText)}</div>
+        <div class="bia-msg-footer">
+          <button type="button" class="bia-btn-speak-msg" id="btn-speak-${msgId}" title="Ouvir resposta">
+            <svg class="bia-speak-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <span class="bia-speak-label">Ouvir</span>
+          </button>
+        </div>
       </div>
     `;
     body.appendChild(row);
+    if (window.lucide) lucide.createIcons();
     this.scrollToBottom();
+
+    const speakBtn = document.getElementById(`btn-speak-${msgId}`);
+    if (speakBtn) {
+      speakBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this._isSpeaking && this._speakingBtn === speakBtn) {
+          this.stopSpeaking();
+        } else {
+          this.speakText(displayText, speakBtn);
+        }
+      });
+    }
+
+    // Auto-fala se estiver ativada
+    if (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.voiceAutoPlay && displayText && !meta.silent) {
+      this.speakText(displayText, speakBtn);
+    }
   },
 
   formatThought(thought) {
@@ -1297,6 +1339,175 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
     formatted = formatted.replace(/\n/g, '<br/>');
 
     return formatted;
+  },
+
+  /* ─── SISTEMA DE REPRODUÇÃO DE VOZ DA BIA (TTS) ────────────────────────── */
+  _currentAudio: null,
+  _currentUtterance: null,
+  _isSpeaking: false,
+  _speakingBtn: null,
+
+  stopSpeaking() {
+    if (this._currentAudio) {
+      try {
+        this._currentAudio.pause();
+        this._currentAudio.currentTime = 0;
+      } catch (_) {}
+      this._currentAudio = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (_) {}
+      this._currentUtterance = null;
+    }
+    this._isSpeaking = false;
+    if (this._speakingBtn) {
+      this._speakingBtn.classList.remove('is-playing', 'is-loading');
+      const label = this._speakingBtn.querySelector('.bia-speak-label');
+      if (label) label.textContent = 'Ouvir';
+      this._speakingBtn = null;
+    }
+  },
+
+  async speakText(text, btnEl = null) {
+    if (!text || typeof text !== 'string') return;
+    this.stopSpeaking();
+
+    this._isSpeaking = true;
+    this._speakingBtn = btnEl;
+    if (btnEl) {
+      btnEl.classList.add('is-loading');
+      const label = btnEl.querySelector('.bia-speak-label');
+      if (label) label.textContent = 'Carregando...';
+    }
+
+    try {
+      if (typeof BiaAPI !== 'undefined' && typeof BiaAPI.synthesizeSpeech === 'function') {
+        const res = await BiaAPI.synthesizeSpeech(text);
+
+        if (res && res.type === 'audio' && res.audioUrl) {
+          if (btnEl) {
+            btnEl.classList.remove('is-loading');
+            btnEl.classList.add('is-playing');
+            const label = btnEl.querySelector('.bia-speak-label');
+            if (label) label.textContent = 'Falando...';
+          }
+
+          const audio = new Audio(res.audioUrl);
+          this._currentAudio = audio;
+
+          audio.onended = () => {
+            this.stopSpeaking();
+          };
+
+          audio.onerror = (e) => {
+            console.warn('[BIA Audio] Falha ao tocar áudio MP3, usando fallback nativo:', e);
+            this.speakNative(text, btnEl);
+          };
+
+          await audio.play();
+          return;
+        }
+
+        // Se o backend indicou fallback ou deu JSON
+        this.speakNative(res?.text || text, btnEl);
+        return;
+      }
+
+      this.speakNative(text, btnEl);
+    } catch (err) {
+      console.warn('[BIA Voice] Erro na síntese:', err);
+      this.speakNative(text, btnEl);
+    }
+  },
+
+  speakNative(text, btnEl = null) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      this.stopSpeaking();
+      return;
+    }
+
+    try {
+      // Limpeza de texto para fala nativa fluida em português
+      let clean = text
+        .replace(/<pensamento>[\s\S]*?<\/pensamento>/gi, '')
+        .replace(/```[\s\S]*?```/gi, '')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, '')
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/\b(\d+)\s*kg\b/gi, '$1 quilos')
+        .replace(/\bkg\b/gi, 'quilos')
+        .replace(/R\$\s*(\d+)/gi, '$1 reais')
+        .replace(/%/g, ' por cento')
+        .replace(/\n+/g, '. ')
+        .trim();
+
+      if (clean.length > 800) {
+        clean = clean.slice(0, 800) + '...';
+      }
+
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 1.05;
+      utterance.pitch = 1.05;
+
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang.startsWith('pt') && (v.name.includes('Luciana') || v.name.includes('Maria') || v.name.includes('Francisca') || v.name.includes('Female') || v.name.includes('Google português')))
+        || voices.find(v => v.lang.startsWith('pt'));
+      if (ptVoice) {
+        utterance.voice = ptVoice;
+      }
+
+      this._currentUtterance = utterance;
+
+      if (btnEl) {
+        btnEl.classList.remove('is-loading');
+        btnEl.classList.add('is-playing');
+        const label = btnEl.querySelector('.bia-speak-label');
+        if (label) label.textContent = 'Falando...';
+      }
+
+      utterance.onend = () => {
+        this.stopSpeaking();
+      };
+      utterance.onerror = () => {
+        this.stopSpeaking();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('[BIA Native Voice] Falha:', e);
+      this.stopSpeaking();
+    }
+  },
+
+  updateVoiceToggleUI() {
+    const btn = document.getElementById('bia-btn-voice-toggle');
+    if (!btn || typeof BIA_CONFIG === 'undefined') return;
+    const enabled = BIA_CONFIG.voiceAutoPlay;
+    btn.classList.toggle('active', enabled);
+    btn.setAttribute('title', enabled ? 'Voz da Bia: Ativada (Clique para silenciar)' : 'Voz da Bia: Silenciada (Clique para ativar)');
+    btn.innerHTML = enabled
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #007AFF;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #8E8E93;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+  },
+
+  toggleVoiceAutoPlay() {
+    if (typeof BIA_CONFIG === 'undefined') return;
+    BIA_CONFIG.voiceAutoPlay = !BIA_CONFIG.voiceAutoPlay;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('BIA_VOICE_AUTO_PLAY', BIA_CONFIG.voiceAutoPlay ? 'true' : 'false');
+    }
+    this.updateVoiceToggleUI();
+    if (!BIA_CONFIG.voiceAutoPlay) {
+      this.stopSpeaking();
+    }
+    if (typeof Components !== 'undefined' && Components.toast) {
+      Components.toast(BIA_CONFIG.voiceAutoPlay ? '🔊 Voz da Bia ativada!' : '🔇 Voz da Bia silenciada.', 'info');
+    }
   }
 };
 

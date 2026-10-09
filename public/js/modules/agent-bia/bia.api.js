@@ -1129,6 +1129,58 @@ const BiaAPI = {
     }
 
     return { cleanText, action, actionData, pensamento };
+  },
+
+  /**
+   * Síntese de Voz (TTS) da Bia:
+   * Conecta ao endpoint /api/bia/tts com ElevenLabs e provê fallback seguro
+   */
+  async synthesizeSpeech(text) {
+    if (!text || typeof text !== 'string') return null;
+
+    try {
+      const token = (typeof localStorage !== 'undefined' && localStorage.getItem('token')) || (typeof API !== 'undefined' && API.token) || '';
+      const endpoint = (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.serverTtsEndpoint) || '/api/bia/tts';
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          text,
+          apiKey: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsApiKey) || '',
+          voiceId: (typeof BIA_CONFIG !== 'undefined' && BIA_CONFIG.elevenLabsVoiceId) || ''
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`TTS server HTTP ${res.status}`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('audio')) {
+        const blob = await res.blob();
+        return {
+          type: 'audio',
+          audioUrl: URL.createObjectURL(blob)
+        };
+      }
+
+      // Se o servidor retornou JSON (fallback com texto sanitizado)
+      const data = await res.json();
+      return {
+        type: 'native',
+        text: data.text || text
+      };
+    } catch (err) {
+      console.warn('[BIA API] Erro ao sintetizar áudio via servidor, usando fallback nativo:', err);
+      return {
+        type: 'native',
+        text
+      };
+    }
   }
 };
 

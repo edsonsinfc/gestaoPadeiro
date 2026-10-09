@@ -14,6 +14,12 @@ const BIA_CONFIG = {
   apiKey: (typeof window !== 'undefined' && (window.GEMINI_API_KEY || localStorage.getItem('BIA_GEMINI_API_KEY'))) || _defaultKey,
   serverChatEndpoint: '/api/bia/chat',
   serverTranscribeEndpoint: '/api/bia/transcribe',
+  serverTtsEndpoint: '/api/bia/tts',
+
+  // Configuração ElevenLabs TTS (Síntese de Voz Ultra-Realista da Bia)
+  elevenLabsApiKey: (typeof window !== 'undefined' && (window.ELEVENLABS_API_KEY || localStorage.getItem('BIA_ELEVENLABS_API_KEY'))) || 'sk_75a5efc2845be1169b12d7549fce7a0f2fdd8302193d9d50',
+  elevenLabsVoiceId: (typeof window !== 'undefined' && (window.ELEVENLABS_VOICE_ID || localStorage.getItem('BIA_ELEVENLABS_VOICE_ID'))) || 'EXAVITQu4vr4xnSDxMaL',
+  voiceAutoPlay: typeof window !== 'undefined' ? localStorage.getItem('BIA_VOICE_AUTO_PLAY') !== 'false' : true,
 
   // Configuração Groq Whisper (Transcrição ultra-rápida de alta precisão)
   groqApiKey: (typeof window !== 'undefined' && (window.GROQ_API_KEY || localStorage.getItem('BIA_GROQ_API_KEY'))) || _defaultGroqKey,

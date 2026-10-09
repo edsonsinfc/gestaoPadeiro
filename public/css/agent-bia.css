@@ -967,3 +967,60 @@
     height: 54px;
   }
 }
+
+/* ─── Controles de Voz da Bia ───────────────────────────────────────────── */
+.bia-msg-footer {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+  gap: 8px;
+}
+
+.bia-btn-speak-msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 12px;
+  background: rgba(0, 122, 255, 0.08);
+  color: #007AFF;
+  border: 1px solid rgba(0, 122, 255, 0.18);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.bia-btn-speak-msg:hover {
+  background: rgba(0, 122, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.bia-btn-speak-msg:active {
+  transform: scale(0.95);
+}
+
+.bia-btn-speak-msg.is-playing {
+  background: #34C759;
+  color: #FFFFFF;
+  border-color: #34C759;
+  animation: biaPulseGlow 1.5s infinite;
+}
+
+.bia-btn-speak-msg.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+@keyframes biaPulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(52, 199, 89, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+}
+
+#bia-btn-voice-toggle.active {
+  background: rgba(0, 122, 255, 0.12);
+}
+

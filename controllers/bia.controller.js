@@ -1681,3 +1681,37 @@ exports.transcribe = async (req, res) => {
   return res.status(500).json({ error: 'Não foi possível transcrever o áudio.' });
 };
 
+/**
+ * Endpoint Dedicado de TTS (Texto para Fala): POST /api/bia/tts
+ */
+exports.tts = async (req, res) => {
+  const { text, voiceId, apiKey } = req.body;
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'Texto não fornecido para síntese de voz.' });
+  }
+
+  const ttsService = require('../services/tts.service');
+  try {
+    const resultado = await ttsService.sintetizarVozElevenLabs(text, {
+      voiceId,
+      apiKey: apiKey || process.env.ELEVENLABS_API_KEY
+    });
+
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': resultado.buffer.length,
+      'X-Spoken-Text': encodeURIComponent(resultado.textoFalado)
+    });
+    return res.send(resultado.buffer);
+  } catch (err) {
+    console.warn('[BIA TTS] Falha ElevenLabs:', err.message);
+    const textoLimpo = ttsService.sanitizarTextoParaFala(text);
+    return res.status(200).json({
+      fallback: true,
+      text: textoLimpo,
+      error: err.message
+    });
+  }
+};
+
+
