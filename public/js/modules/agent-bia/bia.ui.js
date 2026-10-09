@@ -1468,6 +1468,8 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
       if (base64Url.startsWith('blob:')) {
         return { blob: null, blobUrl: base64Url, bytes: null, buffer: null };
       }
+      const mimeMatch = /^data:([^;,]+)/.exec(base64Url);
+      if (mimeMatch) mimeType = mimeMatch[1];
       const base64Data = base64Url.includes(',') ? base64Url.split(',')[1] : base64Url;
       const binaryString = window.atob(base64Data);
       const len = binaryString.length;
@@ -1584,8 +1586,9 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         }
 
         if (res && res.type === 'audio' && (res.audioUrl || res.blobUrl)) {
-          const blobUrl = res.blobUrl || this.base64ToBlobUrl(res.audioUrl).blobUrl;
-          const buffer = this.base64ToBlobUrl(res.audioUrl).buffer;
+          const decoded = this.base64ToBlobUrl(res.audioUrl);
+          const blobUrl = res.blobUrl || decoded.blobUrl;
+          const buffer = decoded.buffer;
 
           // 1. TENTA PRIMEIRO VIA WEB AUDIO API (Decodificação direta em memória)
           if (buffer) {
@@ -1620,8 +1623,15 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
             this.stopSpeaking();
           };
 
+          let triedDataUri = false;
           audio.onerror = (e) => {
             console.warn('[BIA Audio] Elemento de áudio disparou erro:', e, audio.error);
+            if (!triedDataUri && res.audioUrl && res.audioUrl.startsWith('data:')) {
+              triedDataUri = true;
+              audio.src = res.audioUrl;
+              audio.play().catch(() => this.speakNative(text, btnEl));
+              return;
+            }
             this.speakNative(text, btnEl);
           };
 
@@ -2056,7 +2066,13 @@ Como posso ajudar na operação hoje? Exemplos de comandos:
         const audio = this.getAudioPlayer() || new Audio();
         audio.src = targetBlobUrl;
         audio.volume = 1.0;
-        await audio.play();
+        try {
+          await audio.play();
+        } catch (blobErr) {
+          this.logDiag('[Teste 4] Blob falhou (' + blobErr.message + '). Tentando data URI...');
+          audio.src = audioUrl;
+          await audio.play();
+        }
         this.logDiag('[Teste 4] HTML5 Audio tocando agora!');
       }
 

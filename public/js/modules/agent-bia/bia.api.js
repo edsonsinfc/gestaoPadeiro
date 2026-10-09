@@ -1276,7 +1276,7 @@ const BiaAPI = {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 12000);
       try {
-        const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`, {
+        const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=pcm_24000`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1312,17 +1312,31 @@ const BiaAPI = {
       throw lastErr || new Error('ElevenLabs: nenhuma chave disponível');
     }
 
-    const buffer = await res.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+    // PCM 16-bit mono 24kHz -> WAV (formato universal, sem depender de decodificador MP3 do WebView)
+    const pcm = new Uint8Array(await res.arrayBuffer());
+    if (pcm.length < 2000) {
+      throw new Error('ElevenLabs retornou áudio vazio (' + pcm.length + ' bytes)');
+    }
+    const sampleRate = 24000;
+    const wav = new Uint8Array(44 + pcm.length);
+    const dv = new DataView(wav.buffer);
+    const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    wstr(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length, true); wstr(8, 'WAVE');
+    wstr(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, sampleRate, true); dv.setUint32(28, sampleRate * 2, true);
+    dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+    wstr(36, 'data'); dv.setUint32(40, pcm.length, true);
+    wav.set(pcm, 44);
+
+    const blob = new Blob([wav], { type: 'audio/wav' });
     const blobUrl = URL.createObjectURL(blob);
 
     let binary = '';
     const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    for (let i = 0; i < wav.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, wav.subarray(i, i + chunkSize));
     }
-    const base64Url = 'data:audio/mpeg;base64,' + btoa(binary);
+    const base64Url = 'data:audio/wav;base64,' + btoa(binary);
 
     return {
       type: 'audio',
