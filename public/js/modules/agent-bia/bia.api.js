@@ -1308,13 +1308,20 @@ const BiaAPI = {
       throw new Error(`ElevenLabs direto HTTP ${res.status}`);
     }
 
-    const blob = await res.blob();
-    const base64Url = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => resolve(URL.createObjectURL(blob));
-      reader.readAsDataURL(blob);
-    });
+    let base64Url = '';
+    try {
+      const buffer = await res.arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      base64Url = 'data:audio/mpeg;base64,' + btoa(binary);
+    } catch (_) {
+      const blob = await res.blob();
+      base64Url = URL.createObjectURL(blob);
+    }
 
     return {
       type: 'audio',
